@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay.gd" id="1_gameplay"]
 [ext_resource type="Script" path="res://scripts/arena.gd" id="2_arena"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="11_button"]
 [ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="12_safe_area"]
 [ext_resource type="Script" path="res://scripts/screen_shake.gd" id="13_screen_shake"]
+[ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="14_ink"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_retry_normal"]
 bg_color = Color(0.14902, 0.219608, 0.333333, 0.92)
@@ -53,6 +54,19 @@ corner_radius_bottom_left = 30
 [node name="Gameplay" type="Node2D"]
 script = ExtResource("1_gameplay")
 panel_scene = ExtResource("3_panel")
+
+[node name="BackgroundLayer" type="CanvasLayer" parent="."]
+layer = -100
+
+[node name="Background" type="TextureRect" parent="BackgroundLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("14_ink")
 
 [node name="ShakeCamera" type="Camera2D" parent="."]
 position = Vector2(360, 640)

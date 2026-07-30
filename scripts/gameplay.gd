@@ -105,6 +105,7 @@ func _ready() -> void:
 	_apply_level()
 	_sync_tuning()
 	_connect_signals()
+	get_viewport().size_changed.connect(_position_shake_camera)
 	_position_shake_camera()
 	_input_blockers.append(_retry_button)
 	_input_blockers.append(_home_button)
@@ -178,11 +179,15 @@ func _sync_tuning() -> void:
 	_ball.play_bounds = _arena.get_play_rect()
 
 
-## Kamerayi tam oyun alaninin ortasina koyar; boylece dinlenme halinde
-## (offset sifirken) kamerasiz onceki gorunumle birebir ayni kare cizilir -
-## sadece carpma/kazanma anlarindaki hafif sarsinti icin var.
+## Kamerayi yatayda oyun alaninin merkezinde, dikeyde alt kenara hizali tutar.
+## 720x1280'de eski merkez gorunum korunur; uzun ekranlarda ekstra alan ustte
+## acilir ve launcher/HUD ekranin altina yakin kalir.
 func _position_shake_camera() -> void:
-	_shake.position = _arena.get_play_rect().get_center()
+	var play_rect := _arena.get_play_rect()
+	var visible_size := get_viewport_rect().size
+	_shake.position = Vector2(
+		play_rect.position.x + play_rect.size.x * 0.5,
+		play_rect.position.y + play_rect.size.y - visible_size.y * 0.5)
 
 
 func _connect_signals() -> void:

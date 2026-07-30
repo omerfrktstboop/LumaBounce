@@ -1,11 +1,11 @@
 class_name Arena
 extends Node2D
 
-## Oyun alani: sakin murekkep-lacivert gradient zemin ve sekilebilir kenarlar.
+## Oyun alani: sekilebilir kenarlar ve fiziksel arena sinirlari.
 ##
-## Bilerek cok sade: leke yok, desen yok, doku yok. Zeminin tek isi
-## kontrast saglayip top / kilavuz / hedefin one cikmasini kolaylastirmak.
-## Alt kenar aciktir; top asagi duserse atis sifirlanir.
+## Tam ekran zemin Gameplay sahnesindeki InkBackground tarafindan cizilir.
+## Arena yalnizca 720x1280 oyun alaninin cerceve ve collision sinirlarini
+## uretir. Alt kenar aciktir; top asagi duserse atis sifirlanir.
 
 ## Obstacle katmani (project.godot -> 2d_physics/layer_1).
 const OBSTACLE_LAYER := 1
@@ -30,9 +30,6 @@ const OBSTACLE_LAYER := 1
 ]
 
 @export_group("Renkler")
-@export var ink_top := Palette.INK_TOP
-@export var ink_mid := Palette.INK_MID
-@export var ink_bottom := Palette.INK_BOTTOM
 @export var frame_color := Palette.FRAME
 @export var frame_edge_color := Palette.SURFACE_EDGE
 
@@ -68,33 +65,11 @@ func rebuild() -> void:
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
-	_build_background()
 	_build_frame()
 	_build_walls()
 
 
 # --- Gorunum -----------------------------------------------------------------
-
-func _build_background() -> void:
-	var gradient := Gradient.new()
-	gradient.set_color(0, ink_top)
-	gradient.set_color(1, ink_bottom)
-	gradient.add_point(0.55, ink_mid)
-
-	var texture := GradientTexture2D.new()
-	texture.gradient = gradient
-	texture.width = int(play_size.x)
-	texture.height = int(play_size.y)
-	texture.fill_from = Vector2(0.0, 0.0)
-	texture.fill_to = Vector2(0.0, 1.0)
-
-	var sky := Sprite2D.new()
-	sky.name = "Sky"
-	sky.texture = texture
-	sky.centered = false
-	sky.z_index = -100
-	add_child(sky)
-
 
 ## Alt kenar hicbir zaman cizilmez. Sol/sag kenarlar, kendi fizik
 ## duvarlariyla birebir eslesecek sekilde segment segment cizilir; boslukta
