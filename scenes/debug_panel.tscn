@@ -1,0 +1,85 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/debug/debug_panel.gd" id="1_debug_panel"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_debug_bg"]
+bg_color = Color(0.058824, 0.086275, 0.145098, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.301961, 0.396078, 0.584314, 0.8)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+content_margin_left = 14.0
+content_margin_top = 12.0
+content_margin_right = 14.0
+content_margin_bottom = 12.0
+
+[node name="DebugPanel" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_debug_panel")
+
+[node name="Panel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.78
+anchor_bottom = 0.56
+offset_left = 10.0
+offset_top = 10.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_debug_bg")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+
+[node name="Rows" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="InfoLabel" type="Label" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "FPS: 0"
+
+[node name="ActionRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PrevButton" type="Button" parent="Panel/Margin/Rows/ActionRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Onceki"
+
+[node name="NextButton" type="Button" parent="Panel/Margin/Rows/ActionRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Sonraki"
+
+[node name="RestartButton" type="Button" parent="Panel/Margin/Rows/ActionRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Tekrar"
+
+[node name="ToolRow" type="HBoxContainer" parent="Panel/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="UnlockAllButton" type="Button" parent="Panel/Margin/Rows/ToolRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Kilitleri Ac: KAPALI"
+
+[node name="ResetStatsButton" type="Button" parent="Panel/Margin/Rows/ToolRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Istatistikleri Sifirla"

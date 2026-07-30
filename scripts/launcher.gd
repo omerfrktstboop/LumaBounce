@@ -69,6 +69,15 @@ const MAX_BOUNCES_PER_TICK := 6
 ## Nisan sirasinda namlu ucundaki vurgunun guce gore buyume carpani.
 @export var tip_power_scale := 1.7
 
+@export_group("Geri Tepme")
+## Atis birakildiginda namlunun ters yonde kacacagi kisa mesafe.
+@export var recoil_distance := 9.0
+@export var recoil_out_time := 0.05
+@export var recoil_return_time := 0.16
+## Guc maksimuma ulastiginda namlu ucunda oynayan kontrollu kucuk vurgu.
+@export_range(1.0, 1.6, 0.01) var max_power_pulse_scale := 1.22
+@export var max_power_pulse_time := 0.16
+
 ## Kapatilinca nisan alma iptal edilir.
 var enabled := true:
 	set(value):
@@ -81,12 +90,15 @@ var enabled := true:
 @onready var _guide: AimGuide = $AimGuide
 
 var _barrel_tip: Polygon2D
+var _recoil_tween: Tween
+var _max_power_tween: Tween
 
 var _aiming := false
 var _drag_start := Vector2.ZERO
 var _drag_distance := 0.0
 var _direction := Vector2.UP
 var _power_ratio := 0.0
+var _was_at_max_power := false
 
 
 func _ready() -> void:
@@ -118,6 +130,7 @@ func begin_aim(pointer_position: Vector2) -> void:
 	_drag_start = pointer_position
 	_drag_distance = 0.0
 	_power_ratio = 0.0
+	_was_at_max_power = false
 	_refresh_aim_visual()
 	aim_started.emit()
 
@@ -136,9 +149,15 @@ func release_aim() -> bool:
 		return false
 	_aiming = false
 	_guide.clear_guide()
+	# Tam guc titresimi ortasinda birakilmis olabilir; ipucu her durumda
+	# sifira donsun diye tweeni once iptal ediyoruz.
+	if _max_power_tween != null and _max_power_tween.is_valid():
+		_max_power_tween.kill()
+	_set_tip_power(0.0)
 	if _drag_distance < min_drag_distance:
 		aim_cancelled.emit()
 		return false
+	_play_recoil()
 	shot_fired.emit(_direction * get_power())
 	return true
 
@@ -285,6 +304,10 @@ func _cast_ball_motion(
 
 # --- Gorunum -----------------------------------------------------------------
 
+## Guc bu esigin ustundeyken "maksimuma ulasildi" sayilir.
+const MAX_POWER_THRESHOLD := 0.98
+
+
 func _refresh_aim_visual() -> void:
 	_barrel.rotation = Vector2.UP.angle_to(_direction)
 	if not _aiming or _drag_distance < min_drag_distance:
@@ -294,15 +317,56 @@ func _refresh_aim_visual() -> void:
 	# Guc arttikca kilavuz hem uzar hem beyaza dogru parlar.
 	_guide.set_guide(_build_guide_dots(), accent.lerp(accent_core, _power_ratio * 0.5))
 	_set_tip_power(_power_ratio)
+	_check_max_power_pulse()
 
 
 ## Namlu ucundaki vurgu, sürükleme gucuyle birlikte buyuyup parlayarak
 ## yon + guc geri bildirimini firlaticinin uzerinde de belirginlestirir.
+## Maksimum-guc titresimi calisirken (bkz. _play_max_power_pulse) devreye
+## girmez; yoksa her karede cagrilan bu fonksiyon tweeni ezerdi.
 func _set_tip_power(power_ratio: float) -> void:
 	if _barrel_tip == null:
 		return
+	if _max_power_tween != null and _max_power_tween.is_valid():
+		return
 	_barrel_tip.scale = Vector2.ONE * lerpf(1.0, tip_power_scale, power_ratio)
 	_barrel_tip.color = Color(accent.lerp(accent_core, power_ratio * 0.4), lerpf(0.75, 1.0, power_ratio))
+
+
+## Guc maksimuma ULASTIGI ANDA (surekli degil, bir kereligine) kucuk,
+## kontrollu bir vurgu oynatir.
+func _check_max_power_pulse() -> void:
+	var at_max := _power_ratio >= MAX_POWER_THRESHOLD
+	if at_max and not _was_at_max_power:
+		_play_max_power_pulse()
+	_was_at_max_power = at_max
+
+
+func _play_max_power_pulse() -> void:
+	if _barrel_tip == null:
+		return
+	if _max_power_tween != null and _max_power_tween.is_valid():
+		_max_power_tween.kill()
+	_max_power_tween = create_tween()
+	_max_power_tween.tween_property(
+			_barrel_tip, "scale", Vector2.ONE * max_power_pulse_scale, max_power_pulse_time * 0.3) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# Tweenin son degeri _set_tip_power'in bu guc oraninda uretecegi degerle
+	# aynidir; kontrol devri sirasinda gorsel sicrama olmaz.
+	_max_power_tween.tween_property(
+			_barrel_tip, "scale", Vector2.ONE * tip_power_scale, max_power_pulse_time * 0.7) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## Atis birakildiginda namlunun yaptigi cok kisa, hafif geri tepme.
+func _play_recoil() -> void:
+	if _recoil_tween != null and _recoil_tween.is_valid():
+		_recoil_tween.kill()
+	_barrel.position = -_direction * recoil_distance
+	_recoil_tween = create_tween()
+	_recoil_tween.tween_interval(recoil_out_time)
+	_recoil_tween.tween_property(_barrel, "position", Vector2.ZERO, recoil_return_time) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 ## Mat, sessiz bir kaide: koyu yuzey + ince kenar.

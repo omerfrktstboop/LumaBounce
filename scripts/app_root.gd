@@ -5,11 +5,17 @@ extends Node
 ##
 ## MIMARI KURAL: ekranlar birbirini asla instantiate etmez. Her ekran yalnizca
 ## sinyal yayar, tum gecis ve ilerleme kararlari burada verilir. Ekranlara
-## ihtiyac duyduklari veri (bolum, ilerleme) add_child'dan ONCE enjekte edilir,
-## boylece _ready icinde hazir olur.
+## ihtiyac duyduklari veri (bolum, ilerleme, playtest istatistikleri) add_child'dan
+## ONCE enjekte edilir, boylece _ready icinde hazir olur.
 ##
 ## Ekranlar ScreenHost altina tek tek yuklenir; her gecis kisa bir fade ile
 ## ortulur. Fade rengi saf siyah degil, paletin en koyu murekkep tonudur.
+##
+## Uygulama arka plana gecince (odak kaybi / OS duraklatmasi) tum sahne
+## agacini duraklatir: bu hem "guvenli duraklama" hem de "topun ani fizik
+## sicramasi" sorununu tek mekanizmayla cozer - fizik/animasyon islenmedigi
+## icin geri donuste birikmis bir "yakalama" adimi olmaz, kaldigi yerden
+## normal bir fizik adimiyla devam eder.
 
 @export var splash_scene: PackedScene
 @export var main_menu_scene: PackedScene
@@ -20,14 +26,27 @@ extends Node
 
 @onready var _host: Node = $ScreenHost
 @onready var _fade: ColorRect = $FadeLayer/Fade
+@onready var _debug_panel: DebugPanel = $DebugLayer/DebugPanel
 
 var _progress: ProgressStore
+var _playtest_stats: PlaytestStats
+## Debug paneli disinda hicbir yerde okunmaz; gercek save'e asla yazilmaz.
+var _debug_unlock_all := false
 var _current: Node
+## Son go_to_level cagrisinda istenen bolum. Debug onceki/sonraki/tekrar
+## butonlari icin tutulur.
+var _current_level_id := LevelLibrary.FIRST_LEVEL_ID
 var _busy := false
 
 
 func _ready() -> void:
+	# process_mode = ALWAYS (sahnede ayarli): uygulama arka plana alinsa/odagi
+	# kaybetse bile bu dugum calismaya devam etmeli ki duraklatma/devam
+	# bildirimlerini kacirmasin.
 	_progress = ProgressStore.load_from_disk()
+	_playtest_stats = PlaytestStats.load_from_disk()
+	_connect_debug_panel()
+
 	# Ilk ekran bilerek fade'siz acilir: splash'in kendi top-dususu zaten
 	# acilis animasyonudur, onune bir fade koymak sekme anini gizlerdi.
 	# Fade yalnizca ekranlar ARASI gecislerde kullanilir.
@@ -45,11 +64,26 @@ func _input(_event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 
 
-## Telefonun geri tusu. project.godot'ta quit_on_go_back kapali oldugu icin
-## uygulama kendiliginden kapanmaz; hiyerarside bir adim geri gideriz.
+## Telefonun geri tusu VE uygulama odak/arka plan bildirimleri.
+## quit_on_go_back kapali oldugu icin geri tusunda uygulama kendiliginden
+## kapanmaz; hiyerarside bir adim geri gideriz.
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_GO_BACK_REQUEST:
-		_handle_go_back()
+	match what:
+		NOTIFICATION_WM_GO_BACK_REQUEST:
+			_handle_go_back()
+		NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_APPLICATION_PAUSED:
+			_set_application_paused(true)
+		NOTIFICATION_APPLICATION_FOCUS_IN, NOTIFICATION_APPLICATION_RESUMED:
+			_set_application_paused(false)
+
+
+func _set_application_paused(paused: bool) -> void:
+	if get_tree().paused == paused:
+		return
+	var gameplay := _current as Gameplay
+	if gameplay != null:
+		gameplay.set_app_paused(paused)
+	get_tree().paused = paused
 
 
 # --- Ekran gecisleri ---------------------------------------------------------
@@ -63,7 +97,8 @@ func go_to_level_select() -> void:
 
 
 func go_to_level(level_id: int) -> void:
-	await _transition(gameplay_scene, _configure_gameplay.bind(level_id))
+	_current_level_id = LevelLibrary.clamp_id(level_id)
+	await _transition(gameplay_scene, _configure_gameplay.bind(_current_level_id))
 
 
 func _transition(scene: PackedScene, configure: Callable) -> void:
@@ -107,6 +142,9 @@ func _swap_to(scene: PackedScene, configure := Callable()) -> void:
 	_host.add_child(instance)
 	_current = instance
 
+	if _debug_panel != null and is_instance_valid(_debug_panel) and not _debug_panel.is_queued_for_deletion():
+		_debug_panel.set_active_gameplay(instance as Gameplay)
+
 
 # --- Ekran kurulumu ----------------------------------------------------------
 
@@ -146,12 +184,14 @@ func _configure_level_select(screen: Node) -> void:
 	var select := screen as LevelSelect
 	if select != null:
 		select.progress = _progress
+		select.debug_force_unlock = _debug_unlock_all
 
 
 func _configure_gameplay(screen: Node, level_id: int) -> void:
 	var gameplay := screen as Gameplay
 	if gameplay != null:
 		gameplay.level_data = LevelLibrary.load_level(level_id)
+		gameplay.playtest_stats = _playtest_stats
 
 
 func _on_level_completed(level_id: int) -> void:
@@ -181,3 +221,49 @@ func _handle_go_back() -> void:
 
 	# Ana menude geri tusu uygulamadan cikar.
 	get_tree().quit()
+
+
+# --- Debug paneli -------------------------------------------------------------
+#
+# Panel sadece debug build'de var olur (bkz. debug_panel.gd _ready). Release
+# export'ta $DebugLayer/DebugPanel kendini agactan kaldirdigi icin bu
+# baglantilar kurulamaz ama zararsizdir; _debug_panel null/gecersiz kalir.
+
+func _connect_debug_panel() -> void:
+	if _debug_panel == null or not is_instance_valid(_debug_panel) or _debug_panel.is_queued_for_deletion():
+		return
+	_debug_panel.previous_level_requested.connect(_on_debug_previous_level)
+	_debug_panel.next_level_requested.connect(_on_debug_next_level)
+	_debug_panel.restart_level_requested.connect(_on_debug_restart_level)
+	_debug_panel.unlock_all_toggled.connect(_on_debug_unlock_all_toggled)
+	_debug_panel.reset_stats_requested.connect(_on_debug_reset_stats)
+
+
+func _on_debug_previous_level() -> void:
+	if _current is Gameplay:
+		go_to_level(_current_level_id - 1)
+
+
+func _on_debug_next_level() -> void:
+	if _current is Gameplay:
+		go_to_level(_current_level_id + 1)
+
+
+func _on_debug_restart_level() -> void:
+	var gameplay := _current as Gameplay
+	if gameplay != null:
+		gameplay.reset_shot()
+
+
+## Yalnizca oturum-ici bir bayrak degistirir; ProgressStore'a hic dokunmaz,
+## bu yuzden gercek save dosyasi kalici olarak etkilenmez.
+func _on_debug_unlock_all_toggled(enabled: bool) -> void:
+	_debug_unlock_all = enabled
+	var select := _current as LevelSelect
+	if select != null:
+		select.set_debug_force_unlock(enabled)
+
+
+func _on_debug_reset_stats() -> void:
+	if _playtest_stats != null:
+		_playtest_stats.reset_all()

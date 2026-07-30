@@ -17,6 +17,9 @@ signal menu_requested()
 
 ## AppRoot tarafindan add_child'dan ONCE atanir.
 var progress: ProgressStore
+## Yalnizca debug paneli tarafindan kullanilir. true iken gercek save
+## dosyasina HICBIR SEKILDE dokunmadan tum bolumleri secilebilir gosterir.
+var debug_force_unlock := false
 
 @onready var _grid: GridContainer = $SafeArea/Content/GridHolder/Grid
 @onready var _back_button: LumaButton = $SafeArea/Content/BackButton
@@ -30,6 +33,15 @@ func _ready() -> void:
 	_back_button.pressed.connect(menu_requested.emit)
 
 
+## Debug panelinden calisma zamaninda cagrilir; ekran zaten acikken
+## butonlarin kilit durumunu aninda yeniler. Baslangic enjeksiyonu icin
+## debug_force_unlock alanini dogrudan atamak yeterlidir (bkz. AppRoot).
+func set_debug_force_unlock(enabled: bool) -> void:
+	debug_force_unlock = enabled
+	if is_node_ready():
+		_build_buttons()
+
+
 func _build_buttons() -> void:
 	for child in _grid.get_children():
 		_grid.remove_child(child)
@@ -40,7 +52,7 @@ func _build_buttons() -> void:
 
 
 func _make_level_button(level_id: int) -> LumaButton:
-	var unlocked := progress.is_unlocked(level_id)
+	var unlocked := progress.is_unlocked(level_id) or debug_force_unlock
 	var completed := progress.is_completed(level_id)
 
 	var button := LumaButton.new()
@@ -79,6 +91,6 @@ func _make_check_mark() -> GlyphIcon:
 
 
 func _on_level_pressed(level_id: int) -> void:
-	if not progress.is_unlocked(level_id):
+	if not progress.is_unlocked(level_id) and not debug_force_unlock:
 		return
 	level_selected.emit(level_id)

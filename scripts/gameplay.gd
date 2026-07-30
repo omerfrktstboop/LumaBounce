@@ -40,8 +40,19 @@ signal menu_requested()
 @export var spark_count := 5
 @export var spark_length := 24.0
 
+@export_group("Ekran Titresimi")
+## Panele carpma titresiminin carpani (gercek deger carpma hizina gore olceklenir).
+@export_range(0.0, 1.0, 0.01) var bounce_shake_trauma := 0.4
+@export_range(0.0, 1.0, 0.01) var target_hit_shake_trauma := 0.75
+## Hedefe vurulunca (destekleyen cihazlarda) kisa bir titresim; Android/iOS
+## disinda ve destegi olmayan cihazlarda Godot bunu sessizce yok sayar.
+@export var target_hit_haptic_msec := 80
+
 ## AppRoot tarafindan add_child'dan ONCE atanir.
 var level_data: LevelData
+## AppRoot tarafindan add_child'dan ONCE atanir; debug build disinda tum
+## kayit cagrilari sessizce hicbir sey yapmaz (bkz. PlaytestStats).
+var playtest_stats: PlaytestStats
 
 @onready var _arena: Arena = $Arena
 @onready var _panels: Node2D = $Panels
@@ -49,12 +60,13 @@ var level_data: LevelData
 @onready var _ball: Ball = $Ball
 @onready var _target: Target = $Target
 @onready var _effects: Node2D = $Effects
-@onready var _message: Label = $HUD/Root/Message
-@onready var _tutorial: Label = $HUD/Root/TutorialLabel
-@onready var _retry_button: Button = $HUD/Root/RetryButton
-@onready var _home_button: Button = $HUD/Root/HomeButton
-@onready var _lives_display: LivesDisplay = $HUD/Root/LivesDisplay
-@onready var _result_panel: ResultPanel = $HUD/Root/ResultPanel
+@onready var _shake: ScreenShake = $ShakeCamera
+@onready var _message: Label = $HUD/SafeArea/Root/Message
+@onready var _tutorial: Label = $HUD/SafeArea/Root/TutorialLabel
+@onready var _retry_button: Button = $HUD/SafeArea/Root/RetryButton
+@onready var _home_button: Button = $HUD/SafeArea/Root/HomeButton
+@onready var _lives_display: LivesDisplay = $HUD/SafeArea/Root/LivesDisplay
+@onready var _result_panel: ResultPanel = $HUD/ResultPanel
 
 var _message_tween: Tween
 var _retry_pulse_tween: Tween
@@ -67,14 +79,46 @@ var _shot_token := 0
 ## Nisan almayi engellemesi gereken HUD ogeleri.
 var _input_blockers: Array[Control] = []
 
+# --- Debug/playtest durumu ---------------------------------------------------
+#
+# Bu alanlar SADECE gozlem icindir (debug paneli okur, oynanis mantigi
+# bunlara gore dallanmaz); bu yuzden oynanis kodunun geri kalanindan
+# ayri, kendi bolumunde tutulur.
+
+## reset_shot() ilk kez mi (giris) yoksa tekrar mi (restart) cagriliyor.
+var _has_started := false
+var _shots_this_attempt := 0
+var _attempt_active_start_msec := 0
+var _attempt_elapsed_seconds := 0.0
+var _level_active_start_msec := 0
+var _level_elapsed_seconds := 0.0
+var _playtest_timing_paused := false
+var _last_shot_power := 0.0
+var _last_shot_angle_deg := 0.0
+var _last_failure_reason := "-"
+var _active_touch_index := -1
+var _touch_indices: Array[int] = []
+var _suppress_touch_until_release := false
+
 
 func _ready() -> void:
 	_apply_level()
 	_sync_tuning()
 	_connect_signals()
+	_position_shake_camera()
 	_input_blockers.append(_retry_button)
 	_input_blockers.append(_home_button)
+	_start_playtest_timing()
+	if playtest_stats != null:
+		playtest_stats.record_entry(level_data.level_id)
 	reset_shot()
+
+
+func _exit_tree() -> void:
+	if playtest_stats == null or level_data == null:
+		return
+	_flush_playtest_time()
+	playtest_stats.add_time_spent(level_data.level_id, _level_elapsed_seconds)
 
 
 # --- Bolum kurulumu ----------------------------------------------------------
@@ -134,6 +178,13 @@ func _sync_tuning() -> void:
 	_ball.play_bounds = _arena.get_play_rect()
 
 
+## Kamerayi tam oyun alaninin ortasina koyar; boylece dinlenme halinde
+## (offset sifirken) kamerasiz onceki gorunumle birebir ayni kare cizilir -
+## sadece carpma/kazanma anlarindaki hafif sarsinti icin var.
+func _position_shake_camera() -> void:
+	_shake.position = _arena.get_play_rect().get_center()
+
+
 func _connect_signals() -> void:
 	_launcher.shot_fired.connect(_on_shot_fired)
 	_ball.bounced.connect(_on_ball_bounced)
@@ -150,10 +201,25 @@ func _connect_signals() -> void:
 
 ## Bolumu bastan baslatir: haklar dolar, top ve hedef sifirlanir.
 func reset_shot() -> void:
+	if _has_started and playtest_stats != null:
+		playtest_stats.record_restart(level_data.level_id)
+	_has_started = true
+	_shots_this_attempt = 0
+	_reset_attempt_timer()
+
 	_lives_remaining = _max_lives
 	_update_lives_hud()
 	_result_panel.hide_result()
 	_respawn_ball()
+
+
+## AppRoot arka plan / geri donus bildirimlerinde cagirir. Oyun agaci
+## duraklatildigi icin fizik zaten ilerlemez; burada yalnizca playtest
+## kronometresini ve yarim kalmis dokunma durumunu guvenli hale getiririz.
+func set_app_paused(paused: bool) -> void:
+	_set_playtest_timing_paused(paused)
+	if paused:
+		_cancel_pointer_state()
 
 
 ## Sadece topu ve hedefi baslangic durumuna dondurur; top hakkina dokunmaz.
@@ -172,10 +238,21 @@ func _on_shot_fired(impulse: Vector2) -> void:
 	# Ayni anda yalnizca bir top aktif olabilir.
 	if not _ball.is_ready_to_launch():
 		return
+
+	_shots_this_attempt += 1
+	_last_shot_power = impulse.length()
+	_last_shot_angle_deg = rad_to_deg(Vector2.UP.angle_to(impulse.normalized()))
+	if playtest_stats != null:
+		playtest_stats.record_shot(level_data.level_id)
+
 	_ball.launch(impulse)
 
 
-func _on_shot_failed(_reason: String) -> void:
+func _on_shot_failed(reason: String) -> void:
+	_last_failure_reason = reason
+	if playtest_stats != null:
+		playtest_stats.record_failure(level_data.level_id, reason)
+
 	_launcher.enabled = false
 	_lives_remaining = maxi(_lives_remaining - 1, 0)
 	_update_lives_hud()
@@ -205,6 +282,13 @@ func _on_target_hit(_body: Node2D) -> void:
 	SparkBurst.burst(
 		_effects, _target.global_position, Vector2.UP, 1.0,
 		Palette.ACCENT_ALT, Palette.ACCENT_ALT_CORE, 12, 74.0, 350.0)
+	_shake.add_trauma(target_hit_shake_trauma)
+	Input.vibrate_handheld(target_hit_haptic_msec)
+
+	if playtest_stats != null:
+		var elapsed := _current_attempt_seconds()
+		playtest_stats.record_completion(level_data.level_id, _shots_this_attempt, elapsed)
+
 	level_completed.emit(level_data.level_id)
 	_open_result_panel()
 
@@ -238,6 +322,7 @@ func _on_ball_bounced(at: Vector2, normal: Vector2, impact_speed: float) -> void
 	SparkBurst.burst(
 		_effects, at, normal, strength,
 		Palette.ACCENT, Palette.ACCENT_CORE, spark_count, spark_length)
+	_shake.add_trauma(strength * bounce_shake_trauma)
 
 
 func _clear_effects() -> void:
@@ -255,10 +340,7 @@ func _clear_effects() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	var touch := event as InputEventScreenTouch
 	if touch != null:
-		if touch.pressed:
-			_pointer_pressed(touch.position)
-		else:
-			_pointer_released()
+		_handle_touch_input(touch)
 		return
 
 	var drag := event as InputEventScreenDrag
@@ -278,6 +360,39 @@ func _unhandled_input(event: InputEvent) -> void:
 	var motion := event as InputEventMouseMotion
 	if motion != null:
 		_pointer_moved(motion.position)
+
+
+func _handle_touch_input(touch: InputEventScreenTouch) -> void:
+	if touch.pressed:
+		if not _touch_indices.has(touch.index):
+			_touch_indices.append(touch.index)
+		if _touch_indices.size() > 1:
+			_suppress_touch_until_release = true
+			_active_touch_index = -1
+			_launcher.cancel_aim()
+			return
+		if _suppress_touch_until_release:
+			return
+		_active_touch_index = touch.index
+		_pointer_pressed(touch.position)
+		return
+
+	_touch_indices.erase(touch.index)
+	if _suppress_touch_until_release:
+		if _touch_indices.is_empty():
+			_suppress_touch_until_release = false
+		return
+	if touch.index != _active_touch_index:
+		return
+	_active_touch_index = -1
+	_pointer_released()
+
+
+func _cancel_pointer_state() -> void:
+	_touch_indices.clear()
+	_active_touch_index = -1
+	_suppress_touch_until_release = false
+	_launcher.cancel_aim()
 
 
 func _pointer_pressed(viewport_position: Vector2) -> void:
@@ -346,3 +461,70 @@ func _stop_retry_pulse() -> void:
 	if _retry_pulse_tween != null and _retry_pulse_tween.is_valid():
 		_retry_pulse_tween.kill()
 	_retry_button.scale = Vector2.ONE
+
+
+# --- Debug -------------------------------------------------------------------
+#
+# Bu tek metod disinda gameplay.gd, debug panelinin var olup olmadigini
+# hic bilmez - panel sadece asagidaki anlik durumu okur.
+
+func get_debug_snapshot() -> Dictionary:
+	var stats := {}
+	if playtest_stats != null and level_data != null:
+		stats = playtest_stats.get_entry_snapshot(level_data.level_id)
+	return {
+		"level_id": level_data.level_id if level_data != null else 0,
+		"lives_remaining": _lives_remaining,
+		"max_lives": _max_lives,
+		"ball_speed": _ball.velocity.length(),
+		"last_shot_power": _last_shot_power,
+		"last_shot_angle_deg": _last_shot_angle_deg,
+		"last_failure_reason": _last_failure_reason,
+		"stats": stats,
+	}
+
+
+# --- Playtest zamanlamasi -----------------------------------------------------
+
+func _start_playtest_timing() -> void:
+	var now := Time.get_ticks_msec()
+	_level_elapsed_seconds = 0.0
+	_attempt_elapsed_seconds = 0.0
+	_level_active_start_msec = now
+	_attempt_active_start_msec = now
+	_playtest_timing_paused = false
+
+
+func _reset_attempt_timer() -> void:
+	_attempt_elapsed_seconds = 0.0
+	_attempt_active_start_msec = Time.get_ticks_msec()
+
+
+func _set_playtest_timing_paused(paused: bool) -> void:
+	if paused == _playtest_timing_paused:
+		return
+	if paused:
+		_flush_playtest_time()
+		_playtest_timing_paused = true
+		return
+	var now := Time.get_ticks_msec()
+	_level_active_start_msec = now
+	_attempt_active_start_msec = now
+	_playtest_timing_paused = false
+
+
+func _flush_playtest_time() -> void:
+	if _playtest_timing_paused:
+		return
+	var now := Time.get_ticks_msec()
+	_level_elapsed_seconds += maxf((now - _level_active_start_msec) / 1000.0, 0.0)
+	_attempt_elapsed_seconds += maxf((now - _attempt_active_start_msec) / 1000.0, 0.0)
+	_level_active_start_msec = now
+	_attempt_active_start_msec = now
+
+
+func _current_attempt_seconds() -> float:
+	var elapsed := _attempt_elapsed_seconds
+	if not _playtest_timing_paused:
+		elapsed += maxf((Time.get_ticks_msec() - _attempt_active_start_msec) / 1000.0, 0.0)
+	return elapsed
