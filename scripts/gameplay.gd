@@ -265,7 +265,7 @@ func _on_shot_failed(reason: String) -> void:
 	# token'i ilerletir; sure doldugunda token degismisse bu zamanlayici
 	# artik gecersizdir ve yeni (manuel baslatilmis) atisi ezmeden iptal olur.
 	var token := _shot_token
-	await get_tree().create_timer(auto_reset_delay).timeout
+	await get_tree().create_timer(auto_reset_delay, false).timeout
 	if token != _shot_token:
 		return
 	_respawn_ball()
@@ -295,7 +295,7 @@ func _on_target_hit(_body: Node2D) -> void:
 
 func _open_result_panel() -> void:
 	var token := _shot_token
-	await get_tree().create_timer(result_delay).timeout
+	await get_tree().create_timer(result_delay, false).timeout
 	# Bu arada yeniden baslatildiysa karti acma.
 	if token != _shot_token or not is_inside_tree():
 		return
