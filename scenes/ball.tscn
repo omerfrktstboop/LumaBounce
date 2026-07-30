@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ball.gd" id="1_ball"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ball"]
+radius = 24.0
+
+[node name="Ball" type="CharacterBody2D" groups=["ball"]]
+collision_layer = 2
+collision_mask = 1
+motion_mode = 1
+script = ExtResource("1_ball")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_ball")
+
+[node name="Trail" type="Line2D" parent="."]
+top_level = true
+z_as_relative = false
+z_index = 5
+points = PackedVector2Array()
+
+[node name="Visual" type="Node2D" parent="."]
