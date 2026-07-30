@@ -16,7 +16,7 @@ extends StaticBody2D
 		length = maxf(value, 1.0)
 		if is_node_ready():
 			_rebuild()
-@export var thickness := 22.0:
+@export var thickness := 27.0:
 	set(value):
 		thickness = maxf(value, 2.0)
 		if is_node_ready():
@@ -26,7 +26,9 @@ extends StaticBody2D
 @export var surface_color := Palette.SURFACE
 @export var edge_color := Palette.SURFACE_EDGE
 @export var top_light_color := Palette.SURFACE_LIGHT
-@export var outline_width := 2.0
+## Zeminden ayrisip okunakli olmasi icin kontur belirgin tutulur (neon degil).
+@export var outline_width := 3.2
+@export_range(0.0, 1.0, 0.01) var top_light_alpha := 0.6
 
 @onready var _shape: CollisionShape2D = $Shape
 @onready var _visual: Node2D = $Visual
@@ -63,9 +65,9 @@ func _build_visual() -> void:
 	# Ince kontur - derinlik hissini bu veriyor.
 	_visual.add_child(ShapeBuilder.make_outline(body_points, edge_color, outline_width))
 
-	# Ust kenarda cok hafif isik tanimi.
+	# Ust kenarda guclendirilmis isik tanimi - okunabilirligi bu artirir.
 	var top_light := ShapeBuilder.make_polygon(
-		ShapeBuilder.stadium(length - thickness * 1.4, thickness * 0.16),
-		Color(top_light_color, 0.35))
-	top_light.position = Vector2(0.0, -thickness * 0.26)
+		ShapeBuilder.stadium(length - thickness * 1.4, thickness * 0.22),
+		Color(top_light_color, top_light_alpha))
+	top_light.position = Vector2(0.0, -thickness * 0.27)
 	_visual.add_child(top_light)

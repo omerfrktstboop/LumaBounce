@@ -21,10 +21,11 @@ signal hit(body: Node2D)
 ## Isabet ve basari icin ikincil vurgu.
 @export var success_color := Palette.ACCENT_ALT
 @export var outline_width := 3.5
-@export var glow_scale := 2.0
+## Buton degil, havada duran net bir hedef hissi icin hale kucuk ve yumusak tutulur.
+@export var glow_scale := 1.6
 
 @export_group("Animasyon")
-@export var idle_scale := 1.06
+@export var idle_scale := 1.045
 @export var idle_time := 2.2
 @export var hit_scale := 1.45
 @export var hit_time := 0.45
@@ -111,9 +112,9 @@ func _build_visual() -> void:
 	_glow_group = Node2D.new()
 	_glow_group.name = "Glow"
 	_visual.add_child(_glow_group)
-	_glow_group.add_child(_make_square(glow_scale, Color(accent, 0.045)))
-	_glow_group.add_child(_make_square(glow_scale * 0.76, Color(accent, 0.075)))
-	_glow_group.add_child(_make_square(glow_scale * 0.58, Color(accent, 0.12)))
+	_glow_group.add_child(_make_square(glow_scale, Color(accent, 0.03)))
+	_glow_group.add_child(_make_square(glow_scale * 0.76, Color(accent, 0.05)))
+	_glow_group.add_child(_make_square(glow_scale * 0.58, Color(accent, 0.085)))
 
 	# 2) Buzlu cam dolgusu + net neon kontur.
 	_visual.add_child(_make_square(1.0, Color(accent, 0.14)))

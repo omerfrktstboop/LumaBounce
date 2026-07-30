@@ -13,6 +13,16 @@ const OBSTACLE_LAYER := 1
 @export var play_size := Vector2(720.0, 1280.0)
 @export var wall_thickness := 80.0
 
+@export_group("Yan Duvar Segmentleri")
+## Her Vector2(baslangic_y, bitis_y) bir DUVAR segmentidir; aralarda kalan
+## bosluklardan topun ekran disina cikmasi (sol/sag) mumkun olur. Alt kenar
+## zaten tamamen aciktir (hicbir segment onu kapatmaz).
+@export var wall_segments_y: Array[Vector2] = [
+	Vector2(-320.0, 260.0),
+	Vector2(460.0, 760.0),
+	Vector2(960.0, 1440.0),
+]
+
 @export_group("Renkler")
 @export var ink_top := Palette.INK_TOP
 @export var ink_mid := Palette.INK_MID
@@ -61,18 +71,35 @@ func _build_background() -> void:
 	add_child(sky)
 
 
-## Alt kenar cizilmez: orasi acik.
+## Alt kenar hicbir zaman cizilmez. Sol/sag kenarlar, fizik duvarlariyla
+## birebir eslesecek sekilde segment segment cizilir; boslukta cizgi de yoktur
+## - oyuncu acigin nerede oldugunu gorsel olarak da anlar.
 func _build_frame() -> void:
-	var outline := PackedVector2Array([
-		Vector2(0.0, play_size.y),
-		Vector2.ZERO,
-		Vector2(play_size.x, 0.0),
-		Vector2(play_size.x, play_size.y),
-	])
+	var top_points := PackedVector2Array([Vector2(0.0, 0.0), Vector2(play_size.x, 0.0)])
 	add_child(_make_frame_line(
-		"FrameSoft", outline, Color(frame_color, frame_soft_alpha), frame_soft_width, -60))
+		"FrameTopSoft", top_points, Color(frame_color, frame_soft_alpha), frame_soft_width, -60))
 	add_child(_make_frame_line(
-		"FrameLine", outline, frame_edge_color, frame_line_width, -50))
+		"FrameTopLine", top_points, frame_edge_color, frame_line_width, -50))
+
+	for i in wall_segments_y.size():
+		var segment: Vector2 = wall_segments_y[i]
+		var y_start := clampf(segment.x, 0.0, play_size.y)
+		var y_end := clampf(segment.y, 0.0, play_size.y)
+		if y_end - y_start < 1.0:
+			continue
+
+		var left_points := PackedVector2Array([Vector2(0.0, y_start), Vector2(0.0, y_end)])
+		var right_points := PackedVector2Array(
+			[Vector2(play_size.x, y_start), Vector2(play_size.x, y_end)])
+
+		add_child(_make_frame_line("FrameLeftSoft%d" % i,
+			left_points, Color(frame_color, frame_soft_alpha), frame_soft_width, -60))
+		add_child(_make_frame_line("FrameLeftLine%d" % i,
+			left_points, frame_edge_color, frame_line_width, -50))
+		add_child(_make_frame_line("FrameRightSoft%d" % i,
+			right_points, Color(frame_color, frame_soft_alpha), frame_soft_width, -60))
+		add_child(_make_frame_line("FrameRightLine%d" % i,
+			right_points, frame_edge_color, frame_line_width, -50))
 
 
 func _make_frame_line(line_name: String, points: PackedVector2Array,
@@ -92,17 +119,24 @@ func _make_frame_line(line_name: String, points: PackedVector2Array,
 
 # --- Fizik -------------------------------------------------------------------
 
+## Sol/sag duvarlar artik tek parca degil; wall_segments_y'deki her aralik
+## icin ayri bir StaticBody2D uretilir. Segmentler arasindaki bosluklarda
+## hicbir collision shape olmadigi icin top gercekten disari cikabilir.
 func _build_walls() -> void:
 	var walls := Node2D.new()
 	walls.name = "Walls"
 	add_child(walls)
 
-	var tall := play_size.y + wall_thickness * 4.0
+	for i in wall_segments_y.size():
+		var segment: Vector2 = wall_segments_y[i]
+		var height := segment.y - segment.x
+		var center_y := (segment.x + segment.y) * 0.5
+		_add_wall(walls, "WallLeft%d" % i,
+			Vector2(-wall_thickness * 0.5, center_y), Vector2(wall_thickness, height))
+		_add_wall(walls, "WallRight%d" % i,
+			Vector2(play_size.x + wall_thickness * 0.5, center_y), Vector2(wall_thickness, height))
+
 	var wide := play_size.x + wall_thickness * 4.0
-	_add_wall(walls, "WallLeft",
-		Vector2(-wall_thickness * 0.5, play_size.y * 0.5), Vector2(wall_thickness, tall))
-	_add_wall(walls, "WallRight",
-		Vector2(play_size.x + wall_thickness * 0.5, play_size.y * 0.5), Vector2(wall_thickness, tall))
 	_add_wall(walls, "WallTop",
 		Vector2(play_size.x * 0.5, -wall_thickness * 0.5), Vector2(wide, wall_thickness))
 

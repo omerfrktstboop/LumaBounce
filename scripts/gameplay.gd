@@ -8,9 +8,14 @@ extends Node2D
 ## Fizik ball.gd'de, nisan hesabi launcher.gd'de, hedef efektleri target.gd'de.
 
 @export var success_message := "HEDEF VURULDU!"
-## Basarisiz atistan sonra otomatik sifirlama gecikmesi.
+## Basarisiz atistan sonra, hala hakki varsa otomatik sifirlama gecikmesi.
 @export var auto_reset_delay := 0.35
 @export var message_pop_time := 0.35
+
+@export_group("Top Hakki")
+## Bolume ait sinirli top hakki. Hak biterse otomatik sifirlama durur;
+## oyuncu "Yeniden Dene" ile bolumu tam olarak (haklar dahil) yeniden baslatir.
+@export var max_lives := 5
 
 @export_group("Carpma Efekti")
 ## Kivilcim siddetinin doygunluga ulastigi hiz.
@@ -25,8 +30,10 @@ extends Node2D
 @onready var _effects: Node2D = $Effects
 @onready var _message: Label = $HUD/Root/Message
 @onready var _retry_button: Button = $HUD/Root/RetryButton
+@onready var _lives_display: LivesDisplay = $HUD/Root/LivesDisplay
 
 var _message_tween: Tween
+var _lives_remaining := 0
 
 
 func _ready() -> void:
@@ -36,8 +43,10 @@ func _ready() -> void:
 
 
 func _sync_tuning() -> void:
-	# Nisan kilavuzu topun gercek yer cekimiyle ayni egriyi ciziyor olmali.
+	# Nisan kilavuzu topun gercek yer cekimi/sekme davranisiyla ayni egriyi
+	# ciziyor olmali, yoksa yuzeyden onceki durus/sekme noktasi tutmaz.
 	_launcher.preview_gravity = _ball.gravity
+	_launcher.preview_bounciness = _ball.bounciness
 	_ball.play_bounds = _arena.get_play_rect()
 
 
@@ -51,7 +60,16 @@ func _connect_signals() -> void:
 
 # --- Oyun dongusu ------------------------------------------------------------
 
+## Bolumu tam olarak yeniden baslatir: haklar dolar, top ve hedef sifirlanir.
 func reset_shot() -> void:
+	_lives_remaining = max_lives
+	_update_lives_hud()
+	_respawn_ball()
+
+
+## Sadece topu ve hedefi baslangic durumuna dondurur; top hakkina dokunmaz.
+## Basarisiz bir atistan sonra, hak varsa bu cagrilir.
+func _respawn_ball() -> void:
 	_launcher.cancel_aim()
 	_ball.reset_to(_launcher.get_spawn_position())
 	_target.reset()
@@ -69,8 +87,17 @@ func _on_shot_fired(impulse: Vector2) -> void:
 
 func _on_shot_failed(_reason: String) -> void:
 	_launcher.enabled = false
+	_lives_remaining = maxi(_lives_remaining - 1, 0)
+	_update_lives_hud()
+	if _lives_remaining <= 0:
+		# Hak bitti: artik otomatik sifirlama yok, oyuncu "Yeniden Dene"ye basmali.
+		return
 	await get_tree().create_timer(auto_reset_delay).timeout
-	reset_shot()
+	_respawn_ball()
+
+
+func _update_lives_hud() -> void:
+	_lives_display.set_lives(_lives_remaining, max_lives)
 
 
 func _on_target_hit(_body: Node2D) -> void:
