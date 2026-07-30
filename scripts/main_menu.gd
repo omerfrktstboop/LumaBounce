@@ -1,0 +1,76 @@
+class_name MainMenu
+extends Control
+
+## Ana menu.
+##
+## Yerlesim tamamen anchor tabanlidir ve [SafeAreaMargin] icinde durur;
+## boylece 720x1280 referansindan sapan ekran oranlarinda ve centikli
+## cihazlarda da dogru konumlanir.
+##
+## OYNA disindaki her sey henuz yok: BOLUMLER ve ayarlar sade bir "Yakinda"
+## geri bildirimi verir. Ses butonu master bus'i sessize alir (henuz ses
+## varligi yok, ama buton sahte degil - gercekten calisir).
+
+signal play_pressed()
+
+@export var coming_soon_text := "Yakında"
+@export var toast_visible_time := 1.2
+@export var toast_fade_in := 0.18
+@export var toast_fade_out := 0.32
+
+@onready var _logo: LumaLogo = $SafeArea/Content/Logo
+@onready var _play_button: LumaButton = $SafeArea/Content/PlayButton
+@onready var _levels_button: LumaButton = $SafeArea/Content/LevelsButton
+@onready var _sound_button: LumaIconButton = $SafeArea/Content/SoundButton
+@onready var _settings_button: LumaIconButton = $SafeArea/Content/SettingsButton
+@onready var _toast: Label = $SafeArea/Content/Toast
+
+var _toast_tween: Tween
+var _muted := false
+
+
+func _ready() -> void:
+	_toast.hide()
+	_toast.modulate.a = 0.0
+	_logo.show_revealed()
+	_refresh_sound_glyph()
+
+	_play_button.pressed.connect(_on_play_pressed)
+	_levels_button.pressed.connect(_on_coming_soon_pressed)
+	_settings_button.pressed.connect(_on_coming_soon_pressed)
+	_sound_button.pressed.connect(_on_sound_pressed)
+
+
+func _on_play_pressed() -> void:
+	play_pressed.emit()
+
+
+func _on_coming_soon_pressed() -> void:
+	_show_toast(coming_soon_text)
+
+
+func _on_sound_pressed() -> void:
+	_muted = not _muted
+	# 0 numarali bus her zaman Master'dir.
+	AudioServer.set_bus_mute(0, _muted)
+	_refresh_sound_glyph()
+
+
+func _refresh_sound_glyph() -> void:
+	_sound_button.glyph = GlyphIcon.Glyph.SOUND_OFF if _muted else GlyphIcon.Glyph.SOUND_ON
+
+
+## Kisa, sade bilgi mesaji. Ayri bir pencere/diyalog acmaz.
+func _show_toast(text: String) -> void:
+	if _toast_tween != null and _toast_tween.is_valid():
+		_toast_tween.kill()
+
+	_toast.text = text
+	_toast.modulate.a = 0.0
+	_toast.show()
+
+	_toast_tween = create_tween()
+	_toast_tween.tween_property(_toast, "modulate:a", 1.0, toast_fade_in)
+	_toast_tween.tween_interval(toast_visible_time)
+	_toast_tween.tween_property(_toast, "modulate:a", 0.0, toast_fade_out)
+	_toast_tween.tween_callback(_toast.hide)

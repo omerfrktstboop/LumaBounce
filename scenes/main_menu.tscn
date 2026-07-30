@@ -1,0 +1,151 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_main_menu"]
+[ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="2_ink"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="3_safe_area"]
+[ext_resource type="Script" path="res://scripts/ui/luma_logo.gd" id="4_logo"]
+[ext_resource type="Script" path="res://scripts/menu_decor.gd" id="5_decor"]
+[ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="6_button"]
+[ext_resource type="Script" path="res://scripts/ui/luma_icon_button.gd" id="7_icon_button"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_main_menu")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_ink")
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_safe_area")
+
+[node name="Content" type="Control" parent="SafeArea"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Logo" type="Control" parent="SafeArea/Content"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 56.0
+offset_bottom = 156.0
+grow_horizontal = 2
+mouse_filter = 2
+script = ExtResource("4_logo")
+
+[node name="Decor" type="Control" parent="SafeArea/Content"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.04
+anchor_top = 0.19
+anchor_right = 0.96
+anchor_bottom = 0.6
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("5_decor")
+
+[node name="PlayButton" type="Button" parent="SafeArea/Content"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -392.0
+offset_right = 200.0
+offset_bottom = -288.0
+grow_horizontal = 2
+grow_vertical = 0
+focus_mode = 0
+theme_override_font_sizes/font_size = 38
+text = "OYNA"
+script = ExtResource("6_button")
+emphasis = 0
+
+[node name="LevelsButton" type="Button" parent="SafeArea/Content"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -160.0
+offset_top = -262.0
+offset_right = 160.0
+offset_bottom = -186.0
+grow_horizontal = 2
+grow_vertical = 0
+focus_mode = 0
+theme_override_font_sizes/font_size = 27
+text = "BÖLÜMLER"
+script = ExtResource("6_button")
+
+[node name="Toast" type="Label" parent="SafeArea/Content"]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -166.0
+offset_bottom = -118.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.576471, 0.654902, 0.788235, 1)
+theme_override_font_sizes/font_size = 26
+text = "Yakında"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SoundButton" type="Button" parent="SafeArea/Content"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -84.0
+offset_right = 76.0
+offset_bottom = -16.0
+grow_vertical = 0
+focus_mode = 0
+script = ExtResource("7_icon_button")
+glyph = 0
+
+[node name="SettingsButton" type="Button" parent="SafeArea/Content"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -76.0
+offset_top = -84.0
+offset_right = -8.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 0
+focus_mode = 0
+script = ExtResource("7_icon_button")
+glyph = 2

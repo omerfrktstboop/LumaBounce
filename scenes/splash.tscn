@@ -1,0 +1,56 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/splash.gd" id="1_splash"]
+[ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="2_ink"]
+[ext_resource type="Script" path="res://scripts/ui/neon_orb.gd" id="3_orb"]
+[ext_resource type="Script" path="res://scripts/ui/luma_logo.gd" id="4_logo"]
+
+[node name="SplashScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_splash")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_ink")
+
+[node name="Stage" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Pivot" type="Node2D" parent="Stage"]
+
+[node name="FloorLine" type="Line2D" parent="Stage/Pivot"]
+points = PackedVector2Array()
+
+[node name="Orb" type="Node2D" parent="Stage/Pivot"]
+script = ExtResource("3_orb")
+
+[node name="Logo" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = 46.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("4_logo")
