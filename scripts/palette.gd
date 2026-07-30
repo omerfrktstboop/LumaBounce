@@ -20,6 +20,10 @@ const SURFACE := Color("2b3c5b")
 const SURFACE_EDGE := Color("3a4f76")
 const SURFACE_LIGHT := Color("4d6595")
 const FRAME := Color("31446a")
+## Sekme paneli govdesi: SURFACE'tan ~%10 daha acik. Panellerin zeminden
+## net ayrismasi icin ayri tutulur (SURFACE duvar/buton/firlaticida da
+## kullanildigi icin onu genel olarak aydinlatmak tum arayuzu degistirirdi).
+const SURFACE_PANEL := Color("40506b")
 
 # --- Birincil vurgu: neon camgobegi / teal ---
 const ACCENT := Color("34e6d4")

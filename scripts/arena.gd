@@ -29,16 +29,17 @@ const OBSTACLE_LAYER := 1
 	Vector2(960.0, 1440.0),
 ]
 
-@export_group("Renkler")
-@export var frame_color := Palette.FRAME
-@export var frame_edge_color := Palette.SURFACE_EDGE
-
-@export_group("Cerceve")
-## Kenari belirginlestiren cok soluk genis cizgi.
-@export var frame_soft_width := 26.0
-@export_range(0.0, 1.0, 0.01) var frame_soft_alpha := 0.22
-## Net, ince kenar cizgisi.
-@export var frame_line_width := 3.0
+@export_group("Kenar Yuzeyleri")
+## Duvarin collision yuzeyinden oyun alanina dogru uzandigi mat bant genisligi.
+@export_range(8.0, 24.0, 1.0) var wall_visual_width := 14.0
+## Bandin IC kenarindaki daha acik vurgu seridi.
+@export_range(1.0, 6.0, 0.5) var wall_highlight_width := 2.5
+## Segment uclarinin yuvarlatma yaricapi. Bosluklarin nerede basladigi
+## boylece ilk bakista okunur.
+@export var wall_cap_radius := 6.0
+@export var wall_surface_color := Palette.SURFACE
+@export var wall_highlight_color := Palette.SURFACE_LIGHT
+@export_range(0.0, 1.0, 0.01) var wall_highlight_alpha := 0.85
 
 
 func _ready() -> void:
@@ -72,47 +73,65 @@ func rebuild() -> void:
 # --- Gorunum -----------------------------------------------------------------
 
 ## Alt kenar hicbir zaman cizilmez. Sol/sag kenarlar, kendi fizik
-## duvarlariyla birebir eslesecek sekilde segment segment cizilir; boslukta
-## cizgi de yoktur - oyuncu acigin nerede oldugunu gorsel olarak da anlar.
+## duvarlariyla birebir ayni y araliginda cizilir; boslukta hicbir sey yoktur,
+## boylece oyuncu acigin tam olarak nerede oldugunu gorur.
+##
+## Bant collision yuzeyinden OYUN ALANINA DOGRU uzanir. aspect="expand"
+## dikey bosluk uretir, yatayda oyun alani ekran genisligini tam doldurur -
+## disari dogru cizilen bir bant telefonlarda gorunmezdi.
 func _build_frame() -> void:
-	var top_points := PackedVector2Array([Vector2(0.0, 0.0), Vector2(play_size.x, 0.0)])
-	add_child(_make_frame_line(
-		"FrameTopSoft", top_points, Color(frame_color, frame_soft_alpha), frame_soft_width, -60))
-	add_child(_make_frame_line(
-		"FrameTopLine", top_points, frame_edge_color, frame_line_width, -50))
-
-	_build_side_frame("Left", left_wall_segments_y, 0.0)
-	_build_side_frame("Right", right_wall_segments_y, play_size.x)
+	_build_side_surface("Left", left_wall_segments_y, 0.0, 1.0)
+	_build_side_surface("Right", right_wall_segments_y, play_size.x, -1.0)
+	_build_top_surface()
 
 
-func _build_side_frame(side_name: String, segments: Array[Vector2], x: float) -> void:
+## [param outer_x] collision yuzeyi, [param direction] oyun alanina dogru yon.
+func _build_side_surface(side_name: String, segments: Array[Vector2],
+		outer_x: float, direction: float) -> void:
 	for i in segments.size():
 		var segment: Vector2 = segments[i]
 		var y_start := clampf(segment.x, 0.0, play_size.y)
 		var y_end := clampf(segment.y, 0.0, play_size.y)
-		if y_end - y_start < 1.0:
+		var height := y_end - y_start
+		if height < 1.0:
 			continue
 
-		var points := PackedVector2Array([Vector2(x, y_start), Vector2(x, y_end)])
-		add_child(_make_frame_line("Frame%sSoft%d" % [side_name, i],
-			points, Color(frame_color, frame_soft_alpha), frame_soft_width, -60))
-		add_child(_make_frame_line("Frame%sLine%d" % [side_name, i],
-			points, frame_edge_color, frame_line_width, -50))
+		var center_y := (y_start + y_end) * 0.5
+		add_child(_make_wall_surface(
+			"Wall%sSurface%d" % [side_name, i],
+			Vector2(outer_x + direction * wall_visual_width * 0.5, center_y),
+			Vector2(wall_visual_width, height),
+			wall_surface_color))
+		add_child(_make_wall_surface(
+			"Wall%sHighlight%d" % [side_name, i],
+			Vector2(outer_x + direction * (wall_visual_width - wall_highlight_width * 0.5), center_y),
+			Vector2(wall_highlight_width, height),
+			Color(wall_highlight_color, wall_highlight_alpha)))
 
 
-func _make_frame_line(line_name: String, points: PackedVector2Array,
-		color: Color, width: float, z: int) -> Line2D:
-	var line := Line2D.new()
-	line.name = line_name
-	line.points = points
-	line.width = width
-	line.default_color = color
-	line.joint_mode = Line2D.LINE_JOINT_ROUND
-	line.begin_cap_mode = Line2D.LINE_CAP_ROUND
-	line.end_cap_mode = Line2D.LINE_CAP_ROUND
-	line.antialiased = true
-	line.z_index = z
-	return line
+## Tavan da ayni mat dille cizilir; yoksa kalin yan bantlarin yaninda
+## ince bir cizgi olarak yarim kalirdi.
+func _build_top_surface() -> void:
+	add_child(_make_wall_surface(
+		"WallTopSurface",
+		Vector2(play_size.x * 0.5, wall_visual_width * 0.5),
+		Vector2(play_size.x, wall_visual_width),
+		wall_surface_color))
+	add_child(_make_wall_surface(
+		"WallTopHighlight",
+		Vector2(play_size.x * 0.5, wall_visual_width - wall_highlight_width * 0.5),
+		Vector2(play_size.x, wall_highlight_width),
+		Color(wall_highlight_color, wall_highlight_alpha)))
+
+
+func _make_wall_surface(surface_name: String, center: Vector2, size: Vector2,
+		color: Color) -> Polygon2D:
+	var polygon := ShapeBuilder.make_polygon(
+		ShapeBuilder.rounded_rect(size, wall_cap_radius, 4), color)
+	polygon.name = surface_name
+	polygon.position = center
+	polygon.z_index = -50
+	return polygon
 
 
 # --- Fizik -------------------------------------------------------------------

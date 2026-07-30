@@ -123,6 +123,12 @@ func is_aiming() -> bool:
 	return _aiming
 
 
+## Surukleme minimum esigi gecti mi - yani su an birakilirsa gercek bir atis
+## olusur mu. Salt okunur; nisan hesabina veya fizige dokunmaz.
+func has_valid_aim() -> bool:
+	return _aiming and _drag_distance >= min_drag_distance
+
+
 func begin_aim(pointer_position: Vector2) -> void:
 	if not enabled or _aiming:
 		return

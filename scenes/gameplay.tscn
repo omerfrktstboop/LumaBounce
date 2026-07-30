@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay.gd" id="1_gameplay"]
 [ext_resource type="Script" path="res://scripts/arena.gd" id="2_arena"]
@@ -7,49 +7,12 @@
 [ext_resource type="PackedScene" path="res://scenes/launcher.tscn" id="5_launcher"]
 [ext_resource type="PackedScene" path="res://scenes/ball.tscn" id="6_ball"]
 [ext_resource type="Script" path="res://scripts/lives_display.gd" id="7_lives"]
-[ext_resource type="Script" path="res://scripts/restart_icon.gd" id="8_restart_icon"]
 [ext_resource type="Script" path="res://scripts/ui/luma_icon_button.gd" id="9_icon_button"]
 [ext_resource type="Script" path="res://scripts/ui/result_panel.gd" id="10_result_panel"]
 [ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="11_button"]
 [ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="12_safe_area"]
 [ext_resource type="Script" path="res://scripts/screen_shake.gd" id="13_screen_shake"]
 [ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="14_ink"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_retry_normal"]
-bg_color = Color(0.14902, 0.219608, 0.333333, 0.92)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.301961, 0.396078, 0.584314, 1)
-corner_radius_top_left = 30
-corner_radius_top_right = 30
-corner_radius_bottom_right = 30
-corner_radius_bottom_left = 30
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_retry_hover"]
-bg_color = Color(0.207843, 0.290196, 0.423529, 0.96)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.913725, 0.94902, 1, 0.9)
-corner_radius_top_left = 30
-corner_radius_top_right = 30
-corner_radius_bottom_right = 30
-corner_radius_bottom_left = 30
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_retry_pressed"]
-bg_color = Color(0.090196, 0.141176, 0.223529, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.913725, 0.94902, 1, 1)
-corner_radius_top_left = 30
-corner_radius_top_right = 30
-corner_radius_bottom_right = 30
-corner_radius_bottom_left = 30
 
 [node name="Gameplay" type="Node2D"]
 script = ExtResource("1_gameplay")
@@ -157,6 +120,34 @@ grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("7_lives")
 
+[node name="LevelHeader" type="VBoxContainer" parent="HUD/SafeArea/Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 76.0
+offset_right = -76.0
+offset_bottom = 76.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="LevelTitle" type="Label" parent="HUD/SafeArea/Root/LevelHeader"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "BÖLÜM 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LevelSubtitle" type="Label" parent="HUD/SafeArea/Root/LevelHeader"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.576471, 0.654902, 0.788235, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="HomeButton" type="Button" parent="HUD/SafeArea/Root"]
 layout_mode = 1
 anchors_preset = 0
@@ -166,7 +157,9 @@ offset_right = 60.0
 offset_bottom = 60.0
 focus_mode = 0
 script = ExtResource("9_icon_button")
+high_contrast = true
 glyph = 3
+idle_color = Color(0.913725, 0.94902, 1, 1)
 
 [node name="RetryButton" type="Button" parent="HUD/SafeArea/Root"]
 layout_mode = 1
@@ -179,23 +172,10 @@ offset_right = 0.0
 offset_bottom = 60.0
 grow_horizontal = 0
 focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxFlat_retry_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_retry_hover")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_retry_pressed")
-
-[node name="Icon" type="Control" parent="HUD/SafeArea/Root/RetryButton"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 12.0
-offset_top = 12.0
-offset_right = -12.0
-offset_bottom = -12.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("8_restart_icon")
+script = ExtResource("9_icon_button")
+high_contrast = true
+glyph = 5
+idle_color = Color(0.913725, 0.94902, 1, 1)
 
 [node name="ResultPanel" type="Control" parent="HUD"]
 visible = false

@@ -23,6 +23,10 @@ enum Emphasis {
 @export var corner_radius := 30
 ## true ise kose yaricapi boyuttan hesaplanir (tam yuvarlak ikon butonlari).
 @export var circular := false
+## Oynanis HUD'undaki ikon butonlari zeminin uzerinde tek baslarina durur ve
+## menu butonlarindan daha opak bir dolgu + daha aydinlik bir kenar ister,
+## yoksa arenanin uzerinde silik kalirlar. Menu butonlari varsayilanda sessiz.
+@export var high_contrast := false
 @export var content_margin := Vector2(28.0, 14.0)
 
 @export_group("Basis Animasyonu")
@@ -77,11 +81,16 @@ func _apply_style() -> void:
 	_applied_radius = radius
 	var is_primary := emphasis == Emphasis.PRIMARY
 
-	var normal_bg := Color(Palette.SURFACE, 0.92) if is_primary else Color(Palette.SURFACE, 0.5)
-	var hover_bg := Color(Palette.SURFACE_EDGE, 0.92) if is_primary else Color(Palette.SURFACE, 0.85)
+	var solid := is_primary or high_contrast
+	var normal_bg := Color(Palette.SURFACE, 0.92) if solid else Color(Palette.SURFACE, 0.5)
+	var hover_bg := Color(Palette.SURFACE_EDGE, 0.92) if solid else Color(Palette.SURFACE, 0.85)
 	var pressed_bg := Color(Palette.INK_MID, 1.0)
 
-	var normal_border := Color(Palette.ACCENT, 0.5) if is_primary else Color(Palette.SURFACE_EDGE, 0.9)
+	var normal_border := Color(Palette.SURFACE_EDGE, 0.9)
+	if is_primary:
+		normal_border = Color(Palette.ACCENT, 0.5)
+	elif high_contrast:
+		normal_border = Color(Palette.SURFACE_LIGHT, 1.0)
 	var hover_border := Color(Palette.ACCENT, 0.95) if is_primary else Color(Palette.ACCENT, 0.55)
 	var pressed_border := Color(Palette.ACCENT, 1.0) if is_primary else Color(Palette.ACCENT, 0.85)
 

@@ -27,6 +27,9 @@ signal menu_requested()
 @export var auto_reset_delay := 0.35
 @export var message_pop_time := 0.35
 @export var retry_pulse_time := 0.4
+@export var level_title_format := "BÖLÜM %d"
+## Oyuncu ilk gecerli nisan hareketini yapinca ipucu bu surede solar.
+@export var tutorial_fade_time := 0.25
 
 @export_group("Bolum")
 ## Panellerin uretildigi sahne (bounce_panel.tscn).
@@ -63,6 +66,8 @@ var playtest_stats: PlaytestStats
 @onready var _shake: ScreenShake = $ShakeCamera
 @onready var _message: Label = $HUD/SafeArea/Root/Message
 @onready var _tutorial: Label = $HUD/SafeArea/Root/TutorialLabel
+@onready var _level_title: Label = $HUD/SafeArea/Root/LevelHeader/LevelTitle
+@onready var _level_subtitle: Label = $HUD/SafeArea/Root/LevelHeader/LevelSubtitle
 @onready var _retry_button: Button = $HUD/SafeArea/Root/RetryButton
 @onready var _home_button: Button = $HUD/SafeArea/Root/HomeButton
 @onready var _lives_display: LivesDisplay = $HUD/SafeArea/Root/LivesDisplay
@@ -70,6 +75,9 @@ var playtest_stats: PlaytestStats
 
 var _message_tween: Tween
 var _retry_pulse_tween: Tween
+var _tutorial_tween: Tween
+## Ipucu bu denemede zaten solduysa tekrar tetiklenmesin.
+var _tutorial_dismissed := false
 var _max_lives := 5
 var _lives_remaining := 0
 ## Her "gecerli atis denemesi" basladiginda artar (bkz. _respawn_ball).
@@ -138,7 +146,7 @@ func _apply_level() -> void:
 	_max_lives = maxi(level_data.max_lives, 1)
 
 	_build_panels()
-	_apply_tutorial()
+	_apply_level_header()
 
 
 func _build_panels() -> void:
@@ -164,9 +172,12 @@ func _build_panels() -> void:
 		_panels.add_child(panel)
 
 
-func _apply_tutorial() -> void:
-	_tutorial.text = level_data.tutorial_text
-	_tutorial.visible = not level_data.tutorial_text.is_empty()
+## Uzun ekranlarda ust tarafta olusan bosluga bolum kimligi. Metin gercek
+## LevelData'dan gelir; home ve restart butonlarinin arasinda, safe area icinde.
+func _apply_level_header() -> void:
+	_level_title.text = level_title_format % level_data.level_id
+	_level_subtitle.text = level_data.display_name
+	_level_subtitle.visible = not level_data.display_name.is_empty()
 
 
 func _sync_tuning() -> void:
@@ -195,10 +206,9 @@ func _connect_signals() -> void:
 	_ball.bounced.connect(_on_ball_bounced)
 	_ball.shot_failed.connect(_on_shot_failed)
 	_target.hit.connect(_on_target_hit)
-	# HUD'daki tekrar butonu duz bir Button (kendi StyleBox'lari var), bu yuzden
-	# LumaButton'un otomatik tiklama sesini devralmaz - elle ekleniyor ki
-	# sonuc panelindeki "TEKRAR DENE" ile ayni sesi versin.
-	_retry_button.pressed.connect(AudioManager.play_ui_click)
+	# Ilk gecerli nisan hareketinde ipucunu sondur.
+	_launcher.aim_updated.connect(_on_aim_updated)
+	# Tiklama sesini LumaButton'un kendisi calar (HUD butonlari da LumaIconButton).
 	_retry_button.pressed.connect(reset_shot)
 	_home_button.pressed.connect(menu_requested.emit)
 	_result_panel.next_pressed.connect(_on_result_next)
@@ -219,6 +229,9 @@ func reset_shot() -> void:
 	_has_started = true
 	_shots_this_attempt = 0
 	_reset_attempt_timer()
+	# Ipucu yalnizca bolum bastan baslarken geri gelir; basarisiz atistan
+	# sonraki otomatik top respawn'inda gelmez.
+	_show_tutorial()
 
 	_lives_remaining = _max_lives
 	_update_lives_hud()
@@ -461,6 +474,35 @@ func _show_message(text: String) -> void:
 	_message_tween.tween_property(_message, "scale", Vector2.ONE, message_pop_time) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_message_tween.tween_property(_message, "modulate:a", 1.0, message_pop_time * 0.7)
+
+
+## --- Ipucu -------------------------------------------------------------------
+
+func _show_tutorial() -> void:
+	if _tutorial_tween != null and _tutorial_tween.is_valid():
+		_tutorial_tween.kill()
+	_tutorial_dismissed = false
+	_tutorial.text = level_data.tutorial_text
+	_tutorial.modulate.a = 1.0
+	_tutorial.visible = not level_data.tutorial_text.is_empty()
+
+
+## Oyuncu gercekten nisan almaya basladiginda (surukleme min esigi gecince)
+## ipucu yumusakca cekilir - artik ekrani mesgul etmesine gerek yok.
+func _on_aim_updated(_power_ratio: float, _direction: Vector2) -> void:
+	if _launcher.has_valid_aim():
+		_dismiss_tutorial()
+
+
+func _dismiss_tutorial() -> void:
+	if _tutorial_dismissed or not _tutorial.visible:
+		return
+	_tutorial_dismissed = true
+	if _tutorial_tween != null and _tutorial_tween.is_valid():
+		_tutorial_tween.kill()
+	_tutorial_tween = create_tween()
+	_tutorial_tween.tween_property(_tutorial, "modulate:a", 0.0, tutorial_fade_time)
+	_tutorial_tween.tween_callback(_tutorial.hide)
 
 
 func _hide_message() -> void:

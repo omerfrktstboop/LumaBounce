@@ -49,11 +49,19 @@ enum State {
 @export var squash_time := 0.15
 
 @export_group("Iz")
-@export var trail_length := 16
-@export var trail_alpha := 0.42
+## Kisa bir hiz izi: uzun bir kuyruk topun kendisinden dikkat caliyordu.
+@export var trail_length := 12
+@export var trail_alpha := 0.40
 @export var trail_fade_time := 0.28
 ## Iki iz noktasi arasindaki en kucuk mesafe.
 @export var trail_min_step := 6.0
+## Iz genisligi = radius * bu carpan.
+@export_range(0.4, 1.2, 0.05) var trail_width_scale := 0.85
+## Kuyruk ucunun govdeye orani. Cok kucuk degerler izi sivri bir ucgene
+## cevirdigi icin belirgin bir taban birakilir.
+@export_range(0.05, 0.6, 0.01) var trail_tail_width := 0.30
+## Kuyrugun saydamlasma hizi: bu orandan once alfa cok dusuk kalir.
+@export_range(0.2, 0.9, 0.05) var trail_fade_pivot := 0.55
 
 ## Oyun alani; gameplay.gd tarafindan atanir. Bos birakilirsa viewport kullanilir.
 var play_bounds := Rect2()
@@ -227,20 +235,25 @@ func _setup_trail() -> void:
 	_trail.top_level = true
 	_trail.z_as_relative = false
 	_trail.z_index = z_index - 1
-	_trail.width = radius * 1.0
+	_trail.width = radius * trail_width_scale
 	_trail.joint_mode = Line2D.LINE_JOINT_ROUND
 	_trail.begin_cap_mode = Line2D.LINE_CAP_ROUND
 	_trail.end_cap_mode = Line2D.LINE_CAP_ROUND
 	_trail.antialiased = true
 
+	# Kuyruk sifira kadar incelmez: sivri ucgen goruntusunu bu onler.
+	# Iki nokta arasi tanjantlar 0 oldugu icin gecis dogrusal degil yumusaktir.
 	var width_curve := Curve.new()
-	width_curve.add_point(Vector2(0.0, 0.05))
+	width_curve.add_point(Vector2(0.0, trail_tail_width))
 	width_curve.add_point(Vector2(1.0, 1.0))
 	_trail.width_curve = width_curve
 
+	# Ek ara durak: alfa uzun sure cok dusuk kalip yalnizca topa yakin
+	# kisimda yukselir, boylece kuyruk sona dogru hizla saydamlasir.
 	var gradient := Gradient.new()
 	gradient.set_color(0, Color(accent, 0.0))
 	gradient.set_color(1, Color(accent, trail_alpha))
+	gradient.add_point(trail_fade_pivot, Color(accent, trail_alpha * 0.22))
 	_trail.gradient = gradient
 
 

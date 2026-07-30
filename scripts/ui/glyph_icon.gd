@@ -2,7 +2,7 @@ class_name GlyphIcon
 extends Control
 
 ## Prosedurel UI ikonlari. Harici asset yok; hepsi Control'un boyutuna gore
-## _draw() ile cizilir (bkz. ayni desen: restart_icon.gd).
+## _draw() ile cizilir.
 
 enum Glyph {
 	SOUND_ON,
@@ -10,6 +10,7 @@ enum Glyph {
 	SETTINGS,
 	HOME,
 	CHECK,
+	RESTART,
 }
 
 @export var glyph: Glyph = Glyph.SETTINGS:
@@ -38,6 +39,8 @@ func _draw() -> void:
 			_draw_gear(center, unit)
 		Glyph.HOME:
 			_draw_home(center, unit)
+		Glyph.RESTART:
+			_draw_restart(center, unit)
 		Glyph.CHECK:
 			_draw_check(center, unit)
 
@@ -87,6 +90,27 @@ func _draw_home(center: Vector2, unit: float) -> void:
 		center + Vector2(-half, top),
 	])
 	draw_polyline(box, color, stroke_width, true)
+
+
+## Donen tek ok: "yeniden baslat". HUD'daki home ve restart butonlarinin ayni
+## ikon ve stil kaynagini paylasmasi icin buraya tasindi - boylece ikisi
+## tanim geregi ayni gorsel agirliga sahip.
+func _draw_restart(center: Vector2, unit: float) -> void:
+	var radius := unit * 0.62
+	var start_rad := deg_to_rad(-35.0)
+	var end_rad := deg_to_rad(225.0)
+	draw_arc(center, radius, start_rad, end_rad, 24, color, stroke_width, true)
+
+	# Yayin bittigi noktada, tesetten (tangent) yonlu kucuk bir ok ucu.
+	var arrow := unit * 0.28
+	var tip := center + Vector2(cos(end_rad), sin(end_rad)) * radius
+	var tangent := Vector2(-sin(end_rad), cos(end_rad))
+	var outward := Vector2(cos(end_rad), sin(end_rad))
+	draw_polygon(PackedVector2Array([
+		tip + tangent * arrow - outward * arrow * 0.35,
+		tip - tangent * arrow - outward * arrow * 0.35,
+		tip + outward * arrow * 0.85,
+	]), PackedColorArray([color]))
 
 
 func _draw_check(center: Vector2, unit: float) -> void:
