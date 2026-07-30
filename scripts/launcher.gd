@@ -207,7 +207,10 @@ func _build_guide_dots() -> PackedVector2Array:
 
 		for _sub_step in MAX_BOUNCES_PER_TICK:
 			var hit := _cast_ball_motion(space_state, shape, point, motion)
-			var segment_end := (point + motion) if hit.is_empty() else hit["position"]
+			var has_hit := not hit.is_empty()
+			# Dictionary degerleri Variant doner; ternary/aritmetikte tip
+			# belirsizligi olusmasin diye acikca Vector2/float'a sabitlenir.
+			var segment_end: Vector2 = hit["position"] if has_hit else (point + motion)
 			var segment_length := point.distance_to(segment_end)
 
 			while next_dot <= travelled + segment_length:
@@ -222,7 +225,7 @@ func _build_guide_dots() -> PackedVector2Array:
 
 			if travelled >= total_length:
 				return dots
-			if hit.is_empty():
+			if not has_hit:
 				break
 
 			# Tam carpisma noktasini net bir "sekme" isareti olarak da ekle.
@@ -231,9 +234,11 @@ func _build_guide_dots() -> PackedVector2Array:
 				return dots
 			has_bounced = true
 
-			var remainder := motion * (1.0 - hit["fraction"])
-			velocity = velocity.bounce(hit["normal"]) * preview_bounciness
-			motion = remainder.bounce(hit["normal"]) * preview_bounciness
+			var hit_normal: Vector2 = hit["normal"]
+			var hit_fraction: float = hit["fraction"]
+			var remainder := motion * (1.0 - hit_fraction)
+			velocity = velocity.bounce(hit_normal) * preview_bounciness
+			motion = remainder.bounce(hit_normal) * preview_bounciness
 
 	return dots
 
