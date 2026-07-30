@@ -1,0 +1,84 @@
+class_name LevelSelect
+extends Control
+
+## Bolum secim ekrani.
+##
+## Butonlar LevelLibrary'deki bolum sayisindan uretilir; ilerleme durumu
+## AppRoot tarafindan [member progress] ile enjekte edilir. Ekran hicbir
+## sahneyi kendisi acmaz, yalnizca sinyal yayar.
+
+signal level_selected(level_id: int)
+signal menu_requested()
+
+@export var button_size := Vector2(150.0, 150.0)
+@export var button_font_size := 44
+@export var columns := 3
+@export var check_size := 26.0
+
+## AppRoot tarafindan add_child'dan ONCE atanir.
+var progress: ProgressStore
+
+@onready var _grid: GridContainer = $SafeArea/Content/GridHolder/Grid
+@onready var _back_button: LumaButton = $SafeArea/Content/BackButton
+
+
+func _ready() -> void:
+	if progress == null:
+		progress = ProgressStore.load_from_disk()
+	_grid.columns = columns
+	_build_buttons()
+	_back_button.pressed.connect(menu_requested.emit)
+
+
+func _build_buttons() -> void:
+	for child in _grid.get_children():
+		_grid.remove_child(child)
+		child.queue_free()
+
+	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, LevelLibrary.last_level_id() + 1):
+		_grid.add_child(_make_level_button(level_id))
+
+
+func _make_level_button(level_id: int) -> LumaButton:
+	var unlocked := progress.is_unlocked(level_id)
+	var completed := progress.is_completed(level_id)
+
+	var button := LumaButton.new()
+	button.name = "Level%02d" % level_id
+	button.text = str(level_id)
+	button.custom_minimum_size = button_size
+	button.corner_radius = 28
+	button.content_margin = Vector2(10.0, 10.0)
+	button.focus_mode = Control.FOCUS_NONE
+	button.disabled = not unlocked
+	# Tamamlanan bolum, birincil vurgu (hafif cyan kenar) ile isaretlenir.
+	button.emphasis = LumaButton.Emphasis.PRIMARY if completed else LumaButton.Emphasis.SECONDARY
+	button.add_theme_font_size_override("font_size", button_font_size)
+	button.pressed.connect(_on_level_pressed.bind(level_id))
+
+	if completed:
+		button.add_child(_make_check_mark())
+
+	return button
+
+
+## "Tamamlandi" isareti: kucuk, sade bir onay imi.
+func _make_check_mark() -> GlyphIcon:
+	var check := GlyphIcon.new()
+	check.name = "CompletedMark"
+	check.glyph = GlyphIcon.Glyph.CHECK
+	check.color = Palette.ACCENT
+	check.stroke_width = 3.0
+	check.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	check.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	check.offset_left = -(check_size + 16.0)
+	check.offset_top = 16.0
+	check.offset_right = -16.0
+	check.offset_bottom = 16.0 + check_size
+	return check
+
+
+func _on_level_pressed(level_id: int) -> void:
+	if not progress.is_unlocked(level_id):
+		return
+	level_selected.emit(level_id)

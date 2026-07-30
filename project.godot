@@ -17,6 +17,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 config/name="LumaBounce"
 config/description="Dikey mobil sekme prototipi: nisan al, firlat, sektir, hedefi vur."
 run/main_scene="res://scenes/app_root.tscn"
+config/quit_on_go_back=false
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [display]

@@ -1,24 +1,38 @@
+class_name Gameplay
 extends Node2D
 
-## Prototip oyun dongusunun orkestratoru.
+## Bir bolumu oynatan ekran.
 ##
-## Sorumlulugu: girdiyi firlaticiya iletmek, sinyalleri baglamak, carpma/kazanma
-## efektlerini tetiklemek ve "nisan al -> firlat -> sektir -> hedefi vur ->
-## yeniden dene" dongusunu surdurmek.
-## Fizik ball.gd'de, nisan hesabi launcher.gd'de, hedef efektleri target.gd'de.
+## Yerlesim sahnede sabit degildir: firlatici, hedef, paneller, kenar
+## segmentleri ve top hakki tamamen [member level_data]'dan kurulur.
+## Top fizigi (ball.gd), nisan onizlemesi (launcher.gd) ve carpma/kazanma
+## efektleri degismeden korunur.
+##
+## Ekran baska bir sahne acmaz; yalnizca sinyal yayar, AppRoot karar verir.
 
-@export var success_message := "HEDEF VURULDU!"
-## Hak bittiginde gosterilen sade mesaj (ayni Label/animasyon, farkli metin).
+signal level_completed(level_id: int)
+signal next_level_requested(level_id: int)
+signal level_select_requested()
+signal menu_requested()
+
+@export var completed_title := "BÖLÜM TAMAMLANDI"
+@export var next_level_label := "SONRAKİ BÖLÜM"
+@export var level_select_label := "BÖLÜM SEÇİMİ"
+@export var retry_label := "TEKRAR DENE"
+@export var menu_label := "ANA MENÜ"
 @export var out_of_balls_message := "TOP HAKKI BİTTİ"
+## Kazanma efekti gorulsun diye sonuc karti kisa bir gecikmeyle acilir.
+@export var result_delay := 0.75
 ## Basarisiz atistan sonra, hala hakki varsa otomatik sifirlama gecikmesi.
 @export var auto_reset_delay := 0.35
 @export var message_pop_time := 0.35
 @export var retry_pulse_time := 0.4
 
-@export_group("Top Hakki")
-## Bolume ait sinirli top hakki. Hak biterse otomatik sifirlama durur;
-## oyuncu "Yeniden Dene" ile bolumu tam olarak (haklar dahil) yeniden baslatir.
-@export var max_lives := 5
+@export_group("Bolum")
+## Panellerin uretildigi sahne (bounce_panel.tscn).
+@export var panel_scene: PackedScene
+## Veri atanmamissa (or. sahne dogrudan calistirilirsa) kullanilacak bolum.
+@export var fallback_level_id := 1
 
 @export_group("Carpma Efekti")
 ## Kivilcim siddetinin doygunluga ulastigi hiz.
@@ -26,28 +40,88 @@ extends Node2D
 @export var spark_count := 5
 @export var spark_length := 24.0
 
+## AppRoot tarafindan add_child'dan ONCE atanir.
+var level_data: LevelData
+
 @onready var _arena: Arena = $Arena
+@onready var _panels: Node2D = $Panels
 @onready var _launcher: Launcher = $Launcher
 @onready var _ball: Ball = $Ball
 @onready var _target: Target = $Target
 @onready var _effects: Node2D = $Effects
 @onready var _message: Label = $HUD/Root/Message
+@onready var _tutorial: Label = $HUD/Root/TutorialLabel
 @onready var _retry_button: Button = $HUD/Root/RetryButton
+@onready var _home_button: Button = $HUD/Root/HomeButton
 @onready var _lives_display: LivesDisplay = $HUD/Root/LivesDisplay
+@onready var _result_panel: ResultPanel = $HUD/Root/ResultPanel
 
 var _message_tween: Tween
 var _retry_pulse_tween: Tween
+var _max_lives := 5
 var _lives_remaining := 0
 ## Her "gecerli atis denemesi" basladiginda artar (bkz. _respawn_ball).
 ## Gecikmeli otomatik-sifirlama zamanlayicisi, calistigi anda bu deger
 ## degismisse (araya manuel "Yeniden Dene" girmisse) kendini iptal eder.
 var _shot_token := 0
+## Nisan almayi engellemesi gereken HUD ogeleri.
+var _input_blockers: Array[Control] = []
 
 
 func _ready() -> void:
+	_apply_level()
 	_sync_tuning()
 	_connect_signals()
+	_input_blockers.append(_retry_button)
+	_input_blockers.append(_home_button)
 	reset_shot()
+
+
+# --- Bolum kurulumu ----------------------------------------------------------
+
+func _apply_level() -> void:
+	if level_data == null:
+		level_data = LevelLibrary.load_level(fallback_level_id, _arena.get_play_rect())
+
+	var play_rect := _arena.get_play_rect()
+	_arena.configure(
+		level_data.get_left_segments(play_rect),
+		level_data.get_right_segments(play_rect))
+
+	_launcher.position = level_data.launcher_position
+	_target.position = level_data.target_position
+	_max_lives = maxi(level_data.max_lives, 1)
+
+	_build_panels()
+	_apply_tutorial()
+
+
+func _build_panels() -> void:
+	for child in _panels.get_children():
+		_panels.remove_child(child)
+		child.queue_free()
+
+	if panel_scene == null:
+		push_error("Gameplay: panel_scene atanmamis, paneller olusturulamiyor.")
+		return
+
+	for panel_data in level_data.panels:
+		if panel_data == null:
+			continue
+		var panel := panel_scene.instantiate() as BouncePanel
+		if panel == null:
+			push_error("Gameplay: panel_scene bir BouncePanel degil.")
+			return
+		panel.position = panel_data.position
+		panel.rotation_degrees = panel_data.rotation_degrees
+		panel.length = panel_data.length
+		panel.thickness = panel_data.thickness
+		_panels.add_child(panel)
+
+
+func _apply_tutorial() -> void:
+	_tutorial.text = level_data.tutorial_text
+	_tutorial.visible = not level_data.tutorial_text.is_empty()
 
 
 func _sync_tuning() -> void:
@@ -66,21 +140,23 @@ func _connect_signals() -> void:
 	_ball.shot_failed.connect(_on_shot_failed)
 	_target.hit.connect(_on_target_hit)
 	_retry_button.pressed.connect(reset_shot)
+	_home_button.pressed.connect(menu_requested.emit)
+	_result_panel.next_pressed.connect(_on_result_next)
+	_result_panel.retry_pressed.connect(_on_result_retry)
+	_result_panel.menu_pressed.connect(menu_requested.emit)
 
 
 # --- Oyun dongusu ------------------------------------------------------------
 
-## Bolumu tam olarak yeniden baslatir: haklar dolar, top ve hedef sifirlanir.
-## Bekleyen bir otomatik-sifirlama zamanlayicisi varsa _respawn_ball() token'i
-## ilerleterek onu gecersiz kilar (bkz. _on_shot_failed).
+## Bolumu bastan baslatir: haklar dolar, top ve hedef sifirlanir.
 func reset_shot() -> void:
-	_lives_remaining = max_lives
+	_lives_remaining = _max_lives
 	_update_lives_hud()
+	_result_panel.hide_result()
 	_respawn_ball()
 
 
 ## Sadece topu ve hedefi baslangic durumuna dondurur; top hakkina dokunmaz.
-## Basarisiz bir atistan sonra, hak varsa bu cagrilir.
 func _respawn_ball() -> void:
 	_shot_token += 1
 	_stop_retry_pulse()
@@ -104,12 +180,13 @@ func _on_shot_failed(_reason: String) -> void:
 	_lives_remaining = maxi(_lives_remaining - 1, 0)
 	_update_lives_hud()
 	if _lives_remaining <= 0:
-		_show_out_of_balls()
+		_show_message(out_of_balls_message)
+		_pulse_retry_button()
 		return
 
 	# Bekleme sirasinda oyuncu manuel "Yeniden Dene"ye basarsa _respawn_ball()
 	# token'i ilerletir; sure doldugunda token degismisse bu zamanlayici
-	# artik geçersizdir ve yeni (manuel baslatilmis) atisi ezmeden iptal olur.
+	# artik gecersizdir ve yeni (manuel baslatilmis) atisi ezmeden iptal olur.
 	var token := _shot_token
 	await get_tree().create_timer(auto_reset_delay).timeout
 	if token != _shot_token:
@@ -118,24 +195,40 @@ func _on_shot_failed(_reason: String) -> void:
 
 
 func _update_lives_hud() -> void:
-	_lives_display.set_lives(_lives_remaining, max_lives)
+	_lives_display.set_lives(_lives_remaining, _max_lives)
 
 
 func _on_target_hit(_body: Node2D) -> void:
 	_ball.stop()
 	_launcher.enabled = false
-	_show_message(success_message)
 	# Kazanma anini ikincil vurgu (menekse) ile isaretle.
 	SparkBurst.burst(
 		_effects, _target.global_position, Vector2.UP, 1.0,
 		Palette.ACCENT_ALT, Palette.ACCENT_ALT_CORE, 12, 74.0, 350.0)
+	level_completed.emit(level_data.level_id)
+	_open_result_panel()
 
 
-## Son top hakki da bitince: sade bir mesaj + "Yeniden Dene" butonuna kisa
-## bir vurgu animasyonu. Baska renk/gorsel eklenmez, mevcut sistem yeniden kullanilir.
-func _show_out_of_balls() -> void:
-	_show_message(out_of_balls_message)
-	_pulse_retry_button()
+func _open_result_panel() -> void:
+	var token := _shot_token
+	await get_tree().create_timer(result_delay).timeout
+	# Bu arada yeniden baslatildiysa karti acma.
+	if token != _shot_token or not is_inside_tree():
+		return
+	var next_text := next_level_label if LevelLibrary.has_next(level_data.level_id) else level_select_label
+	_result_panel.show_result(completed_title, next_text)
+
+
+func _on_result_next() -> void:
+	if LevelLibrary.has_next(level_data.level_id):
+		next_level_requested.emit(level_data.level_id + 1)
+	else:
+		level_select_requested.emit()
+
+
+func _on_result_retry() -> void:
+	_result_panel.hide_result()
+	reset_shot()
 
 
 # --- Carpma geri bildirimi ---------------------------------------------------
@@ -149,6 +242,7 @@ func _on_ball_bounced(at: Vector2, normal: Vector2, impact_speed: float) -> void
 
 func _clear_effects() -> void:
 	for child in _effects.get_children():
+		_effects.remove_child(child)
 		child.queue_free()
 
 
@@ -187,9 +281,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _pointer_pressed(viewport_position: Vector2) -> void:
-	# Dokunma olaylari HUD tarafindan yutulmaz; butonun uzerini elle disla.
-	if _retry_button.visible and _retry_button.get_global_rect().has_point(viewport_position):
+	# Dokunma olaylari HUD tarafindan yutulmaz; UI alanlarini elle disla.
+	if _result_panel.visible:
 		return
+	for control in _input_blockers:
+		if control.visible and control.get_global_rect().has_point(viewport_position):
+			return
 	if not _ball.is_ready_to_launch():
 		return
 	_launcher.begin_aim(_to_world(viewport_position))

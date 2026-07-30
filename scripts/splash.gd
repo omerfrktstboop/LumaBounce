@@ -117,19 +117,20 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	var touch := event as InputEventScreenTouch
 	if touch != null and touch.pressed:
-		_skip()
+		skip()
 		return
 
 	var button := event as InputEventMouseButton
 	if button != null and button.pressed and button.button_index == MOUSE_BUTTON_LEFT:
-		_skip()
+		skip()
 		return
 
 	if event.is_action_pressed("ui_accept") or event.is_action_pressed("ui_cancel"):
-		_skip()
+		skip()
 
 
-func _skip() -> void:
+## Animasyonu atlar. Telefonun geri tusu icin AppRoot da cagirir.
+func skip() -> void:
 	if _finished:
 		return
 	if _tween != null and _tween.is_valid():

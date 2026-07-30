@@ -8,6 +8,8 @@ enum Glyph {
 	SOUND_ON,
 	SOUND_OFF,
 	SETTINGS,
+	HOME,
+	CHECK,
 }
 
 @export var glyph: Glyph = Glyph.SETTINGS:
@@ -34,6 +36,10 @@ func _draw() -> void:
 			_draw_speaker(center, unit, false)
 		Glyph.SETTINGS:
 			_draw_gear(center, unit)
+		Glyph.HOME:
+			_draw_home(center, unit)
+		Glyph.CHECK:
+			_draw_check(center, unit)
 
 
 func _draw_speaker(center: Vector2, unit: float, sound_on: bool) -> void:
@@ -58,6 +64,38 @@ func _draw_speaker(center: Vector2, unit: float, sound_on: bool) -> void:
 	var b := center + Vector2(unit * 0.82, unit * 0.30)
 	draw_line(a, b, color, stroke_width, true)
 	draw_line(Vector2(a.x, b.y), Vector2(b.x, a.y), color, stroke_width, true)
+
+
+func _draw_home(center: Vector2, unit: float) -> void:
+	# Cati: tek parca ucgen.
+	var roof := PackedVector2Array([
+		center + Vector2(0.0, -unit * 0.78),
+		center + Vector2(unit * 0.84, -unit * 0.02),
+		center + Vector2(-unit * 0.84, -unit * 0.02),
+	])
+	draw_colored_polygon(roof, color)
+
+	# Govde: ince konturlu kutu.
+	var half := unit * 0.5
+	var top := -unit * 0.02
+	var bottom := unit * 0.72
+	var box := PackedVector2Array([
+		center + Vector2(-half, top),
+		center + Vector2(half, top),
+		center + Vector2(half, bottom),
+		center + Vector2(-half, bottom),
+		center + Vector2(-half, top),
+	])
+	draw_polyline(box, color, stroke_width, true)
+
+
+func _draw_check(center: Vector2, unit: float) -> void:
+	var points := PackedVector2Array([
+		center + Vector2(-unit * 0.62, unit * 0.02),
+		center + Vector2(-unit * 0.16, unit * 0.48),
+		center + Vector2(unit * 0.64, -unit * 0.46),
+	])
+	draw_polyline(points, color, stroke_width, true)
 
 
 func _draw_gear(center: Vector2, unit: float) -> void:

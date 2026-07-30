@@ -45,13 +45,32 @@ const OBSTACLE_LAYER := 1
 
 
 func _ready() -> void:
-	_build_background()
-	_build_frame()
-	_build_walls()
+	rebuild()
 
 
 func get_play_rect() -> Rect2:
 	return Rect2(Vector2.ZERO, play_size)
+
+
+## Bolum verisinden gelen kenar segmentlerini uygular ve arenayi yeniden kurar.
+## gameplay.gd bunu kendi _ready'sinde cagirir (Arena'nin _ready'si once calisir).
+func configure(left_segments: Array[Vector2], right_segments: Array[Vector2]) -> void:
+	left_wall_segments_y = left_segments
+	right_wall_segments_y = right_segments
+	if is_node_ready():
+		rebuild()
+
+
+## Uretilmis tum zemin/cerceve/duvar dugumlerini atip bastan olusturur.
+## remove_child sart: yalnizca queue_free eski duvarlari kare sonuna kadar
+## fizik dunyasinda birakir ve yeni bolumde hayalet carpisma yaratirdi.
+func rebuild() -> void:
+	for child in get_children():
+		remove_child(child)
+		child.queue_free()
+	_build_background()
+	_build_frame()
+	_build_walls()
 
 
 # --- Gorunum -----------------------------------------------------------------

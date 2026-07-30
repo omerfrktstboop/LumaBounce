@@ -7,11 +7,17 @@ extends Control
 ## boylece 720x1280 referansindan sapan ekran oranlarinda ve centikli
 ## cihazlarda da dogru konumlanir.
 ##
-## OYNA disindaki her sey henuz yok: BOLUMLER ve ayarlar sade bir "Yakinda"
-## geri bildirimi verir. Ses butonu master bus'i sessize alir (henuz ses
-## varligi yok, ama buton sahte degil - gercekten calisir).
+## OYNA kalinan bolumu acar, BOLUMLER bolum secim ekranini acar. Ayarlar
+## henuz yok ve sade bir "Yakinda" geri bildirimi verir. Ses butonu master
+## bus'i sessize alir (henuz ses varligi yok, ama buton sahte degil).
+##
+## Ekran hicbir sahneyi kendisi acmaz; yalnizca sinyal yayar.
 
-signal play_pressed()
+signal play_pressed(level_id: int)
+signal levels_requested()
+
+## AppRoot tarafindan add_child'dan ONCE atanir: kalinan bolum.
+var resume_level_id := 1
 
 @export var coming_soon_text := "Yakında"
 @export var toast_visible_time := 1.2
@@ -36,13 +42,13 @@ func _ready() -> void:
 	_refresh_sound_glyph()
 
 	_play_button.pressed.connect(_on_play_pressed)
-	_levels_button.pressed.connect(_on_coming_soon_pressed)
+	_levels_button.pressed.connect(levels_requested.emit)
 	_settings_button.pressed.connect(_on_coming_soon_pressed)
 	_sound_button.pressed.connect(_on_sound_pressed)
 
 
 func _on_play_pressed() -> void:
-	play_pressed.emit()
+	play_pressed.emit(resume_level_id)
 
 
 func _on_coming_soon_pressed() -> void:

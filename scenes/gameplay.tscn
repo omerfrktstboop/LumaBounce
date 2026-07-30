@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay.gd" id="1_gameplay"]
 [ext_resource type="Script" path="res://scripts/arena.gd" id="2_arena"]
@@ -8,6 +8,9 @@
 [ext_resource type="PackedScene" path="res://scenes/ball.tscn" id="6_ball"]
 [ext_resource type="Script" path="res://scripts/lives_display.gd" id="7_lives"]
 [ext_resource type="Script" path="res://scripts/restart_icon.gd" id="8_restart_icon"]
+[ext_resource type="Script" path="res://scripts/ui/luma_icon_button.gd" id="9_icon_button"]
+[ext_resource type="Script" path="res://scripts/ui/result_panel.gd" id="10_result_panel"]
+[ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="11_button"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_retry_normal"]
 bg_color = Color(0.14902, 0.219608, 0.333333, 0.92)
@@ -47,51 +50,16 @@ corner_radius_bottom_left = 30
 
 [node name="Gameplay" type="Node2D"]
 script = ExtResource("1_gameplay")
+panel_scene = ExtResource("3_panel")
 
 [node name="Arena" type="Node2D" parent="."]
 script = ExtResource("2_arena")
 
 [node name="Panels" type="Node2D" parent="."]
 
-[node name="RoofLeft" parent="Panels" instance=ExtResource("3_panel")]
-position = Vector2(250, 572)
-rotation = -0.349066
-length = 250.0
-thickness = 27.0
-
-[node name="RoofRight" parent="Panels" instance=ExtResource("3_panel")]
-position = Vector2(470, 572)
-rotation = 0.349066
-length = 250.0
-thickness = 27.0
-
-[node name="KickLeft" parent="Panels" instance=ExtResource("3_panel")]
-position = Vector2(165, 880)
-rotation = 0.558505
-length = 190.0
-thickness = 24.0
-
-[node name="KickRight" parent="Panels" instance=ExtResource("3_panel")]
-position = Vector2(555, 880)
-rotation = -0.558505
-length = 190.0
-thickness = 24.0
-
-[node name="TopLeft" parent="Panels" instance=ExtResource("3_panel")]
-position = Vector2(140, 320)
-rotation = 0.663225
-length = 170.0
-thickness = 22.0
-
-[node name="TopRight" parent="Panels" instance=ExtResource("3_panel")]
-position = Vector2(580, 320)
-rotation = -0.663225
-length = 170.0
-thickness = 22.0
-
 [node name="Target" parent="." instance=ExtResource("4_target")]
 z_index = 2
-position = Vector2(360, 220)
+position = Vector2(360, 300)
 
 [node name="Launcher" parent="." instance=ExtResource("5_launcher")]
 z_index = 4
@@ -130,7 +98,23 @@ theme_override_constants/shadow_offset_x = 0
 theme_override_constants/shadow_offset_y = 0
 theme_override_constants/shadow_outline_size = 5
 theme_override_font_sizes/font_size = 54
-text = "HEDEF VURULDU!"
+text = "TOP HAKKI BİTTİ"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TutorialLabel" type="Label" parent="HUD/Root"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -344.0
+offset_bottom = -284.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.576471, 0.654902, 0.788235, 1)
+theme_override_font_sizes/font_size = 27
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -146,6 +130,17 @@ offset_bottom = -48.0
 grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("7_lives")
+
+[node name="HomeButton" type="Button" parent="HUD/Root"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 44.0
+offset_top = 44.0
+offset_right = 104.0
+offset_bottom = 104.0
+focus_mode = 0
+script = ExtResource("9_icon_button")
+glyph = 3
 
 [node name="RetryButton" type="Button" parent="HUD/Root"]
 layout_mode = 1
@@ -175,3 +170,84 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("8_restart_icon")
+
+[node name="ResultPanel" type="Control" parent="HUD/Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("10_result_panel")
+
+[node name="Scrim" type="ColorRect" parent="HUD/Root/ResultPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.090196, 0.137255, 0.227451, 0.82)
+
+[node name="Card" type="PanelContainer" parent="HUD/Root/ResultPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -262.0
+offset_top = -238.0
+offset_right = 262.0
+offset_bottom = 238.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="HUD/Root/ResultPanel/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 32
+
+[node name="Rows" type="VBoxContainer" parent="HUD/Root/ResultPanel/Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Title" type="Label" parent="HUD/Root/ResultPanel/Card/Margin/Rows"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "BÖLÜM TAMAMLANDI"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="NextButton" type="Button" parent="HUD/Root/ResultPanel/Card/Margin/Rows"]
+custom_minimum_size = Vector2(0, 92)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "SONRAKİ BÖLÜM"
+script = ExtResource("11_button")
+emphasis = 0
+
+[node name="RetryButton" type="Button" parent="HUD/Root/ResultPanel/Card/Margin/Rows"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 28
+text = "TEKRAR DENE"
+script = ExtResource("11_button")
+
+[node name="MenuButton" type="Button" parent="HUD/Root/ResultPanel/Card/Margin/Rows"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 28
+text = "ANA MENÜ"
+script = ExtResource("11_button")
