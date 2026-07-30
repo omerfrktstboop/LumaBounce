@@ -70,8 +70,10 @@ func toggle_visible() -> void:
 func _build_info_text() -> String:
 	var lines := PackedStringArray()
 	lines.append("FPS: %d" % Engine.get_frames_per_second())
+	_append_audio_lines(lines)
 
 	if _active_gameplay == null or not is_instance_valid(_active_gameplay):
+		lines.append("")
 		lines.append("(oynanis ekrani degil)")
 		return "\n".join(lines)
 
@@ -91,6 +93,16 @@ func _on_unlock_all_pressed() -> void:
 	_unlock_all = not _unlock_all
 	_unlock_button.text = "Kilitleri Ac: ACIK" if _unlock_all else "Kilitleri Ac: KAPALI"
 	unlock_all_toggled.emit(_unlock_all)
+
+
+## Ses durumu: yalnizca debug panelinde gorunur, oyuncu arayuzunde yer almaz.
+func _append_audio_lines(lines: PackedStringArray) -> void:
+	var audio := AudioManager.get_debug_snapshot()
+	lines.append("Ses: %s | aktif SFX: %d/%d" % [
+		"KAPALI" if bool(audio.get("muted", false)) else "ACIK",
+		int(audio.get("active_sfx", 0)),
+		int(audio.get("sfx_pool_size", 0))])
+	lines.append("Son ses: %s" % String(audio.get("last_sound", "-")))
 
 
 func _append_stats_lines(lines: PackedStringArray, raw_stats: Variant) -> void:

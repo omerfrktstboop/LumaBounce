@@ -195,6 +195,10 @@ func _connect_signals() -> void:
 	_ball.bounced.connect(_on_ball_bounced)
 	_ball.shot_failed.connect(_on_shot_failed)
 	_target.hit.connect(_on_target_hit)
+	# HUD'daki tekrar butonu duz bir Button (kendi StyleBox'lari var), bu yuzden
+	# LumaButton'un otomatik tiklama sesini devralmaz - elle ekleniyor ki
+	# sonuc panelindeki "TEKRAR DENE" ile ayni sesi versin.
+	_retry_button.pressed.connect(AudioManager.play_ui_click)
 	_retry_button.pressed.connect(reset_shot)
 	_home_button.pressed.connect(menu_requested.emit)
 	_result_panel.next_pressed.connect(_on_result_next)
@@ -205,9 +209,13 @@ func _connect_signals() -> void:
 # --- Oyun dongusu ------------------------------------------------------------
 
 ## Bolumu bastan baslatir: haklar dolar, top ve hedef sifirlanir.
+## _has_started, bolume ILK giris ile MANUEL yeniden baslatmayi ayirir:
+## giriste ne restart sayaci artar ne de restart sesi calar.
 func reset_shot() -> void:
-	if _has_started and playtest_stats != null:
-		playtest_stats.record_restart(level_data.level_id)
+	if _has_started:
+		AudioManager.play_restart()
+		if playtest_stats != null:
+			playtest_stats.record_restart(level_data.level_id)
 	_has_started = true
 	_shots_this_attempt = 0
 	_reset_attempt_timer()
@@ -250,6 +258,11 @@ func _on_shot_fired(impulse: Vector2) -> void:
 	if playtest_stats != null:
 		playtest_stats.record_shot(level_data.level_id)
 
+	# Guc orani firlaticinin kendi araligindan turetilir; boylece ses
+	# ayarlari min/max_power degisirse otomatik uyum saglar.
+	AudioManager.play_launch(clampf(
+		inverse_lerp(_launcher.min_power, _launcher.max_power, impulse.length()), 0.0, 1.0))
+
 	_ball.launch(impulse)
 
 
@@ -262,6 +275,9 @@ func _on_shot_failed(reason: String) -> void:
 	_lives_remaining = maxi(_lives_remaining - 1, 0)
 	_update_lives_hud()
 	if _lives_remaining <= 0:
+		# Sadece SON hak bitince duyulur; her sıradan iskada agir bir
+		# kaybetme sesi calmak yorucu olurdu.
+		AudioManager.play_failure()
 		_show_message(out_of_balls_message)
 		_pulse_retry_button()
 		return
@@ -289,6 +305,7 @@ func _on_target_hit(_body: Node2D) -> void:
 		Palette.ACCENT_ALT, Palette.ACCENT_ALT_CORE, 12, 74.0, 350.0)
 	_shake.add_trauma(target_hit_shake_trauma)
 	Input.vibrate_handheld(target_hit_haptic_msec)
+	AudioManager.play_target_hit()
 
 	if playtest_stats != null:
 		var elapsed := _current_attempt_seconds()
@@ -306,6 +323,8 @@ func _open_result_panel() -> void:
 		return
 	var next_text := next_level_label if LevelLibrary.has_next(level_data.level_id) else level_select_label
 	_result_panel.show_result(completed_title, next_text)
+	# target_hit'ten result_delay kadar sonra geldigi icin ust uste binmez.
+	AudioManager.play_level_complete()
 
 
 func _on_result_next() -> void:
@@ -328,6 +347,8 @@ func _on_ball_bounced(at: Vector2, normal: Vector2, impact_speed: float) -> void
 		_effects, at, normal, strength,
 		Palette.ACCENT, Palette.ACCENT_CORE, spark_count, spark_length)
 	_shake.add_trauma(strength * bounce_shake_trauma)
+	# Ham impact_speed verilir; katman secimi ve cooldown AudioManager'da.
+	AudioManager.play_bounce(impact_speed)
 
 
 func _clear_effects() -> void:

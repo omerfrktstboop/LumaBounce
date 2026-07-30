@@ -21,6 +21,10 @@ run/max_fps=60
 config/quit_on_go_back=false
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
+[autoload]
+
+AudioManager="*res://scripts/audio/audio_manager.gd"
+
 [display]
 
 window/size/viewport_width=720

@@ -30,6 +30,11 @@ enum Emphasis {
 @export var press_time := 0.09
 @export var release_time := 0.22
 
+@export_group("Ses")
+## Kapatilirsa bu buton tiklama sesi calmaz (or. sesin kendisini bozacak
+## ozel durumlar icin). Devre disi butonlar zaten hic ses cikarmaz.
+@export var play_click_sound := true
+
 var _scale_tween: Tween
 ## Stil yeniden uretimini gereksiz tetiklememek icin son uygulanan yaricap.
 var _applied_radius := -1
@@ -39,8 +44,17 @@ func _ready() -> void:
 	resized.connect(_on_resized)
 	button_down.connect(_on_button_down)
 	button_up.connect(_on_button_up)
+	# "pressed" basari basina TAM BIR KEZ yayilir ve disabled butonlarda hic
+	# yayilmaz; tiklama sesi icin dogru kanca budur. LumaIconButton bunu
+	# oldugu gibi devralir.
+	pressed.connect(_on_pressed_sound)
 	pivot_offset = size * 0.5
 	_apply_style()
+
+
+func _on_pressed_sound() -> void:
+	if play_click_sound:
+		AudioManager.play_ui_click()
 
 
 func _on_resized() -> void:
