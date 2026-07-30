@@ -8,8 +8,12 @@ extends Control
 ## cihazlarda da dogru konumlanir.
 ##
 ## OYNA kalinan bolumu acar, BOLUMLER bolum secim ekranini acar. Ayarlar
-## henuz yok ve sade bir "Yakinda" geri bildirimi verir. Ses butonu master
-## bus'i sessize alir (henuz ses varligi yok, ama buton sahte degil).
+## henuz yok ve sade bir "Yakinda" geri bildirimi verir.
+##
+## Ses butonu yerel bir bayrak TUTMAZ: tek dogruluk kaynagi AudioManager'dir.
+## Ikon hem acilista hem de mute_changed sinyaliyle guncellenir, boylece
+## durum baska bir ekrandan degisse bile senkron kalir ve uygulama yeniden
+## acildiginda kayitli mute durumu korunur.
 ##
 ## Ekran hicbir sahneyi kendisi acmaz; yalnizca sinyal yayar.
 
@@ -32,7 +36,6 @@ var resume_level_id := 1
 @onready var _toast: Label = $SafeArea/Content/Toast
 
 var _toast_tween: Tween
-var _muted := false
 
 
 func _ready() -> void:
@@ -44,7 +47,8 @@ func _ready() -> void:
 	_play_button.pressed.connect(_on_play_pressed)
 	_levels_button.pressed.connect(levels_requested.emit)
 	_settings_button.pressed.connect(_on_coming_soon_pressed)
-	_sound_button.pressed.connect(_on_sound_pressed)
+	_sound_button.pressed.connect(AudioManager.toggle_muted)
+	AudioManager.mute_changed.connect(_on_mute_changed)
 
 
 func _on_play_pressed() -> void:
@@ -55,15 +59,13 @@ func _on_coming_soon_pressed() -> void:
 	_show_toast(coming_soon_text)
 
 
-func _on_sound_pressed() -> void:
-	_muted = not _muted
-	# 0 numarali bus her zaman Master'dir.
-	AudioServer.set_bus_mute(0, _muted)
+func _on_mute_changed(_muted: bool) -> void:
 	_refresh_sound_glyph()
 
 
 func _refresh_sound_glyph() -> void:
-	_sound_button.glyph = GlyphIcon.Glyph.SOUND_OFF if _muted else GlyphIcon.Glyph.SOUND_ON
+	_sound_button.glyph = (GlyphIcon.Glyph.SOUND_OFF if AudioManager.is_muted()
+		else GlyphIcon.Glyph.SOUND_ON)
 
 
 ## Kisa, sade bilgi mesaji. Ayri bir pencere/diyalog acmaz.

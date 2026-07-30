@@ -80,6 +80,7 @@ func _play() -> void:
 	# Yumusak konus + logo.
 	_tween.tween_callback(_on_settle)
 	_tween.tween_callback(_logo.play_reveal.bind(logo_reveal_time))
+	_tween.parallel().tween_callback(AudioManager.play_logo_reveal)
 	_tween.parallel().tween_property(_floor_line, "modulate:a", 0.0, floor_fade_out_time)
 
 	# Kare hedefin kisa parlamasi, ardindan gecis.
@@ -90,6 +91,7 @@ func _play() -> void:
 
 func _on_impact() -> void:
 	_orb.squash(Vector2.UP)
+	AudioManager.play_splash_bounce()
 	SparkBurst.burst(
 		_pivot, Vector2(0.0, impact_offset_y + _orb.radius), Vector2.UP, 0.9,
 		Palette.ACCENT, Palette.ACCENT_CORE, spark_count, spark_length)
@@ -133,6 +135,9 @@ func _unhandled_input(event: InputEvent) -> void:
 func skip() -> void:
 	if _finished:
 		return
+	# Tweeni oldurmek bekleyen TUM zamanlayicilari iptal eder - sesler de
+	# bu tween'in callback'lerinden tetiklendigi icin atlanan bir logo_reveal
+	# menuye gectikten sonra gecikmeli olarak calmaz.
 	if _tween != null and _tween.is_valid():
 		_tween.kill()
 	# Son kareyi aninda kur: yarim kalmis bir animasyonla gecis yapilmasin.

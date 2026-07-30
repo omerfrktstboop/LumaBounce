@@ -11,6 +11,9 @@ export_presets.cfg
 .mono/
 data_*/
 
+# Export ciktilari (export_presets.cfg -> builds/lumabounce-debug.apk)
+builds/
+
 # System/editor specific
 .DS_Store
 Thumbs.db
