@@ -17,10 +17,11 @@ signal aim_updated(power_ratio: float, direction: Vector2)
 signal aim_cancelled()
 signal shot_fired(impulse: Vector2)
 
-## Yorunge ornekleme adimi (saniye). Kucuk = daha duzgun yay ve daha ince
-## carpisma kontrolu (her mikro-adimda bir raycast atilir).
-const SIM_STEP := 0.005
+## Guvenlik siniri: kilavuz en fazla bu kadar fizik "tick"i ileri simule eder.
 const SIM_MAX_ITERATIONS := 400
+## Tek bir tick icinde (mikro-carpismalar icin) en fazla sekme denemesi.
+## ball.gd'deki max_bounces_per_step ile ayni degeri kullanir.
+const MAX_BOUNCES_PER_TICK := 6
 
 @export_group("Guc")
 @export var min_power := 900.0
@@ -44,6 +45,12 @@ const SIM_MAX_ITERATIONS := 400
 @export var preview_gravity := 1500.0
 ## gameplay.gd bunu topun bounciness degeriyle esitler.
 @export_range(0.5, 1.0, 0.01) var preview_bounciness := 0.94
+## gameplay.gd bunu topun radius degeriyle esitler. Carpisma testi (shape
+## cast) bu yaricapi kullanir; boylece onizleme, topun kendisi gibi yuzeye
+## merkezi degil govdesi degdiginde durur.
+@export var preview_ball_radius := 24.0
+## gameplay.gd bunu topun max_speed degeriyle esitler.
+@export var preview_max_speed := 3000.0
 ## Noktalar arasi ekran mesafesi.
 @export var dot_spacing := 27.0
 @export var max_dots := 20
@@ -165,14 +172,22 @@ func _clamp_direction(direction: Vector2) -> Vector2:
 	return Vector2.UP.rotated(angle)
 
 
-## Topun gercekte kullandigi ivmeyle yorungeyi ornekler VE fiziksel yuzeylere
-## karsi mikro-adim basina raycast atar; kilavuz asla bir yuzeyin icinden
-## gecmez. Ilk carpismada topun gercek sekme mantigiyla (velocity.bounce)
+## Topun gercek fizik dongusunu (ball.gd) birebir taklit eder: her "tick"te
+## once yer cekimi eklenir (velocity.y += gravity*delta), sonra hiz sinirlanir
+## ve o sabit hizla bir DUZ segment kadar hareket denenir - tipki
+## move_and_collide(velocity*delta)'nin yaptigi gibi. Carpisma testi topun
+## gercek yaricapini kullanan bir CircleShape2D shape-cast'i ile yapilir;
+## boylece onizleme merkez-nokta degil govde temasina gore durur.
+## Ilk carpismada topun gercek sekme formuluyle (velocity.bounce * bounciness)
 ## bir kez yansitilip ikinci carpismaya veya guc sinirina kadar devam eder,
 ## boylece oyuncu "ilk sekmeyi" de onceden gorebilir.
-## Noktalar esit ARC uzunluklarinda birakilir -> ekranda esit aralikli noktalar.
+## Her duz segment boyunca (fizik adimindan bagimsiz) esit ARC araliklarinda
+## nokta yerlestirilir -> ekranda esit aralikli, pürüzsüz noktalar.
 func _build_guide_dots() -> PackedVector2Array:
 	var space_state := get_world_2d().direct_space_state
+	var shape := CircleShape2D.new()
+	shape.radius = preview_ball_radius
+
 	var dots := PackedVector2Array()
 	var total_length := lerpf(guide_length_min, guide_length_max, _power_ratio)
 	var point := Vector2.UP * ball_spawn_offset
@@ -180,50 +195,86 @@ func _build_guide_dots() -> PackedVector2Array:
 	var travelled := 0.0
 	var next_dot := 0.0
 	var has_bounced := false
+	# ball.gd'nin _physics_process'i her fizik "tick"inde calisir; onizleme
+	# ayni sabit adimla ilerlemezse egri ve carpisma noktalari kayar.
+	var fixed_delta := 1.0 / float(Engine.physics_ticks_per_second)
 
-	for _i in SIM_MAX_ITERATIONS:
-		if travelled >= next_dot:
+	for _tick in SIM_MAX_ITERATIONS:
+		# ball.gd ile ayni sira: once yer cekimi, sonra hiz sinirlama, sonra hareket.
+		velocity.y += preview_gravity * fixed_delta
+		velocity = velocity.limit_length(preview_max_speed)
+		var motion := velocity * fixed_delta
+
+		for _sub_step in MAX_BOUNCES_PER_TICK:
+			var hit := _cast_ball_motion(space_state, shape, point, motion)
+			var segment_end := (point + motion) if hit.is_empty() else hit["position"]
+			var segment_length := point.distance_to(segment_end)
+
+			while next_dot <= travelled + segment_length:
+				var t := 0.0 if segment_length <= 0.0001 else (next_dot - travelled) / segment_length
+				dots.append(point.lerp(segment_end, t))
+				next_dot += dot_spacing
+				if dots.size() >= max_dots:
+					return dots
+
+			travelled += segment_length
+			point = segment_end
+
+			if travelled >= total_length:
+				return dots
+			if hit.is_empty():
+				break
+
+			# Tam carpisma noktasini net bir "sekme" isareti olarak da ekle.
 			dots.append(point)
-			next_dot += dot_spacing
-			if dots.size() >= max_dots:
-				break
-
-		var next_point := point + velocity * SIM_STEP
-		velocity.y += preview_gravity * SIM_STEP
-
-		var hit := _cast_obstacle(space_state, point, next_point)
-		if not hit.is_empty():
-			dots.append(hit["position"])
-			if has_bounced or dots.size() >= max_dots:
-				break
+			if dots.size() >= max_dots or has_bounced:
+				return dots
 			has_bounced = true
-			velocity = velocity.bounce(hit["normal"]) * preview_bounciness
-			travelled += point.distance_to(hit["position"])
-			point = hit["position"]
-			next_dot = travelled + dot_spacing
-			continue
 
-		travelled += point.distance_to(next_point)
-		point = next_point
-		if travelled >= total_length:
-			break
+			var remainder := motion * (1.0 - hit["fraction"])
+			velocity = velocity.bounce(hit["normal"]) * preview_bounciness
+			motion = remainder.bounce(hit["normal"]) * preview_bounciness
 
 	return dots
 
 
-## Iki yerel nokta arasinda "obstacle" katmanina (paneller + duvarlar) karsi
-## raycast atar. Hedef (Area2D) ve top bu katmanda olmadigi icin etkilenmez.
-func _cast_obstacle(
-		space_state: PhysicsDirectSpaceState2D, from_local: Vector2, to_local_point: Vector2) -> Dictionary:
-	var query := PhysicsRayQueryParameters2D.create(
-		to_global(from_local), to_global(to_local_point), Arena.OBSTACLE_LAYER)
-	var result := space_state.intersect_ray(query)
-	if result.is_empty():
+## Yarıçapı topunkiyle ayni olan bir CircleShape2D'yi from_local -> from_local+motion
+## boyunca "obstacle" katmanina (paneller + duvarlar) karsi supurur. Godot'ta
+## normal donen tek bir sweep fonksiyonu olmadigi icin standart iki adimli
+## yontem kullanilir: once cast_motion ile ilk temasin oldugu fraction bulunur,
+## sonra tam o pozisyonda get_rest_info ile temas noktasi/normali okunur.
+## Hedef (Area2D) ve topun kendisi bu katmanda olmadigi icin etkilenmez.
+func _cast_ball_motion(
+		space_state: PhysicsDirectSpaceState2D, shape: CircleShape2D,
+		from_local: Vector2, motion_local: Vector2) -> Dictionary:
+	if motion_local.is_zero_approx():
 		return {}
+
+	var from_global := to_global(from_local)
+	var motion_global := global_transform.basis_xform(motion_local)
+
+	var params := PhysicsShapeQueryParameters2D.new()
+	params.shape = shape
+	params.collision_mask = Arena.OBSTACLE_LAYER
+	params.transform = Transform2D(0.0, from_global)
+	params.motion = motion_global
+
+	var fractions := space_state.cast_motion(params)
+	if fractions.is_empty() or fractions[1] >= 1.0:
+		return {}
+
+	var unsafe_fraction: float = fractions[1]
+	params.transform = Transform2D(0.0, from_global + motion_global * unsafe_fraction)
+	params.motion = Vector2.ZERO
+	var rest := space_state.get_rest_info(params)
+	if rest.is_empty():
+		return {}
+
 	var inverse_basis := global_transform.affine_inverse()
 	return {
-		"position": to_local(result["position"]),
-		"normal": inverse_basis.basis_xform(result["normal"]).normalized(),
+		"position": to_local(rest["point"]),
+		"normal": inverse_basis.basis_xform(rest["normal"]).normalized(),
+		"fraction": unsafe_fraction,
 	}
 
 

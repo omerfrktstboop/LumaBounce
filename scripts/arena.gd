@@ -15,9 +15,15 @@ const OBSTACLE_LAYER := 1
 
 @export_group("Yan Duvar Segmentleri")
 ## Her Vector2(baslangic_y, bitis_y) bir DUVAR segmentidir; aralarda kalan
-## bosluklardan topun ekran disina cikmasi (sol/sag) mumkun olur. Alt kenar
-## zaten tamamen aciktir (hicbir segment onu kapatmaz).
-@export var wall_segments_y: Array[Vector2] = [
+## bosluklardan topun o taraftan ekran disina cikmasi mumkun olur. Alt kenar
+## zaten tamamen aciktir (hicbir segment onu kapatmaz). Sol ve sag bagimsiz
+## dizilerdir; farkli acikliklara sahip olabilirler.
+@export var left_wall_segments_y: Array[Vector2] = [
+	Vector2(-320.0, 260.0),
+	Vector2(460.0, 760.0),
+	Vector2(960.0, 1440.0),
+]
+@export var right_wall_segments_y: Array[Vector2] = [
 	Vector2(-320.0, 260.0),
 	Vector2(460.0, 760.0),
 	Vector2(960.0, 1440.0),
@@ -71,9 +77,9 @@ func _build_background() -> void:
 	add_child(sky)
 
 
-## Alt kenar hicbir zaman cizilmez. Sol/sag kenarlar, fizik duvarlariyla
-## birebir eslesecek sekilde segment segment cizilir; boslukta cizgi de yoktur
-## - oyuncu acigin nerede oldugunu gorsel olarak da anlar.
+## Alt kenar hicbir zaman cizilmez. Sol/sag kenarlar, kendi fizik
+## duvarlariyla birebir eslesecek sekilde segment segment cizilir; boslukta
+## cizgi de yoktur - oyuncu acigin nerede oldugunu gorsel olarak da anlar.
 func _build_frame() -> void:
 	var top_points := PackedVector2Array([Vector2(0.0, 0.0), Vector2(play_size.x, 0.0)])
 	add_child(_make_frame_line(
@@ -81,25 +87,23 @@ func _build_frame() -> void:
 	add_child(_make_frame_line(
 		"FrameTopLine", top_points, frame_edge_color, frame_line_width, -50))
 
-	for i in wall_segments_y.size():
-		var segment: Vector2 = wall_segments_y[i]
+	_build_side_frame("Left", left_wall_segments_y, 0.0)
+	_build_side_frame("Right", right_wall_segments_y, play_size.x)
+
+
+func _build_side_frame(side_name: String, segments: Array[Vector2], x: float) -> void:
+	for i in segments.size():
+		var segment: Vector2 = segments[i]
 		var y_start := clampf(segment.x, 0.0, play_size.y)
 		var y_end := clampf(segment.y, 0.0, play_size.y)
 		if y_end - y_start < 1.0:
 			continue
 
-		var left_points := PackedVector2Array([Vector2(0.0, y_start), Vector2(0.0, y_end)])
-		var right_points := PackedVector2Array(
-			[Vector2(play_size.x, y_start), Vector2(play_size.x, y_end)])
-
-		add_child(_make_frame_line("FrameLeftSoft%d" % i,
-			left_points, Color(frame_color, frame_soft_alpha), frame_soft_width, -60))
-		add_child(_make_frame_line("FrameLeftLine%d" % i,
-			left_points, frame_edge_color, frame_line_width, -50))
-		add_child(_make_frame_line("FrameRightSoft%d" % i,
-			right_points, Color(frame_color, frame_soft_alpha), frame_soft_width, -60))
-		add_child(_make_frame_line("FrameRightLine%d" % i,
-			right_points, frame_edge_color, frame_line_width, -50))
+		var points := PackedVector2Array([Vector2(x, y_start), Vector2(x, y_end)])
+		add_child(_make_frame_line("Frame%sSoft%d" % [side_name, i],
+			points, Color(frame_color, frame_soft_alpha), frame_soft_width, -60))
+		add_child(_make_frame_line("Frame%sLine%d" % [side_name, i],
+			points, frame_edge_color, frame_line_width, -50))
 
 
 func _make_frame_line(line_name: String, points: PackedVector2Array,
@@ -119,20 +123,25 @@ func _make_frame_line(line_name: String, points: PackedVector2Array,
 
 # --- Fizik -------------------------------------------------------------------
 
-## Sol/sag duvarlar artik tek parca degil; wall_segments_y'deki her aralik
-## icin ayri bir StaticBody2D uretilir. Segmentler arasindaki bosluklarda
-## hicbir collision shape olmadigi icin top gercekten disari cikabilir.
+## Sol/sag duvarlar artik tek parca degil; ilgili segment dizisindeki her
+## aralik icin ayri bir StaticBody2D uretilir. Segmentler arasindaki
+## bosluklarda hicbir collision shape olmadigi icin top gercekten disari cikabilir.
 func _build_walls() -> void:
 	var walls := Node2D.new()
 	walls.name = "Walls"
 	add_child(walls)
 
-	for i in wall_segments_y.size():
-		var segment: Vector2 = wall_segments_y[i]
+	for i in left_wall_segments_y.size():
+		var segment: Vector2 = left_wall_segments_y[i]
 		var height := segment.y - segment.x
 		var center_y := (segment.x + segment.y) * 0.5
 		_add_wall(walls, "WallLeft%d" % i,
 			Vector2(-wall_thickness * 0.5, center_y), Vector2(wall_thickness, height))
+
+	for i in right_wall_segments_y.size():
+		var segment: Vector2 = right_wall_segments_y[i]
+		var height := segment.y - segment.x
+		var center_y := (segment.x + segment.y) * 0.5
 		_add_wall(walls, "WallRight%d" % i,
 			Vector2(play_size.x + wall_thickness * 0.5, center_y), Vector2(wall_thickness, height))
 
