@@ -127,6 +127,7 @@ func _append_stats_lines(lines: PackedStringArray, raw_stats: Variant) -> void:
 	lines.append("OOB / settled: %d / %d" % [
 		int(stats.get("out_of_bounds_failures", 0)),
 		int(stats.get("settled_failures", 0))])
+	lines.append("Manual iptal: %d" % int(stats.get("manual_cancels", 0)))
 
 
 func _format_seconds(seconds: float) -> String:

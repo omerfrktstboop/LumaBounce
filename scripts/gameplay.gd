@@ -31,6 +31,14 @@ signal menu_requested()
 ## Oyuncu ilk gecerli nisan hareketini yapinca ipucu bu surede solar.
 @export var tutorial_fade_time := 0.25
 
+@export_group("Hizli Yeniden Nisan")
+## Ucan bir top varken yalnizca firlaticinin bu yaricapindaki dokunuslar
+## yeni bir nisan suruklemesi baslatabilir.
+@export var reaim_touch_radius := 140.0
+## Iptal edilen eski topun kisa gorsel izi. Yeni top beklemeden firlaticida
+## gorunur; bu sure yalnizca eski konumdaki gorsel kopyaya uygulanir.
+@export_range(0.10, 0.15, 0.01) var manual_cancel_fade_time := 0.12
+
 @export_group("Bolum")
 ## Panellerin uretildigi sahne (bounce_panel.tscn).
 @export var panel_scene: PackedScene
@@ -107,6 +115,9 @@ var _last_failure_reason := "-"
 var _active_touch_index := -1
 var _touch_indices: Array[int] = []
 var _suppress_touch_until_release := false
+## Ucan top sirasinda firlatici bolgesinden baslayan, henuz minimum surukleme
+## esigini gecmedigi icin aktif atisi iptal etmemis nisan hareketi.
+var _reaim_pending := false
 
 
 func _ready() -> void:
@@ -252,6 +263,7 @@ func set_app_paused(paused: bool) -> void:
 func _respawn_ball() -> void:
 	_shot_token += 1
 	_stop_retry_pulse()
+	_reaim_pending = false
 	_launcher.cancel_aim()
 	_ball.reset_to(_launcher.get_spawn_position())
 	_target.reset()
@@ -264,6 +276,7 @@ func _on_shot_fired(impulse: Vector2) -> void:
 	# Ayni anda yalnizca bir top aktif olabilir.
 	if not _ball.is_ready_to_launch():
 		return
+	_reaim_pending = false
 
 	_shots_this_attempt += 1
 	_last_shot_power = impulse.length()
@@ -280,6 +293,7 @@ func _on_shot_fired(impulse: Vector2) -> void:
 
 
 func _on_shot_failed(reason: String) -> void:
+	_reaim_pending = false
 	_last_failure_reason = reason
 	if playtest_stats != null:
 		playtest_stats.record_failure(level_data.level_id, reason)
@@ -305,11 +319,44 @@ func _on_shot_failed(reason: String) -> void:
 	_respawn_ball()
 
 
+## Ucan topu, Launcher'in devam eden nisan suruklemesini bozmadan iptal eder.
+## Ball.shot_failed yayilmaz; hak ve istatistik burada tam olarak bir kez islenir.
+func _cancel_active_shot_for_reaim() -> void:
+	if not _reaim_pending or not _launcher.has_valid_aim() or not _ball.is_flying():
+		return
+
+	_reaim_pending = false
+	_shot_token += 1
+	_ball.cancel_and_reset_to(_launcher.get_spawn_position(), manual_cancel_fade_time)
+	_clear_effects()
+	_stop_retry_pulse()
+	_hide_message()
+
+	_last_failure_reason = "manual_cancel"
+	if playtest_stats != null:
+		playtest_stats.record_failure(level_data.level_id, "manual_cancel")
+
+	_lives_remaining = maxi(_lives_remaining - 1, 0)
+	_update_lives_hud()
+	if _lives_remaining <= 0:
+		_launcher.cancel_aim()
+		_launcher.enabled = false
+		AudioManager.play_failure()
+		_show_message(out_of_balls_message)
+		_pulse_retry_button()
+		return
+
+	# cancel_and_reset_to topu READY yapar. Launcher'in nisan durumu bilerek
+	# korunur; ayni parmak hareketi guc/aciyi guncelleyip yeni topu firlatabilir.
+	_launcher.enabled = true
+
+
 func _update_lives_hud() -> void:
 	_lives_display.set_lives(_lives_remaining, _max_lives)
 
 
 func _on_target_hit(_body: Node2D) -> void:
+	_reaim_pending = false
 	_ball.stop()
 	_launcher.enabled = false
 	# Kazanma anini ikincil vurgu (menekse) ile isaretle.
@@ -408,6 +455,7 @@ func _handle_touch_input(touch: InputEventScreenTouch) -> void:
 		if _touch_indices.size() > 1:
 			_suppress_touch_until_release = true
 			_active_touch_index = -1
+			_reaim_pending = false
 			_launcher.cancel_aim()
 			return
 		if _suppress_touch_until_release:
@@ -431,6 +479,7 @@ func _cancel_pointer_state() -> void:
 	_touch_indices.clear()
 	_active_touch_index = -1
 	_suppress_touch_until_release = false
+	_reaim_pending = false
 	_launcher.cancel_aim()
 
 
@@ -441,16 +490,28 @@ func _pointer_pressed(viewport_position: Vector2) -> void:
 	for control in _input_blockers:
 		if control.visible and control.get_global_rect().has_point(viewport_position):
 			return
-	if not _ball.is_ready_to_launch():
+
+	var world_position := _to_world(viewport_position)
+	if _ball.is_ready_to_launch():
+		_launcher.begin_aim(world_position)
 		return
-	_launcher.begin_aim(_to_world(viewport_position))
+	if not _ball.is_flying():
+		return
+	if world_position.distance_to(_launcher.global_position) > reaim_touch_radius:
+		return
+
+	_launcher.begin_aim(world_position)
+	_reaim_pending = _launcher.is_aiming()
 
 
 func _pointer_moved(viewport_position: Vector2) -> void:
 	_launcher.update_aim(_to_world(viewport_position))
+	if _reaim_pending and _launcher.has_valid_aim():
+		_cancel_active_shot_for_reaim()
 
 
 func _pointer_released() -> void:
+	_reaim_pending = false
 	_launcher.release_aim()
 
 

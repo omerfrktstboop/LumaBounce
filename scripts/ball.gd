@@ -98,6 +98,19 @@ func reset_to(spawn_position: Vector2) -> void:
 	show()
 
 
+## Manuel yeniden nisan icin aktif atisi sinyal yaymadan bitirir ve topu hemen
+## baslangica getirir. Eski konumda yalnizca kisa omurlu bir gorsel kopya kalir.
+func cancel_and_reset_to(spawn_position: Vector2, fade_time: float = 0.12) -> void:
+	if state != State.FLYING:
+		return
+
+	var cancel_echo := _make_cancel_echo()
+	stop()
+	_clear_trail()
+	reset_to(spawn_position)
+	_fade_cancel_echo(cancel_echo, fade_time)
+
+
 func launch(impulse: Vector2) -> void:
 	if state != State.READY:
 		return
@@ -226,6 +239,33 @@ func _build_visual() -> void:
 		ShapeBuilder.circle(radius, 40), accent))
 	_shell.add_child(ShapeBuilder.make_polygon(
 		ShapeBuilder.circle(radius * 0.52, 28), Color(core_color, 0.92)))
+
+
+func _make_cancel_echo() -> Node2D:
+	if _visual == null or get_parent() == null:
+		return null
+	var echo := _visual.duplicate() as Node2D
+	if echo == null:
+		return null
+	var visual_transform := _visual.global_transform
+	get_parent().add_child(echo)
+	echo.name = "CancelEcho"
+	echo.global_transform = visual_transform
+	echo.z_as_relative = false
+	echo.z_index = z_index
+	return echo
+
+
+func _fade_cancel_echo(echo: Node2D, fade_time: float) -> void:
+	if echo == null or not is_instance_valid(echo):
+		return
+	var duration := clampf(fade_time, 0.10, 0.15)
+	var start_scale := echo.scale
+	var tween := echo.create_tween().set_parallel(true)
+	tween.tween_property(echo, "scale", start_scale * 0.72, duration) \
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_property(echo, "modulate:a", 0.0, duration)
+	tween.chain().tween_callback(echo.queue_free)
 
 
 func _setup_trail() -> void:

@@ -12,6 +12,7 @@ var failed_shots := 0
 var restarts := 0
 var out_of_bounds_failures := 0
 var settled_failures := 0
+var manual_cancels := 0
 var total_time_seconds := 0.0
 ## Hicbir tamamlanma yoksa -1 (henuz bilgi yok anlaminda).
 var min_shots_to_complete := -1
@@ -36,6 +37,8 @@ func record_failure(reason: String) -> void:
 			out_of_bounds_failures += 1
 		"settled":
 			settled_failures += 1
+		"manual_cancel":
+			manual_cancels += 1
 
 
 func to_dictionary() -> Dictionary:
@@ -50,6 +53,7 @@ func to_dictionary() -> Dictionary:
 		"average_completion_seconds": average_completion_seconds(),
 		"out_of_bounds_failures": out_of_bounds_failures,
 		"settled_failures": settled_failures,
+		"manual_cancels": manual_cancels,
 	}
 
 
@@ -61,6 +65,7 @@ func load_from(config: ConfigFile, section: String) -> void:
 	restarts = config.get_value(section, "restarts", 0)
 	out_of_bounds_failures = config.get_value(section, "out_of_bounds_failures", 0)
 	settled_failures = config.get_value(section, "settled_failures", 0)
+	manual_cancels = config.get_value(section, "manual_cancels", 0)
 	total_time_seconds = config.get_value(section, "total_time_seconds", 0.0)
 	min_shots_to_complete = config.get_value(section, "min_shots_to_complete", -1)
 	var raw_total_completion: Variant = config.get_value(section, "total_completion_seconds", null)
@@ -80,6 +85,7 @@ func save_to(config: ConfigFile, section: String) -> void:
 	config.set_value(section, "restarts", restarts)
 	config.set_value(section, "out_of_bounds_failures", out_of_bounds_failures)
 	config.set_value(section, "settled_failures", settled_failures)
+	config.set_value(section, "manual_cancels", manual_cancels)
 	config.set_value(section, "total_time_seconds", total_time_seconds)
 	config.set_value(section, "min_shots_to_complete", min_shots_to_complete)
 	config.set_value(section, "average_completion_seconds", average_completion_seconds())
