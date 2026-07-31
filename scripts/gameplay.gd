@@ -114,6 +114,11 @@ var _has_started := false
 var _shots_this_attempt := 0
 var _attempt_active_start_msec := 0
 var _attempt_elapsed_seconds := 0.0
+## Deneme kronometresi bolume GIRINCE degil, oyuncu ilk topu gercekten nisan
+## almaya baslayinca calisir. Bolumu inceleyip yerlesimi okumak yildiz suresini
+## yemez. Ipucunun soldugu anla ayni tetik kullanilir (ilk gecerli nisan),
+## boylece "sure basladi" ile "artik oynuyorsun" ayni an olur.
+var _attempt_timer_running := false
 var _level_active_start_msec := 0
 var _level_elapsed_seconds := 0.0
 var _playtest_timing_paused := false
@@ -643,9 +648,13 @@ func _show_tutorial() -> void:
 
 
 ## Oyuncu gercekten nisan almaya basladiginda (surukleme min esigi gecince)
-## ipucu yumusakca cekilir - artik ekrani mesgul etmesine gerek yok.
+## iki sey olur: ipucu yumusakca cekilir ve deneme kronometresi baslar.
+## Ayni tetigi paylasmalari kasitli - oyuncu icin "artik oynuyorum" ani budur.
+## Ekrana dokunmak degil, gercek bir nisan olusmasi araniyor; boylece
+## yanlislikla degen bir parmak sureyi baslatmaz.
 func _on_aim_updated(_power_ratio: float, _direction: Vector2) -> void:
 	if _launcher.has_valid_aim():
+		_start_attempt_timer()
 		_dismiss_tutorial()
 
 
@@ -701,6 +710,7 @@ func get_debug_snapshot() -> Dictionary:
 		"blocks_broken": _blocks.get_broken_count(),
 		"attempt_shots": _shots_this_attempt,
 		"attempt_seconds": attempt_seconds,
+		"attempt_timer_running": _attempt_timer_running,
 		"projected_stars": projected,
 		"saved_stars": saved_stars,
 		"total_stars": total_stars,
@@ -723,9 +733,21 @@ func _start_playtest_timing() -> void:
 func _reset_attempt_timer() -> void:
 	_attempt_elapsed_seconds = 0.0
 	_attempt_active_start_msec = Time.get_ticks_msec()
+	# Kronometre yeniden KURULUR ama baslatilmaz; oyuncu tekrar nisan alana
+	# kadar bekler (bkz. _start_attempt_timer).
+	_attempt_timer_running = false
 	_final_attempt_seconds = 0.0
 	_final_attempt_shots = 0
 	_attempt_finished = false
+
+
+## Oyuncu ilk gecerli nisanini yaptigi anda kronometreyi baslatir. Deneme
+## boyunca yalnizca bir kez etki eder; sonraki atislarda sure durmaz.
+func _start_attempt_timer() -> void:
+	if _attempt_timer_running or _attempt_finished:
+		return
+	_attempt_timer_running = true
+	_attempt_active_start_msec = Time.get_ticks_msec()
 
 
 func _set_playtest_timing_paused(paused: bool) -> void:
@@ -745,8 +767,11 @@ func _flush_playtest_time() -> void:
 	if _playtest_timing_paused:
 		return
 	var now := Time.get_ticks_msec()
+	# Bolum kronometresi (playtest istatistigi) bolume girildigi andan itibaren
+	# isler; deneme kronometresi (yildiz suresi) yalnizca baslatildiysa.
 	_level_elapsed_seconds += maxf((now - _level_active_start_msec) / 1000.0, 0.0)
-	_attempt_elapsed_seconds += maxf((now - _attempt_active_start_msec) / 1000.0, 0.0)
+	if _attempt_timer_running:
+		_attempt_elapsed_seconds += maxf((now - _attempt_active_start_msec) / 1000.0, 0.0)
 	_level_active_start_msec = now
 	_attempt_active_start_msec = now
 
@@ -755,6 +780,9 @@ func _current_attempt_seconds() -> float:
 	# Bolum bittiyse dondurulmus deger doner; sonuc karti acikken sure islemez.
 	if _attempt_finished:
 		return _final_attempt_seconds
+	# Henuz nisan alinmadi: sure 0'dir, yerlesimi incelemek yildiz yemez.
+	if not _attempt_timer_running:
+		return _attempt_elapsed_seconds
 	var elapsed := _attempt_elapsed_seconds
 	if not _playtest_timing_paused:
 		elapsed += maxf((Time.get_ticks_msec() - _attempt_active_start_msec) / 1000.0, 0.0)

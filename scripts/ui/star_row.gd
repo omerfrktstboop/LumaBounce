@@ -26,8 +26,13 @@ extends Control
 @export_group("Renkler")
 @export var filled_color := Palette.ACCENT
 @export var filled_core_color := Palette.ACCENT_CORE
-@export var empty_color := Color(Palette.SURFACE_LIGHT, 0.35)
-@export var outline_color := Color(Palette.SURFACE_EDGE, 0.9)
+## Bos yildiz "yer tutan bos yuva" gibi okunmali: cok soluk govde + ince
+## kontur. Govde fazla belirgin olursa kucuk boyutlarda dolu yildizdan
+## ayirt edilemez.
+@export var empty_color := Color(Palette.SURFACE_LIGHT, 0.20)
+@export var outline_color := Color(Palette.SURFACE_LIGHT, 0.70)
+## Buyuk yildizlardaki kontur kalinligi. Kucuk yaricaplarda otomatik incelir
+## (bkz. _effective_outline_width).
 @export var outline_width := 2.0
 
 @export_group("Animasyon")
@@ -129,6 +134,15 @@ func _draw() -> void:
 			_draw_star(center, star_radius, empty_color, true)
 
 
+## Kontur kalinligi YARICAPLA ORANTILI olmali. Sabit 2 px, bolum secim
+## butonundaki 7 px'lik yildizda kollarin arasini tamamen doldurur: bos yildiz
+## "ici bos" degil "dolu" gorunur ve 2 yildiz kazanilan bir bolum listede
+## 3 yildizmis gibi okunur. Sonuc panelindeki 17 px'lik yildizda deger
+## degismez, yani buyuk gosterim aynen korunur.
+func _effective_outline_width() -> float:
+	return minf(outline_width, star_radius * 0.20)
+
+
 ## Bes koseli yildiz: dis ve ic yaricap arasinda donusumlu 10 nokta.
 func _draw_star(center: Vector2, radius: float, color: Color, outlined: bool) -> void:
 	var points := PackedVector2Array()
@@ -142,4 +156,4 @@ func _draw_star(center: Vector2, radius: float, color: Color, outlined: bool) ->
 	if outlined:
 		var loop := points.duplicate()
 		loop.append(points[0])
-		draw_polyline(loop, outline_color, outline_width, true)
+		draw_polyline(loop, outline_color, _effective_outline_width(), true)

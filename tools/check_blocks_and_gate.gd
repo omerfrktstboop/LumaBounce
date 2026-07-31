@@ -38,6 +38,7 @@ func _run() -> void:
 	_register_audio_manager()
 
 	await _test_block_state_rules()
+	await _test_attempt_timer()
 	await _test_level_select()
 	_test_star_gate()
 	_test_library_bounds()
@@ -132,6 +133,54 @@ func _first_block(field: BreakableField) -> BreakableBlock:
 		if block != null and not block.is_broken():
 			return block
 	return null
+
+
+# --- Deneme kronometresi -------------------------------------------------------
+#
+# Sure, bolume GIRINCE degil ilk gecerli nisanda baslamali. Bunu oynayarak
+# fark etmek zor (ekranda kronometre yok, yalnizca yildiza yansir), bu yuzden
+# dogrudan olculur.
+
+func _test_attempt_timer() -> void:
+	print("")
+	print("--- Deneme kronometresi ---")
+
+	var gameplay: Node = (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+	gameplay.level_data = LevelLibrary.load_level(1)
+	root.add_child(gameplay)
+	await physics_frame
+
+	_check("bolume girince kronometre kapali",
+		bool((gameplay.get_debug_snapshot() as Dictionary)["attempt_timer_running"]), false)
+
+	# Bolumu incelemek sureyi yememeli.
+	await create_timer(0.6).timeout
+	_check("nisan alinmadan sure islemiyor",
+		float((gameplay.get_debug_snapshot() as Dictionary)["attempt_seconds"]), 0.0)
+
+	# Gecerli bir nisan: min_drag_distance esigini gecen bir surukleme.
+	var launcher := gameplay.get_node("Launcher") as Launcher
+	var origin := launcher.get_spawn_position()
+	launcher.begin_aim(origin)
+	launcher.update_aim(origin + Vector2(0.0, launcher.min_drag_distance + 40.0))
+	_check("gecerli nisan olustu", launcher.has_valid_aim(), true)
+	_check("gecerli nisan kronometreyi baslatiyor",
+		bool((gameplay.get_debug_snapshot() as Dictionary)["attempt_timer_running"]), true)
+
+	await create_timer(0.5).timeout
+	var running := float((gameplay.get_debug_snapshot() as Dictionary)["attempt_seconds"])
+	_check("nisandan sonra sure isliyor", running > 0.3, true)
+
+	# Bolum yeniden baslarsa kronometre yeniden BEKLEMEYE gecmeli.
+	gameplay.reset_shot()
+	await physics_frame
+	var after: Dictionary = gameplay.get_debug_snapshot()
+	_check("yeniden baslatinca kronometre tekrar kapali",
+		bool(after["attempt_timer_running"]), false)
+	_check("yeniden baslatinca sure sifir", float(after["attempt_seconds"]), 0.0)
+
+	root.remove_child(gameplay)
+	gameplay.free()
 
 
 # --- Bolum secim ekrani --------------------------------------------------------

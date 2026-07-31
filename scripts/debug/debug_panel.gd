@@ -106,9 +106,11 @@ func _append_block_lines(lines: PackedStringArray, snapshot: Dictionary) -> void
 ## Su anki deneme ve yildiz durumu - yalnizca debug panelinde.
 func _append_attempt_lines(lines: PackedStringArray, snapshot: Dictionary) -> void:
 	lines.append("")
-	lines.append("Deneme: %d atis / %.1f sn" % [
+	# Kronometre ilk gecerli nisanla baslar; o ana kadar "bekliyor" gorunur.
+	lines.append("Deneme: %d atis / %.1f sn %s" % [
 		int(snapshot.get("attempt_shots", 0)),
-		float(snapshot.get("attempt_seconds", 0.0))])
+		float(snapshot.get("attempt_seconds", 0.0)),
+		"" if bool(snapshot.get("attempt_timer_running", false)) else "(sure bekliyor)"])
 	lines.append("Yildiz: simdi %d | kayitli %d | toplam %d/%d" % [
 		int(snapshot.get("projected_stars", 0)),
 		int(snapshot.get("saved_stars", 0)),

@@ -19,7 +19,7 @@ signal menu_requested()
 @export var check_size := 24.0
 @export var lock_size := 24.0
 ## Buton icindeki mini yildiz satiri.
-@export var button_star_radius := 7.0
+@export var button_star_radius := 8.5
 @export var button_star_spacing := 5.0
 ## Yildiz kapisi yuzunden kilitli butondaki "34 / 40" bilgisi.
 @export var gate_font_size := 18
