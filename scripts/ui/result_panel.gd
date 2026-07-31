@@ -1,13 +1,19 @@
 class_name ResultPanel
 extends Control
 
-## Bolum tamamlaninca acilan sade sonuc karti.
+## Bolum sonu karti - hem BASARI hem BASARISIZLIK icin AYNI bilesen.
 ##
-## Kendi basina karar vermez: hangi metinlerin gosterilecegini ve butonlarin
-## ne anlama geldigini cagiran (gameplay.gd) belirler.
+## Iki ayri UI kopyasi yoktur: show_success() ve show_failure() ayni
+## dugumleri farkli yapilandirir (yildiz satiri ve "sonraki bolum" butonu
+## yalnizca basaride gorunur). Kart CenterContainer icinde oldugu icin
+## gizlenen satirlar yer kaplamaz, kart icerige gore kuculur.
+##
+## Kendi basina karar vermez: metinleri ve butonlarin anlamini cagiran
+## (gameplay.gd) belirler. Panel acikken tum ekran girdisini bloklar.
 
 signal next_pressed()
 signal retry_pressed()
+signal level_select_pressed()
 signal menu_pressed()
 
 @export var scrim_color := Color(Palette.INK_TOP, 0.82)
@@ -17,11 +23,17 @@ signal menu_pressed()
 @export var pop_time := 0.28
 
 @onready var _scrim: ColorRect = $Scrim
-@onready var _card: PanelContainer = $Card
-@onready var _title: Label = $Card/Margin/Rows/Title
-@onready var _next_button: LumaButton = $Card/Margin/Rows/NextButton
-@onready var _retry_button: LumaButton = $Card/Margin/Rows/RetryButton
-@onready var _menu_button: LumaButton = $Card/Margin/Rows/MenuButton
+@onready var _card: PanelContainer = $CardCenter/Card
+@onready var _title: Label = $CardCenter/Card/Margin/Rows/Title
+@onready var _subtitle: Label = $CardCenter/Card/Margin/Rows/Subtitle
+@onready var _stars: StarRow = $CardCenter/Card/Margin/Rows/Stars
+@onready var _stats: HBoxContainer = $CardCenter/Card/Margin/Rows/Stats
+@onready var _time_value: Label = $CardCenter/Card/Margin/Rows/Stats/TimeColumn/Value
+@onready var _shot_value: Label = $CardCenter/Card/Margin/Rows/Stats/ShotColumn/Value
+@onready var _next_button: LumaButton = $CardCenter/Card/Margin/Rows/NextButton
+@onready var _retry_button: LumaButton = $CardCenter/Card/Margin/Rows/RetryButton
+@onready var _level_select_button: LumaButton = $CardCenter/Card/Margin/Rows/LevelSelectButton
+@onready var _menu_button: LumaButton = $CardCenter/Card/Margin/Rows/MenuButton
 
 var _pop_tween: Tween
 
@@ -31,15 +43,63 @@ func _ready() -> void:
 	_apply_card_style()
 	_next_button.pressed.connect(next_pressed.emit)
 	_retry_button.pressed.connect(retry_pressed.emit)
+	_level_select_button.pressed.connect(level_select_pressed.emit)
 	_menu_button.pressed.connect(menu_pressed.emit)
 	hide_result()
 
 
-func show_result(title_text: String, next_text: String) -> void:
+## Bolum tamamlandi: yildizlar, sure/atis bilgisi ve tam navigasyon.
+## [param new_record] true ise yildizlar kisa bir pop ile belirir.
+func show_success(title_text: String, next_text: String, retry_text: String,
+		stars: int, seconds: float, shots: int, new_record: bool) -> void:
 	_title.text = title_text
-	_next_button.text = next_text
+	_subtitle.hide()
 
+	_stars.show()
+	if new_record:
+		_stars.play_reveal(stars)
+	else:
+		_stars.set_stars(stars)
+
+	_stats.show()
+	_time_value.text = "%.1f sn" % seconds
+	_shot_value.text = str(shots)
+
+	_next_button.text = next_text
+	_next_button.show()
+	_retry_button.text = retry_text
+	_open()
+
+
+## Top hakki bitti: yildiz YOK (bolum tamamlanmadi), sonraki bolum YOK.
+func show_failure(title_text: String, subtitle_text: String, retry_text: String,
+		seconds: float, shots: int) -> void:
+	_title.text = title_text
+	_subtitle.text = subtitle_text
+	_subtitle.show()
+
+	_stars.hide()
+
+	_stats.show()
+	_time_value.text = "%.1f sn" % seconds
+	_shot_value.text = str(shots)
+
+	_next_button.hide()
+	_retry_button.text = retry_text
+	_open()
+
+
+func hide_result() -> void:
+	if _pop_tween != null and _pop_tween.is_valid():
+		_pop_tween.kill()
+	hide()
+	modulate.a = 1.0
+	_card.scale = Vector2.ONE
+
+
+func _open() -> void:
 	show()
+	# Kart icerige gore kuculup buyudugu icin pivot her acilista guncellenir.
 	_card.pivot_offset = _card.size * 0.5
 	_card.scale = Vector2(0.86, 0.86)
 	modulate.a = 0.0
@@ -51,14 +111,6 @@ func show_result(title_text: String, next_text: String) -> void:
 	_pop_tween.tween_property(_card, "scale", Vector2.ONE, pop_time) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	_pop_tween.tween_property(self, "modulate:a", 1.0, pop_time * 0.7)
-
-
-func hide_result() -> void:
-	if _pop_tween != null and _pop_tween.is_valid():
-		_pop_tween.kill()
-	hide()
-	modulate.a = 1.0
-	_card.scale = Vector2.ONE
 
 
 func _apply_card_style() -> void:

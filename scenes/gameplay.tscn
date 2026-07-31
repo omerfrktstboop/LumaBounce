@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay.gd" id="1_gameplay"]
 [ext_resource type="Script" path="res://scripts/arena.gd" id="2_arena"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="12_safe_area"]
 [ext_resource type="Script" path="res://scripts/screen_shake.gd" id="13_screen_shake"]
 [ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="14_ink"]
+[ext_resource type="Script" path="res://scripts/ui/star_row.gd" id="15_star_row"]
 
 [node name="Gameplay" type="Node2D"]
 script = ExtResource("1_gameplay")
@@ -197,63 +198,134 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.090196, 0.137255, 0.227451, 0.82)
 
-[node name="Card" type="PanelContainer" parent="HUD/ResultPanel"]
+[node name="CardCenter" type="CenterContainer" parent="HUD/ResultPanel"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -262.0
-offset_top = -238.0
-offset_right = 262.0
-offset_bottom = 238.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
-[node name="Margin" type="MarginContainer" parent="HUD/ResultPanel/Card"]
+[node name="Card" type="PanelContainer" parent="HUD/ResultPanel/CardCenter"]
+custom_minimum_size = Vector2(524, 0)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="HUD/ResultPanel/CardCenter/Card"]
 layout_mode = 2
 theme_override_constants/margin_left = 36
-theme_override_constants/margin_top = 32
+theme_override_constants/margin_top = 30
 theme_override_constants/margin_right = 36
-theme_override_constants/margin_bottom = 32
+theme_override_constants/margin_bottom = 30
 
-[node name="Rows" type="VBoxContainer" parent="HUD/ResultPanel/Card/Margin"]
+[node name="Rows" type="VBoxContainer" parent="HUD/ResultPanel/CardCenter/Card/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="HUD/ResultPanel/Card/Margin/Rows"]
-custom_minimum_size = Vector2(0, 92)
+[node name="Title" type="Label" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
+custom_minimum_size = Vector2(0, 72)
 layout_mode = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 38
 text = "BÖLÜM TAMAMLANDI"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="NextButton" type="Button" parent="HUD/ResultPanel/Card/Margin/Rows"]
-custom_minimum_size = Vector2(0, 92)
+[node name="Subtitle" type="Label" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.576471, 0.654902, 0.788235, 1)
+theme_override_font_sizes/font_size = 26
+text = "HEDEFİ VURAMADIN"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="Stars" type="Control" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("15_star_row")
+
+[node name="Stats" type="HBoxContainer" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="TimeColumn" type="VBoxContainer" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows/Stats"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Caption" type="Label" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows/Stats/TimeColumn"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.576471, 0.654902, 0.788235, 1)
+theme_override_font_sizes/font_size = 20
+text = "Süre"
+horizontal_alignment = 1
+
+[node name="Value" type="Label" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows/Stats/TimeColumn"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "0.0 sn"
+horizontal_alignment = 1
+
+[node name="ShotColumn" type="VBoxContainer" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows/Stats"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Caption" type="Label" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows/Stats/ShotColumn"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.576471, 0.654902, 0.788235, 1)
+theme_override_font_sizes/font_size = 20
+text = "Top"
+horizontal_alignment = 1
+
+[node name="Value" type="Label" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows/Stats/ShotColumn"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "0"
+horizontal_alignment = 1
+
+[node name="NextButton" type="Button" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
+custom_minimum_size = Vector2(0, 86)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 30
 text = "SONRAKİ BÖLÜM"
 script = ExtResource("11_button")
 emphasis = 0
 
-[node name="RetryButton" type="Button" parent="HUD/ResultPanel/Card/Margin/Rows"]
-custom_minimum_size = Vector2(0, 80)
+[node name="RetryButton" type="Button" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
+custom_minimum_size = Vector2(0, 74)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 28
-text = "TEKRAR DENE"
+theme_override_font_sizes/font_size = 26
+text = "TEKRAR OYNA"
 script = ExtResource("11_button")
 
-[node name="MenuButton" type="Button" parent="HUD/ResultPanel/Card/Margin/Rows"]
-custom_minimum_size = Vector2(0, 80)
+[node name="LevelSelectButton" type="Button" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
+custom_minimum_size = Vector2(0, 74)
 layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 26
+text = "BÖLÜM SEÇİMİ"
+script = ExtResource("11_button")
+
+[node name="MenuButton" type="Button" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
+custom_minimum_size = Vector2(0, 74)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
 text = "ANA MENÜ"
 script = ExtResource("11_button")

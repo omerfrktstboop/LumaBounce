@@ -17,6 +17,12 @@ signal menu_requested()
 @export var button_font_size := 40
 @export var columns := 2
 @export var check_size := 24.0
+## Buton icindeki mini yildiz satiri.
+@export var button_star_radius := 7.0
+@export var button_star_spacing := 5.0
+## Kilitli bolumlerde yildizlar tamamen gizlenmez, kisilir - grid'in
+## dikey ritmi bozulmasin ve "burada da yildiz var" bilgisi kalsin.
+@export_range(0.0, 1.0, 0.05) var locked_star_alpha := 0.25
 ## Kaydirma bittikten sonra bu sure boyunca bolum secimi yok sayilir; parmak
 ## kaydirirken butonun uzerinde birakildiginda yanlislikla bolum acilmasin.
 @export var scroll_guard_msec := 220
@@ -29,6 +35,7 @@ var debug_force_unlock := false
 
 @onready var _scroll: ScrollContainer = $SafeArea/Content/GridScroll
 @onready var _grid: GridContainer = $SafeArea/Content/GridScroll/GridHolder/Grid
+@onready var _star_total: Label = $SafeArea/Content/StarTotal
 @onready var _back_button: LumaButton = $SafeArea/Content/BackButton
 
 var _last_scroll_msec := -100000
@@ -39,8 +46,15 @@ func _ready() -> void:
 		progress = ProgressStore.load_from_disk()
 	_grid.columns = columns
 	_build_buttons()
+	_refresh_star_total()
 	_back_button.pressed.connect(menu_requested.emit)
 	_scroll.get_v_scroll_bar().value_changed.connect(_on_scrolled)
+
+
+## Ustte sade toplam: "34 / 60". Yeni panel acilmaz, mevcut baslik
+## seridinin altina tek satir eklenir.
+func _refresh_star_total() -> void:
+	_star_total.text = "%d / %d" % [progress.get_total_stars(), progress.get_max_available_stars()]
 
 
 func _on_scrolled(_value: float) -> void:
@@ -84,8 +98,29 @@ func _make_level_button(level_id: int) -> LumaButton:
 
 	if completed:
 		button.add_child(_make_check_mark())
+	button.add_child(_make_button_stars(level_id, unlocked))
 
 	return button
+
+
+## Butonun alt kenarinda mini yildiz satiri. Kilitliyken kisilir.
+func _make_button_stars(level_id: int, unlocked: bool) -> StarRow:
+	var stars := StarRow.new()
+	stars.name = "Stars"
+	stars.star_radius = button_star_radius
+	stars.spacing = button_star_spacing
+	stars.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if not unlocked:
+		stars.modulate.a = locked_star_alpha
+	stars.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	stars.offset_left = 0.0
+	stars.offset_top = -(button_star_radius * 2.0 + 16.0)
+	stars.offset_right = 0.0
+	stars.offset_bottom = -8.0
+	# set_stars sadece dolu sayisini ayarlar; StarRow._ready henuz calismadigi
+	# icin deger saklanir ve ilk cizimde uygulanir.
+	stars.set_stars(progress.get_level_stars(level_id))
+	return stars
 
 
 ## "Tamamlandi" isareti: kucuk, sade bir onay imi.

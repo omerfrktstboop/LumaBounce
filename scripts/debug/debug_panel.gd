@@ -85,8 +85,22 @@ func _build_info_text() -> String:
 	lines.append("Son atis gucu: %.0f" % float(snapshot.get("last_shot_power", 0.0)))
 	lines.append("Son atis acisi: %.1f deg" % float(snapshot.get("last_shot_angle_deg", 0.0)))
 	lines.append("Son basarisizlik: %s" % String(snapshot.get("last_failure_reason", "-")))
+	_append_attempt_lines(lines, snapshot)
 	_append_stats_lines(lines, snapshot.get("stats", {}))
 	return "\n".join(lines)
+
+
+## Su anki deneme ve yildiz durumu - yalnizca debug panelinde.
+func _append_attempt_lines(lines: PackedStringArray, snapshot: Dictionary) -> void:
+	lines.append("")
+	lines.append("Deneme: %d atis / %.1f sn" % [
+		int(snapshot.get("attempt_shots", 0)),
+		float(snapshot.get("attempt_seconds", 0.0))])
+	lines.append("Yildiz: simdi %d | kayitli %d | toplam %d/%d" % [
+		int(snapshot.get("projected_stars", 0)),
+		int(snapshot.get("saved_stars", 0)),
+		int(snapshot.get("total_stars", 0)),
+		int(snapshot.get("max_total_stars", 0))])
 
 
 func _on_unlock_all_pressed() -> void:

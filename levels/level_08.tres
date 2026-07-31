@@ -39,3 +39,7 @@ launcher_position = Vector2(360, 1120)
 target_position = Vector2(580, 300)
 panels = Array[PanelData]([SubResource("Resource_l8_wall_left"), SubResource("Resource_l8_wall_right"), SubResource("Resource_l8_floor_left"), SubResource("Resource_l8_floor_right")])
 max_lives = 4
+two_star_max_seconds = 60.0
+two_star_max_shots = 3
+three_star_max_seconds = 32.0
+three_star_max_shots = 2

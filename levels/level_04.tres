@@ -20,3 +20,7 @@ panels = Array[PanelData]([SubResource("Resource_l4_shelf")])
 left_wall_segments = Array[Vector2]([Vector2(-320, 380), Vector2(620, 1440)])
 max_lives = 4
 tutorial_text = "Sol kenarda boşluk var. Zayıf atış topu kaçırır."
+two_star_max_seconds = 52.0
+two_star_max_shots = 3
+three_star_max_seconds = 26.0
+three_star_max_shots = 2

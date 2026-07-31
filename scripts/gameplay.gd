@@ -10,15 +10,18 @@ extends Node2D
 ##
 ## Ekran baska bir sahne acmaz; yalnizca sinyal yayar, AppRoot karar verir.
 
-signal level_completed(level_id: int)
+signal level_completed(level_id: int, stars: int)
 signal next_level_requested(level_id: int)
 signal level_select_requested()
 signal menu_requested()
 
 @export var completed_title := "BÖLÜM TAMAMLANDI"
+@export var failed_title := "BÖLÜM BAŞARISIZ"
+@export var failed_subtitle := "HEDEFİ VURAMADIN"
 @export var next_level_label := "SONRAKİ BÖLÜM"
 @export var level_select_label := "BÖLÜM SEÇİMİ"
-@export var retry_label := "TEKRAR DENE"
+@export var retry_label := "TEKRAR OYNA"
+@export var restart_label := "TEKRAR BAŞLA"
 @export var menu_label := "ANA MENÜ"
 @export var out_of_balls_message := "TOP HAKKI BİTTİ"
 ## Kazanma efekti gorulsun diye sonuc karti kisa bir gecikmeyle acilir.
@@ -26,7 +29,6 @@ signal menu_requested()
 ## Basarisiz atistan sonra, hala hakki varsa otomatik sifirlama gecikmesi.
 @export var auto_reset_delay := 0.35
 @export var message_pop_time := 0.35
-@export var retry_pulse_time := 0.4
 @export var level_title_format := "BÖLÜM %d"
 ## Oyuncu ilk gecerli nisan hareketini yapinca ipucu bu surede solar.
 @export var tutorial_fade_time := 0.25
@@ -64,6 +66,9 @@ var level_data: LevelData
 ## AppRoot tarafindan add_child'dan ONCE atanir; debug build disinda tum
 ## kayit cagrilari sessizce hicbir sey yapmaz (bkz. PlaytestStats).
 var playtest_stats: PlaytestStats
+## AppRoot tarafindan add_child'dan ONCE atanir. Buradan YALNIZCA onceki
+## yildiz OKUNUR (yeni rekor tespiti icin); yazma islemi AppRoot'a aittir.
+var progress: ProgressStore
 
 @onready var _arena: Arena = $Arena
 @onready var _panels: Node2D = $Panels
@@ -82,7 +87,6 @@ var playtest_stats: PlaytestStats
 @onready var _result_panel: ResultPanel = $HUD/ResultPanel
 
 var _message_tween: Tween
-var _retry_pulse_tween: Tween
 var _tutorial_tween: Tween
 ## Ipucu bu denemede zaten solduysa tekrar tetiklenmesin.
 var _tutorial_dismissed := false
@@ -112,6 +116,14 @@ var _playtest_timing_paused := false
 var _last_shot_power := 0.0
 var _last_shot_angle_deg := 0.0
 var _last_failure_reason := "-"
+## Bolum bittigi ANDA dondurulan sure. Sonuc paneli gecikmeli acildigi ve
+## kart ekranda beklerken kronometre calismaya devam ettigi icin, yildiz
+## hesabi ve kartta gosterilen deger bu dondurulmus degeri kullanir.
+var _final_attempt_seconds := 0.0
+var _final_attempt_shots := 0
+## Bolum bitti (hedef vuruldu veya haklar tukendi). Kronometre burada durur;
+## sonuc karti ekranda beklerken sure ilerlemez.
+var _attempt_finished := false
 var _active_touch_index := -1
 var _touch_indices: Array[int] = []
 var _suppress_touch_until_release := false
@@ -224,6 +236,8 @@ func _connect_signals() -> void:
 	_home_button.pressed.connect(menu_requested.emit)
 	_result_panel.next_pressed.connect(_on_result_next)
 	_result_panel.retry_pressed.connect(_on_result_retry)
+	# Gameplay hicbir sahne acmaz; AppRoot mevcut fade gecisiyle karar verir.
+	_result_panel.level_select_pressed.connect(level_select_requested.emit)
 	_result_panel.menu_pressed.connect(menu_requested.emit)
 
 
@@ -262,7 +276,6 @@ func set_app_paused(paused: bool) -> void:
 ## Sadece topu ve hedefi baslangic durumuna dondurur; top hakkina dokunmaz.
 func _respawn_ball() -> void:
 	_shot_token += 1
-	_stop_retry_pulse()
 	_reaim_pending = false
 	_launcher.cancel_aim()
 	_ball.reset_to(_launcher.get_spawn_position())
@@ -302,11 +315,7 @@ func _on_shot_failed(reason: String) -> void:
 	_lives_remaining = maxi(_lives_remaining - 1, 0)
 	_update_lives_hud()
 	if _lives_remaining <= 0:
-		# Sadece SON hak bitince duyulur; her sıradan iskada agir bir
-		# kaybetme sesi calmak yorucu olurdu.
-		AudioManager.play_failure()
-		_show_message(out_of_balls_message)
-		_pulse_retry_button()
+		_handle_out_of_lives()
 		return
 
 	# Bekleme sirasinda oyuncu manuel "Yeniden Dene"ye basarsa _respawn_ball()
@@ -329,7 +338,6 @@ func _cancel_active_shot_for_reaim() -> void:
 	_shot_token += 1
 	_ball.cancel_and_reset_to(_launcher.get_spawn_position(), manual_cancel_fade_time)
 	_clear_effects()
-	_stop_retry_pulse()
 	_hide_message()
 
 	_last_failure_reason = "manual_cancel"
@@ -341,14 +349,22 @@ func _cancel_active_shot_for_reaim() -> void:
 	if _lives_remaining <= 0:
 		_launcher.cancel_aim()
 		_launcher.enabled = false
-		AudioManager.play_failure()
-		_show_message(out_of_balls_message)
-		_pulse_retry_button()
+		_handle_out_of_lives()
 		return
 
 	# cancel_and_reset_to topu READY yapar. Launcher'in nisan durumu bilerek
 	# korunur; ayni parmak hareketi guc/aciyi guncelleyip yeni topu firlatabilir.
 	_launcher.enabled = true
+
+
+## Son top da bitti. Iki cagiran var (normal iska ve manuel iptal), bu yuzden
+## ses + mesaj + sonuc karti tek yerde toplanir.
+func _handle_out_of_lives() -> void:
+	# Sadece SON hak bitince duyulur; her sıradan iskada agir bir
+	# kaybetme sesi calmak yorucu olurdu.
+	AudioManager.play_failure()
+	_show_message(out_of_balls_message)
+	_open_failure_panel()
 
 
 func _update_lives_hud() -> void:
@@ -367,24 +383,48 @@ func _on_target_hit(_body: Node2D) -> void:
 	Input.vibrate_handheld(target_hit_haptic_msec)
 	AudioManager.play_target_hit()
 
+	# Sure ve atis burada dondurulur: kart gecikmeli acilir ve ekranda
+	# beklerken kronometrenin islemesi yildizi haksiz yere dusururdu.
+	_freeze_attempt()
+
 	if playtest_stats != null:
-		var elapsed := _current_attempt_seconds()
-		playtest_stats.record_completion(level_data.level_id, _shots_this_attempt, elapsed)
+		playtest_stats.record_completion(
+			level_data.level_id, _final_attempt_shots, _final_attempt_seconds)
 
-	level_completed.emit(level_data.level_id)
-	_open_result_panel()
+	var stars := level_data.calculate_stars(_final_attempt_seconds, _final_attempt_shots)
+	# Kaydi AppRoot yazar; "yeni rekor" karari YAZMADAN ONCE alinmali.
+	var previous_stars := progress.get_level_stars(level_data.level_id) if progress != null else 0
+	var new_record := stars > previous_stars
+
+	level_completed.emit(level_data.level_id, stars)
+	_open_success_panel(stars, new_record)
 
 
-func _open_result_panel() -> void:
+func _open_success_panel(stars: int, new_record: bool) -> void:
 	var token := _shot_token
 	await get_tree().create_timer(result_delay, false).timeout
 	# Bu arada yeniden baslatildiysa karti acma.
 	if token != _shot_token or not is_inside_tree():
 		return
 	var next_text := next_level_label if LevelLibrary.has_next(level_data.level_id) else level_select_label
-	_result_panel.show_result(completed_title, next_text)
+	_result_panel.show_success(
+		completed_title, next_text, retry_label,
+		stars, _final_attempt_seconds, _final_attempt_shots, new_record)
 	# target_hit'ten result_delay kadar sonra geldigi icin ust uste binmez.
 	AudioManager.play_level_complete()
+
+
+## Son top da kaybedildi. Yildiz GOSTERILMEZ - bolum tamamlanmadi.
+func _open_failure_panel() -> void:
+	_freeze_attempt()
+
+	var token := _shot_token
+	await get_tree().create_timer(result_delay, false).timeout
+	if token != _shot_token or not is_inside_tree():
+		return
+	_result_panel.show_failure(
+		failed_title, failed_subtitle, restart_label,
+		_final_attempt_seconds, _final_attempt_shots)
 
 
 func _on_result_next() -> void:
@@ -394,8 +434,11 @@ func _on_result_next() -> void:
 		level_select_requested.emit()
 
 
+## Hem basaridaki "TEKRAR OYNA" hem basarisizliktaki "TEKRAR BASLA".
+## Ayni reset mantigi ikinci kez yazilmaz: reset_shot() zaten haklari,
+## atis sayacini, attempt zamanlayicisini, hedefi, topu, ipucunu ve
+## retry pulse'ini sifirlar; panel de orada kapanir.
 func _on_result_retry() -> void:
-	_result_panel.hide_result()
 	reset_shot()
 
 
@@ -574,24 +617,6 @@ func _hide_message() -> void:
 	_message.modulate.a = 1.0
 
 
-## Dikkat cekmek icin butonu bir kez buyutup geri getirir. Renk degismez -
-## tek vurgu kuralina (neon sadece top/hedef/nisan cizgisinde) dokunulmaz.
-func _pulse_retry_button() -> void:
-	_stop_retry_pulse()
-	_retry_button.pivot_offset = _retry_button.size * 0.5
-	_retry_pulse_tween = create_tween()
-	_retry_pulse_tween.tween_property(_retry_button, "scale", Vector2.ONE * 1.22, retry_pulse_time * 0.35) \
-		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_retry_pulse_tween.tween_property(_retry_button, "scale", Vector2.ONE, retry_pulse_time * 0.65) \
-		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-
-
-func _stop_retry_pulse() -> void:
-	if _retry_pulse_tween != null and _retry_pulse_tween.is_valid():
-		_retry_pulse_tween.kill()
-	_retry_button.scale = Vector2.ONE
-
-
 # --- Debug -------------------------------------------------------------------
 #
 # Bu tek metod disinda gameplay.gd, debug panelinin var olup olmadigini
@@ -601,6 +626,17 @@ func get_debug_snapshot() -> Dictionary:
 	var stats := {}
 	if playtest_stats != null and level_data != null:
 		stats = playtest_stats.get_entry_snapshot(level_data.level_id)
+	var attempt_seconds := _current_attempt_seconds()
+	var projected := 0
+	var saved_stars := 0
+	var total_stars := 0
+	if level_data != null:
+		# "Su an bitirsen kac yildiz alirdin" - gercek hesabin aynisi.
+		projected = level_data.calculate_stars(attempt_seconds, _shots_this_attempt)
+	if progress != null and level_data != null:
+		saved_stars = progress.get_level_stars(level_data.level_id)
+		total_stars = progress.get_total_stars()
+
 	return {
 		"level_id": level_data.level_id if level_data != null else 0,
 		"lives_remaining": _lives_remaining,
@@ -609,6 +645,12 @@ func get_debug_snapshot() -> Dictionary:
 		"last_shot_power": _last_shot_power,
 		"last_shot_angle_deg": _last_shot_angle_deg,
 		"last_failure_reason": _last_failure_reason,
+		"attempt_shots": _shots_this_attempt,
+		"attempt_seconds": attempt_seconds,
+		"projected_stars": projected,
+		"saved_stars": saved_stars,
+		"total_stars": total_stars,
+		"max_total_stars": progress.get_max_available_stars() if progress != null else 0,
 		"stats": stats,
 	}
 
@@ -627,6 +669,9 @@ func _start_playtest_timing() -> void:
 func _reset_attempt_timer() -> void:
 	_attempt_elapsed_seconds = 0.0
 	_attempt_active_start_msec = Time.get_ticks_msec()
+	_final_attempt_seconds = 0.0
+	_final_attempt_shots = 0
+	_attempt_finished = false
 
 
 func _set_playtest_timing_paused(paused: bool) -> void:
@@ -653,7 +698,20 @@ func _flush_playtest_time() -> void:
 
 
 func _current_attempt_seconds() -> float:
+	# Bolum bittiyse dondurulmus deger doner; sonuc karti acikken sure islemez.
+	if _attempt_finished:
+		return _final_attempt_seconds
 	var elapsed := _attempt_elapsed_seconds
 	if not _playtest_timing_paused:
 		elapsed += maxf((Time.get_ticks_msec() - _attempt_active_start_msec) / 1000.0, 0.0)
 	return elapsed
+
+
+## Bolum bittigi anda sure/atis dondurulur. Iki bitis yolu da (hedef ve
+## haklarin tukenmesi) buradan gecer, boylece kural tek yerde durur.
+func _freeze_attempt() -> void:
+	if _attempt_finished:
+		return
+	_final_attempt_seconds = _current_attempt_seconds()
+	_final_attempt_shots = _shots_this_attempt
+	_attempt_finished = true

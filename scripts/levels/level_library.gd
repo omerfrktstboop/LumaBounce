@@ -11,6 +11,22 @@ const FIRST_LEVEL_ID := 1
 const LEVEL_COUNT := 20
 const PATH_FORMAT := "res://levels/level_%02d.tres"
 
+## Yildiz kapilari: bolum_id -> o bolumun acilmasi icin gereken TOPLAM yildiz.
+## Sirali ilerlemeye EK bir kosuldur (bkz. ProgressStore.is_unlocked).
+##
+## Level 21 henuz yok; LEVEL_COUNT 21'e cikarilinca bu kapi kendiliginden
+## devreye girer. Simdilik is_valid_id(21) false oldugu icin tamamen atildir,
+## sahte bir bolum uretilmez.
+const LEVEL_21_REQUIRED_STARS := 40
+const STAR_GATES := {
+	21: LEVEL_21_REQUIRED_STARS,
+}
+
+
+## Bolumun acilmasi icin gereken toplam yildiz; kapisi yoksa 0.
+static func required_stars_for(level_id: int) -> int:
+	return int(STAR_GATES.get(level_id, 0))
+
 
 static func last_level_id() -> int:
 	return FIRST_LEVEL_ID + LEVEL_COUNT - 1

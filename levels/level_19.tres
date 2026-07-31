@@ -33,3 +33,7 @@ target_position = Vector2(250, 260)
 panels = Array[PanelData]([SubResource("Resource_l19_diagonal"), SubResource("Resource_l19_upper"), SubResource("Resource_l19_left")])
 right_wall_segments = Array[Vector2]([Vector2(-320, 600), Vector2(900, 1440)])
 max_lives = 3
+two_star_max_seconds = 75.0
+two_star_max_shots = 3
+three_star_max_seconds = 42.0
+three_star_max_shots = 2

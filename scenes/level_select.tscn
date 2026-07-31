@@ -53,10 +53,24 @@ text = "BÖLÜMLER"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="StarTotal" type="Label" parent="SafeArea/Content"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 142.0
+offset_bottom = 182.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.203922, 0.901961, 0.831373, 1)
+theme_override_font_sizes/font_size = 26
+text = "0 / 60"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="GridScroll" type="ScrollContainer" parent="SafeArea/Content"]
 layout_mode = 1
 anchors_preset = -1
-anchor_top = 0.17
+anchor_top = 0.19
 anchor_right = 1.0
 anchor_bottom = 0.8
 grow_horizontal = 2

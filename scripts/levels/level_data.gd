@@ -30,6 +30,14 @@ const WALL_OVERSHOOT := 320.0
 @export var max_lives := 5
 @export_multiline var tutorial_text := ""
 
+@export_group("Yildiz Hedefleri")
+## 2 yildiz icin: sure VE atis sayisi birlikte saglanmali.
+@export var two_star_max_seconds := 45.0
+@export var two_star_max_shots := 4
+## 3 yildiz icin daha siki esikler; ikisi de saglanmali.
+@export var three_star_max_seconds := 25.0
+@export var three_star_max_shots := 2
+
 
 func get_left_segments(play_rect := DEFAULT_PLAY_RECT) -> Array[Vector2]:
 	return left_wall_segments if not left_wall_segments.is_empty() else _solid_wall(play_rect)
@@ -58,6 +66,42 @@ func validate(play_rect := DEFAULT_PLAY_RECT) -> PackedStringArray:
 			problems.append("panel %d bos" % i)
 			continue
 		problems.append_array(panel.validate(i))
+
+	problems.append_array(_validate_star_targets())
+	return problems
+
+
+## Bolum tamamlandiginda kazanilan yildiz. Sure VE atis kosulu BIRLIKTE
+## saglanmali: 18 sn + 3 atis, sure 3 yildizlik olsa bile 2 yildiz verir.
+## Basarisiz bolumde hic cagrilmaz (yildiz yalnizca tamamlamayla kazanilir).
+func calculate_stars(seconds: float, shots: int) -> int:
+	if seconds <= three_star_max_seconds and shots <= three_star_max_shots:
+		return 3
+	if seconds <= two_star_max_seconds and shots <= two_star_max_shots:
+		return 2
+	return 1
+
+
+func _validate_star_targets() -> PackedStringArray:
+	var problems := PackedStringArray()
+
+	if two_star_max_seconds <= 0.0:
+		problems.append("two_star_max_seconds pozitif olmali (%s)" % two_star_max_seconds)
+	if three_star_max_seconds <= 0.0:
+		problems.append("three_star_max_seconds pozitif olmali (%s)" % three_star_max_seconds)
+	if two_star_max_shots <= 0:
+		problems.append("two_star_max_shots pozitif olmali (%d)" % two_star_max_shots)
+	if three_star_max_shots <= 0:
+		problems.append("three_star_max_shots pozitif olmali (%d)" % three_star_max_shots)
+
+	# 3 yildiz her zaman 2 yildizdan daha siki olmali, yoksa 3 yildiz
+	# kosulu 2 yildizdan once saglanip esikler anlamsizlasir.
+	if three_star_max_seconds > two_star_max_seconds:
+		problems.append("three_star_max_seconds (%s) two_star_max_seconds'tan (%s) buyuk olamaz" % [
+			three_star_max_seconds, two_star_max_seconds])
+	if three_star_max_shots > two_star_max_shots:
+		problems.append("three_star_max_shots (%d) two_star_max_shots'tan (%d) buyuk olamaz" % [
+			three_star_max_shots, two_star_max_shots])
 
 	return problems
 

@@ -192,10 +192,14 @@ func _configure_gameplay(screen: Node, level_id: int) -> void:
 	if gameplay != null:
 		gameplay.level_data = LevelLibrary.load_level(level_id)
 		gameplay.playtest_stats = _playtest_stats
+		gameplay.progress = _progress
 
 
-func _on_level_completed(level_id: int) -> void:
+## Kazanilan yildiz yalnizca oncekinden IYIYSE kaydedilir; eski 3, yeni 1
+## ise kayit 3 kalir (bkz. ProgressStore.set_level_stars_if_higher).
+func _on_level_completed(level_id: int, stars: int) -> void:
 	_progress.mark_completed(level_id)
+	_progress.set_level_stars_if_higher(level_id, stars)
 
 
 # --- Geri tusu ---------------------------------------------------------------
