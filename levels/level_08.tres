@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+
+[sub_resource type="Resource" id="Resource_l8_wall_left"]
+script = ExtResource("2_panel_data")
+position = Vector2(200, 600)
+rotation_degrees = 90.0
+length = 400.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l8_wall_right"]
+script = ExtResource("2_panel_data")
+position = Vector2(410, 600)
+rotation_degrees = 90.0
+length = 400.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l8_floor_left"]
+script = ExtResource("2_panel_data")
+position = Vector2(60, 800)
+rotation_degrees = 0.0
+length = 300.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l8_floor_right"]
+script = ExtResource("2_panel_data")
+position = Vector2(575, 800)
+rotation_degrees = 0.0
+length = 350.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("1_level_data")
+level_id = 8
+display_name = "Kontrollü Koridor"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(580, 300)
+panels = Array[PanelData]([SubResource("Resource_l8_wall_left"), SubResource("Resource_l8_wall_right"), SubResource("Resource_l8_floor_left"), SubResource("Resource_l8_floor_right")])
+max_lives = 4

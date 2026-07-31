@@ -10,10 +10,16 @@ extends Control
 signal level_selected(level_id: int)
 signal menu_requested()
 
-@export var button_size := Vector2(150.0, 150.0)
-@export var button_font_size := 44
-@export var columns := 3
-@export var check_size := 26.0
+## 10 bolum iki sutuna sigacak boyut: 5 satir x 132 + 4 x 20 bosluk = 740 px,
+## 720x1280 referans ekranda kaydirmaya gerek kalmadan sigar. Daha kisa
+## ekranlarda GridScroll devreye girer.
+@export var button_size := Vector2(132.0, 132.0)
+@export var button_font_size := 40
+@export var columns := 2
+@export var check_size := 24.0
+## Kaydirma bittikten sonra bu sure boyunca bolum secimi yok sayilir; parmak
+## kaydirirken butonun uzerinde birakildiginda yanlislikla bolum acilmasin.
+@export var scroll_guard_msec := 220
 
 ## AppRoot tarafindan add_child'dan ONCE atanir.
 var progress: ProgressStore
@@ -21,8 +27,11 @@ var progress: ProgressStore
 ## dosyasina HICBIR SEKILDE dokunmadan tum bolumleri secilebilir gosterir.
 var debug_force_unlock := false
 
-@onready var _grid: GridContainer = $SafeArea/Content/GridHolder/Grid
+@onready var _scroll: ScrollContainer = $SafeArea/Content/GridScroll
+@onready var _grid: GridContainer = $SafeArea/Content/GridScroll/GridHolder/Grid
 @onready var _back_button: LumaButton = $SafeArea/Content/BackButton
+
+var _last_scroll_msec := -100000
 
 
 func _ready() -> void:
@@ -31,6 +40,11 @@ func _ready() -> void:
 	_grid.columns = columns
 	_build_buttons()
 	_back_button.pressed.connect(menu_requested.emit)
+	_scroll.get_v_scroll_bar().value_changed.connect(_on_scrolled)
+
+
+func _on_scrolled(_value: float) -> void:
+	_last_scroll_msec = Time.get_ticks_msec()
 
 
 ## Debug panelinden calisma zamaninda cagrilir; ekran zaten acikken
@@ -91,6 +105,10 @@ func _make_check_mark() -> GlyphIcon:
 
 
 func _on_level_pressed(level_id: int) -> void:
+	# Kaydirma jesti butonun uzerinde bitmis olabilir; hemen ardindan gelen
+	# basisi bolum acma niyeti saymayiz.
+	if Time.get_ticks_msec() - _last_scroll_msec < scroll_guard_msec:
+		return
 	if not progress.is_unlocked(level_id) and not debug_force_unlock:
 		return
 	level_selected.emit(level_id)

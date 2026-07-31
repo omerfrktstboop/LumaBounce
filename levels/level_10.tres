@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+
+[sub_resource type="Resource" id="Resource_l10_roof"]
+script = ExtResource("2_panel_data")
+position = Vector2(300, 480)
+rotation_degrees = 0.0
+length = 360.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l10_kick_left"]
+script = ExtResource("2_panel_data")
+position = Vector2(170, 820)
+rotation_degrees = 25.0
+length = 300.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l10_kick_right"]
+script = ExtResource("2_panel_data")
+position = Vector2(570, 880)
+rotation_degrees = -25.0
+length = 300.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("1_level_data")
+level_id = 10
+display_name = "İlk Ustalık"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(470, 260)
+panels = Array[PanelData]([SubResource("Resource_l10_roof"), SubResource("Resource_l10_kick_left"), SubResource("Resource_l10_kick_right")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 400), Vector2(640, 1440)])
+max_lives = 4

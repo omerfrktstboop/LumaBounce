@@ -53,7 +53,7 @@ text = "BÖLÜMLER"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="GridHolder" type="CenterContainer" parent="SafeArea/Content"]
+[node name="GridScroll" type="ScrollContainer" parent="SafeArea/Content"]
 layout_mode = 1
 anchors_preset = -1
 anchor_top = 0.17
@@ -61,13 +61,18 @@ anchor_right = 1.0
 anchor_bottom = 0.8
 grow_horizontal = 2
 grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="GridHolder" type="CenterContainer" parent="SafeArea/Content/GridScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Grid" type="GridContainer" parent="SafeArea/Content/GridHolder"]
+[node name="Grid" type="GridContainer" parent="SafeArea/Content/GridScroll/GridHolder"]
 layout_mode = 2
-theme_override_constants/h_separation = 24
-theme_override_constants/v_separation = 24
-columns = 3
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 20
+columns = 2
 
 [node name="BackButton" type="Button" parent="SafeArea/Content"]
 layout_mode = 1

@@ -17,9 +17,9 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 config/name="LumaBounce"
 config/description="Dikey mobil sekme prototipi: nisan al, firlat, sektir, hedefi vur."
 run/main_scene="res://scenes/app_root.tscn"
-run/max_fps=60
 config/quit_on_go_back=false
 config/features=PackedStringArray("4.7", "GL Compatibility")
+run/max_fps=60
 
 [autoload]
 
@@ -49,5 +49,5 @@ window/handheld/orientation=1
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-anti_aliasing/quality/msaa_2d=2
 textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_2d=2

@@ -8,7 +8,7 @@ extends RefCounted
 ## bos/bozuk bir bolumle acilmaz.
 
 const FIRST_LEVEL_ID := 1
-const LEVEL_COUNT := 5
+const LEVEL_COUNT := 10
 const PATH_FORMAT := "res://levels/level_%02d.tres"
 
 
