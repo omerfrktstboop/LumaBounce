@@ -8,22 +8,24 @@ extends RefCounted
 ## bos/bozuk bir bolumle acilmaz.
 
 const FIRST_LEVEL_ID := 1
-const LEVEL_COUNT := 20
+const LEVEL_COUNT := 25
 const PATH_FORMAT := "res://levels/level_%02d.tres"
 
-## Yildiz kapilari: bolum_id -> o bolumun acilmasi icin gereken TOPLAM yildiz.
+## Yildiz kapilari: bolum_id -> o bolumun acilmasi icin gereken yildiz sayisi.
 ## Sirali ilerlemeye EK bir kosuldur (bkz. ProgressStore.is_unlocked).
 ##
-## Level 21 henuz yok; LEVEL_COUNT 21'e cikarilinca bu kapi kendiliginden
-## devreye girer. Simdilik is_valid_id(21) false oldugu icin tamamen atildir,
-## sahte bir bolum uretilmez.
+## Sayim her zaman kapinin ONUNDEKI bolumlerden yapilir (bkz.
+## ProgressStore.get_stars_before): 21'in kapisi 1-20'yi sayar, 21-25'i
+## saymaz. Bu kural kapiya ozel bir ayar degil, sistemin tanimidir - ileride
+## eklenecek her kapi kendiliginden dogru araligi sayar ve bir bolum asla
+## kendi kilidini acmaya katkida bulunamaz.
 const LEVEL_21_REQUIRED_STARS := 40
 const STAR_GATES := {
 	21: LEVEL_21_REQUIRED_STARS,
 }
 
 
-## Bolumun acilmasi icin gereken toplam yildiz; kapisi yoksa 0.
+## Bolumun acilmasi icin gereken yildiz; kapisi yoksa 0.
 static func required_stars_for(level_id: int) -> int:
 	return int(STAR_GATES.get(level_id, 0))
 

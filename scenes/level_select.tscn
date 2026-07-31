@@ -63,7 +63,7 @@ grow_horizontal = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.203922, 0.901961, 0.831373, 1)
 theme_override_font_sizes/font_size = 26
-text = "0 / 60"
+text = "0 / 75"
 horizontal_alignment = 1
 vertical_alignment = 1
 

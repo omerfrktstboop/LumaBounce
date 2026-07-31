@@ -11,6 +11,7 @@ enum Glyph {
 	HOME,
 	CHECK,
 	RESTART,
+	LOCK,
 }
 
 @export var glyph: Glyph = Glyph.SETTINGS:
@@ -43,6 +44,8 @@ func _draw() -> void:
 			_draw_restart(center, unit)
 		Glyph.CHECK:
 			_draw_check(center, unit)
+		Glyph.LOCK:
+			_draw_lock(center, unit)
 
 
 func _draw_speaker(center: Vector2, unit: float, sound_on: bool) -> void:
@@ -120,6 +123,18 @@ func _draw_check(center: Vector2, unit: float) -> void:
 		center + Vector2(unit * 0.64, -unit * 0.46),
 	])
 	draw_polyline(points, color, stroke_width, true)
+
+
+## Kilit: dolu govde + uzerinde yarim halka aski. Bolum secim ekranindaki
+## kilitli butonlar bunu kullanir; "kapali" bilgisi yalnizca solgunlukla
+## degil, bir isaretle de verilsin.
+func _draw_lock(center: Vector2, unit: float) -> void:
+	var body_top := center.y - unit * 0.22
+	draw_arc(
+		Vector2(center.x, body_top), unit * 0.40, PI, TAU, 16, color, stroke_width, true)
+	draw_rect(
+		Rect2(Vector2(center.x - unit * 0.62, body_top), Vector2(unit * 1.24, unit * 0.84)),
+		color)
 
 
 func _draw_gear(center: Vector2, unit: float) -> void:

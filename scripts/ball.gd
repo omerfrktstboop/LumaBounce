@@ -9,7 +9,14 @@ extends CharacterBody2D
 ## Rastgelelik yoktur, fizik adimi sabittir -> ayni atis ayni sonucu verir.
 
 ## Topun bir yuzeye carptigi an (konum, yuzey normali, carpma hizi).
+## Bu sinyal GERI BILDIRIM icindir ve [member min_impact_for_feedback] ile
+## suzulur - cok yavas temaslarda hic yayilmaz.
 signal bounced(bounce_position: Vector2, normal: Vector2, impact_speed: float)
+## Topun NEYE degdigi. Hiz esiginden bagimsiz olarak HER carpismada yayilir;
+## kural niteligindeki temaslar (or. kirilabilir blok) buna baglanmalidir,
+## yoksa yavas bir temas sessizce yutulur. Top carpismanin ne anlama
+## geldigini bilmez; kararlari gameplay.gd verir.
+signal surface_touched(collider: Object, at: Vector2, normal: Vector2)
 ## Atis basarisiz bitti: "out_of_bounds" veya "settled".
 signal shot_failed(reason: String)
 
@@ -165,6 +172,11 @@ func _move_and_bounce(delta: float) -> void:
 		velocity = velocity.bounce(normal) * bounciness
 		_enforce_separation(normal)
 		motion = collision.get_remainder().bounce(normal) * bounciness
+
+		# Sekme HESAPLANDIKTAN sonra bildirilir: dinleyicinin yaptigi is
+		# (or. blogun carpismasini kaldirmasi) bu carpismanin sonucunu
+		# geriye donuk degistiremez.
+		surface_touched.emit(collision.get_collider(), collision.get_position(), normal)
 
 		if impact_speed >= min_impact_for_feedback:
 			bounced.emit(collision.get_position(), normal, impact_speed)

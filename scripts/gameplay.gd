@@ -56,6 +56,9 @@ signal menu_requested()
 @export_group("Ekran Titresimi")
 ## Panele carpma titresiminin carpani (gercek deger carpma hizina gore olceklenir).
 @export_range(0.0, 1.0, 0.01) var bounce_shake_trauma := 0.4
+## Blok kirilmasi sekmenin ustune EKLENEN kucuk bir vurgudur; sekme
+## titresimi zaten calistigi icin bilerek dusuk tutulur.
+@export_range(0.0, 1.0, 0.01) var block_break_shake_trauma := 0.22
 @export_range(0.0, 1.0, 0.01) var target_hit_shake_trauma := 0.75
 ## Hedefe vurulunca (destekleyen cihazlarda) kisa bir titresim; Android/iOS
 ## disinda ve destegi olmayan cihazlarda Godot bunu sessizce yok sayar.
@@ -72,6 +75,7 @@ var progress: ProgressStore
 
 @onready var _arena: Arena = $Arena
 @onready var _panels: Node2D = $Panels
+@onready var _blocks: BreakableField = $Blocks
 @onready var _launcher: Launcher = $Launcher
 @onready var _ball: Ball = $Ball
 @onready var _target: Target = $Target
@@ -227,6 +231,8 @@ func _position_shake_camera() -> void:
 func _connect_signals() -> void:
 	_launcher.shot_fired.connect(_on_shot_fired)
 	_ball.bounced.connect(_on_ball_bounced)
+	_ball.surface_touched.connect(_on_surface_touched)
+	_blocks.block_broken.connect(_on_block_broken)
 	_ball.shot_failed.connect(_on_shot_failed)
 	_target.hit.connect(_on_target_hit)
 	# Ilk gecerli nisan hareketinde ipucunu sondur.
@@ -243,7 +249,10 @@ func _connect_signals() -> void:
 
 # --- Oyun dongusu ------------------------------------------------------------
 
-## Bolumu bastan baslatir: haklar dolar, top ve hedef sifirlanir.
+## BOLUM YENIDEN BASLATMA. Haklar dolar, atis sayaci ve kronometre sifirlanir,
+## KIRILAN TUM BLOKLAR GERI GELIR. (Karsiti: _respawn_ball, yalnizca ATIS
+## sifirlamasidir ve bloklara dokunmaz.)
+##
 ## _has_started, bolume ILK giris ile MANUEL yeniden baslatmayi ayirir:
 ## giriste ne restart sayaci artar ne de restart sesi calar.
 func reset_shot() -> void:
@@ -257,6 +266,12 @@ func reset_shot() -> void:
 	# Ipucu yalnizca bolum bastan baslarken geri gelir; basarisiz atistan
 	# sonraki otomatik top respawn'inda gelmez.
 	_show_tutorial()
+
+	# Bloklar bilerek _apply_level'da degil BURADA kurulur: paneller ve
+	# duvarlar bolumun degismeyen iskeleti, bloklar ise deneme boyunca
+	# degisen durumudur. Boylece "bloklar ne zaman geri gelir" sorusunun
+	# yaniti tek bir yerdedir ve yanlislikla atis sifirlamasina sizamaz.
+	_blocks.build(level_data.breakable_blocks)
 
 	_lives_remaining = _max_lives
 	_update_lives_hud()
@@ -273,7 +288,9 @@ func set_app_paused(paused: bool) -> void:
 		_cancel_pointer_state()
 
 
-## Sadece topu ve hedefi baslangic durumuna dondurur; top hakkina dokunmaz.
+## ATIS SIFIRLAMA. Sadece topu ve hedefi baslangic durumuna dondurur; top
+## hakkina ve KIRILMIS BLOKLARA dokunmaz - kirilan blok bolum cozumunun
+## ilerlemesidir, yeni top eskisinin actigi yoldan devam eder.
 func _respawn_ball() -> void:
 	_shot_token += 1
 	_reaim_pending = false
@@ -406,7 +423,7 @@ func _open_success_panel(stars: int, new_record: bool) -> void:
 	# Bu arada yeniden baslatildiysa karti acma.
 	if token != _shot_token or not is_inside_tree():
 		return
-	var next_text := next_level_label if LevelLibrary.has_next(level_data.level_id) else level_select_label
+	var next_text := next_level_label if _can_advance_to_next() else level_select_label
 	_result_panel.show_success(
 		completed_title, next_text, retry_label,
 		stars, _final_attempt_seconds, _final_attempt_shots, new_record)
@@ -428,10 +445,22 @@ func _open_failure_panel() -> void:
 
 
 func _on_result_next() -> void:
-	if LevelLibrary.has_next(level_data.level_id):
+	if _can_advance_to_next():
 		next_level_requested.emit(level_data.level_id + 1)
 	else:
 		level_select_requested.emit()
+
+
+## Sonraki bolum var mi VE gercekten acik mi. Ikincisi sart: 21. bolumun
+## yildiz kapisi henuz dolmamissa "SONRAKI BOLUM" butonu kapiyi delerdi.
+## Bu kontrol basari paneli acilirken yapilir; AppRoot o ana kadar
+## level_completed sinyalini isleyip yildizi kaydetmis olur, yani kapinin
+## bu tamamlamayla acilip acilmadigi da dogru gorunur.
+func _can_advance_to_next() -> bool:
+	var next_id := level_data.level_id + 1
+	if not LevelLibrary.has_next(level_data.level_id):
+		return false
+	return progress == null or progress.is_unlocked(next_id)
 
 
 ## Hem basaridaki "TEKRAR OYNA" hem basarisizliktaki "TEKRAR BASLA".
@@ -443,6 +472,28 @@ func _on_result_retry() -> void:
 
 
 # --- Carpma geri bildirimi ---------------------------------------------------
+
+## Topun her temasi buraya duser (hiz esigi YOK - bkz. Ball.surface_touched).
+## Sekmenin kendisi zaten fizik tarafindan cozuldu; burada yalnizca "bu temas
+## ne anlama geliyor" sorusu yanitlanir.
+func _on_surface_touched(collider: Object, _at: Vector2, _normal: Vector2) -> void:
+	var block := collider as BreakableBlock
+	if block == null:
+		return
+	# Idempotent: ayni blok ayni atista ikinci kez ses/efekt uretmez.
+	block.shatter()
+
+
+## Gorsel parcalar blogun KENDI icinde cizilir (bkz. BreakableBlock._draw) ve
+## temas noktasindaki kivilcimi zaten sekme uretir. Buraya ayri bir partikul
+## daha eklemek ayni ani uc kez anlatmak olurdu; burada sadece ses ve kucuk
+## bir titresim vardir.
+func _on_block_broken(_at: Vector2) -> void:
+	# Sekme sesi bu cagriyla bastirilir (bkz. AudioManager.play_block_break),
+	# ama sekmenin kivilcimi ve titresimi aynen kalir.
+	AudioManager.play_block_break()
+	_shake.add_trauma(block_break_shake_trauma)
+
 
 func _on_ball_bounced(at: Vector2, normal: Vector2, impact_speed: float) -> void:
 	var strength := clampf(impact_speed / spark_reference_speed, 0.3, 1.0)
@@ -645,6 +696,9 @@ func get_debug_snapshot() -> Dictionary:
 		"last_shot_power": _last_shot_power,
 		"last_shot_angle_deg": _last_shot_angle_deg,
 		"last_failure_reason": _last_failure_reason,
+		"blocks_total": _blocks.get_total_count(),
+		"blocks_remaining": _blocks.get_remaining_count(),
+		"blocks_broken": _blocks.get_broken_count(),
 		"attempt_shots": _shots_this_attempt,
 		"attempt_seconds": attempt_seconds,
 		"projected_stars": projected,

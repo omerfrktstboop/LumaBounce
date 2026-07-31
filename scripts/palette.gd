@@ -25,6 +25,16 @@ const FRAME := Color("31446a")
 ## kullanildigi icin onu genel olarak aydinlatmak tum arayuzu degistirirdi).
 const SURFACE_PANEL := Color("40506b")
 
+# --- Kirilabilir blok yuzeyi ---
+# Panelden AYIRT EDILEBILIR olmali ama neon top/hedefle yarismamali.
+# Panel "saglam" hissi verir (acik mat govde, yuvarlak stadyum); blok ise
+# "modulup kirilabilir" hissi verir: daha KOYU govde, daha PARLAK ince kenar
+# ve merkezdeki dikis cizgisi. Tonlar bilerek cyan/teal DEGIL, mavi-gri.
+const SURFACE_BLOCK := Color("32405c")
+const SURFACE_BLOCK_EDGE := Color("6d86b6")
+## Merkezdeki hafif kirilma/segment cizgisi.
+const SURFACE_BLOCK_SEAM := Color("8ba3ce")
+
 # --- Birincil vurgu: neon camgobegi / teal ---
 const ACCENT := Color("34e6d4")
 const ACCENT_DIM := Color("1ba99d")

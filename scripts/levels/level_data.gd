@@ -18,6 +18,9 @@ const WALL_OVERSHOOT := 320.0
 @export var launcher_position := Vector2(360.0, 1120.0)
 @export var target_position := Vector2(360.0, 300.0)
 @export var panels: Array[PanelData] = []
+## Topun kirabilecegi bloklar. Bos birakilirsa bolumde hic blok yoktur ve
+## davranis eskisiyle birebir aynidir (bkz. BreakableField).
+@export var breakable_blocks: Array[BreakableBlockData] = []
 
 @export_group("Kenarlar")
 ## Her Vector2(baslangic_y, bitis_y) bir DUVAR parcasidir; aralardaki
@@ -66,6 +69,13 @@ func validate(play_rect := DEFAULT_PLAY_RECT) -> PackedStringArray:
 			problems.append("panel %d bos" % i)
 			continue
 		problems.append_array(panel.validate(i))
+
+	for i in breakable_blocks.size():
+		var block := breakable_blocks[i]
+		if block == null:
+			problems.append("blok %d bos" % i)
+			continue
+		problems.append_array(block.validate(i))
 
 	problems.append_array(_validate_star_targets())
 	return problems

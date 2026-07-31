@@ -17,9 +17,13 @@ signal menu_requested()
 @export var button_font_size := 40
 @export var columns := 2
 @export var check_size := 24.0
+@export var lock_size := 24.0
 ## Buton icindeki mini yildiz satiri.
 @export var button_star_radius := 7.0
 @export var button_star_spacing := 5.0
+## Yildiz kapisi yuzunden kilitli butondaki "34 / 40" bilgisi.
+@export var gate_font_size := 18
+@export var gate_star_radius := 7.0
 ## Kilitli bolumlerde yildizlar tamamen gizlenmez, kisilir - grid'in
 ## dikey ritmi bozulmasin ve "burada da yildiz var" bilgisi kalsin.
 @export_range(0.0, 1.0, 0.05) var locked_star_alpha := 0.25
@@ -51,7 +55,7 @@ func _ready() -> void:
 	_scroll.get_v_scroll_bar().value_changed.connect(_on_scrolled)
 
 
-## Ustte sade toplam: "34 / 60". Yeni panel acilmaz, mevcut baslik
+## Ustte sade toplam: "34 / 75". Yeni panel acilmaz, mevcut baslik
 ## seridinin altina tek satir eklenir.
 func _refresh_star_total() -> void:
 	_star_total.text = "%d / %d" % [progress.get_total_stars(), progress.get_max_available_stars()]
@@ -98,7 +102,17 @@ func _make_level_button(level_id: int) -> LumaButton:
 
 	if completed:
 		button.add_child(_make_check_mark())
-	button.add_child(_make_button_stars(level_id, unlocked))
+	if not unlocked:
+		button.add_child(_make_lock_mark())
+
+	# Yildiz kapisi yuzunden kilitliyse alt satirda yildizlar yerine kapinin
+	# durumu gosterilir: o yildiz satiri zaten 0 gosterecekti, oysa oyuncunun
+	# ihtiyaci olan bilgi "daha kac yildiz gerekiyor".
+	var gate := progress.get_star_gate_progress(level_id)
+	if not unlocked and gate.y > 0:
+		button.add_child(_make_gate_row(gate))
+	else:
+		button.add_child(_make_button_stars(level_id, unlocked))
 
 	return button
 
@@ -121,6 +135,57 @@ func _make_button_stars(level_id: int, unlocked: bool) -> StarRow:
 	# icin deger saklanir ve ilk cizimde uygulanir.
 	stars.set_stars(progress.get_level_stars(level_id))
 	return stars
+
+
+## "34 / 40 *" satiri. Yildiz karakteri metin olarak yazilmaz - projede hicbir
+## yerde harici font/asset varsayimi yok, bu yuzden yildiz yine prosedurel
+## StarRow ile cizilir (tek yildiz, dolu).
+func _make_gate_row(gate: Vector2i) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.name = "StarGate"
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 5)
+	row.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	row.offset_left = 0.0
+	row.offset_top = -(float(gate_font_size) + 16.0)
+	row.offset_right = 0.0
+	row.offset_bottom = -8.0
+
+	var label := Label.new()
+	label.text = "%d / %d" % [gate.x, gate.y]
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", gate_font_size)
+	label.add_theme_color_override("font_color", Palette.ACCENT_DIM)
+	row.add_child(label)
+
+	var star := StarRow.new()
+	star.star_count = 1
+	star.star_radius = gate_star_radius
+	star.spacing = 0.0
+	star.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	star.set_stars(1)
+	row.add_child(star)
+
+	return row
+
+
+## Kilitli bolum isareti. Butonun solgunlugu tek basina "neden basamiyorum"
+## sorusunu yanitlamiyordu.
+func _make_lock_mark() -> GlyphIcon:
+	var lock := GlyphIcon.new()
+	lock.name = "LockMark"
+	lock.glyph = GlyphIcon.Glyph.LOCK
+	lock.color = Color(Palette.TEXT_DIM, 0.75)
+	lock.stroke_width = 2.6
+	lock.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lock.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	lock.offset_left = -(lock_size + 16.0)
+	lock.offset_top = 16.0
+	lock.offset_right = -16.0
+	lock.offset_bottom = 16.0 + lock_size
+	return lock
 
 
 ## "Tamamlandi" isareti: kucuk, sade bir onay imi.

@@ -85,9 +85,22 @@ func _build_info_text() -> String:
 	lines.append("Son atis gucu: %.0f" % float(snapshot.get("last_shot_power", 0.0)))
 	lines.append("Son atis acisi: %.1f deg" % float(snapshot.get("last_shot_angle_deg", 0.0)))
 	lines.append("Son basarisizlik: %s" % String(snapshot.get("last_failure_reason", "-")))
+	_append_block_lines(lines, snapshot)
 	_append_attempt_lines(lines, snapshot)
 	_append_stats_lines(lines, snapshot.get("stats", {}))
 	return "\n".join(lines)
+
+
+## Kirilabilir blok sayaclari. Bloksuz bolumlerde satir hic gosterilmez,
+## boylece 1-20 arasindaki panel gorunumu aynen kalir.
+func _append_block_lines(lines: PackedStringArray, snapshot: Dictionary) -> void:
+	var total := int(snapshot.get("blocks_total", 0))
+	if total <= 0:
+		return
+	lines.append("Blok: %d kalan / %d kirik / %d toplam" % [
+		int(snapshot.get("blocks_remaining", 0)),
+		int(snapshot.get("blocks_broken", 0)),
+		total])
 
 
 ## Su anki deneme ve yildiz durumu - yalnizca debug panelinde.

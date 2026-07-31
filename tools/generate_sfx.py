@@ -211,6 +211,23 @@ def build_bounce(freq: float, duration: float, decay: float,
     return mix((body, 1.0, 0.0), (tick, tick_gain, 0.0))
 
 
+def build_block_break(rng: random.Random) -> Signal:
+    """Kirilabilir blogun kirilmasi: kisa seramik/cam parcalanmasi.
+
+    Sekme sesleri TEK bir can tonudur; bu ses bilerek COKLU ve gurultuludur
+    (art arda gelen dort detune parca + kuru bir cirpinti). Ayni ses
+    ailesinde kalir ama sekmeyle karistirilamaz.
+    """
+    shards = mix(
+        (glass(1480.0, 0.20, decay=26.0, attack=0.001), 1.00, 0.000),
+        (glass(1180.0, 0.22, decay=22.0, attack=0.001), 0.70, 0.012),
+        (glass(1870.0, 0.16, decay=34.0, attack=0.001), 0.45, 0.024),
+        (glass(2360.0, 0.13, decay=42.0, attack=0.001), 0.28, 0.036),
+    )
+    grit = noise_layer(0.09, rng, lowpass_hz=8000.0, highpass_hz=1900.0, decay=48.0)
+    return mix((shards, 1.0, 0.0), (grit, 0.34, 0.0))
+
+
 def build_target_hit() -> Signal:
     """Parlak, tatmin edici cam cinlamasi (E6 + B6 - temiz beslik)."""
     low = glass(1318.5, 0.42, decay=9.0, attack=0.003)
@@ -274,6 +291,10 @@ def main() -> None:
         finish("restart.wav", build_restart(rng), peak=0.50),
         finish("splash_bounce.wav", build_splash_bounce(), peak=0.68, fade_out=0.03),
         finish("logo_reveal.wav", build_logo_reveal(), peak=0.60, fade_out=0.06),
+        # YENI SESLER LISTENIN SONUNA EKLENIR. rng tek bir akistir; araya
+        # eklenen her rng'li tarif kendinden SONRAKI tum seslerin orneklerini
+        # kaydirir ve degismemis dosyalari gereksiz yere yeniden yazardi.
+        finish("block_break.wav", build_block_break(rng), peak=0.62, fade_out=0.03),
     ]
 
     for path in written:

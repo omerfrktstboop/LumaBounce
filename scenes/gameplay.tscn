@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay.gd" id="1_gameplay"]
 [ext_resource type="Script" path="res://scripts/arena.gd" id="2_arena"]
@@ -14,6 +14,8 @@
 [ext_resource type="Script" path="res://scripts/screen_shake.gd" id="13_screen_shake"]
 [ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="14_ink"]
 [ext_resource type="Script" path="res://scripts/ui/star_row.gd" id="15_star_row"]
+[ext_resource type="Script" path="res://scripts/breakable_field.gd" id="16_breakable_field"]
+[ext_resource type="PackedScene" path="res://scenes/breakable_block.tscn" id="17_block"]
 
 [node name="Gameplay" type="Node2D"]
 script = ExtResource("1_gameplay")
@@ -40,6 +42,11 @@ script = ExtResource("13_screen_shake")
 script = ExtResource("2_arena")
 
 [node name="Panels" type="Node2D" parent="."]
+
+[node name="Blocks" type="Node2D" parent="."]
+z_index = 1
+script = ExtResource("16_breakable_field")
+block_scene = ExtResource("17_block")
 
 [node name="Target" parent="." instance=ExtResource("4_target")]
 z_index = 2

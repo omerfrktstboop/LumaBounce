@@ -46,6 +46,7 @@ const SOUND_FILES := {
 	"bounce_soft": "bounce_soft.wav",
 	"bounce_medium": "bounce_medium.wav",
 	"bounce_hard": "bounce_hard.wav",
+	"block_break": "block_break.wav",
 	"target_hit": "target_hit.wav",
 	"level_complete": "level_complete.wav",
 	"failure": "failure.wav",
@@ -113,6 +114,16 @@ func play_bounce(impact_speed: float) -> void:
 	var t := clampf(
 		inverse_lerp(BOUNCE_QUIET_SPEED, BOUNCE_LOUD_SPEED, impact_speed), 0.0, 1.0)
 	_play_sfx(key, lerpf(-10.0, 0.0, t), lerpf(0.97, 1.05, t))
+
+
+## Kirilabilir blok kirildi. Ayni temasta top zaten sekiyor, yani hemen
+## ardindan play_bounce() de cagrilacak; iki ses ust uste yigilip cirkin bir
+## tepe yapmasin diye burada SEKME COOLDOWN'U damgalanir. Boylece o temasin
+## sekme sesi mevcut mekanizma tarafindan yutulur ve kirilma one cikar -
+## sekmenin gorsel kivilcimi ve ekran titresimi ise aynen kalir.
+func play_block_break() -> void:
+	_last_bounce_msec = Time.get_ticks_msec()
+	_play_sfx("block_break", -3.0)
 
 
 func play_target_hit() -> void:

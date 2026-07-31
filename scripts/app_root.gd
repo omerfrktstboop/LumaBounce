@@ -177,7 +177,7 @@ func _connect_screen(screen: Node) -> void:
 func _configure_main_menu(screen: Node) -> void:
 	var menu := screen as MainMenu
 	if menu != null:
-		menu.resume_level_id = _progress.highest_unlocked_level
+		menu.resume_level_id = _progress.get_resume_level_id()
 
 
 func _configure_level_select(screen: Node) -> void:

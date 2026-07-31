@@ -48,26 +48,43 @@ func save() -> void:
 
 # --- Kilit durumu -------------------------------------------------------------
 
+## Iki kosul BIRLIKTE saglanmali:
+##   1) sirali ilerleme - onceki bolum tamamlanmis olmali
+##   2) varsa yildiz kapisi - onundeki bolumlerden yeterince yildiz toplanmis olmali
+## Bu yuzden 40 yildizi olan ama 20. bolumu bitirmemis oyuncuya 21 acilmaz.
 func is_unlocked(level_id: int) -> bool:
 	if not LevelLibrary.is_valid_id(level_id):
 		return false
 	if level_id > highest_unlocked_level:
 		return false
-	# Sirali ilerleme yetmeyebilir: bazi bolumler ayrica yildiz esigi ister.
-	return get_total_stars() >= LevelLibrary.required_stars_for(level_id)
+	var required := LevelLibrary.required_stars_for(level_id)
+	if required <= 0:
+		return true
+	return get_stars_before(level_id) >= required
 
 
 ## Yildiz kapisi olan bir bolum icin (mevcut, gerekli). Kapi yoksa ikisi de
-## 0 doner. Kilitli buton "34 / 40" gibi bilgi gostermek icin kullanabilir.
+## 0 doner. Kilitli buton "34 / 40" bilgisini bundan uretir.
 func get_star_gate_progress(level_id: int) -> Vector2i:
 	var required := LevelLibrary.required_stars_for(level_id)
 	if required <= 0:
 		return Vector2i.ZERO
-	return Vector2i(get_total_stars(), required)
+	return Vector2i(get_stars_before(level_id), required)
 
 
 func is_completed(level_id: int) -> bool:
 	return completed_levels.has(level_id)
+
+
+## Ana menudeki "OYNA" butonunun acacagi bolum. highest_unlocked_level tek
+## basina YETMEZ: sirali ilerleme 21'i acsa bile yildiz kapisi kapaliysa o
+## bolum oynanabilir degildir ve menuden dogrudan girmek kapiyi delerdi.
+## Bu yuzden geriye dogru, gercekten acik olan ilk bolume inilir.
+func get_resume_level_id() -> int:
+	var level_id := LevelLibrary.clamp_id(highest_unlocked_level)
+	while level_id > LevelLibrary.FIRST_LEVEL_ID and not is_unlocked(level_id):
+		level_id -= 1
+	return level_id
 
 
 # --- Yildizlar ----------------------------------------------------------------
@@ -92,10 +109,18 @@ func set_level_stars_if_higher(level_id: int, stars: int) -> bool:
 	return true
 
 
+## Tum bolumlerin toplami - bolum secim ekranindaki "N / 75" sayaci.
 func get_total_stars() -> int:
+	return get_stars_before(LevelLibrary.last_level_id() + 1)
+
+
+## [param level_id]'den ONCEKI bolumlerin yildiz toplami. Yildiz kapilari
+## bunu kullanir: kapinin arkasindaki bolumler kendi kilidini acamaz, yani
+## 21-25'te kazanilan yildizlar 21'in 40-yildiz sartina sayilmaz.
+func get_stars_before(level_id: int) -> int:
 	var total := 0
-	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, LevelLibrary.last_level_id() + 1):
-		total += get_level_stars(level_id)
+	for id in range(LevelLibrary.FIRST_LEVEL_ID, level_id):
+		total += get_level_stars(id)
 	return total
 
 
