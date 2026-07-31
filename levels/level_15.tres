@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+
+[sub_resource type="Resource" id="Resource_l15_lower"]
+script = ExtResource("2_panel_data")
+position = Vector2(500, 800)
+rotation_degrees = -15.0
+length = 400.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l15_mid"]
+script = ExtResource("2_panel_data")
+position = Vector2(200, 460)
+rotation_degrees = 15.0
+length = 380.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l15_far"]
+script = ExtResource("2_panel_data")
+position = Vector2(600, 350)
+rotation_degrees = -8.0
+length = 220.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("1_level_data")
+level_id = 15
+display_name = "Kör Sekme"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(350, 260)
+panels = Array[PanelData]([SubResource("Resource_l15_lower"), SubResource("Resource_l15_mid"), SubResource("Resource_l15_far")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 380), Vector2(680, 1440)])
+max_lives = 3

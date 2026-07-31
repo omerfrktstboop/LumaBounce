@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+
+[sub_resource type="Resource" id="Resource_l14_mid"]
+script = ExtResource("2_panel_data")
+position = Vector2(390, 650)
+rotation_degrees = 5.0
+length = 320.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l14_upper"]
+script = ExtResource("2_panel_data")
+position = Vector2(230, 420)
+rotation_degrees = 15.0
+length = 280.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("1_level_data")
+level_id = 14
+display_name = "Çifte Duvar"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(300, 270)
+panels = Array[PanelData]([SubResource("Resource_l14_mid"), SubResource("Resource_l14_upper")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 260), Vector2(560, 1440)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 720), Vector2(920, 1440)])
+max_lives = 4

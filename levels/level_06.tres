@@ -3,26 +3,26 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 
-[sub_resource type="Resource" id="Resource_l6_lower_left"]
+[sub_resource type="Resource" id="Resource_l6_shield"]
 script = ExtResource("2_panel_data")
-position = Vector2(230, 830)
-rotation_degrees = 30.0
-length = 320.0
+position = Vector2(560, 560)
+rotation_degrees = 20.0
+length = 400.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l6_mid_right"]
+[sub_resource type="Resource" id="Resource_l6_near_kick"]
 script = ExtResource("2_panel_data")
-position = Vector2(500, 520)
-rotation_degrees = 30.0
-length = 340.0
+position = Vector2(540, 840)
+rotation_degrees = -25.0
+length = 280.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("1_level_data")
 level_id = 6
-display_name = "Çapraz Geçiş"
+display_name = "Ters Rota"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(560, 280)
-panels = Array[PanelData]([SubResource("Resource_l6_lower_left"), SubResource("Resource_l6_mid_right")])
-max_lives = 5
-tutorial_text = "İki yüzeyi sırayla kullan."
+target_position = Vector2(560, 330)
+panels = Array[PanelData]([SubResource("Resource_l6_shield"), SubResource("Resource_l6_near_kick")])
+right_wall_segments = Array[Vector2]([Vector2(760, 1440)])
+max_lives = 4

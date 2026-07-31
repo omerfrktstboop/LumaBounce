@@ -68,8 +68,11 @@ func load_from(config: ConfigFile, section: String) -> void:
 	manual_cancels = config.get_value(section, "manual_cancels", 0)
 	total_time_seconds = config.get_value(section, "total_time_seconds", 0.0)
 	min_shots_to_complete = config.get_value(section, "min_shots_to_complete", -1)
-	var raw_total_completion: Variant = config.get_value(section, "total_completion_seconds", null)
-	if raw_total_completion is int or raw_total_completion is float:
+	# NOT: varsayilan olarak null verilemez - ConfigFile bunu "varsayilan
+	# yok" sayip eksik anahtarda hata basar. -1.0 hicbir gecerli sureye
+	# esit olamayacagi icin "kayitli deger yok" sentinel'i olarak kullanilir.
+	var raw_total_completion: Variant = config.get_value(section, "total_completion_seconds", -1.0)
+	if (raw_total_completion is int or raw_total_completion is float) and float(raw_total_completion) >= 0.0:
 		total_completion_seconds = float(raw_total_completion)
 	else:
 		var average_completion: Variant = config.get_value(section, "average_completion_seconds", 0.0)
