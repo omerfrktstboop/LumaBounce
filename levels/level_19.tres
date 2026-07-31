@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+
+[sub_resource type="Resource" id="Resource_l19_diagonal"]
+script = ExtResource("2_panel_data")
+position = Vector2(250, 820)
+rotation_degrees = 20.0
+length = 320.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l19_upper"]
+script = ExtResource("2_panel_data")
+position = Vector2(500, 480)
+rotation_degrees = -15.0
+length = 300.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l19_left"]
+script = ExtResource("2_panel_data")
+position = Vector2(200, 380)
+rotation_degrees = 20.0
+length = 280.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("1_level_data")
+level_id = 19
+display_name = "Zincir"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(250, 260)
+panels = Array[PanelData]([SubResource("Resource_l19_diagonal"), SubResource("Resource_l19_upper"), SubResource("Resource_l19_left")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 600), Vector2(900, 1440)])
+max_lives = 3

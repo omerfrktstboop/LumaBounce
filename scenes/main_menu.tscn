@@ -1,14 +1,14 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene format=3 uid="uid://d231uyioo5hsi"]
 
-[ext_resource type="Script" path="res://scripts/main_menu.gd" id="1_main_menu"]
-[ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="2_ink"]
-[ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="3_safe_area"]
-[ext_resource type="Script" path="res://scripts/ui/luma_logo.gd" id="4_logo"]
-[ext_resource type="Script" path="res://scripts/menu_decor.gd" id="5_decor"]
-[ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="6_button"]
-[ext_resource type="Script" path="res://scripts/ui/luma_icon_button.gd" id="7_icon_button"]
+[ext_resource type="Script" uid="uid://d0ayitdahvkhv" path="res://scripts/main_menu.gd" id="1_main_menu"]
+[ext_resource type="Script" uid="uid://crkgh238sytb" path="res://scripts/ui/ink_background.gd" id="2_ink"]
+[ext_resource type="Script" uid="uid://dxakx6dds6blo" path="res://scripts/ui/safe_area_margin.gd" id="3_safe_area"]
+[ext_resource type="Script" uid="uid://cfi2714h7ro0y" path="res://scripts/ui/luma_logo.gd" id="4_logo"]
+[ext_resource type="Script" uid="uid://dicugs765gs8i" path="res://scripts/menu_decor.gd" id="5_decor"]
+[ext_resource type="Script" uid="uid://6np78oomdjsw" path="res://scripts/ui/luma_button.gd" id="6_button"]
+[ext_resource type="Script" uid="uid://ctrv1ui3c3gp6" path="res://scripts/ui/luma_icon_button.gd" id="7_icon_button"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1864388757]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -18,7 +18,7 @@ grow_vertical = 2
 mouse_filter = 1
 script = ExtResource("1_main_menu")
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="Background" type="TextureRect" parent="." unique_id=1337979110]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,7 +28,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_ink")
 
-[node name="SafeArea" type="MarginContainer" parent="."]
+[node name="SafeArea" type="MarginContainer" parent="." unique_id=14516435]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,11 +38,11 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("3_safe_area")
 
-[node name="Content" type="Control" parent="SafeArea"]
+[node name="Content" type="Control" parent="SafeArea" unique_id=1910219677]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Logo" type="Control" parent="SafeArea/Content"]
+[node name="Logo" type="Control" parent="SafeArea/Content" unique_id=525108428]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -52,19 +52,22 @@ grow_horizontal = 2
 mouse_filter = 2
 script = ExtResource("4_logo")
 
-[node name="Decor" type="Control" parent="SafeArea/Content"]
+[node name="Decor" type="Control" parent="SafeArea/Content" unique_id=2068567509]
 layout_mode = 1
-anchors_preset = -1
 anchor_left = 0.04
 anchor_top = 0.19
 anchor_right = 0.96
 anchor_bottom = 0.6
+offset_left = 43.2
+offset_top = -232.2
+offset_right = 43.200012
+offset_bottom = -232.20001
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("5_decor")
 
-[node name="PlayButton" type="Button" parent="SafeArea/Content"]
+[node name="PlayButton" type="Button" parent="SafeArea/Content" unique_id=1077028997]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
@@ -83,7 +86,7 @@ text = "OYNA"
 script = ExtResource("6_button")
 emphasis = 0
 
-[node name="LevelsButton" type="Button" parent="SafeArea/Content"]
+[node name="LevelsButton" type="Button" parent="SafeArea/Content" unique_id=314887897]
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
@@ -101,7 +104,7 @@ theme_override_font_sizes/font_size = 27
 text = "BÖLÜMLER"
 script = ExtResource("6_button")
 
-[node name="Toast" type="Label" parent="SafeArea/Content"]
+[node name="Toast" type="Label" parent="SafeArea/Content" unique_id=2091199431]
 visible = false
 layout_mode = 1
 anchors_preset = -1
@@ -112,14 +115,13 @@ offset_top = -166.0
 offset_bottom = -118.0
 grow_horizontal = 2
 grow_vertical = 0
-mouse_filter = 2
 theme_override_colors/font_color = Color(0.576471, 0.654902, 0.788235, 1)
 theme_override_font_sizes/font_size = 26
 text = "Yakında"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SoundButton" type="Button" parent="SafeArea/Content"]
+[node name="SoundButton" type="Button" parent="SafeArea/Content" unique_id=2000312049]
 layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
@@ -133,7 +135,7 @@ focus_mode = 0
 script = ExtResource("7_icon_button")
 glyph = 0
 
-[node name="SettingsButton" type="Button" parent="SafeArea/Content"]
+[node name="SettingsButton" type="Button" parent="SafeArea/Content" unique_id=254207074]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -148,4 +150,3 @@ grow_horizontal = 0
 grow_vertical = 0
 focus_mode = 0
 script = ExtResource("7_icon_button")
-glyph = 2
