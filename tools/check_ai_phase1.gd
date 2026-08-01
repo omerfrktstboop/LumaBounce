@@ -34,7 +34,19 @@ func _test_contract_and_request() -> void:
 	_check("model slug aynen korunuyor", body["model"], "vendor/exact-model")
 	_check("json schema etkin", body["response_format"]["type"], "json_schema")
 	_check("strict schema", body["response_format"]["json_schema"]["strict"], true)
+	_check("reasoning geometri uretiminde kapali", body["reasoning"]["enabled"], false)
+	_check("sema tam istenen taslak sayisi", body["response_format"]["json_schema"]
+		["schema"]["properties"]["levels"]["minItems"], 5)
+	_check("launcher semasi guvenli alt bantta", body["response_format"]["json_schema"]
+		["schema"]["properties"]["levels"]["items"]["properties"]
+		["launcher"]["properties"]["y"]["minimum"], 1080.0)
 	_check("provider parametreleri zorunlu", body["provider"]["require_parameters"], true)
+	_check("prompt dogrudan sema ciktisi istiyor",
+		String(messages[0]["content"]).contains("Analiz, reasoning, Markdown"), true)
+	_check("prompt sayisal guvenli mesafe veriyor",
+		String(messages[0]["content"]).contains("hedefe 190 px"), true)
+	_check("prompt zorluk sozlesmesi veriyor",
+		String(messages[1]["content"]).contains("2-3 panel, 1-2 blok"), true)
 	var headers := client.build_headers("secret-test-key")
 	_check("authorization olusuyor", headers[0], "Authorization: Bearer secret-test-key")
 	_check("prompt anahtari icermiyor", JSON.stringify(messages).contains("secret-test-key"), false)
@@ -58,6 +70,9 @@ func _test_response_rules() -> void:
 		OpenRouterClient.transport_error_message(HTTPRequest.RESULT_TIMEOUT).contains("zaman asimi"), true)
 	_check("mesgul istemci ayirt ediliyor",
 		OpenRouterClient.request_start_error_message(ERR_BUSY).contains("mesgul"), true)
+	var client_source := FileAccess.get_file_as_string("res://scripts/editor/openrouter_client.gd")
+	_check("gecersiz 2xx JSON tek fallback aliyor", client_source.contains(
+		"elif not _fallback_used:\n\t\t\t_fallback_used = true\n\t\t\t_using_json_fallback = true"), true)
 	var invalid := OpenRouterClient.parse_chat_response("not-json".to_utf8_buffer())
 	_check("gecersiz json reddediliyor", invalid["ok"], false)
 	var valid_body := JSON.stringify({

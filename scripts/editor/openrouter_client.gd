@@ -10,7 +10,7 @@ signal failed(message: String, status_code: int)
 signal cancelled
 
 const ENDPOINT := "https://openrouter.ai/api/v1/chat/completions"
-const REQUEST_TIMEOUT := 60.0
+const REQUEST_TIMEOUT := 150.0
 const MAX_TOKENS := 5000
 
 var _http: HTTPRequest
@@ -87,6 +87,7 @@ func build_request_body(model_slug: String, messages: Array, requested_count: in
 		"temperature": 0.8,
 		"max_tokens": MAX_TOKENS,
 		"stream": false,
+		"reasoning": {"enabled": false},
 		"provider": {
 			"sort": "latency",
 			"allow_fallbacks": true,
@@ -222,6 +223,11 @@ func _on_request_completed(result: int, response_code: int,
 		var parsed := parse_chat_response(body)
 		if bool(parsed["ok"]):
 			_finish(parsed["document"], parsed["usage"])
+		elif not _fallback_used:
+			_fallback_used = true
+			_using_json_fallback = true
+			status_changed.emit("Model yaniti icin JSON uyumluluk modu deneniyor...")
+			_send_on_next_frame()
 		else:
 			_fail(String(parsed["error"]), response_code)
 		return

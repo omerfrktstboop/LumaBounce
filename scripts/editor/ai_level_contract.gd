@@ -3,7 +3,7 @@ extends RefCounted
 
 ## OpenRouter semasi, mapper sinirlari ve UI secenekleri icin tek kaynak.
 
-const PROMPT_VERSION := "1.0"
+const PROMPT_VERSION := "1.1"
 const MAX_LEVELS := 10
 const MAX_PANELS := 5
 const MAX_BLOCKS := 4
@@ -21,28 +21,32 @@ const MECHANIC_IDS := ["panel", "wall_gap", "breakable_block"]
 
 
 static func response_schema(requested_count: int) -> Dictionary:
-	var point := _object({
-		"x": _number(0.0, 720.0),
-		"y": _number(0.0, 1280.0),
+	var launcher := _object({
+		"x": _number(320.0, 400.0),
+		"y": _number(1080.0, 1140.0),
+	}, ["x", "y"])
+	var target := _object({
+		"x": _number(140.0, 580.0),
+		"y": _number(230.0, 480.0),
 	}, ["x", "y"])
 	var wall_gap := _object({
 		"enabled": {"type": "boolean"},
-		"top": _number(0.0, 1280.0),
-		"bottom": _number(0.0, 1280.0),
+		"top": _number(180.0, 860.0),
+		"bottom": _number(420.0, 1080.0),
 	}, ["enabled", "top", "bottom"])
 	var panel := _object({
-		"x": _number(0.0, 720.0),
-		"y": _number(0.0, 1280.0),
-		"rotation_degrees": _number(-180.0, 180.0),
-		"length": _number(120.0, 480.0),
-		"thickness": _number(10.0, 60.0),
+		"x": _number(130.0, 590.0),
+		"y": _number(460.0, 930.0),
+		"rotation_degrees": _number(-55.0, 55.0),
+		"length": _number(220.0, 340.0),
+		"thickness": _number(20.0, 32.0),
 	}, ["x", "y", "rotation_degrees", "length", "thickness"])
 	var block := _object({
-		"x": _number(0.0, 720.0),
-		"y": _number(0.0, 1280.0),
-		"rotation_degrees": _number(-180.0, 180.0),
-		"width": _number(100.0, 360.0),
-		"height": _number(20.0, 80.0),
+		"x": _number(140.0, 580.0),
+		"y": _number(420.0, 900.0),
+		"rotation_degrees": _number(-55.0, 55.0),
+		"width": _number(120.0, 280.0),
+		"height": _number(36.0, 52.0),
 	}, ["x", "y", "rotation_degrees", "width", "height"])
 	var expected_solution := _object({
 		"estimated_bounces": {"type": "integer", "minimum": 0, "maximum": 12},
@@ -52,8 +56,8 @@ static func response_schema(requested_count: int) -> Dictionary:
 	var level := _object({
 		"display_name": {"type": "string", "minLength": 1, "maxLength": MAX_DISPLAY_NAME},
 		"design_intent": {"type": "string", "maxLength": MAX_DESIGN_INTENT},
-		"launcher": point,
-		"target": point,
+		"launcher": launcher,
+		"target": target,
 		"panels": {
 			"type": "array", "maxItems": MAX_PANELS, "items": panel,
 		},
@@ -71,7 +75,7 @@ static func response_schema(requested_count: int) -> Dictionary:
 	return _object({
 		"levels": {
 			"type": "array",
-			"minItems": 1,
+			"minItems": clampi(requested_count, 1, MAX_LEVELS),
 			"maxItems": clampi(requested_count, 1, MAX_LEVELS),
 			"items": level,
 		},
