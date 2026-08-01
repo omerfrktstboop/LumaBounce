@@ -55,6 +55,7 @@ func _ready() -> void:
 	_unlock_button.pressed.connect(_on_unlock_all_pressed)
 	$Panel/Margin/Rows/ToolRow/ResetStatsButton.pressed.connect(reset_stats_requested.emit)
 	$Panel/Margin/Rows/EditorButton.pressed.connect(editor_requested.emit)
+	$Panel/Margin/Rows/HeaderRow/CloseButton.pressed.connect(hide_panel)
 	_toggle_button.pressed.connect(toggle_visible)
 
 

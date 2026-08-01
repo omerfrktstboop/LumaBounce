@@ -42,6 +42,9 @@ var _current_level_id := LevelLibrary.FIRST_LEVEL_ID
 ## Editorden test edilen bolum. Oynanistan cikildiginda editore ayni veriyle
 ## donebilmek icin tutulur; kaydedilmemis duzenleme kaybolmaz.
 var _editor_level: LevelData
+## Uretilen veya kaydedilen parti, acik indeks ve metadata. Test sahnesi
+## LevelEditor'u yok ettigi icin bu baglam AppRoot'ta yasatilir.
+var _editor_batch_context := {}
 var _busy := false
 
 
@@ -239,19 +242,28 @@ func _on_gameplay_menu_requested() -> void:
 func go_to_editor(edit_level: LevelData = null) -> void:
 	if not OS.is_debug_build():
 		return
+	if edit_level == null:
+		_editor_batch_context.clear()
 	_editor_level = edit_level
 	await _transition(level_editor_scene, _configure_editor)
 
 
 func _configure_editor(screen: Node) -> void:
 	var editor := screen as LevelEditor
-	if editor != null and _editor_level != null:
+	if editor == null:
+		return
+	if not _editor_batch_context.is_empty():
+		editor.initial_batch_context = _editor_batch_context
+	elif _editor_level != null:
 		editor.level = _editor_level
 
 
 ## Editordeki bolumu oynatir. Kopya DEGIL ayni kaynak verilir: test sirasinda
 ## bolum degismez, ve geri donuldugunde duzenleme aynen durur.
 func _on_editor_test_requested(edit_level: LevelData) -> void:
+	var editor := _current as LevelEditor
+	if editor != null:
+		_editor_batch_context = editor.get_batch_context()
 	_editor_level = edit_level
 	# Acik kalan debug paneli arenanin ustunu ortup test edilen bolumu
 	# gizlerdi. Kose dugmesi durdugu icin tek dokunusla geri acilir.
@@ -273,6 +285,7 @@ func _configure_editor_gameplay(screen: Node) -> void:
 
 func _on_editor_closed() -> void:
 	_editor_level = null
+	_editor_batch_context.clear()
 	go_to_main_menu()
 
 
@@ -328,13 +341,37 @@ func _connect_debug_panel() -> void:
 
 
 func _on_debug_previous_level() -> void:
-	if _current is Gameplay:
-		go_to_level(_current_level_id - 1)
+	if not (_current is Gameplay):
+		return
+	if _editor_level != null:
+		if _step_editor_batch(-1):
+			_transition(gameplay_scene, _configure_editor_gameplay)
+		return
+	go_to_level(_current_level_id - 1)
 
 
 func _on_debug_next_level() -> void:
-	if _current is Gameplay:
-		go_to_level(_current_level_id + 1)
+	if not (_current is Gameplay):
+		return
+	if _editor_level != null:
+		if _step_editor_batch(1):
+			_transition(gameplay_scene, _configure_editor_gameplay)
+		return
+	go_to_level(_current_level_id + 1)
+
+
+func _step_editor_batch(direction: int) -> bool:
+	var raw_levels = _editor_batch_context.get("levels", [])
+	if not raw_levels is Array or raw_levels.size() <= 1:
+		return false
+	var index := wrapi(
+		int(_editor_batch_context.get("index", 0)) + direction, 0, raw_levels.size())
+	var next_level = raw_levels[index]
+	if not next_level is LevelData:
+		return false
+	_editor_batch_context["index"] = index
+	_editor_level = next_level
+	return true
 
 
 func _on_debug_restart_level() -> void:
@@ -361,6 +398,9 @@ func _on_debug_editor_requested() -> void:
 	if not OS.is_debug_build():
 		return
 	if _current is LevelEditor:
+		return
+	if _editor_level != null:
+		go_to_editor(_editor_level)
 		return
 	# Bos bolumle acilir; editordeki "AC" ile kayitli bir bolum yuklenebilir.
 	go_to_editor()

@@ -41,6 +41,9 @@ const PANEL_HEIGHT_WITH_BATCH := 350.0
 ## AppRoot tarafindan add_child'dan ONCE atanabilir; bos birakilirsa bos bir
 ## bolumle baslanir.
 var level: LevelData
+## Test sahnesinden editore donerken AppRoot tarafindan add_child'dan ONCE
+## atanir. Uretilen/kaydedilen parti ve acik indeks boylece kaybolmaz.
+var initial_batch_context := {}
 
 @onready var _world: LevelWorld = $World
 @onready var _camera: Camera2D = $EditorCamera
@@ -111,7 +114,10 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_position_camera)
 	_position_camera()
 	_modal.hide()
-	_rebuild()
+	if initial_batch_context.is_empty():
+		_rebuild()
+	else:
+		_restore_batch_context(initial_batch_context)
 
 
 ## Oynanisla AYNI cerceveleme: yatayda oyun alani ortali, dikeyde alt kenara
@@ -667,13 +673,52 @@ func _on_save() -> void:
 # atiyordu, yani gozden gecirmek imkansizdi.
 
 func _set_batch(levels: Array[LevelData], names: PackedStringArray,
-		bucket: CustomLevelStore.Bucket, metadata: Array[Dictionary] = []) -> void:
+		bucket: CustomLevelStore.Bucket, metadata: Array[Dictionary] = [],
+		start_index := 0) -> void:
 	_batch = levels
 	_batch_names = names
 	_batch_bucket = bucket
+	_library_bucket = bucket
 	_batch_metadata.assign(metadata)
-	_batch_index = 0
+	_batch_index = clampi(start_index, 0, maxi(_batch.size() - 1, 0))
 	_load_batch_entry()
+
+
+func get_batch_context() -> Dictionary:
+	if _batch.is_empty():
+		return {}
+	return {
+		"levels": _batch.duplicate(),
+		"names": _batch_names.duplicate(),
+		"index": _batch_index,
+		"bucket": int(_batch_bucket),
+		"metadata": _batch_metadata.duplicate(true),
+	}
+
+
+func _restore_batch_context(context: Dictionary) -> void:
+	var restored_levels: Array[LevelData] = []
+	var raw_levels = context.get("levels", [])
+	if raw_levels is Array:
+		for candidate in raw_levels:
+			if candidate is LevelData:
+				restored_levels.append(candidate)
+	if restored_levels.is_empty():
+		_rebuild()
+		return
+
+	var restored_names := PackedStringArray(context.get("names", PackedStringArray()))
+	while restored_names.size() < restored_levels.size():
+		restored_names.append("bolum_%02d" % (restored_names.size() + 1))
+	var restored_metadata: Array[Dictionary] = []
+	var raw_metadata = context.get("metadata", [])
+	if raw_metadata is Array:
+		for entry in raw_metadata:
+			restored_metadata.append(entry if entry is Dictionary else {})
+	_set_batch(
+		restored_levels, restored_names,
+		int(context.get("bucket", CustomLevelStore.Bucket.GENERATED)),
+		restored_metadata, int(context.get("index", 0)))
 
 
 func _on_batch_step(direction: int) -> void:
@@ -828,23 +873,34 @@ func _load_selected_levels() -> Array[LevelData]:
 	return levels
 
 
-## Secilenleri editore PARTI olarak alir; ‹ › ile aralarinda gezilir.
+## Secilen satir baslangic noktasidir; kovadaki tum gecerli bolumler partiye
+## alinir. Boylece tek satira dokunup DUZENLE denince Sonraki/Onceki ile
+## diger uretilen veya kaydedilen adaylara gecilebilir.
 func _on_library_edit() -> void:
-	var names := _selected_names()
-	if names.is_empty():
+	var selected_names := _selected_names()
+	if selected_names.is_empty():
 		_modal_status.text = "Önce en az bir bölüm seç."
 		return
-	var levels := _load_selected_levels()
+	var names := PackedStringArray()
+	var levels: Array[LevelData] = []
+	var metadata: Array[Dictionary] = []
+	var manifest := (
+		_metadata_store.load_all()
+		if _library_bucket == CustomLevelStore.Bucket.GENERATED else {})
+	for entry_name in _library_names:
+		var loaded := CustomLevelStore.load_level(_library_bucket, entry_name)
+		if loaded == null:
+			continue
+		names.append(entry_name)
+		levels.append(loaded)
+		if _library_bucket == CustomLevelStore.Bucket.GENERATED:
+			metadata.append(manifest.get(entry_name, {}))
 	if levels.is_empty():
 		_modal_status.text = "Yüklenemedi."
 		return
 	_modal.hide()
-	var metadata: Array[Dictionary] = []
-	if _library_bucket == CustomLevelStore.Bucket.GENERATED:
-		var manifest := _metadata_store.load_all()
-		for entry_name in names:
-			metadata.append(manifest.get(entry_name, {}))
-	_set_batch(levels, names, _library_bucket, metadata)
+	var start_index := names.find(selected_names[0])
+	_set_batch(levels, names, _library_bucket, metadata, maxi(start_index, 0))
 	_status_text = "%d bölüm açıldı — ‹ › ile gez" % levels.size()
 	_refresh_info()
 

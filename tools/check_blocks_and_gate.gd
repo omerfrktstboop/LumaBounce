@@ -37,6 +37,7 @@ func _run() -> void:
 	_backup_save()
 	_register_audio_manager()
 
+	await _test_debug_panel_close()
 	await _test_block_state_rules()
 	await _test_practice_mode()
 	await _test_custom_level_store()
@@ -52,6 +53,21 @@ func _run() -> void:
 	print("")
 	print("SONUC: %d gecti, %d kaldi." % [_passed, _failed])
 	quit(0 if _failed == 0 else 1)
+
+
+func _test_debug_panel_close() -> void:
+	print("--- Debug paneli ---")
+	var panel: Node = (load("res://scenes/debug_panel.tscn") as PackedScene).instantiate()
+	root.add_child(panel)
+	await process_frame
+	panel.call("toggle_visible")
+	_check("debug panel aciliyor", panel.get_node("Panel").visible, true)
+	_check("debug kapat dugmesi var",
+		panel.has_node("Panel/Margin/Rows/HeaderRow/CloseButton"), true)
+	(panel.get_node("Panel/Margin/Rows/HeaderRow/CloseButton") as Button).pressed.emit()
+	_check("debug kapat dugmesi paneli kapatiyor", panel.get_node("Panel").visible, false)
+	root.remove_child(panel)
+	panel.free()
 
 
 ## Autoload'i elle kur; yoksa oynanis sahnesi hic yuklenemez (bkz. dosya basi).
@@ -408,6 +424,63 @@ func _test_editor() -> void:
 	await process_frame
 	_check("basa sarma calisiyor", editor.level.display_name, "Parti 3")
 	_check("gezindikten sonra parti bozulmadi", editor.get("_batch").size(), 3)
+
+	# KUTUPHANE: tek satir secmek yalnizca o satiri degil, tum kovayi parti
+	# olarak acmali. Secilen satir baslangic indeksi olur.
+	var generated_names := CustomLevelStore.replace_generated(batch)
+	editor.set("_library_bucket", CustomLevelStore.Bucket.GENERATED)
+	editor.set("_library_names", generated_names)
+	editor.set("_library_selected", {generated_names[1]: true})
+	editor.call("_on_library_edit")
+	await process_frame
+	_check("uretilen tek secim tum partiyi aciyor", editor.get("_batch").size(), 3)
+	_check("uretilen secili adaydan basliyor", editor.level.display_name, "Parti 2")
+	_check("uretilen parti sekmesi korunuyor",
+		int(editor.get("_batch_bucket")), int(CustomLevelStore.Bucket.GENERATED))
+
+	var saved_names := PackedStringArray(["nav_saved_01", "nav_saved_02", "nav_saved_03"])
+	for i in batch.size():
+		CustomLevelStore.save(CustomLevelStore.Bucket.SAVED, batch[i], saved_names[i])
+	editor.set("_library_bucket", CustomLevelStore.Bucket.SAVED)
+	editor.set("_library_names", saved_names)
+	editor.set("_library_selected", {saved_names[2]: true})
+	editor.call("_on_library_edit")
+	await process_frame
+	_check("kayit tek secim tum partiyi aciyor", editor.get("_batch").size(), 3)
+	_check("kayit secili adaydan basliyor", editor.level.display_name, "Parti 3")
+	_check("kayit parti sekmesi korunuyor",
+		int(editor.get("_batch_bucket")), int(CustomLevelStore.Bucket.SAVED))
+
+	# Editor sahnesi test icin yok edilip yeniden kuruldugunda parti ve indeks
+	# aynen geri gelmeli.
+	var context: Dictionary = editor.call("get_batch_context")
+	var restored: Node = (load("res://scenes/level_editor.tscn") as PackedScene).instantiate()
+	restored.set("initial_batch_context", context)
+	root.add_child(restored)
+	await process_frame
+	_check("editore donuste parti korunuyor", restored.get("_batch").size(), 3)
+	_check("editore donuste acik kayit korunuyor", restored.level.display_name, "Parti 3")
+	_check("editore donuste kayit kovasi korunuyor",
+		int(restored.get("_batch_bucket")), int(CustomLevelStore.Bucket.SAVED))
+	root.remove_child(restored)
+	restored.free()
+
+	# Gameplay testinde debug Sonraki/Onceki AppRoot'taki ayni baglami adimlar.
+	var app: Node = (load("res://scripts/app_root.gd") as GDScript).new()
+	app.set("_editor_batch_context", context)
+	app.set("_editor_level", batch[2])
+	_check("testte sonraki aday var", app.call("_step_editor_batch", 1), true)
+	_check("testte sonraki aday aciliyor",
+		(app.get("_editor_level") as LevelData).display_name, "Parti 1")
+	_check("testte onceki aday var", app.call("_step_editor_batch", -1), true)
+	_check("testte onceki aday aciliyor",
+		(app.get("_editor_level") as LevelData).display_name, "Parti 3")
+	app.free()
+
+	for entry_name in generated_names:
+		CustomLevelStore.delete(CustomLevelStore.Bucket.GENERATED, entry_name)
+	for entry_name in saved_names:
+		CustomLevelStore.delete(CustomLevelStore.Bucket.SAVED, entry_name)
 
 	root.remove_child(editor)
 	editor.free()
