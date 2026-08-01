@@ -167,13 +167,14 @@ func _test_custom_level_store() -> void:
 	block.size = Vector2(200, 44)
 	level.breakable_blocks = [block]
 
-	var path := CustomLevelStore.save(level, "Sınama Bölümü 1")
+	var saved := CustomLevelStore.Bucket.SAVED
+	var path := CustomLevelStore.save(saved, level, "Sınama Bölümü 1")
 	_check("kaydedildi", not path.is_empty(), true)
 	_check("dosya adi temizlendi", path.get_file(), "sinama_bolumu_1.tres")
 	_check("kayit listede gorunuyor",
-		CustomLevelStore.list_names().has("sinama_bolumu_1"), true)
+		CustomLevelStore.list_names(saved).has("sinama_bolumu_1"), true)
 
-	var loaded := CustomLevelStore.load_level("sinama_bolumu_1")
+	var loaded := CustomLevelStore.load_level(saved, "sinama_bolumu_1")
 	_check("geri yuklendi", loaded != null, true)
 	if loaded != null:
 		_check("panel korundu", loaded.panels.size(), 1)
@@ -190,8 +191,29 @@ func _test_custom_level_store() -> void:
 	_check("alt kaynaklar gomulu", text.contains("[sub_resource"), true)
 	_check("blok verisi metinde", text.contains("breakable_block_data.gd"), true)
 
-	CustomLevelStore.delete("sinama_bolumu_1")
-	_check("silindi", CustomLevelStore.list_names().has("sinama_bolumu_1"), false)
+	# Toplu kopyalama: her bolum ayrac satiriyla baslamali ki yapistirilan
+	# blok tekrar dosyalara bolunebilsin.
+	var second := level.duplicate(true) as LevelData
+	second.display_name = "İkinci"
+	var bulk := CustomLevelStore.bulk_text([level, second],
+		PackedStringArray(["birinci", "ikinci"]))
+	_check("toplu metin iki bolum iceriyor", bulk.count("[gd_resource"), 2)
+	_check("toplu metin ayrac tasiyor", bulk.contains("===== birinci.tres ====="), true)
+	_check("ikinci ayrac da var", bulk.contains("===== ikinci.tres ====="), true)
+
+	# URETILENLER kovasi AYRI olmali ve yeni parti eskisini silmeli.
+	var generated := CustomLevelStore.Bucket.GENERATED
+	CustomLevelStore.replace_generated([level, second])
+	_check("parti diske yazildi", CustomLevelStore.list_names(generated).size(), 2)
+	_check("parti kayitlar kovasina karismadi",
+		CustomLevelStore.list_names(saved).size(), 1)
+	CustomLevelStore.replace_generated([level])
+	_check("yeni parti eskisini siliyor", CustomLevelStore.list_names(generated).size(), 1)
+
+	for leftover in CustomLevelStore.list_names(generated):
+		CustomLevelStore.delete(generated, leftover)
+	CustomLevelStore.delete(saved, "sinama_bolumu_1")
+	_check("silindi", CustomLevelStore.list_names(saved).has("sinama_bolumu_1"), false)
 
 
 # --- Uretec ----------------------------------------------------------------------
@@ -289,6 +311,34 @@ func _test_editor() -> void:
 	await process_frame
 	_check("blok silindi", editor.level.breakable_blocks.size(), 0)
 	_check("blok onizlemeden kalkti", world.get_block_count(), 0)
+
+	# PARTI GEZINMESI: bir bolumu acmak digerlerini KAYBETMEMELI. Onceki
+	# surumde uretilen 10 adaydan birini secmek geri kalanini yok ediyordu.
+	var batch: Array[LevelData] = []
+	for i in 3:
+		var entry := LevelData.new()
+		entry.display_name = "Parti %d" % (i + 1)
+		entry.launcher_position = Vector2(360, 1120)
+		entry.target_position = Vector2(200.0 + 80.0 * float(i), 320)
+		batch.append(entry)
+	editor.call("_set_batch", batch, PackedStringArray(["a", "b", "c"]),
+		CustomLevelStore.Bucket.GENERATED)
+	await process_frame
+
+	_check("parti ilk bolumu acti", editor.level.display_name, "Parti 1")
+	_check("gezinme satiri gorunur", editor.get_node(
+		"HUD/SafeArea/Root/BottomPanel/Rows/BatchRow").visible, true)
+
+	editor.call("_on_batch_step", 1)
+	await process_frame
+	_check("sonraki bolume gecti", editor.level.display_name, "Parti 2")
+	_check("parti hala 3 bolum", editor.get("_batch").size(), 3)
+
+	editor.call("_on_batch_step", -1)
+	editor.call("_on_batch_step", -1)
+	await process_frame
+	_check("basa sarma calisiyor", editor.level.display_name, "Parti 3")
+	_check("gezindikten sonra parti bozulmadi", editor.get("_batch").size(), 3)
 
 	root.remove_child(editor)
 	editor.free()

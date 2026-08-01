@@ -33,6 +33,10 @@ const MAX_BLOCK_WIDTH := 620.0
 const BLOCK_HEIGHT := 44.0
 ## Duvar bosluklarinin editordeki varsayilan araligi.
 const DEFAULT_GAP := Vector2(420.0, 740.0)
+## Alt serit sabit yukseklikte; parti gezinme satiri belirince tam o kadar
+## buyur. Sabit en buyuk boyutta birakmak arenadan bosuna yer yerdi.
+const PANEL_HEIGHT := 286.0
+const PANEL_HEIGHT_WITH_BATCH := 350.0
 
 ## AppRoot tarafindan add_child'dan ONCE atanabilir; bos birakilirsa bos bir
 ## bolumle baslanir.
@@ -42,9 +46,13 @@ var level: LevelData
 @onready var _camera: Camera2D = $EditorCamera
 @onready var _info: Label = $HUD/SafeArea/Root/BottomPanel/Rows/InfoLabel
 @onready var _bottom: PanelContainer = $HUD/SafeArea/Root/BottomPanel
+@onready var _batch_row: HBoxContainer = $HUD/SafeArea/Root/BottomPanel/Rows/BatchRow
+@onready var _batch_label: Label = $HUD/SafeArea/Root/BottomPanel/Rows/BatchRow/BatchLabel
 @onready var _modal: Control = $HUD/Modal
 @onready var _modal_title: Label = $HUD/Modal/Card/Rows/Title
 @onready var _modal_status: Label = $HUD/Modal/Card/Rows/Status
+@onready var _modal_tabs: HBoxContainer = $HUD/Modal/Card/Rows/TabRow
+@onready var _modal_actions: HBoxContainer = $HUD/Modal/Card/Rows/ActionRow
 @onready var _modal_list: VBoxContainer = $HUD/Modal/Card/Rows/Scroll/List
 
 var _solver: LevelSolver
@@ -57,8 +65,16 @@ var _selected_index := -1
 var _dragging := false
 var _drag_offset := Vector2.ZERO
 var _active_touch := -1
-## Uretecin son sonuclari; listeden secilince editore yuklenir.
-var _generated: Array[LevelData] = []
+## Uzerinde gezinilen parti (uretim sonucu ya da kitapliktan acilan liste).
+## Editorde acik bolum her zaman _batch[_batch_index]'tir; ‹ › ile gezilir.
+var _batch: Array[LevelData] = []
+var _batch_names := PackedStringArray()
+var _batch_index := 0
+var _batch_bucket := CustomLevelStore.Bucket.GENERATED
+## Kitaplikta acik olan sekme ve isaretli satirlar.
+var _library_bucket := CustomLevelStore.Bucket.GENERATED
+var _library_names := PackedStringArray()
+var _library_selected := {}
 var _status_text := ""
 
 
@@ -120,10 +136,22 @@ func _connect_buttons() -> void:
 	get_node(rows + "ActionRow/GenerateButton").pressed.connect(_on_open_generator)
 	get_node(rows + "ActionRow/SaveButton").pressed.connect(_on_save)
 
+	get_node(rows + "BatchRow/PrevLevel").pressed.connect(_on_batch_step.bind(-1))
+	get_node(rows + "BatchRow/NextLevel").pressed.connect(_on_batch_step.bind(1))
+
 	$HUD/SafeArea/Root/TopBar/BackButton.pressed.connect(menu_requested.emit)
-	$HUD/SafeArea/Root/TopBar/OpenButton.pressed.connect(_on_open_saved)
+	$HUD/SafeArea/Root/TopBar/OpenButton.pressed.connect(_on_open_library)
 	$HUD/SafeArea/Root/TopBar/CollapseButton.pressed.connect(_on_toggle_panel)
 	$HUD/Modal/Card/Rows/CloseButton.pressed.connect(_on_modal_close)
+
+	$HUD/Modal/Card/Rows/TabRow/GeneratedTab.pressed.connect(
+		_show_library.bind(CustomLevelStore.Bucket.GENERATED))
+	$HUD/Modal/Card/Rows/TabRow/SavedTab.pressed.connect(
+		_show_library.bind(CustomLevelStore.Bucket.SAVED))
+	$HUD/Modal/Card/Rows/ActionRow/EditSelected.pressed.connect(_on_library_edit)
+	$HUD/Modal/Card/Rows/ActionRow/CopySelected.pressed.connect(_on_library_copy)
+	$HUD/Modal/Card/Rows/ActionRow/RepoSelected.pressed.connect(_on_library_to_repo)
+	$HUD/Modal/Card/Rows/ActionRow/DeleteSelected.pressed.connect(_on_library_delete)
 
 
 # --- Onizlemeyi veriden kurma -------------------------------------------------
@@ -474,32 +502,89 @@ func _on_analyse() -> void:
 	_refresh_info()
 
 
+## KAYDET her zaman KAYITLAR kovasina yazar - uretilen bir bolume basmak onu
+## "begendim, kalsin" demektir ve bir sonraki uretimin silmesinden kurtarir.
 func _on_save() -> void:
-	var level_name := "bolum_%s" % Time.get_datetime_string_from_system().replace(":", "")
-	var path := CustomLevelStore.save(level, level_name)
+	var level_name := level.display_name
+	if level_name.is_empty() or level_name == "Yeni Bölüm":
+		level_name = "bolum_%s" % Time.get_datetime_string_from_system().replace(":", "")
+	var path := CustomLevelStore.save(CustomLevelStore.Bucket.SAVED, level, level_name)
 	var copied := CustomLevelStore.copy_to_clipboard(level)
 	if path.is_empty():
 		_status_text = "Kaydedilemedi."
 	elif copied:
-		_status_text = "Kaydedildi + panoya kopyalandı: %s" % level_name
+		_status_text = "Kayıtlara alındı + panoya kopyalandı: %s" % level_name
 	else:
-		_status_text = "Kaydedildi: %s (pano başarısız)" % level_name
+		_status_text = "Kayıtlara alındı: %s (pano başarısız)" % level_name
 	_refresh_info()
+
+
+# --- Parti gezinmesi ----------------------------------------------------------
+#
+# Uretim 10 aday dondurur; hepsini tek tek gercek olcekte gorup begendigini
+# kaydetmek gerekir. Onceki surumde listeden birini secmek digerlerini
+# atiyordu, yani gozden gecirmek imkansizdi.
+
+func _set_batch(levels: Array[LevelData], names: PackedStringArray,
+		bucket: CustomLevelStore.Bucket) -> void:
+	_batch = levels
+	_batch_names = names
+	_batch_bucket = bucket
+	_batch_index = 0
+	_load_batch_entry()
+
+
+func _on_batch_step(direction: int) -> void:
+	if _batch.size() <= 1:
+		return
+	_batch_index = wrapi(_batch_index + direction, 0, _batch.size())
+	_load_batch_entry()
+
+
+func _load_batch_entry() -> void:
+	if _batch.is_empty():
+		_refresh_batch_row()
+		return
+	level = _batch[_batch_index]
+	_selection = Selection.NONE
+	_selected_index = -1
+	_status_text = ""
+	_refresh_batch_row()
+	_rebuild()
+
+
+func _refresh_batch_row() -> void:
+	_batch_row.visible = _batch.size() > 1
+	_bottom.offset_top = -(PANEL_HEIGHT_WITH_BATCH if _batch_row.visible else PANEL_HEIGHT)
+	if _batch_row.visible:
+		_batch_label.text = "%d / %d — %s" % [
+			_batch_index + 1, _batch.size(), level.display_name]
 
 
 func _on_toggle_panel() -> void:
 	_bottom.visible = not _bottom.visible
 
 
-# --- Modal (kayitlar / uretec) ------------------------------------------------
+# --- Kitaplik ve uretec (modal) -----------------------------------------------
+#
+# Tek bir modal iki isi gorur: URETILENLER (son arama partisi) ve KAYITLAR
+# (bilerek sakladiklarin). Satirlar isaretlenebilir, boylece begendiklerini
+# tek tek degil TOPLU kopyalayabilir ya da repoya yazabilirsin.
 
-func _open_modal(title: String) -> void:
+func _open_modal(title: String, show_tabs: bool, show_actions: bool) -> void:
 	_modal_title.text = title
 	_modal_status.text = ""
+	_modal_tabs.visible = show_tabs
+	_modal_actions.visible = show_actions
+	_library_selected.clear()
+	_clear_modal_list()
+	_modal.show()
+
+
+func _clear_modal_list() -> void:
 	for child in _modal_list.get_children():
 		_modal_list.remove_child(child)
 		child.queue_free()
-	_modal.show()
 
 
 func _on_modal_close() -> void:
@@ -508,31 +593,134 @@ func _on_modal_close() -> void:
 	_modal.hide()
 
 
-func _on_open_saved() -> void:
-	_open_modal("Kayıtlı Bölümler")
-	var names := CustomLevelStore.list_names()
+func _on_open_library() -> void:
+	_open_modal("Kitaplık", true, true)
+	_show_library(_library_bucket)
+
+
+func _show_library(bucket: CustomLevelStore.Bucket) -> void:
+	_library_bucket = bucket
+	_library_selected.clear()
+	_modal_tabs.visible = true
+	_modal_actions.visible = true
+	_clear_modal_list()
+
+	_library_names = CustomLevelStore.list_names(bucket)
+	if _library_names.is_empty():
+		_modal_status.text = ("Bu partide bölüm yok - ÜRET ile ara."
+			if bucket == CustomLevelStore.Bucket.GENERATED else "Henüz kayıt yok.")
+		_refresh_library_actions()
+		return
+
+	for entry_name in _library_names:
+		var button := _make_list_button("", _on_library_toggle.bind(entry_name))
+		button.set_meta("entry", entry_name)
+		_modal_list.add_child(button)
+	_refresh_library_rows()
+
+
+## Satira dokunmak SECER (acmaz). Acmak ayri bir dugmedir; boylece toplu
+## secim yaparken yanlislikla bolum degistirilmez.
+func _on_library_toggle(entry_name: String) -> void:
+	if _library_selected.has(entry_name):
+		_library_selected.erase(entry_name)
+	else:
+		_library_selected[entry_name] = true
+	_refresh_library_rows()
+
+
+func _refresh_library_rows() -> void:
+	for child in _modal_list.get_children():
+		var button := child as Button
+		if button == null or not button.has_meta("entry"):
+			continue
+		var entry_name := String(button.get_meta("entry"))
+		var mark := "[x]" if _library_selected.has(entry_name) else "[  ]"
+		button.text = "%s  %s" % [mark, entry_name]
+		button.emphasis = LumaButton.Emphasis.PRIMARY if _library_selected.has(entry_name) 			else LumaButton.Emphasis.SECONDARY
+	_refresh_library_actions()
+
+
+func _refresh_library_actions() -> void:
+	var count := _library_selected.size()
+	_modal_actions.get_node("CopySelected").text = "KOPYALA (%d)" % count
+	_modal_actions.get_node("DeleteSelected").text = "SİL (%d)" % count
+	# Repoya dogrudan yazma yalnizca masaustunde mumkun (res:// salt okunur).
+	_modal_actions.get_node("RepoSelected").visible = CustomLevelStore.can_write_to_repo()
+	if count == 0 and not _library_names.is_empty():
+		_modal_status.text = "%d bölüm — satırlara dokunup seç" % _library_names.size()
+
+
+func _selected_names() -> PackedStringArray:
+	# Liste sirasi korunur; sozluk sirasina guvenilmez.
+	var names := PackedStringArray()
+	for entry_name in _library_names:
+		if _library_selected.has(entry_name):
+			names.append(entry_name)
+	return names
+
+
+func _load_selected_levels() -> Array[LevelData]:
+	var levels: Array[LevelData] = []
+	for entry_name in _selected_names():
+		var loaded := CustomLevelStore.load_level(_library_bucket, entry_name)
+		if loaded != null:
+			levels.append(loaded)
+	return levels
+
+
+## Secilenleri editore PARTI olarak alir; ‹ › ile aralarinda gezilir.
+func _on_library_edit() -> void:
+	var names := _selected_names()
 	if names.is_empty():
-		_modal_status.text = "Henüz kayıt yok."
+		_modal_status.text = "Önce en az bir bölüm seç."
 		return
-	for saved_name in names:
-		_modal_list.add_child(_make_list_button(saved_name, _on_load_saved.bind(saved_name)))
-
-
-func _on_load_saved(saved_name: String) -> void:
-	var loaded := CustomLevelStore.load_level(saved_name)
-	if loaded == null:
-		_modal_status.text = "Yüklenemedi: %s" % saved_name
+	var levels := _load_selected_levels()
+	if levels.is_empty():
+		_modal_status.text = "Yüklenemedi."
 		return
-	level = loaded
-	_selection = Selection.NONE
-	_selected_index = -1
-	_status_text = "Yüklendi: %s" % saved_name
 	_modal.hide()
-	_rebuild()
+	_set_batch(levels, names, _library_bucket)
+	_status_text = "%d bölüm açıldı — ‹ › ile gez" % levels.size()
+	_refresh_info()
 
+
+func _on_library_copy() -> void:
+	var names := _selected_names()
+	if names.is_empty():
+		_modal_status.text = "Önce en az bir bölüm seç."
+		return
+	var levels := _load_selected_levels()
+	if CustomLevelStore.copy_many_to_clipboard(levels, names):
+		_modal_status.text = "%d bölüm panoya kopyalandı (ayraç satırlarıyla)" % levels.size()
+	else:
+		_modal_status.text = "Kopyalanamadı."
+
+
+func _on_library_to_repo() -> void:
+	var levels := _load_selected_levels()
+	if levels.is_empty():
+		_modal_status.text = "Önce en az bir bölüm seç."
+		return
+	var written := CustomLevelStore.save_many_to_repo(levels)
+	_modal_status.text = "%d bölüm res://levels/ içine yazıldı" % written
+
+
+func _on_library_delete() -> void:
+	var names := _selected_names()
+	if names.is_empty():
+		_modal_status.text = "Önce en az bir bölüm seç."
+		return
+	for entry_name in names:
+		CustomLevelStore.delete(_library_bucket, entry_name)
+	_show_library(_library_bucket)
+	_modal_status.text = "%d bölüm silindi" % names.size()
+
+
+# --- Uretec -------------------------------------------------------------------
 
 func _on_open_generator() -> void:
-	_open_modal("Bölüm Üret")
+	_open_modal("Bölüm Üret", false, false)
 	_modal_status.text = "Bir profil seç; 10 aday aranacak."
 	_modal_list.add_child(_make_list_button("Kolay", _start_generation.bind("easy")))
 	_modal_list.add_child(_make_list_button("Orta", _start_generation.bind("medium")))
@@ -552,11 +740,8 @@ func _start_generation(profile_name: String) -> void:
 		_:
 			profile = LevelGenerator.Profile.medium()
 
-	for child in _modal_list.get_children():
-		_modal_list.remove_child(child)
-		child.queue_free()
+	_clear_modal_list()
 	_modal_status.text = "Aranıyor..."
-	_generated.clear()
 	_generator.generate(profile, 10)
 
 
@@ -565,34 +750,26 @@ func _on_candidate_evaluated(tried: int, accepted: int) -> void:
 		_modal_status.text = "Aranıyor... %d aday denendi, %d bulundu" % [tried, accepted]
 
 
+## Parti biter bitmez DISKE yazilir. Onceki surumde yalnizca bellekte
+## duruyordu ve listeden birini secmek digerlerini yok ediyordu.
 func _on_generation_finished(levels: Array[LevelData]) -> void:
-	_generated = levels
-	if not _modal.visible:
-		return
-	# Eleme dokumu gosterilir: "hiçbir şey bulunamadı" tek basina yol
-	# gostermez, hangi olcutun fazla siki oldugunu bilmek gerekir.
 	var rejections := _generator.describe_rejections()
 	if levels.is_empty():
-		_modal_status.text = "Uygun aday çıkmadı.\nEleme: %s" % rejections
+		if _modal.visible:
+			_modal_status.text = "Uygun aday çıkmadı.
+Eleme: %s" % rejections
 		return
-	_modal_status.text = "%d bölüm bulundu — düzenlemek için dokun\nEleme: %s" % [
-		levels.size(), rejections]
-	for i in levels.size():
-		_modal_list.add_child(_make_list_button(levels[i].display_name, _load_generated.bind(i)))
 
-
-func _load_generated(index: int) -> void:
-	if index < 0 or index >= _generated.size():
-		return
-	level = _generated[index]
-	_selection = Selection.NONE
-	_selected_index = -1
-	_status_text = "Üretilen bölüm yüklendi — düzenleyip kaydet"
+	var names := CustomLevelStore.replace_generated(levels)
 	_modal.hide()
-	_rebuild()
+	_set_batch(levels, names, CustomLevelStore.Bucket.GENERATED)
+	_status_text = "%d bölüm üretildi ve kaydedildi — ‹ › ile gez, beğendiğine KAYDET
+Eleme: %s" % [
+		levels.size(), rejections]
+	_refresh_info()
 
 
-func _make_list_button(text: String, action: Callable) -> Button:
+func _make_list_button(text: String, action: Callable) -> LumaButton:
 	var button := LumaButton.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(0.0, 64.0)

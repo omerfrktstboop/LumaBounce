@@ -85,10 +85,10 @@ custom_minimum_size = Vector2(100, 58)
 layout_mode = 2
 focus_mode = 0
 theme_override_font_sizes/font_size = 22
-text = "AÇ"
+text = "LİSTE"
 script = ExtResource("5_button")
 corner_radius = 18
-content_margin = Vector2(10, 6)
+content_margin = Vector2(8, 6)
 
 [node name="CollapseButton" type="Button" parent="HUD/SafeArea/Root/TopBar"]
 custom_minimum_size = Vector2(70, 58)
@@ -114,6 +114,41 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 [node name="Rows" type="VBoxContainer" parent="HUD/SafeArea/Root/BottomPanel"]
 layout_mode = 2
 theme_override_constants/separation = 8
+
+[node name="BatchRow" type="HBoxContainer" parent="HUD/SafeArea/Root/BottomPanel/Rows"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PrevLevel" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/BatchRow"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "‹"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="BatchLabel" type="Label" parent="HUD/SafeArea/Root/BottomPanel/Rows/BatchRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.203922, 0.901961, 0.831373, 1)
+theme_override_font_sizes/font_size = 21
+text = "1 / 10"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NextLevel" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/BatchRow"]
+custom_minimum_size = Vector2(80, 56)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "›"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
 
 [node name="InfoLabel" type="Label" parent="HUD/SafeArea/Root/BottomPanel/Rows"]
 custom_minimum_size = Vector2(0, 76)
@@ -320,6 +355,33 @@ theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 autowrap_mode = 2
 
+[node name="TabRow" type="HBoxContainer" parent="HUD/Modal/Card/Rows"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="GeneratedTab" type="Button" parent="HUD/Modal/Card/Rows/TabRow"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "ÜRETİLENLER"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(8, 6)
+
+[node name="SavedTab" type="Button" parent="HUD/Modal/Card/Rows/TabRow"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "KAYITLAR"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(8, 6)
+
 [node name="Scroll" type="ScrollContainer" parent="HUD/Modal/Card/Rows"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -329,6 +391,56 @@ horizontal_scroll_mode = 0
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 10
+
+[node name="ActionRow" type="HBoxContainer" parent="HUD/Modal/Card/Rows"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EditSelected" type="Button" parent="HUD/Modal/Card/Rows/ActionRow"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+text = "DÜZENLE"
+script = ExtResource("5_button")
+emphasis = 0
+corner_radius = 16
+content_margin = Vector2(4, 6)
+
+[node name="CopySelected" type="Button" parent="HUD/Modal/Card/Rows/ActionRow"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+text = "KOPYALA (0)"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
+
+[node name="RepoSelected" type="Button" parent="HUD/Modal/Card/Rows/ActionRow"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+text = "REPOYA"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
+
+[node name="DeleteSelected" type="Button" parent="HUD/Modal/Card/Rows/ActionRow"]
+custom_minimum_size = Vector2(0, 62)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+text = "SİL (0)"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
 
 [node name="CloseButton" type="Button" parent="HUD/Modal/Card/Rows"]
 custom_minimum_size = Vector2(0, 70)
