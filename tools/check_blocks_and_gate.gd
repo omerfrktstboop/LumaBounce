@@ -38,6 +38,7 @@ func _run() -> void:
 	_register_audio_manager()
 
 	await _test_block_state_rules()
+	await _test_star_row()
 	await _test_attempt_timer()
 	await _test_level_select()
 	_test_star_gate()
@@ -133,6 +134,46 @@ func _first_block(field: BreakableField) -> BreakableBlock:
 		if block != null and not block.is_broken():
 			return block
 	return null
+
+
+# --- Yildiz satiri -------------------------------------------------------------
+#
+# Yildiz SAYISI dogru olsa bile yanlis CIZILEBILIR: reveal animasyonu her
+# yildizin olcegini ayri oynatir ve olcek 0'da kalirsa o yildiz dolu sayilsa
+# bile bos cizilir. Kod okumakla fark edilmez, bu yuzden cizim kosulunun
+# kendisi test edilir.
+
+func _test_star_row() -> void:
+	print("")
+	print("--- Yildiz satiri ---")
+
+	var row := StarRow.new()
+	root.add_child(row)
+	await process_frame
+
+	for count in [0, 1, 2, 3]:
+		row.set_stars(count)
+		_check("set_stars(%d) -> %d dolu cizilir" % [count, count], _visible_filled(row), count)
+
+	for count in [1, 2, 3]:
+		row.play_reveal(count)
+		await create_timer(0.8).timeout
+		_check("play_reveal(%d) bitince %d dolu cizilir" % [count, count],
+			_visible_filled(row), count)
+
+	root.remove_child(row)
+	row.free()
+
+
+## StarRow._draw()'in "bu yildiz dolu cizilir" kosulunun aynisi.
+func _visible_filled(row: StarRow) -> int:
+	var filled := int(row.get("_filled"))
+	var scales: PackedFloat32Array = row.get("_scales")
+	var count := 0
+	for i in scales.size():
+		if i < filled and scales[i] > 0.001:
+			count += 1
+	return count
 
 
 # --- Deneme kronometresi -------------------------------------------------------

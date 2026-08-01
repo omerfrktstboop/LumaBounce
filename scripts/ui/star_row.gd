@@ -80,11 +80,14 @@ func play_reveal(filled: int) -> void:
 	for i in _filled:
 		var index := i
 		var start := float(index) * pop_stagger
-		_reveal_tween.tween_method(
-				_set_star_scale.bind(index), 0.0, pop_scale, pop_time * 0.55) \
+		# Callable.bind() bagladigi argumani cagri argumanlarindan SONRA
+		# gonderir, yani `_set_star_scale.bind(index)` aslinda
+		# `_set_star_scale(deger, index)` demektir - iki parametre yer degistirir
+		# ve olcek dizisi bozulur. Lambda ile sira cagri yerinde gorunur kalir.
+		var setter := func(value: float) -> void: _set_star_scale(index, value)
+		_reveal_tween.tween_method(setter, 0.0, pop_scale, pop_time * 0.55) \
 			.set_delay(start).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		_reveal_tween.tween_method(
-				_set_star_scale.bind(index), pop_scale, 1.0, pop_time * 0.45) \
+		_reveal_tween.tween_method(setter, pop_scale, 1.0, pop_time * 0.45) \
 			.set_delay(start + pop_time * 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
