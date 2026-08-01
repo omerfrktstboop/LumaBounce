@@ -50,6 +50,31 @@ func _test_quality_and_ranking() -> void:
 		{"name": "referans", "level": reference, "metrics": {}},
 	])
 	_check("batch kopyasi eleniyor", ranked.size(), 2)
+	var exact_fill := coordinator.rank_records(records, {"template": "single_bounce"}, [
+		{"name": "referans", "level": reference, "metrics": {}},
+	], 3)
+	_check("tam kopya sayiyi doldurmak icin geri alinmiyor", exact_fill.size(), 2)
+	var near := high.duplicate(true) as LevelData
+	near.target_position += Vector2(18.0, 12.0)
+	near.panels[0].position += Vector2(20.0, -10.0)
+	var fill_records := records.slice(0, 2)
+	fill_records.append({
+		"level": near,
+		"solver": {
+			"ok": true, "robust": 26, "bounces": 2,
+			"opened_robust": 26, "block_free": true,
+		},
+	})
+	var filled := coordinator.rank_records(
+		fill_records, {"template": "single_bounce"}, [
+			{"name": "referans", "level": reference, "metrics": {}},
+		], 3)
+	_check("benzer fizik adayi istenen sayiyi dolduruyor", filled.size(), 3)
+	var has_fallback := false
+	for entry in filled:
+		if bool(entry["novelty"].get("similarity_fallback", false)):
+			has_fallback = true
+	_check("doldurma adayi metadata ile isaretli", has_fallback, true)
 	if not ranked.is_empty():
 		_check("yuksek kalite once", ranked[0]["level"], high)
 	var quality := LevelQualityScorer.new()

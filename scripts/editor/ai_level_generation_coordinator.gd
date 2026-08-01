@@ -21,6 +21,10 @@ var _cancel_requested := false
 var _request := {}
 var _usage := {}
 
+## Yenilik filtresi yakin varyasyonlari cezalandirabilir; yalnizca geometri
+## tamamen ayniysa (yatay ayna dahil) adayi kesin kopya sayariz.
+const EXACT_DUPLICATE_SIMILARITY := 100
+
 
 func _ready() -> void:
 	_client = OpenRouterClient.new()
@@ -78,8 +82,9 @@ func cancel_generation() -> void:
 
 
 func rank_records(records: Array[Dictionary], request: Dictionary,
-		references: Array) -> Array[Dictionary]:
+		references: Array, desired_count := 0) -> Array[Dictionary]:
 	var ranked: Array[Dictionary] = []
+	var similar_fallbacks: Array[Dictionary] = []
 	var batch_references: Array[Dictionary] = []
 	for record in records:
 		if not record.get("level", null) is LevelData:
@@ -102,6 +107,15 @@ func rank_records(records: Array[Dictionary], request: Dictionary,
 		comparison.append_array(batch_references)
 		var novelty := _novelty.score(level, solver, comparison)
 		if bool(novelty["reject"]):
+			# Uretim ekraninda istenen sayi, fizik filtresinden gecen adaylar
+			# arasindan doldurulur. Tam kopyalar yine asla geri alinmaz.
+			if (desired_count > 0
+					and int(novelty.get("similarity", 0)) < EXACT_DUPLICATE_SIMILARITY):
+				var fallback := record.duplicate(true)
+				fallback["novelty"] = _relax_novelty(novelty)
+				fallback["quality"] = _quality.score(
+					level, solver, fallback["novelty"], String(request.get("template", "auto")))
+				similar_fallbacks.append(fallback)
 			continue
 		var quality := _quality.score(level, solver, novelty, String(request.get("template", "auto")))
 		var ranked_record := record.duplicate(true)
@@ -114,12 +128,56 @@ func rank_records(records: Array[Dictionary], request: Dictionary,
 			"metrics": solver,
 		})
 	ranked.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
-		var qa := int(a["quality"]["quality_score"])
-		var qb := int(b["quality"]["quality_score"])
-		if qa != qb:
-			return qa > qb
-		return int(a["novelty"]["novelty_score"]) > int(b["novelty"]["novelty_score"]))
+		return _rank_before(a, b))
+
+	if desired_count <= ranked.size() or similar_fallbacks.is_empty():
+		return ranked
+
+	# Once en iyi yakin varyasyonlari dene; her eklemede benzerligi yeniden
+	# hesaplayarak fallback'lerin kendi aralarinda tam kopya olmasini engelle.
+	similar_fallbacks.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return _rank_before(a, b))
+	var selected_references := references.duplicate()
+	for selected in ranked:
+		selected_references.append(_reference_for(selected, selected_references.size()))
+	for fallback in similar_fallbacks:
+		if ranked.size() >= desired_count:
+			break
+		var level: LevelData = fallback["level"]
+		var solver: Dictionary = fallback["solver"]
+		var novelty := _novelty.score(level, solver, selected_references)
+		if int(novelty.get("similarity", 0)) >= EXACT_DUPLICATE_SIMILARITY:
+			continue
+		fallback["novelty"] = _relax_novelty(novelty)
+		fallback["quality"] = _quality.score(
+			level, solver, fallback["novelty"], String(request.get("template", "auto")))
+		ranked.append(fallback)
+		selected_references.append(_reference_for(fallback, selected_references.size()))
 	return ranked
+
+
+func _relax_novelty(novelty: Dictionary) -> Dictionary:
+	var relaxed := novelty.duplicate(true)
+	relaxed["reject"] = false
+	relaxed["strong_penalty"] = true
+	relaxed["similarity_fallback"] = true
+	return relaxed
+
+
+func _reference_for(record: Dictionary, index: int) -> Dictionary:
+	return {
+		"name": "Secilen aday %d" % (index + 1),
+		"level": record["level"],
+		"metrics": record.get("solver", {}),
+	}
+
+
+func _rank_before(a: Dictionary, b: Dictionary) -> bool:
+	var qa := int(a["quality"]["quality_score"])
+	var qb := int(b["quality"]["quality_score"])
+	if qa != qb:
+		return qa > qb
+	return int(a["novelty"]["novelty_score"]) > int(b["novelty"]["novelty_score"])
 
 
 func _on_blueprints_received(document: Dictionary, usage: Dictionary) -> void:
@@ -141,7 +199,8 @@ func _on_blueprints_received(document: Dictionary, usage: Dictionary) -> void:
 
 
 func _on_generator_progress(tried: int, total: int, accepted: int) -> void:
-	status_changed.emit("%d / %d aday test edildi. %d uygun." % [tried, total, accepted])
+	status_changed.emit(
+		"%d / %d aday test edildi. %d fizik filtresinden gecti." % [tried, total, accepted])
 	progress_changed.emit(tried, total, accepted)
 
 
@@ -155,8 +214,9 @@ func _on_physics_finished(records: Array[Dictionary]) -> void:
 		return
 	status_changed.emit(
 		"%d fizik adayi bulundu. Yenilik ve kalite puanlari hesaplaniyor..." % records.size())
-	var ranked := rank_records(records, _request, _novelty.default_references())
 	var wanted := int(_request["candidate_count"])
+	var ranked := rank_records(
+		records, _request, _novelty.default_references(), wanted)
 	if ranked.size() > wanted:
 		ranked.resize(wanted)
 	if ranked.is_empty():
@@ -200,6 +260,7 @@ func _build_metadata(record: Dictionary) -> Dictionary:
 		"broken_state": int(solver.get("broken_state", 0)),
 		"novelty_score": int(novelty["novelty_score"]),
 		"quality_score": int(quality["quality_score"]),
+		"similarity_fallback": bool(novelty.get("similarity_fallback", false)),
 		"most_similar_level": String(novelty["most_similar_level"]),
 		"similarity_reasons": novelty["similarity_reasons"],
 		"design_intent": String(record.get("design_intent", "")),

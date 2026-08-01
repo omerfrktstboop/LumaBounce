@@ -13,6 +13,7 @@ const ALLOWED_FIELDS := [
 	"variation_scale", "physics_rescue",
 	"robust_cells", "bounce_count", "opened_robust", "novelty_score", "quality_score",
 	"solution_shots", "broken_state",
+	"similarity_fallback",
 	"most_similar_level", "similarity_reasons", "design_intent", "usage",
 ]
 
