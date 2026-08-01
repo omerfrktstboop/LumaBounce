@@ -22,8 +22,13 @@ signal editor_requested()
 ## kadar gecen sure bunun altindaysa "kisa dokunma" sayilir.
 const THREE_FINGER_MAX_HOLD_MSEC := 450
 const PANEL_PADDING := Vector2(12.0, 12.0)
+## Kose dugmesi bilerek kucuk ve safe area'nin en dibinde: oynanis HUD'u
+## kendi ic bosluguna (44 px) yerlestigi icin bu boyut ev dugmesine degmez.
+const TOGGLE_SIZE := 38.0
+const TOGGLE_PADDING := 3.0
 
 @onready var _panel: Control = $Panel
+@onready var _toggle_button: Button = $ToggleButton
 @onready var _info_label: Label = $Panel/Margin/Rows/InfoLabel
 @onready var _unlock_button: Button = $Panel/Margin/Rows/ToolRow/UnlockAllButton
 
@@ -50,6 +55,7 @@ func _ready() -> void:
 	_unlock_button.pressed.connect(_on_unlock_all_pressed)
 	$Panel/Margin/Rows/ToolRow/ResetStatsButton.pressed.connect(reset_stats_requested.emit)
 	$Panel/Margin/Rows/EditorButton.pressed.connect(editor_requested.emit)
+	_toggle_button.pressed.connect(toggle_visible)
 
 
 func _process(_delta: float) -> void:
@@ -67,6 +73,19 @@ func toggle_visible() -> void:
 	_panel.visible = not _panel.visible
 	if _panel.visible:
 		_apply_safe_area_offset()
+
+
+## Paneli kapatir (acmaz). Editorden "TEST"e basildiginda cagrilir: acik
+## kalan panel arenanin ustunu ortup test edilen bolumu gizlerdi.
+func hide_panel() -> void:
+	_panel.visible = false
+
+
+## Kose dugmesi. Editor ekraninda gizlenir - orada zaten kendi GERI dugmesi
+## ayni koseyi kullaniyor ve panele ihtiyac yok (uc parmak jesti hala calisir).
+func set_toggle_visible(value: bool) -> void:
+	if is_node_ready():
+		_toggle_button.visible = value
 
 
 func _build_info_text() -> String:
@@ -172,6 +191,14 @@ func _apply_safe_area_offset() -> void:
 	var insets := _safe_area_insets()
 	_panel.offset_left = PANEL_PADDING.x + insets.x
 	_panel.offset_top = PANEL_PADDING.y + insets.y
+
+	# Kose dugmesi safe area'nin hemen icinde, oyun HUD'unun IC kenar
+	# boslugundan (44 px) once durur; boylece oynanistaki ev/tekrar
+	# dugmelerinin uzerine binmez.
+	_toggle_button.offset_left = TOGGLE_PADDING + insets.x
+	_toggle_button.offset_top = TOGGLE_PADDING + insets.y
+	_toggle_button.offset_right = _toggle_button.offset_left + TOGGLE_SIZE
+	_toggle_button.offset_bottom = _toggle_button.offset_top + TOGGLE_SIZE
 
 
 func _safe_area_insets() -> Vector2:

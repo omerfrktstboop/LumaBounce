@@ -150,6 +150,9 @@ func _swap_to(scene: PackedScene, configure := Callable()) -> void:
 
 	if _debug_panel != null and is_instance_valid(_debug_panel) and not _debug_panel.is_queued_for_deletion():
 		_debug_panel.set_active_gameplay(instance as Gameplay)
+		# Editorun kendi GERI dugmesi ayni koseyi kullaniyor; orada kose
+		# dugmesi gizlenir (uc parmak jesti calismaya devam eder).
+		_debug_panel.set_toggle_visible(not (instance is LevelEditor))
 
 
 # --- Ekran kurulumu ----------------------------------------------------------
@@ -248,6 +251,10 @@ func _configure_editor(screen: Node) -> void:
 ## bolum degismez, ve geri donuldugunde duzenleme aynen durur.
 func _on_editor_test_requested(edit_level: LevelData) -> void:
 	_editor_level = edit_level
+	# Acik kalan debug paneli arenanin ustunu ortup test edilen bolumu
+	# gizlerdi. Kose dugmesi durdugu icin tek dokunusla geri acilir.
+	if _debug_panel != null and is_instance_valid(_debug_panel):
+		_debug_panel.hide_panel()
 	await _transition(gameplay_scene, _configure_editor_gameplay)
 
 
@@ -257,6 +264,9 @@ func _configure_editor_gameplay(screen: Node) -> void:
 		gameplay.level_data = _editor_level
 		gameplay.playtest_stats = _playtest_stats
 		gameplay.progress = _progress
+		# Bolum bitmez: hedefe isabet geri bildirimi oynar ama sonuc karti
+		# acilmaz ve haklar tukenmez (bkz. Gameplay.practice_mode).
+		gameplay.practice_mode = true
 
 
 func _on_editor_closed() -> void:

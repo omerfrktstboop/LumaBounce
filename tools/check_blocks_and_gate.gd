@@ -38,6 +38,7 @@ func _run() -> void:
 	_register_audio_manager()
 
 	await _test_block_state_rules()
+	await _test_practice_mode()
 	await _test_custom_level_store()
 	await _test_generator()
 	await _test_editor()
@@ -137,6 +138,74 @@ func _first_block(field: BreakableField) -> BreakableBlock:
 		if block != null and not block.is_broken():
 			return block
 	return null
+
+
+# --- Test modu (editorden TEST) --------------------------------------------------
+#
+# Test modunun tamami "olmayan seyler" uzerine kurulu: kart ACILMAZ, haklar
+# TUKENMEZ, ilerleme YAZILMAZ. Bir seyin olmadigini oynayarak fark etmek zor,
+# bu yuzden dogrudan olculur.
+
+func _test_practice_mode() -> void:
+	print("")
+	print("--- Test modu ---")
+
+	var gameplay: Node = (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+	gameplay.level_data = LevelLibrary.load_level(1)
+	gameplay.practice_mode = true
+	root.add_child(gameplay)
+	await physics_frame
+
+	var lives_at_start := int((gameplay.get_debug_snapshot() as Dictionary)["lives_remaining"])
+	_check("baslangicta haklar dolu", lives_at_start > 0, true)
+
+	# max_lives'tan FAZLA iska: normalde basarisizlik karti acilirdi.
+	var ball := gameplay.get_node("Ball") as Ball
+	for i in lives_at_start + 2:
+		ball.shot_failed.emit("out_of_bounds")
+		await create_timer(float(gameplay.auto_reset_delay) + 0.1).timeout
+	var after_misses: Dictionary = gameplay.get_debug_snapshot()
+	_check("iskalar hak yemiyor", int(after_misses["lives_remaining"]), lives_at_start)
+
+	# ResultPanel tipi BILEREK yazilmaz: result_panel.gd LumaButton'a, o da
+	# AudioManager'a baglidir; tipi statik olarak anmak bu zinciri harness
+	# derlenirken zorlar ve autoload henuz kayitli olmadigi icin butun
+	# butonlar bozulur (bkz. dosya basindaki not).
+	var panel := gameplay.get_node("HUD/ResultPanel") as Control
+	_check("basarisizlik karti acilmadi", panel.visible, false)
+
+	# Bayrak DIZI icinde tutulur: GDScript lambda'lari degeri kopyalayarak
+	# yakalar, dolayisiyla `completed = true` yalnizca lambda'nin kendi
+	# kopyasini degistirir ve test hicbir sey olcmemis olur.
+	var completed := [false]
+	gameplay.level_completed.connect(func(_id: int, _stars: int) -> void: completed[0] = true)
+	var target := gameplay.get_node("Target") as Target
+	target.hit.emit(gameplay.get_node("Ball"))
+	await create_timer(float(gameplay.practice_hit_reset_delay) + 0.3).timeout
+
+	_check("isabette basari karti acilmadi", panel.visible, false)
+	_check("isabette level_completed yayilmadi", completed[0], false)
+	_check("top tekrar atisa hazir", (gameplay.get_node("Ball") as Ball).is_ready_to_launch(), true)
+	_check("baslikta TEST isareti var",
+		(gameplay.get_node("HUD/SafeArea/Root/LevelHeader/LevelSubtitle") as Label)
+			.text.contains("TEST"), true)
+
+	root.remove_child(gameplay)
+	gameplay.free()
+
+	# Normal modda ayni isabet bolumu BITIRMELI - test modu genel davranisi
+	# degistirmemis olmali.
+	var normal: Node = (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+	normal.level_data = LevelLibrary.load_level(1)
+	root.add_child(normal)
+	await physics_frame
+	var normal_completed := [false]
+	normal.level_completed.connect(func(_id: int, _stars: int) -> void: normal_completed[0] = true)
+	(normal.get_node("Target") as Target).hit.emit(normal.get_node("Ball"))
+	await process_frame
+	_check("normal modda level_completed yayiliyor", normal_completed[0], true)
+	root.remove_child(normal)
+	normal.free()
 
 
 # --- Editor kayit katmani -------------------------------------------------------

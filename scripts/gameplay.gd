@@ -28,6 +28,8 @@ signal menu_requested()
 @export var result_delay := 0.75
 ## Basarisiz atistan sonra, hala hakki varsa otomatik sifirlama gecikmesi.
 @export var auto_reset_delay := 0.35
+## Test modunda hedefe isabetten sonra topun geri gelme gecikmesi.
+@export var practice_hit_reset_delay := 0.7
 @export var message_pop_time := 0.35
 @export var level_title_format := "BÖLÜM %d"
 ## Oyuncu ilk gecerli nisan hareketini yapinca ipucu bu surede solar.
@@ -72,6 +74,11 @@ var playtest_stats: PlaytestStats
 ## AppRoot tarafindan add_child'dan ONCE atanir. Buradan YALNIZCA onceki
 ## yildiz OKUNUR (yeni rekor tespiti icin); yazma islemi AppRoot'a aittir.
 var progress: ProgressStore
+## TEST MODU - bolum editorunden "TEST" ile acildiginda AppRoot tarafindan
+## acilir. Bolum BITMEZ: hedefe isabet geri bildirimi oynar ama sonuc karti
+## acilmaz, haklar tukenmez, ilerleme yazilmaz. Amac bolumu degerlendirmek
+## degil, geometriyi istedigin kadar denemek.
+var practice_mode := false
 
 @onready var _arena: Arena = $Arena
 @onready var _panels: Node2D = $Panels
@@ -208,8 +215,14 @@ func _build_panels() -> void:
 ## LevelData'dan gelir; home ve restart butonlarinin arasinda, safe area icinde.
 func _apply_level_header() -> void:
 	_level_title.text = level_title_format % level_data.level_id
-	_level_subtitle.text = level_data.display_name
-	_level_subtitle.visible = not level_data.display_name.is_empty()
+	# Test modu basligi: bolum neden bitmiyor sorusunun yaniti gorunur olsun,
+	# yoksa "hedefi vurdum ama bir sey olmadi" bir hata gibi okunur.
+	var subtitle := level_data.display_name
+	if practice_mode:
+		subtitle = "%s · TEST (bölüm bitmez)" % subtitle if not subtitle.is_empty() \
+			else "TEST (bölüm bitmez)"
+	_level_subtitle.text = subtitle
+	_level_subtitle.visible = not subtitle.is_empty()
 
 
 func _sync_tuning() -> void:
@@ -334,10 +347,7 @@ func _on_shot_failed(reason: String) -> void:
 		playtest_stats.record_failure(level_data.level_id, reason)
 
 	_launcher.enabled = false
-	_lives_remaining = maxi(_lives_remaining - 1, 0)
-	_update_lives_hud()
-	if _lives_remaining <= 0:
-		_handle_out_of_lives()
+	if _consume_life():
 		return
 
 	# Bekleme sirasinda oyuncu manuel "Yeniden Dene"ye basarsa _respawn_ball()
@@ -366,17 +376,31 @@ func _cancel_active_shot_for_reaim() -> void:
 	if playtest_stats != null:
 		playtest_stats.record_failure(level_data.level_id, "manual_cancel")
 
-	_lives_remaining = maxi(_lives_remaining - 1, 0)
-	_update_lives_hud()
-	if _lives_remaining <= 0:
+	if _consume_life():
 		_launcher.cancel_aim()
 		_launcher.enabled = false
-		_handle_out_of_lives()
 		return
 
 	# cancel_and_reset_to topu READY yapar. Launcher'in nisan durumu bilerek
 	# korunur; ayni parmak hareketi guc/aciyi guncelleyip yeni topu firlatabilir.
 	_launcher.enabled = true
+
+
+## Bir hak harcar. Haklar bittiyse basarisizlik akisini baslatir ve true
+## doner; cagiran o noktada durmalidir.
+##
+## TEST MODUNDA hak harcanmaz: editorden gelen amac bolumu "gecmek" degil
+## geometriyi denemektir, ve dorduncu atista basarisizlik karti acilan bir
+## test araci ise yaramaz.
+func _consume_life() -> bool:
+	if practice_mode:
+		return false
+	_lives_remaining = maxi(_lives_remaining - 1, 0)
+	_update_lives_hud()
+	if _lives_remaining > 0:
+		return false
+	_handle_out_of_lives()
+	return true
 
 
 ## Son top da bitti. Iki cagiran var (normal iska ve manuel iptal), bu yuzden
@@ -405,6 +429,13 @@ func _on_target_hit(_body: Node2D) -> void:
 	Input.vibrate_handheld(target_hit_haptic_msec)
 	AudioManager.play_target_hit()
 
+	# TEST MODU: isabetin tum geri bildirimi (kivilcim, titresim, ses) oynar
+	# ama bolum bitmez - kart acilmaz, ilerleme yazilmaz. Top ve hedef kisa
+	# bir gecikmeyle sifirlanir, kaldigin yerden denemeye devam edersin.
+	if practice_mode:
+		_respawn_after_practice_hit()
+		return
+
 	# Sure ve atis burada dondurulur: kart gecikmeli acilir ve ekranda
 	# beklerken kronometrenin islemesi yildizi haksiz yere dusururdu.
 	_freeze_attempt()
@@ -420,6 +451,17 @@ func _on_target_hit(_body: Node2D) -> void:
 
 	level_completed.emit(level_data.level_id, stars)
 	_open_success_panel(stars, new_record)
+
+
+## Test modunda isabetten sonra. Gecikme hedefin kendi isabet animasyonundan
+## (halka ~0.55 sn) biraz uzun, yoksa vurdugunu gormeden top geri gelirdi.
+func _respawn_after_practice_hit() -> void:
+	var token := _shot_token
+	await get_tree().create_timer(practice_hit_reset_delay, false).timeout
+	if token != _shot_token or not is_inside_tree():
+		return
+	# _respawn_ball hedefi de sifirlar, boylece tekrar vurulabilir hale gelir.
+	_respawn_ball()
 
 
 func _open_success_panel(stars: int, new_record: bool) -> void:
