@@ -124,54 +124,80 @@ func build_powers(step: float) -> Array[float]:
 ## [param excluded] o durumda ARTIK OLMAYAN bloklarin RID'leridir.
 func scan(spawn: Vector2, target_position: Vector2, play_rect: Rect2,
 		excluded: Array[RID], angle_step: float, power_step: float) -> Dictionary:
+	var state := _create_scan_state(angle_step, power_step)
+	for ai in state["angles"].size():
+		for pi in state["powers"].size():
+			_scan_cell(state, ai, pi, spawn, target_position, play_rect, excluded)
+	return state
+
+
+## scan() ile ayni sonucu ayni simulate() cekirdeginden uretir, fakat uzun
+## izgarayi karelere boler. AI generator bunu kullanir; verifier'in senkron
+## scan() sozlesmesi degismez.
+func scan_async(spawn: Vector2, target_position: Vector2, play_rect: Rect2,
+		excluded: Array[RID], angle_step: float, power_step: float,
+		sims_per_frame := 120, cancel_check := Callable()) -> Dictionary:
+	var state := _create_scan_state(angle_step, power_step)
+	var frame_budget := 0
+	for ai in state["angles"].size():
+		for pi in state["powers"].size():
+			if cancel_check.is_valid() and bool(cancel_check.call()):
+				state["cancelled"] = true
+				return state
+			_scan_cell(state, ai, pi, spawn, target_position, play_rect, excluded)
+			frame_budget += 1
+			if frame_budget >= maxi(sims_per_frame, 1):
+				frame_budget = 0
+				var tree := Engine.get_main_loop() as SceneTree
+				if tree != null:
+					await tree.process_frame
+	state["cancelled"] = false
+	return state
+
+
+func _create_scan_state(angle_step: float, power_step: float) -> Dictionary:
 	var angles := build_angles(angle_step)
 	var powers := build_powers(power_step)
-
-	var hits: Array = []          # [ai][pi] -> bool
-	var bounce_counts: Array = [] # [ai][pi] -> int (isabet etmeyenler -1)
-	var hit_count := 0
-	var min_bounces := 999
-	var reasons := {"settled": 0, "oob": 0, "timeout": 0}
-	## Bu taramada ulasilabilen yeni kirik-blok kombinasyonlari:
-	## maske -> onu ureten temsili atis metni.
-	var reached: Dictionary = {}
-
-	for ai in angles.size():
+	var hits: Array = []
+	var bounce_counts: Array = []
+	for _ai in angles.size():
 		var row := []
 		var bounce_row := []
 		row.resize(powers.size())
 		bounce_row.resize(powers.size())
-		for pi in powers.size():
-			var direction := Vector2.UP.rotated(deg_to_rad(angles[ai]))
-			var result := simulate(
-				spawn, direction * powers[pi], target_position, play_rect, excluded)
-			var did_hit: bool = result["hit"]
-			row[pi] = did_hit
-			bounce_row[pi] = int(result["bounces"]) if did_hit else -1
-			if did_hit:
-				hit_count += 1
-				min_bounces = mini(min_bounces, int(result["bounces"]))
-			else:
-				var reason: String = result["reason"]
-				reasons[reason] = int(reasons.get(reason, 0)) + 1
-
-			var broken := int(result["broken"])
-			if broken != 0 and not reached.has(broken):
-				reached[broken] = "aci %.1f deg, guc %.0f" % [angles[ai], powers[pi]]
 		hits.append(row)
 		bounce_counts.append(bounce_row)
-
 	return {
 		"angles": angles,
 		"powers": powers,
 		"hits": hits,
 		"bounces": bounce_counts,
 		"total": angles.size() * powers.size(),
-		"hit_count": hit_count,
-		"min_bounces": min_bounces,
-		"reasons": reasons,
-		"reached": reached,
+		"hit_count": 0,
+		"min_bounces": 999,
+		"reasons": {"settled": 0, "oob": 0, "timeout": 0},
+		"reached": {},
 	}
+
+
+func _scan_cell(state: Dictionary, ai: int, pi: int, spawn: Vector2,
+		target_position: Vector2, play_rect: Rect2, excluded: Array[RID]) -> void:
+	var angles: Array[float] = state["angles"]
+	var powers: Array[float] = state["powers"]
+	var direction := Vector2.UP.rotated(deg_to_rad(angles[ai]))
+	var result := simulate(spawn, direction * powers[pi], target_position, play_rect, excluded)
+	var did_hit: bool = result["hit"]
+	state["hits"][ai][pi] = did_hit
+	state["bounces"][ai][pi] = int(result["bounces"]) if did_hit else -1
+	if did_hit:
+		state["hit_count"] = int(state["hit_count"]) + 1
+		state["min_bounces"] = mini(int(state["min_bounces"]), int(result["bounces"]))
+	else:
+		var reason: String = result["reason"]
+		state["reasons"][reason] = int(state["reasons"].get(reason, 0)) + 1
+	var broken := int(result["broken"])
+	if broken != 0 and not state["reached"].has(broken):
+		state["reached"][broken] = "aci %.1f deg, guc %.0f" % [angles[ai], powers[pi]]
 
 
 ## Cevresi de isabet eden hucreler = piksel hassasiyeti gerektirmeyen cozum.

@@ -32,6 +32,9 @@ const SIMS_PER_FRAME := 120
 signal candidate_evaluated(tried: int, accepted: int)
 ## Uretim bitti; [param levels] kabul edilen bolumler.
 signal finished(levels: Array[LevelData])
+## AI blueprint akisi icin LevelData yaninda kaynak/seed/solver olcumleri.
+signal blueprints_finished(candidates: Array[Dictionary])
+signal blueprint_progress(tried: int, total: int, accepted: int)
 
 ## Zorluk profili. Filtreyi bununla ayarlarsin: kolay bolum genis pencere ve
 ## az sekme, zor bolum dar pencere ve cok sekme ister.
@@ -110,6 +113,7 @@ var _running := false
 ## Neden kaci elendi. Bir profil sonuc vermiyorsa hangi kriterin fazla sıkı
 ## oldugunu soyler - "hicbir sey bulunamadi" tek basina yol gostermez.
 var _rejections := {}
+var _last_blueprint_records: Array[Dictionary] = []
 
 
 ## Son uretimin eleme dokumu: sebep -> adet.
@@ -148,6 +152,10 @@ func cancel() -> void:
 	_cancelled = true
 
 
+func get_last_blueprint_records() -> Array[Dictionary]:
+	return _last_blueprint_records.duplicate(true)
+
+
 ## [param wanted] kadar bolum bulana ya da [param max_tries] adayi
 ## tuketene kadar arar.
 func generate(profile: Profile, wanted: int, max_tries := 400, seed_value := 0) -> void:
@@ -161,6 +169,7 @@ func generate(profile: Profile, wanted: int, max_tries := 400, seed_value := 0) 
 		_rng.randomize()
 
 	var accepted: Array[LevelData] = []
+	_last_blueprint_records.clear()
 	_rejections.clear()
 	var tried := 0
 	var budget := 0
@@ -190,6 +199,131 @@ func generate(profile: Profile, wanted: int, max_tries := 400, seed_value := 0) 
 	finished.emit(accepted)
 
 
+## AI mapper'in temiz blueprint'lerini yerelde cesitlendirir ve yine gercek
+## LevelSolver fizigiyle eler. Orijinal taslaklar once, sonra varyasyonlar
+## round-robin sirayla test edilir; boylece ilk blueprint partiyi tek basina
+## doldurmaz.
+func generate_from_blueprints(profile: Profile, blueprints: Array, wanted: int,
+		variations_per_blueprint: int, seed_value := 0) -> void:
+	if _running:
+		return
+	_running = true
+	_cancelled = false
+	_rejections.clear()
+	_last_blueprint_records.clear()
+	var effective_seed := seed_value
+	if effective_seed == 0:
+		_rng.randomize()
+		effective_seed = _rng.randi()
+	var candidates := build_blueprint_variations(
+		blueprints, clampi(variations_per_blueprint, 0, 30), effective_seed)
+	var accepted_levels: Array[LevelData] = []
+	var accepted_records: Array[Dictionary] = []
+	var tried := 0
+
+	for source in candidates:
+		if _cancelled or accepted_levels.size() >= clampi(wanted, 1, 20):
+			break
+		tried += 1
+		var candidate: LevelData = source["level"]
+		_world.build(candidate)
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		_solver.bind_space(_world.get_space(), _world.get_block_rids())
+		var verdict := await _evaluate(candidate, profile)
+		if bool(verdict["ok"]) and not _cancelled:
+			if candidate.display_name.is_empty():
+				candidate.display_name = "AI Aday %d" % (accepted_levels.size() + 1)
+			accepted_levels.append(candidate)
+			var accepted := source.duplicate(true)
+			accepted["solver"] = verdict.duplicate(true)
+			accepted_records.append(accepted)
+		candidate_evaluated.emit(tried, accepted_levels.size())
+		blueprint_progress.emit(tried, candidates.size(), accepted_levels.size())
+		await get_tree().process_frame
+
+	_world.clear()
+	_running = false
+	if _cancelled:
+		accepted_levels.clear()
+		accepted_records.clear()
+	_last_blueprint_records.assign(accepted_records)
+	blueprints_finished.emit(accepted_records)
+	finished.emit(accepted_levels)
+
+
+## Testler ve coordinator icin saf/deterministik varyasyon adimi. Fizik yoktur.
+func build_blueprint_variations(blueprints: Array, variations_per_blueprint: int,
+		seed_value: int) -> Array[Dictionary]:
+	var records: Array[Dictionary] = []
+	var sources: Array[Dictionary] = []
+	for i in blueprints.size():
+		var source := _normalize_blueprint(blueprints[i], i)
+		if not source.is_empty():
+			sources.append(source)
+	for source in sources:
+		var original := source.duplicate(true)
+		original["level"] = (source["level"] as LevelData).duplicate(true)
+		original["variation_seed"] = 0
+		records.append(original)
+	for variation_index in clampi(variations_per_blueprint, 0, 30):
+		for source in sources:
+			var blueprint_index := int(source["blueprint_index"])
+			var variation_seed := seed_value + blueprint_index * 1000003 + (variation_index + 1) * 9176
+			var varied := source.duplicate(true)
+			varied["level"] = _vary_level(source["level"], variation_seed)
+			varied["variation_seed"] = variation_seed
+			records.append(varied)
+	return records
+
+
+func _normalize_blueprint(value: Variant, fallback_index: int) -> Dictionary:
+	if value is LevelData:
+		return {"level": value, "blueprint_index": fallback_index}
+	if value is Dictionary and value.get("level", null) is LevelData:
+		var source: Dictionary = value.duplicate(true)
+		source["blueprint_index"] = int(source.get("blueprint_index", fallback_index))
+		return source
+	return {}
+
+
+func _vary_level(source: LevelData, variation_seed: int) -> LevelData:
+	var level := source.duplicate(true) as LevelData
+	var rng := RandomNumberGenerator.new()
+	rng.seed = variation_seed
+	level.target_position = Vector2(
+		clampf(level.target_position.x + rng.randf_range(-25.0, 25.0), 80.0, 640.0),
+		clampf(level.target_position.y + rng.randf_range(-25.0, 25.0), 180.0, 560.0))
+	for panel in level.panels:
+		panel.position = Vector2(
+			clampf(panel.position.x + rng.randf_range(-40.0, 40.0), 60.0, 660.0),
+			clampf(panel.position.y + rng.randf_range(-40.0, 40.0), 180.0, 1080.0))
+		panel.rotation_degrees = clampf(
+			panel.rotation_degrees + rng.randf_range(-6.0, 6.0), -80.0, 80.0)
+		panel.length = clampf(panel.length + rng.randf_range(-40.0, 40.0), 140.0, 420.0)
+	for block in level.breakable_blocks:
+		block.position = Vector2(
+			clampf(block.position.x + rng.randf_range(-35.0, 35.0), 60.0, 660.0),
+			clampf(block.position.y + rng.randf_range(-35.0, 35.0), 180.0, 1080.0))
+		block.size.x = clampf(block.size.x + rng.randf_range(-30.0, 30.0), 120.0, 360.0)
+	_vary_wall(level.left_wall_segments, rng)
+	_vary_wall(level.right_wall_segments, rng)
+	return level
+
+
+func _vary_wall(segments: Array[Vector2], rng: RandomNumberGenerator) -> void:
+	if segments.size() != 2:
+		return
+	var top := clampf(segments[0].y + rng.randf_range(-40.0, 40.0), 120.0, 1064.0)
+	var bottom := clampf(segments[1].x + rng.randf_range(-40.0, 40.0), top + 96.0, 1160.0)
+	var upper := segments[0]
+	var lower := segments[1]
+	upper.y = top
+	lower.x = bottom
+	segments[0] = upper
+	segments[1] = lower
+
+
 # --- Degerlendirme ------------------------------------------------------------
 
 func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
@@ -204,16 +338,22 @@ func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
 	var no_blocks: Array[RID] = []
 
 	# 1) Kaba tarama: hicbir isabet yoksa devam etmenin anlami yok.
-	var coarse := _solver.scan(spawn, level.target_position, play_rect,
-		no_blocks, COARSE_ANGLE_STEP, COARSE_POWER_STEP)
+	var coarse := await _solver.scan_async(spawn, level.target_position, play_rect,
+		no_blocks, COARSE_ANGLE_STEP, COARSE_POWER_STEP, SIMS_PER_FRAME,
+		Callable(self, "_is_cancelled"))
 	sims += int(coarse["total"])
+	if bool(coarse.get("cancelled", false)):
+		return _reject("iptal", sims)
 	if int(coarse["hit_count"]) < COARSE_MIN_HITS:
 		return _reject("cozulemez", sims)
 
 	# 2) Ince tarama: bloksuz rotanin gercek penceresi.
-	var fine := _solver.scan(spawn, level.target_position, play_rect,
-		no_blocks, FINE_ANGLE_STEP, FINE_POWER_STEP)
+	var fine := await _solver.scan_async(spawn, level.target_position, play_rect,
+		no_blocks, FINE_ANGLE_STEP, FINE_POWER_STEP, SIMS_PER_FRAME,
+		Callable(self, "_is_cancelled"))
 	sims += int(fine["total"])
+	if bool(fine.get("cancelled", false)):
+		return _reject("iptal", sims)
 	var analysis := LevelSolver.analyse_robust(fine)
 	var robust := int(analysis["robust"])
 	if robust < profile.min_robust:
@@ -228,17 +368,30 @@ func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
 	# 3) Blok varsa: kirmak rotayi GERCEKTEN kolaylastirmali. Kolaylastirmayan
 	#    blok bulmacaya hicbir sey katmaz, sadece ekrani doldurur.
 	if level.breakable_blocks.is_empty():
-		return {"ok": true, "sims": sims}
+		return {
+			"ok": true, "sims": sims, "robust": robust, "bounces": bounces,
+			"opened_robust": robust, "block_free": true,
+		}
 
 	var all_broken := (1 << level.breakable_blocks.size()) - 1
-	var opened := _solver.scan(spawn, level.target_position, play_rect,
-		_world.rids_for_state(all_broken), FINE_ANGLE_STEP, FINE_POWER_STEP)
+	var opened := await _solver.scan_async(spawn, level.target_position, play_rect,
+		_world.rids_for_state(all_broken), FINE_ANGLE_STEP, FINE_POWER_STEP,
+		SIMS_PER_FRAME, Callable(self, "_is_cancelled"))
 	sims += int(opened["total"])
+	if bool(opened.get("cancelled", false)):
+		return _reject("iptal", sims)
 	var opened_robust := int(LevelSolver.analyse_robust(opened)["robust"])
 	if opened_robust <= robust:
 		return _reject("blok-katkisiz", sims)
 
-	return {"ok": true, "sims": sims}
+	return {
+		"ok": true, "sims": sims, "robust": robust, "bounces": bounces,
+		"opened_robust": opened_robust, "block_free": robust > 0,
+	}
+
+
+func _is_cancelled() -> bool:
+	return _cancelled
 
 
 func _static_geometry_ok(level: LevelData, spawn: Vector2) -> bool:
