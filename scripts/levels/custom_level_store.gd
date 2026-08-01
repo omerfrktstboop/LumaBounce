@@ -22,6 +22,7 @@ enum Bucket { SAVED, GENERATED }
 
 const SAVED_DIR := "user://custom_levels"
 const GENERATED_DIR := "user://generated_levels"
+const GENERATED_MANIFEST_PATH := "user://generated_levels/generated_manifest.json"
 const REPO_DIR := "res://levels"
 ## ResourceSaver metne cevirmek icin dogrudan bir API sunmadigi icin once
 ## gecici bir dosyaya yazip geri okuruz.
@@ -94,6 +95,11 @@ static func delete(bucket: Bucket, level_name: String) -> void:
 ## bolumu kayitlara tasirsin.
 static func replace_generated(levels: Array[LevelData]) -> PackedStringArray:
 	ensure_dir(Bucket.GENERATED)
+	# Yerel generator yeni parti yazdiginda eski AI sidecar'i ayni dosya
+	# adlarina yanlis metadata baglamasin. AI coordinator partiden sonra yeni
+	# manifesti yazar.
+	if FileAccess.file_exists(GENERATED_MANIFEST_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(GENERATED_MANIFEST_PATH))
 	for existing in list_names(Bucket.GENERATED):
 		delete(Bucket.GENERATED, existing)
 

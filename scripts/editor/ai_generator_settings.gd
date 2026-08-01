@@ -57,6 +57,10 @@ func clear_api_key() -> Error:
 	return save_values(values, "")
 
 
+func sanitize(values: Dictionary) -> Dictionary:
+	return _sanitize(values)
+
+
 func _sanitize(source: Dictionary) -> Dictionary:
 	var safe := defaults()
 	var model_slug := String(source.get("model_slug", "")).strip_edges()
