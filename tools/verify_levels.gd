@@ -55,6 +55,12 @@ const MAX_BLOCK_STATES := 48
 ## tek bir noktayi tutturmak. Bloklu bolumlerde bu esigin altinda kalan bir
 ## rota kabul edilmez; daha derin (daha cok blok kirilmis) durumlar aranir.
 const MIN_ROBUST_CELLS := 6
+## TASARIM SOZLESMESI: bu bolumden itibaren kirilabilir blok ZORUNLU OLAMAZ.
+## Her bolumun hicbir blok kirmadan gecilebilen bir rotasi olmali, yoksa blok
+## bir bulmaca parcasi degil anahtar/kapi olur ve oyun brick-breaker'a kayar.
+## 21 disaridadir: mekanigi ogreten tek bolum oldugu icin orada blok kirmak
+## zorunlu olabilir. Ileride eklenecek bolumler bu esigin ustunde kalir.
+const BLOCK_OPTIONAL_FROM_LEVEL := 22
 
 var _angle_step := 2.0
 var _power_step := 50.0
@@ -64,6 +70,9 @@ var _block_angle_step := 3.0
 var _block_power_step := 100.0
 ## -1: tum bolumler. Tek bir bolumu hizlica denemek icin --level N.
 var _only_level := -1
+## Yalnizca "hicbir blok kirilmamis" durumunu tarar. Bloksuz rotayi ayarlarken
+## tum durum agacini beklemeye gerek yok - tasarim dongusunu kisaltir.
+var _free_only := false
 
 var _world: Node2D
 var _arena: Arena
@@ -109,6 +118,8 @@ func _parse_args() -> void:
 			_block_power_step = maxf(float(args[i + 1]), 5.0)
 		elif args[i] == "--level" and i + 1 < args.size():
 			_only_level = int(args[i + 1])
+		elif args[i] == "--free-only":
+			_free_only = true
 
 
 func _run() -> void:
@@ -381,7 +392,7 @@ func _print_scan_summary(scan: Dictionary) -> void:
 
 func _check_multi_shot_solvability(level: LevelData) -> bool:
 	var spawn := level.launcher_position + Vector2.UP * _spawn_offset
-	var max_shots := maxi(level.max_lives, 1)
+	var max_shots := 1 if _free_only else maxi(level.max_lives, 1)
 	print("  kirilabilir blok: %d   en fazla atis: %d" % [_block_count, max_shots])
 
 	var frontier: Array[int] = [0]
@@ -426,41 +437,93 @@ func _check_multi_shot_solvability(level: LevelData) -> bool:
 		print("  HATA: %d durum tarandi, hicbir atis dizisi hedefe ulasmiyor." % states_visited)
 		return false
 
-	return _report_solutions(solutions, states_visited)
+	return _report_solutions(level, solutions, states_visited)
 
 
-## Bulunan tum rotalari atis sayisina gore listeler. "ANA ROTA", MIN_ROBUST_CELLS
-## esigini gecen EN AZ ATISLI rotadir - yani oyuncunun gercekten bulup
-## tekrarlayabilecegi en kisa cozum. Esigi gecen rota yoksa bolum kabul
-## edilmez: hedefe ulasilabiliyor olmasi yetmez, rahat ulasilabilmelidir.
-func _report_solutions(solutions: Array[Dictionary], states_visited: int) -> bool:
+## Bulunan tum rotalari listeler, sonra tasarim sozlesmesini uygular.
+##
+## BLOKSUZ ROTA hep durum 0'dir, yani tanimi geregi TEK ATISLIK bir cozumdur:
+## her atis firlaticidan ayni geometriyle baslar, dolayisiyla "blok kirmadan
+## 2 top" ile "blok kirmadan 1 top" ayni pencereyi paylasir - ikincisi sadece
+## bir kez iskalamis halidir.
+func _report_solutions(level: LevelData, solutions: Array[Dictionary],
+		states_visited: int) -> bool:
 	print("  %d durum tarandi, %d rota hedefe ulasiyor:" % [states_visited, solutions.size()])
 	for entry in solutions:
-		var analysis: Dictionary = entry["analysis"]
 		print("    %d atis  kirilan blok: %-10s isabet: %-5d saglam hucre: %d" % [
 			int(entry["shots"]), _describe_state(int(entry["state"])),
-			int((entry["scan"] as Dictionary)["hit_count"]), int(analysis["robust"])])
+			int((entry["scan"] as Dictionary)["hit_count"]), _robust_of(entry)])
 
-	var best: Dictionary = {}
-	for entry in solutions:
-		if int((entry["analysis"] as Dictionary)["robust"]) < MIN_ROBUST_CELLS:
-			continue
-		if best.is_empty() or int(entry["shots"]) < int(best["shots"]):
-			best = entry
-		elif int(entry["shots"]) == int(best["shots"]) \
-				and int((entry["analysis"] as Dictionary)["robust"]) \
-					> int((best["analysis"] as Dictionary)["robust"]):
-			best = entry
+	var free_route := _pick_route(solutions, true)
+	var block_route := _pick_route(solutions, false)
 
-	if best.is_empty():
-		print("  UYARI: hicbir rota %d saglam hucre esigini gecmiyor - cozum var ama dar." %
-			MIN_ROBUST_CELLS)
+	if _free_only:
+		# Tasarim dongusu modu: yalnizca bloksuz rota olculur.
+		return _report_route("BLOKSUZ USTALIK ROTASI (tek atis)", free_route)
+
+	if level.level_id < BLOCK_OPTIONAL_FROM_LEVEL:
+		# Ogretici bolum: blok kirmak zorunlu olabilir, tek bir rahat rota yeter.
+		var main := block_route
+		if not free_route.is_empty() and _robust_of(free_route) >= MIN_ROBUST_CELLS:
+			main = free_route
+		return _report_route("ANA ROTA", main)
+
+	var ok := _report_route("BLOKSUZ USTALIK ROTASI (tek atis)", free_route)
+	ok = _report_route("BLOKLU GUVENLI ROTA", block_route) and ok
+	if not ok:
 		return false
 
-	print("  ANA ROTA -> %d atis, kirilan blok: %s" % [
-		int(best["shots"]), _describe_state(int(best["state"]))])
-	_print_scan_summary(best["scan"])
-	_print_robust(best["analysis"])
+	# Blok kirmak rotayi gercekten kolaylastirmali; kolaylastirmiyorsa blok
+	# bulmacaya hicbir sey katmiyor demektir.
+	var free_robust := _robust_of(free_route)
+	var block_robust := _robust_of(block_route)
+	print("  KARSILASTIRMA: bloksuz %d saglam hucre, bloklu %d saglam hucre" % [
+		free_robust, block_robust])
+	if block_robust <= free_robust:
+		print("  UYARI: blok kirmak rotayi kolaylastirmiyor - blok bulmacaya katki vermiyor.")
+		return false
+	return true
+
+
+## [param block_free] true ise yalnizca hicbir blogun kirilmadigi durum (0).
+## Esigi gecen rotalar oncelikli; hicbiri gecmiyorsa en iyisi raporlanir ki
+## tasarimin ne kadar yaklastigi gorunsun.
+func _pick_route(solutions: Array[Dictionary], block_free: bool) -> Dictionary:
+	var best: Dictionary = {}
+	for entry in solutions:
+		if (int(entry["state"]) == 0) != block_free:
+			continue
+		if best.is_empty() or _is_better_route(entry, best):
+			best = entry
+	return best
+
+
+func _is_better_route(a: Dictionary, b: Dictionary) -> bool:
+	var a_ok := _robust_of(a) >= MIN_ROBUST_CELLS
+	var b_ok := _robust_of(b) >= MIN_ROBUST_CELLS
+	if a_ok != b_ok:
+		return a_ok
+	if int(a["shots"]) != int(b["shots"]):
+		return int(a["shots"]) < int(b["shots"])
+	return _robust_of(a) > _robust_of(b)
+
+
+func _robust_of(entry: Dictionary) -> int:
+	return int((entry["analysis"] as Dictionary)["robust"])
+
+
+func _report_route(label: String, route: Dictionary) -> bool:
+	if route.is_empty():
+		print("  HATA: %s yok - hedefe hic ulasilamiyor." % label)
+		return false
+	print("  %s -> %d atis, kirilan blok: %s" % [
+		label, int(route["shots"]), _describe_state(int(route["state"]))])
+	_print_scan_summary(route["scan"])
+	if _robust_of(route) < MIN_ROBUST_CELLS:
+		print("  UYARI: %s %d saglam hucre esigini gecmiyor (%d) - cozum var ama dar." % [
+			label, MIN_ROBUST_CELLS, _robust_of(route)])
+		return false
+	_print_robust(route["analysis"])
 	return true
 
 
