@@ -52,6 +52,24 @@ func _test_mobile_form() -> void:
 		_check("OpenRouter modu gorunuyor", ai_page.visible, true)
 		_check("API key maskeli", (ai_page.get_node("APIKey") as LineEdit).secret, true)
 		_check("model elle yazilabilir", ai_page.has_node("ModelSlug"), true)
+		_check("API key yapistirma dugmesi", ai_page.has_node("PasteAPIKey"), true)
+		_check("API key kopyalama dugmesi yok",
+			ai_page.find_child("CopyAPIKey", true, false) != null, false)
+		_check("model pano dugmeleri", ai_page.find_child("PasteModel", true, false) != null
+			and ai_page.find_child("CopyModel", true, false) != null, true)
+		_check("tasarim notu pano dugmeleri",
+			ai_page.find_child("PasteDesignNote", true, false) != null
+			and ai_page.find_child("CopyDesignNote", true, false) != null, true)
+		form.call("_apply_paste", "api_key", "  sk-or-test\r\n")
+		_check("API key panodan temiz tek satir alinir",
+			(ai_page.get_node("APIKey") as LineEdit).text, "sk-or-test")
+		form.call("_apply_paste", "model", "  provider/model\n")
+		_check("model panodan temiz tek satir alinir",
+			(ai_page.get_node("ModelSlug") as LineEdit).text, "provider/model")
+		(ai_page.get_node("DesignNote") as TextEdit).clear()
+		form.call("_apply_paste", "design_note", "mobil pano notu")
+		_check("tasarim notu panodan alinir",
+			(ai_page.get_node("DesignNote") as TextEdit).text, "mobil pano notu")
 		_check("form ScrollContainer icinde", form.get_parent().get_parent() is ScrollContainer, true)
 		var request: Dictionary = form.call("get_request")
 		_check("aday siniri 1-20", int(request["candidate_count"]) in range(1, 21), true)
@@ -60,6 +78,8 @@ func _test_mobile_form() -> void:
 		form.call("set_busy", true)
 		_check("istek surerken ikinci uretim disabled",
 			(ai_page.get_node("GenerateAI") as Button).disabled, true)
+		_check("istek surerken pano islemleri disabled",
+			(ai_page.get_node("PasteAPIKey") as Button).disabled, true)
 		_check("istek surerken iptal gorunur", ai_page.get_node("Cancel").visible, true)
 		form.call("set_busy", false)
 	editor.call("_on_modal_close")

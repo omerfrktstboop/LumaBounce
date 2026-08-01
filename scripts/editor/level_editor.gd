@@ -894,6 +894,7 @@ func _on_open_generator() -> void:
 	_generation_form.ai_generation_requested.connect(_start_ai_generation)
 	_generation_form.cancel_requested.connect(_cancel_generation)
 	_generation_form.validation_failed.connect(_on_ai_generation_failed)
+	_generation_form.status_message.connect(_on_ai_status_changed)
 	_modal_list.add_child(_generation_form)
 
 

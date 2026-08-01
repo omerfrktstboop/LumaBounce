@@ -8,6 +8,7 @@ signal local_generation_requested(profile_name: String)
 signal ai_generation_requested(request: Dictionary)
 signal cancel_requested
 signal validation_failed(message: String)
+signal status_message(message: String)
 
 const TEMPLATE_OPTIONS := [
 	["Otomatik", "auto"], ["Ogretici", "tutorial"],
@@ -125,6 +126,10 @@ func _build_ai_page() -> void:
 	_api_key.placeholder_text = "sk-or-..."
 	_prepare_text_input(_api_key)
 	_ai_page.add_child(_api_key)
+	var paste_api_key := _button("YAPISTIR", _paste_from_clipboard.bind("api_key"), true)
+	paste_api_key.name = "PasteAPIKey"
+	_ai_page.add_child(paste_api_key)
+	_interactive.append(paste_api_key)
 
 	var remember_row := HBoxContainer.new()
 	remember_row.add_theme_constant_override("separation", 8)
@@ -146,6 +151,16 @@ func _build_ai_page() -> void:
 	_model.placeholder_text = "provider/model-slug"
 	_prepare_text_input(_model)
 	_ai_page.add_child(_model)
+	var model_actions := HBoxContainer.new()
+	model_actions.add_theme_constant_override("separation", 8)
+	_ai_page.add_child(model_actions)
+	var paste_model := _button("YAPISTIR", _paste_from_clipboard.bind("model"), true)
+	paste_model.name = "PasteModel"
+	model_actions.add_child(paste_model)
+	var copy_model := _button("KOPYALA", _copy_to_clipboard.bind("model"), true)
+	copy_model.name = "CopyModel"
+	model_actions.add_child(copy_model)
+	_interactive.append_array([paste_model, copy_model])
 
 	_template = _option_field("SABLON", TEMPLATE_OPTIONS)
 	_difficulty = _option_field("ZORLUK", DIFFICULTY_OPTIONS)
@@ -172,6 +187,16 @@ func _build_ai_page() -> void:
 	_ai_page.add_child(_design_note)
 	_watch_focus(_design_note)
 	_interactive.append(_design_note)
+	var note_actions := HBoxContainer.new()
+	note_actions.add_theme_constant_override("separation", 8)
+	_ai_page.add_child(note_actions)
+	var paste_note := _button("YAPISTIR", _paste_from_clipboard.bind("design_note"), true)
+	paste_note.name = "PasteDesignNote"
+	note_actions.add_child(paste_note)
+	var copy_note := _button("KOPYALA", _copy_to_clipboard.bind("design_note"), true)
+	copy_note.name = "CopyDesignNote"
+	note_actions.add_child(copy_note)
+	_interactive.append_array([paste_note, copy_note])
 
 	_candidate_count = _spin_field("ISTENEN ADAY", 1, 20, 10)
 	_blueprint_count = _spin_field("AI TASLAK SAYISI", 1, 10, 5)
@@ -324,6 +349,63 @@ func _on_clear_key() -> void:
 	_api_key.clear()
 	_remember.button_pressed = false
 	_settings.clear_api_key()
+	status_message.emit("Kayitli API anahtari temizlendi.")
+
+
+func _paste_from_clipboard(target: String) -> void:
+	_apply_paste(target, DisplayServer.clipboard_get())
+
+
+func _apply_paste(target: String, clipboard_text: String) -> void:
+	if clipboard_text.is_empty():
+		status_message.emit("Pano bos.")
+		return
+	match target:
+		"api_key":
+			var api_key := _single_line_clipboard_text(clipboard_text)
+			if api_key.is_empty():
+				status_message.emit("Panoda gecerli bir API anahtari yok.")
+				return
+			_api_key.text = api_key
+			_api_key.caret_column = api_key.length()
+			_api_key.grab_focus()
+			status_message.emit("API anahtari panodan yapistirildi.")
+		"model":
+			var model_slug := _single_line_clipboard_text(clipboard_text)
+			if model_slug.is_empty():
+				status_message.emit("Panoda gecerli bir model slug'i yok.")
+				return
+			_model.text = model_slug
+			_model.caret_column = model_slug.length()
+			_model.grab_focus()
+			status_message.emit("Model slug'i panodan yapistirildi.")
+		"design_note":
+			_design_note.insert_text_at_caret(clipboard_text)
+			if _design_note.text.length() > AILevelContract.MAX_DESIGN_NOTE:
+				_design_note.text = _design_note.text.left(AILevelContract.MAX_DESIGN_NOTE)
+			_design_note.grab_focus()
+			status_message.emit("Tasarim notu panodan yapistirildi.")
+
+
+func _copy_to_clipboard(target: String) -> void:
+	var clipboard_text := ""
+	var description := ""
+	match target:
+		"model":
+			clipboard_text = _model.text
+			description = "Model slug'i"
+		"design_note":
+			clipboard_text = _design_note.text
+			description = "Tasarim notu"
+	if clipboard_text.is_empty():
+		status_message.emit("Kopyalanacak metin yok.")
+		return
+	DisplayServer.clipboard_set(clipboard_text)
+	status_message.emit("%s panoya kopyalandi." % description)
+
+
+func _single_line_clipboard_text(value: String) -> String:
+	return value.replace("\r", "").replace("\n", "").strip_edges()
 
 
 func _select_metadata(option: OptionButton, wanted: String) -> void:
