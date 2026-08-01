@@ -261,12 +261,95 @@ static func analyse_robust(scan_result: Dictionary) -> Dictionary:
 	}
 
 
+## Saglam hucreleri 4-komsu baglantili rota kumelerine ayirir. Overlay ve
+## "iki alternatif rota" degerlendirmesi ayni tarama sonucunu kullanir.
+static func analyse_solution_clusters(scan_result: Dictionary) -> Array[Dictionary]:
+	var angles: Array[float] = scan_result["angles"]
+	var powers: Array[float] = scan_result["powers"]
+	var hits: Array = scan_result["hits"]
+	var bounce_counts: Array = scan_result["bounces"]
+	var robust_map: Array = []
+	for _ai in angles.size():
+		var robust_row := []
+		robust_row.resize(powers.size())
+		robust_row.fill(false)
+		robust_map.append(robust_row)
+	for ai in range(1, angles.size() - 1):
+		for pi in range(1, powers.size() - 1):
+			robust_map[ai][pi] = _is_robust_cell(hits, ai, pi)
+
+	var clusters: Array[Dictionary] = []
+	var visited := {}
+	var neighbour_offsets: Array[Vector2i] = [
+		Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
+	for ai in angles.size():
+		for pi in powers.size():
+			var start_key := ai * powers.size() + pi
+			if not robust_map[ai][pi] or visited.has(start_key):
+				continue
+			var queue: Array[Vector2i] = [Vector2i(ai, pi)]
+			visited[start_key] = true
+			var cells: Array[Vector2i] = []
+			while not queue.is_empty():
+				var cell: Vector2i = queue.pop_front()
+				cells.append(cell)
+				for offset in neighbour_offsets:
+					var neighbour: Vector2i = cell + offset
+					if (neighbour.x < 0 or neighbour.x >= angles.size()
+							or neighbour.y < 0 or neighbour.y >= powers.size()):
+						continue
+					var neighbour_key: int = neighbour.x * powers.size() + neighbour.y
+					if robust_map[neighbour.x][neighbour.y] and not visited.has(neighbour_key):
+						visited[neighbour_key] = true
+						queue.append(neighbour)
+			clusters.append(_describe_cluster(cells, angles, powers, bounce_counts))
+	clusters.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["robust"]) != int(b["robust"]):
+			return int(a["robust"]) > int(b["robust"])
+		return int(a["bounces"]) < int(b["bounces"]))
+	return clusters
+
+
+static func _is_robust_cell(hits: Array, ai: int, pi: int) -> bool:
+	return (hits[ai][pi] and hits[ai - 1][pi] and hits[ai + 1][pi]
+		and hits[ai][pi - 1] and hits[ai][pi + 1])
+
+
+static func _describe_cluster(cells: Array[Vector2i], angles: Array[float],
+		powers: Array[float], bounce_counts: Array) -> Dictionary:
+	var best := cells[0]
+	var best_bounces := int(bounce_counts[best.x][best.y])
+	var angle_lo := INF
+	var angle_hi := -INF
+	var power_lo := INF
+	var power_hi := -INF
+	for cell in cells:
+		var cell_bounces := int(bounce_counts[cell.x][cell.y])
+		if cell_bounces < best_bounces:
+			best = cell
+			best_bounces = cell_bounces
+		angle_lo = minf(angle_lo, angles[cell.x])
+		angle_hi = maxf(angle_hi, angles[cell.x])
+		power_lo = minf(power_lo, powers[cell.y])
+		power_hi = maxf(power_hi, powers[cell.y])
+	return {
+		"robust": cells.size(),
+		"angle": angles[best.x],
+		"power": powers[best.y],
+		"bounces": best_bounces,
+		"angle_lo": angle_lo,
+		"angle_hi": angle_hi,
+		"power_lo": power_lo,
+		"power_hi": power_hi,
+	}
+
+
 # --- Simulasyon (ball.gd ile ayni sira) ---------------------------------------
 
 ## [param excluded] atisin BASINDA zaten kirik olan bloklar. Atis sirasinda
 ## kirilanlar sonuca "broken" bit maskesi olarak doner.
 func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
-		play_rect: Rect2, excluded: Array[RID]) -> Dictionary:
+		play_rect: Rect2, excluded: Array[RID], capture_trace := false) -> Dictionary:
 	var bounds := play_rect.grow(oob_margin)
 	var target_half := target_size * 0.5
 
@@ -278,8 +361,13 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 	var broken := 0
 	var ignored := excluded.duplicate()
 	var broke_this_frame: Array[RID] = []
+	var trace_points := PackedVector2Array()
+	var collision_points: Array[Dictionary] = []
+	var broken_order := PackedInt32Array()
+	if capture_trace:
+		trace_points.append(pos)
 
-	for _frame in MAX_FRAMES:
+	for frame_index in MAX_FRAMES:
 		vel.y += gravity * dt
 		vel = vel.limit_length(max_speed)
 		var motion := vel * dt
@@ -293,14 +381,26 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 
 			var normal: Vector2 = hit["normal"]
 			var fraction: float = hit["fraction"]
+			var collision_position := pos + motion * fraction
 			pos = pos + motion * fraction + normal * CONTACT_EPSILON
 			bounces += 1
 
 			var rid: RID = hit["rid"]
+			var block_index := -1
 			if _block_index.has(rid):
-				broken |= 1 << int(_block_index[rid])
+				block_index = int(_block_index[rid])
+				broken |= 1 << block_index
+				if capture_trace and not broken_order.has(block_index):
+					broken_order.append(block_index)
 				if not broke_this_frame.has(rid):
 					broke_this_frame.append(rid)
+			if capture_trace:
+				trace_points.append(collision_position)
+				collision_points.append({
+					"position": collision_position,
+					"normal": normal,
+					"block_index": block_index,
+				})
 
 			vel = vel.bounce(normal) * bounciness
 			var along := vel.dot(normal)
@@ -314,22 +414,45 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 		for rid in broke_this_frame:
 			if not ignored.has(rid):
 				ignored.append(rid)
+		if capture_trace and frame_index % 3 == 0:
+			trace_points.append(pos)
 
 		# Hedef algilamasi Area2D gibi kare sonunda yapilir.
 		if _circle_hits_target(pos, target_position, target_half):
-			return {"hit": true, "bounces": bounces, "broken": broken}
+			return _simulation_result(true, "", bounces, broken, pos,
+				trace_points, collision_points, broken_order, capture_trace)
 
 		if vel.length() < settle_speed:
 			settle_timer += dt
 			if settle_timer >= settle_time:
-				return {"hit": false, "reason": "settled", "bounces": bounces, "broken": broken}
+				return _simulation_result(false, "settled", bounces, broken, pos,
+					trace_points, collision_points, broken_order, capture_trace)
 		else:
 			settle_timer = 0.0
 
 		if not bounds.has_point(pos):
-			return {"hit": false, "reason": "oob", "bounces": bounces, "broken": broken}
+			return _simulation_result(false, "oob", bounces, broken, pos,
+				trace_points, collision_points, broken_order, capture_trace)
 
-	return {"hit": false, "reason": "timeout", "bounces": bounces, "broken": broken}
+	return _simulation_result(false, "timeout", bounces, broken, pos,
+		trace_points, collision_points, broken_order, capture_trace)
+
+
+func _simulation_result(hit: bool, reason: String, bounces: int, broken: int,
+		end_position: Vector2, trace_points: PackedVector2Array,
+		collision_points: Array[Dictionary], broken_order: PackedInt32Array,
+		capture_trace: bool) -> Dictionary:
+	var result := {"hit": hit, "bounces": bounces, "broken": broken}
+	if not hit:
+		result["reason"] = reason
+	if capture_trace:
+		if trace_points.is_empty() or trace_points[-1].distance_to(end_position) > 0.5:
+			trace_points.append(end_position)
+		result["trace_points"] = trace_points
+		result["collision_points"] = collision_points
+		result["broken_order"] = broken_order
+		result["target_hit_position"] = end_position if hit else Vector2.ZERO
+	return result
 
 
 ## launcher.gd'nin nisan onizlemesiyle ayni iki adimli yontem:

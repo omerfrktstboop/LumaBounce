@@ -56,6 +56,15 @@ func _test_quality_and_ranking() -> void:
 	var neutral_novelty := {"novelty_score": 80, "strong_penalty": false, "reject": false}
 	var ordinary := quality.score(high, records[1]["solver"], neutral_novelty, "single_bounce")
 	_check("alternatif istemeyen sablon rota puani aliyor", ordinary["breakdown"]["route"], 10)
+	var no_two_routes: Array[Dictionary] = [{
+		"level": high,
+		"solver": {
+			"ok": true, "robust": 28, "bounces": 2, "opened_robust": 28,
+			"block_free": true, "route_clusters": 1,
+		},
+	}]
+	_check("iki rota sablonu solver kumesi olmadan eleniyor",
+		coordinator.rank_records(no_two_routes, {"template": "two_routes"}, []).size(), 0)
 	root.remove_child(coordinator)
 	coordinator.free()
 

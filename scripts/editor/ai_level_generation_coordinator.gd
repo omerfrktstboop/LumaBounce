@@ -88,6 +88,9 @@ func rank_records(records: Array[Dictionary], request: Dictionary,
 		var solver: Dictionary = record.get("solver", {})
 		if not bool(solver.get("ok", false)):
 			continue
+		if (String(request.get("template", "auto")) == "two_routes"
+				and int(solver.get("route_clusters", 0)) < 2):
+			continue
 		var comparison := references.duplicate()
 		comparison.append_array(batch_references)
 		var novelty := _novelty.score(level, solver, comparison)

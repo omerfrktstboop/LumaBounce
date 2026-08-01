@@ -148,6 +148,10 @@ func is_running() -> bool:
 	return _running
 
 
+func was_cancelled() -> bool:
+	return _cancelled
+
+
 func cancel() -> void:
 	_cancelled = true
 
@@ -196,6 +200,8 @@ func generate(profile: Profile, wanted: int, max_tries := 400, seed_value := 0) 
 
 	_world.clear()
 	_running = false
+	if _cancelled:
+		accepted.clear()
 	finished.emit(accepted)
 
 
@@ -355,6 +361,7 @@ func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
 	if bool(fine.get("cancelled", false)):
 		return _reject("iptal", sims)
 	var analysis := LevelSolver.analyse_robust(fine)
+	var route_clusters := LevelSolver.analyse_solution_clusters(fine).size()
 	var robust := int(analysis["robust"])
 	if robust < profile.min_robust:
 		return _reject("pencere-dar", sims)
@@ -371,6 +378,7 @@ func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
 		return {
 			"ok": true, "sims": sims, "robust": robust, "bounces": bounces,
 			"opened_robust": robust, "block_free": true,
+			"route_clusters": route_clusters,
 		}
 
 	var all_broken := (1 << level.breakable_blocks.size()) - 1
@@ -387,6 +395,7 @@ func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
 	return {
 		"ok": true, "sims": sims, "robust": robust, "bounces": bounces,
 		"opened_robust": opened_robust, "block_free": robust > 0,
+		"route_clusters": route_clusters,
 	}
 
 

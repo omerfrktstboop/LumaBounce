@@ -237,6 +237,8 @@ func _on_gameplay_menu_requested() -> void:
 # bulunur ama ulasilamaz.
 
 func go_to_editor(edit_level: LevelData = null) -> void:
+	if not OS.is_debug_build():
+		return
 	_editor_level = edit_level
 	await _transition(level_editor_scene, _configure_editor)
 
@@ -356,6 +358,8 @@ func _on_debug_reset_stats() -> void:
 
 
 func _on_debug_editor_requested() -> void:
+	if not OS.is_debug_build():
+		return
 	if _current is LevelEditor:
 		return
 	# Bos bolumle acilir; editordeki "AC" ile kayitli bir bolum yuklenebilir.

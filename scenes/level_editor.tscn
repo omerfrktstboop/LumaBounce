@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/editor/level_editor.gd" id="1_editor"]
 [ext_resource type="Script" path="res://scripts/levels/level_world.gd" id="2_world"]
 [ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="3_ink"]
 [ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="4_safe_area"]
 [ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="5_button"]
+[ext_resource type="Script" path="res://scripts/editor/level_solution_overlay.gd" id="6_solution"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.09, 0.137, 0.227, 0.94)
@@ -34,6 +35,10 @@ position = Vector2(360, 640)
 
 [node name="World" type="Node2D" parent="."]
 script = ExtResource("2_world")
+
+[node name="SolutionOverlay" type="Node2D" parent="."]
+z_index = 20
+script = ExtResource("6_solution")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
@@ -131,14 +136,16 @@ corner_radius = 16
 content_margin = Vector2(6, 6)
 
 [node name="BatchLabel" type="Label" parent="HUD/SafeArea/Root/BottomPanel/Rows/BatchRow"]
+custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.203922, 0.901961, 0.831373, 1)
-theme_override_font_sizes/font_size = 21
+theme_override_font_sizes/font_size = 18
 text = "1 / 10"
 horizontal_alignment = 1
 vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="NextLevel" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/BatchRow"]
 custom_minimum_size = Vector2(80, 56)
@@ -293,6 +300,17 @@ script = ExtResource("5_button")
 corner_radius = 16
 content_margin = Vector2(6, 6)
 
+[node name="SolutionButton" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ActionRow"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 19
+text = "COZUM"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
+
 [node name="SaveButton" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ActionRow"]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
@@ -333,6 +351,8 @@ theme_override_constants/margin_left = 40
 theme_override_constants/margin_top = 80
 theme_override_constants/margin_right = 40
 theme_override_constants/margin_bottom = 80
+script = ExtResource("4_safe_area")
+base_padding = Vector2(40, 50)
 
 [node name="Rows" type="VBoxContainer" parent="HUD/Modal/Card"]
 layout_mode = 2

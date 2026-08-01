@@ -1,0 +1,348 @@
+class_name AIGenerationForm
+extends VBoxContainer
+
+## Mobil debug editor icindeki iki modlu uretim formu. Ag/network isi yapmaz;
+## yalnizca dogrulanmis kullanici secimlerini sinyal olarak coordinator'a verir.
+
+signal local_generation_requested(profile_name: String)
+signal ai_generation_requested(request: Dictionary)
+signal cancel_requested
+signal validation_failed(message: String)
+
+const TEMPLATE_OPTIONS := [
+	["Otomatik", "auto"], ["Ogretici", "tutorial"],
+	["Tek Sekme", "single_bounce"], ["Duvar Sekmesi", "wall_bounce"],
+	["Zikzak", "zigzag"], ["Dar Gecit", "narrow_passage"],
+	["Ters Rota", "reverse_route"], ["Iki Alternatif Rota", "two_routes"],
+	["Bloklu Guvenli Rota", "safe_block_route"],
+	["Bloksuz Ustalik Rotasi", "block_free_mastery"],
+	["Cok Atisli Ilerleme", "multi_shot"], ["Mini Final", "mini_final"],
+]
+const DIFFICULTY_OPTIONS := [
+	["Kolay", "easy"], ["Orta", "medium"], ["Zor", "hard"], ["Final", "final"],
+]
+
+var _settings := AIGeneratorSettings.new()
+var _local_page: VBoxContainer
+var _ai_page: VBoxContainer
+var _local_mode_button: LumaButton
+var _ai_mode_button: LumaButton
+var _api_key: LineEdit
+var _model: LineEdit
+var _remember: CheckBox
+var _template: OptionButton
+var _difficulty: OptionButton
+var _mechanics := {}
+var _design_note: TextEdit
+var _candidate_count: SpinBox
+var _blueprint_count: SpinBox
+var _variation_count: SpinBox
+var _generate_button: LumaButton
+var _cancel_button: LumaButton
+var _local_cancel_button: LumaButton
+var _interactive: Array[Control] = []
+var _busy := false
+
+
+func _ready() -> void:
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_theme_constant_override("separation", 12)
+	_build_mode_row()
+	_build_local_page()
+	_build_ai_page()
+	_load_settings()
+	_show_ai(false)
+
+
+func set_busy(value: bool) -> void:
+	_busy = value
+	for control in _interactive:
+		if not is_instance_valid(control):
+			continue
+		if control is BaseButton:
+			(control as BaseButton).disabled = value
+		elif control is LineEdit:
+			(control as LineEdit).editable = not value
+		elif control is TextEdit:
+			(control as TextEdit).editable = not value
+		elif control is SpinBox:
+			(control as SpinBox).editable = not value
+	_cancel_button.visible = value
+	_cancel_button.disabled = false
+	_local_cancel_button.visible = value
+	_local_cancel_button.disabled = false
+
+
+func is_busy() -> bool:
+	return _busy
+
+
+func show_ai_mode() -> void:
+	_show_ai(true)
+
+
+func _build_mode_row() -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	add_child(row)
+	_local_mode_button = _button("YEREL", _show_ai.bind(false), true)
+	_ai_mode_button = _button("OPENROUTER AI", _show_ai.bind(true), true)
+	_local_mode_button.name = "LocalMode"
+	_ai_mode_button.name = "OpenRouterMode"
+	row.add_child(_local_mode_button)
+	row.add_child(_ai_mode_button)
+	_interactive.append_array([_local_mode_button, _ai_mode_button])
+
+
+func _build_local_page() -> void:
+	_local_page = VBoxContainer.new()
+	_local_page.name = "LocalPage"
+	_local_page.add_theme_constant_override("separation", 10)
+	add_child(_local_page)
+	var hint := _label("Mevcut fizik filtreli yerel uretim")
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_local_page.add_child(hint)
+	for option in [["Kolay", "easy"], ["Orta", "medium"], ["Zor", "hard"], ["Bloklu", "blocks"]]:
+		var button := _button(option[0], local_generation_requested.emit.bind(option[1]))
+		_local_page.add_child(button)
+		_interactive.append(button)
+	_local_cancel_button = _button("IPTAL", cancel_requested.emit)
+	_local_cancel_button.name = "CancelLocal"
+	_local_cancel_button.visible = false
+	_local_page.add_child(_local_cancel_button)
+
+
+func _build_ai_page() -> void:
+	_ai_page = VBoxContainer.new()
+	_ai_page.name = "AIPage"
+	_ai_page.add_theme_constant_override("separation", 10)
+	add_child(_ai_page)
+
+	_ai_page.add_child(_field_label("API KEY"))
+	_api_key = LineEdit.new()
+	_api_key.name = "APIKey"
+	_api_key.secret = true
+	_api_key.placeholder_text = "sk-or-..."
+	_prepare_text_input(_api_key)
+	_ai_page.add_child(_api_key)
+
+	var remember_row := HBoxContainer.new()
+	remember_row.add_theme_constant_override("separation", 8)
+	_ai_page.add_child(remember_row)
+	_remember = CheckBox.new()
+	_remember.name = "RememberKey"
+	_remember.text = "BU CIHAZDA HATIRLA"
+	_remember.custom_minimum_size = Vector2(0, 56)
+	_remember.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	remember_row.add_child(_remember)
+	var clear_button := _button("ANAHTARI TEMIZLE", _on_clear_key)
+	clear_button.custom_minimum_size.x = 210
+	remember_row.add_child(clear_button)
+	_interactive.append_array([_remember, clear_button])
+
+	_ai_page.add_child(_field_label("MODEL"))
+	_model = LineEdit.new()
+	_model.name = "ModelSlug"
+	_model.placeholder_text = "provider/model-slug"
+	_prepare_text_input(_model)
+	_ai_page.add_child(_model)
+
+	_template = _option_field("SABLON", TEMPLATE_OPTIONS)
+	_difficulty = _option_field("ZORLUK", DIFFICULTY_OPTIONS)
+
+	_ai_page.add_child(_field_label("MEKANIKLER"))
+	var mechanics_row := HBoxContainer.new()
+	mechanics_row.add_theme_constant_override("separation", 6)
+	_ai_page.add_child(mechanics_row)
+	for definition in [["Panel", "panel"], ["Duvar boslugu", "wall_gap"], ["Kirilabilir blok", "breakable_block"]]:
+		var check := CheckBox.new()
+		check.text = definition[0]
+		check.custom_minimum_size = Vector2(0, 54)
+		check.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		mechanics_row.add_child(check)
+		_mechanics[definition[1]] = check
+		_interactive.append(check)
+
+	_ai_page.add_child(_field_label("TASARIM NOTU"))
+	_design_note = TextEdit.new()
+	_design_note.name = "DesignNote"
+	_design_note.custom_minimum_size = Vector2(0, 126)
+	_design_note.placeholder_text = "Rota, blok katkisi ve okunabilirlik hedefini yaz."
+	_design_note.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_ai_page.add_child(_design_note)
+	_watch_focus(_design_note)
+	_interactive.append(_design_note)
+
+	_candidate_count = _spin_field("ISTENEN ADAY", 1, 20, 10)
+	_blueprint_count = _spin_field("AI TASLAK SAYISI", 1, 10, 5)
+	_variation_count = _spin_field("TASLAK BASINA VARYASYON", 1, 30, 12)
+
+	_generate_button = _button("AI ILE URET", _on_generate_ai)
+	_generate_button.name = "GenerateAI"
+	_generate_button.emphasis = LumaButton.Emphasis.PRIMARY
+	_ai_page.add_child(_generate_button)
+	_interactive.append(_generate_button)
+	_cancel_button = _button("IPTAL", cancel_requested.emit)
+	_cancel_button.name = "Cancel"
+	_cancel_button.visible = false
+	_ai_page.add_child(_cancel_button)
+
+
+func _option_field(title: String, options: Array) -> OptionButton:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	_ai_page.add_child(row)
+	var title_label := _field_label(title)
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(title_label)
+	var option := OptionButton.new()
+	option.custom_minimum_size = Vector2(300, 58)
+	option.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for definition in options:
+		option.add_item(definition[0])
+		option.set_item_metadata(option.item_count - 1, definition[1])
+	row.add_child(option)
+	_interactive.append(option)
+	return option
+
+
+func _spin_field(title: String, minimum: float, maximum: float, initial: float) -> SpinBox:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	_ai_page.add_child(row)
+	var title_label := _field_label(title)
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(title_label)
+	var spin := SpinBox.new()
+	spin.min_value = minimum
+	spin.max_value = maximum
+	spin.step = 1
+	spin.value = initial
+	spin.custom_minimum_size = Vector2(180, 58)
+	row.add_child(spin)
+	_watch_focus(spin.get_line_edit())
+	_interactive.append(spin)
+	return spin
+
+
+func _prepare_text_input(input: LineEdit) -> void:
+	input.custom_minimum_size = Vector2(0, 58)
+	input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	input.add_theme_font_size_override("font_size", 21)
+	_watch_focus(input)
+	_interactive.append(input)
+
+
+func _button(caption: String, action: Callable, expand := false) -> LumaButton:
+	var button := LumaButton.new()
+	button.text = caption
+	button.custom_minimum_size = Vector2(0, 58)
+	button.corner_radius = 14
+	button.content_margin = Vector2(8, 6)
+	button.add_theme_font_size_override("font_size", 20)
+	if expand:
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.pressed.connect(action)
+	return button
+
+
+func _label(caption: String) -> Label:
+	var label := Label.new()
+	label.text = caption
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_color_override("font_color", Palette.TEXT_DIM)
+	label.add_theme_font_size_override("font_size", 19)
+	return label
+
+
+func _field_label(caption: String) -> Label:
+	var label := _label(caption)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	return label
+
+
+func _show_ai(enabled: bool) -> void:
+	if _busy:
+		return
+	_local_page.visible = not enabled
+	_ai_page.visible = enabled
+	_local_mode_button.emphasis = (
+		LumaButton.Emphasis.SECONDARY if enabled else LumaButton.Emphasis.PRIMARY)
+	_ai_mode_button.emphasis = (
+		LumaButton.Emphasis.PRIMARY if enabled else LumaButton.Emphasis.SECONDARY)
+
+
+func _load_settings() -> void:
+	var values := _settings.load_values()
+	_model.text = String(values["model_slug"])
+	_remember.button_pressed = bool(values["remember_api_key"])
+	_api_key.text = String(values["api_key"]) if _remember.button_pressed else ""
+	_select_metadata(_template, String(values["template"]))
+	_select_metadata(_difficulty, String(values["difficulty"]))
+	for mechanic_id in _mechanics:
+		(_mechanics[mechanic_id] as CheckBox).button_pressed = values["mechanics"].has(mechanic_id)
+	_design_note.text = String(values["design_note"])
+	_candidate_count.value = int(values["candidate_count"])
+	_blueprint_count.value = int(values["blueprint_count"])
+	_variation_count.value = int(values["variation_count"])
+
+
+func _on_generate_ai() -> void:
+	var request := get_request()
+	if String(request["api_key"]).strip_edges().is_empty():
+		validation_failed.emit("API anahtari gerekli.")
+		return
+	if String(request["model_slug"]).strip_edges().is_empty():
+		validation_failed.emit("Model slug'i gerekli.")
+		return
+	_settings.save_values(request, String(request["api_key"]))
+	ai_generation_requested.emit(request)
+
+
+func get_request() -> Dictionary:
+	var mechanics := PackedStringArray()
+	for mechanic_id in _mechanics:
+		if (_mechanics[mechanic_id] as CheckBox).button_pressed:
+			mechanics.append(mechanic_id)
+	if mechanics.is_empty():
+		mechanics.append("panel")
+	return {
+		"api_key": _api_key.text,
+		"model_slug": _model.text.strip_edges(),
+		"remember_api_key": _remember.button_pressed,
+		"template": String(_template.get_item_metadata(_template.selected)),
+		"difficulty": String(_difficulty.get_item_metadata(_difficulty.selected)),
+		"mechanics": mechanics,
+		"design_note": _design_note.text.left(AILevelContract.MAX_DESIGN_NOTE),
+		"candidate_count": roundi(_candidate_count.value),
+		"blueprint_count": roundi(_blueprint_count.value),
+		"variation_count": roundi(_variation_count.value),
+	}
+
+
+func _on_clear_key() -> void:
+	_api_key.clear()
+	_remember.button_pressed = false
+	_settings.clear_api_key()
+
+
+func _select_metadata(option: OptionButton, wanted: String) -> void:
+	for i in option.item_count:
+		if String(option.get_item_metadata(i)) == wanted:
+			option.select(i)
+			return
+
+
+func _watch_focus(control: Control) -> void:
+	control.focus_entered.connect(_ensure_visible.bind(control))
+
+
+func _ensure_visible(control: Control) -> void:
+	await get_tree().process_frame
+	var ancestor := get_parent()
+	while ancestor != null:
+		var scroll := ancestor as ScrollContainer
+		if scroll != null:
+			scroll.ensure_control_visible(control)
+			return
+		ancestor = ancestor.get_parent()

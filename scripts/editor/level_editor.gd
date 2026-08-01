@@ -54,9 +54,14 @@ var level: LevelData
 @onready var _modal_tabs: HBoxContainer = $HUD/Modal/Card/Rows/TabRow
 @onready var _modal_actions: HBoxContainer = $HUD/Modal/Card/Rows/ActionRow
 @onready var _modal_list: VBoxContainer = $HUD/Modal/Card/Rows/Scroll/List
+@onready var _solution_overlay: LevelSolutionOverlay = $SolutionOverlay
+@onready var _solution_button: Button = $HUD/SafeArea/Root/BottomPanel/Rows/ActionRow/SolutionButton
 
 var _solver: LevelSolver
 var _generator: LevelGenerator
+var _ai_coordinator: AILevelGenerationCoordinator
+var _generation_form: AIGenerationForm
+var _metadata_store := GenerationMetadataStore.new()
 var _target_preview: Node2D
 var _launcher_preview: Node2D
 
@@ -71,14 +76,19 @@ var _batch: Array[LevelData] = []
 var _batch_names := PackedStringArray()
 var _batch_index := 0
 var _batch_bucket := CustomLevelStore.Bucket.GENERATED
+var _batch_metadata: Array[Dictionary] = []
 ## Kitaplikta acik olan sekme ve isaretli satirlar.
 var _library_bucket := CustomLevelStore.Bucket.GENERATED
 var _library_names := PackedStringArray()
 var _library_selected := {}
 var _status_text := ""
+var _solution_busy := false
 
 
 func _ready() -> void:
+	if not OS.is_debug_build():
+		queue_free()
+		return
 	if level == null:
 		level = _make_blank_level()
 
@@ -88,6 +98,13 @@ func _ready() -> void:
 	add_child(_generator)
 	_generator.candidate_evaluated.connect(_on_candidate_evaluated)
 	_generator.finished.connect(_on_generation_finished)
+	_ai_coordinator = AILevelGenerationCoordinator.new()
+	_ai_coordinator.name = "AICoordinator"
+	add_child(_ai_coordinator)
+	_ai_coordinator.status_changed.connect(_on_ai_status_changed)
+	_ai_coordinator.completed.connect(_on_ai_generation_completed)
+	_ai_coordinator.failed.connect(_on_ai_generation_failed)
+	_ai_coordinator.cancelled.connect(_on_ai_generation_cancelled)
 
 	_build_previews()
 	_connect_buttons()
@@ -134,6 +151,7 @@ func _connect_buttons() -> void:
 	get_node(rows + "ActionRow/TestButton").pressed.connect(_on_test)
 	get_node(rows + "ActionRow/AnalyseButton").pressed.connect(_on_analyse)
 	get_node(rows + "ActionRow/GenerateButton").pressed.connect(_on_open_generator)
+	get_node(rows + "ActionRow/SolutionButton").pressed.connect(_on_solution_pressed)
 	get_node(rows + "ActionRow/SaveButton").pressed.connect(_on_save)
 
 	get_node(rows + "BatchRow/PrevLevel").pressed.connect(_on_batch_step.bind(-1))
@@ -159,6 +177,7 @@ func _connect_buttons() -> void:
 ## Yapisal her degisiklikten sonra cagrilir (ekleme, silme, bolum yukleme).
 ## Surukleme sirasinda cagrilmaz - orada yalnizca ilgili dugum oynatilir.
 func _rebuild() -> void:
+	_clear_solution()
 	_world.build(level)
 	_target_preview.position = level.target_position
 	_launcher_preview.position = level.launcher_position
@@ -259,6 +278,7 @@ func _pointer_move(viewport_position: Vector2) -> void:
 	target.x = clampf(target.x, rect.position.x, rect.end.x)
 	target.y = clampf(target.y, rect.position.y, rect.end.y)
 	_set_selected_position(target)
+	_clear_solution()
 	_refresh_info()
 	queue_redraw()
 
@@ -480,8 +500,9 @@ func _on_analyse() -> void:
 	var play_rect := _world.get_play_rect()
 	var none: Array[RID] = []
 
-	var free_scan := _solver.scan(spawn, level.target_position, play_rect,
-		none, LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP)
+	var free_scan := await _solver.scan_async(spawn, level.target_position, play_rect,
+		none, LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
+		LevelGenerator.SIMS_PER_FRAME)
 	var free_robust := int(LevelSolver.analyse_robust(free_scan)["robust"])
 	var free_bounces := int(LevelSolver.analyse_robust(free_scan)["bounces"])
 
@@ -492,13 +513,133 @@ func _on_analyse() -> void:
 		return
 
 	var all_broken := (1 << level.breakable_blocks.size()) - 1
-	var open_scan := _solver.scan(spawn, level.target_position, play_rect,
+	var open_scan := await _solver.scan_async(spawn, level.target_position, play_rect,
 		_world.rids_for_state(all_broken),
-		LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP)
+		LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
+		LevelGenerator.SIMS_PER_FRAME)
 	var open_robust := int(LevelSolver.analyse_robust(open_scan)["robust"])
 	_status_text = "Bloksuz %d sağlam | Bloklar kırık %d sağlam%s" % [
 		free_robust, open_robust,
 		"" if open_robust > free_robust else "  (blok kolaylaştırmıyor!)"]
+	_refresh_info()
+
+
+func _on_solution_pressed() -> void:
+	if _solution_busy:
+		return
+	if _solution_overlay.has_routes():
+		_solution_overlay.cycle()
+		_refresh_solution_state()
+		return
+	_solution_busy = true
+	_solution_button.disabled = true
+	_status_text = "Cozum taraniyor..."
+	_refresh_info()
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_solver.bind_space(_world.get_space(), _world.get_block_rids())
+	var spawn := _solver.spawn_position(level.launcher_position)
+	var play_rect := _world.get_play_rect()
+	var none: Array[RID] = []
+	var free_scan := await _solver.scan_async(
+		spawn, level.target_position, play_rect, none,
+		LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
+		LevelGenerator.SIMS_PER_FRAME)
+	var routes: Array[Dictionary] = []
+	var free_route := _route_from_scan(free_scan, none, "ANA ROTA", 0)
+	if not free_route.is_empty():
+		routes.append(free_route)
+
+	if level.breakable_blocks.is_empty():
+		var alternative := _route_from_scan(free_scan, none, "ALTERNATIF ROTA", 0, 1)
+		if not alternative.is_empty():
+			routes.append(alternative)
+	else:
+		var all_broken := (1 << level.breakable_blocks.size()) - 1
+		var opened_rids := _world.rids_for_state(all_broken)
+		var opened_scan := await _solver.scan_async(
+			spawn, level.target_position, play_rect, opened_rids,
+			LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
+			LevelGenerator.SIMS_PER_FRAME)
+		var opened := _route_from_scan(
+			opened_scan, opened_rids, "BLOKLAR KIRIK ROTA", level.breakable_blocks.size())
+		if not opened.is_empty():
+			routes.append(opened)
+
+	_solution_overlay.set_routes(routes)
+	if not routes.is_empty():
+		_solution_overlay.show_main()
+	_solution_busy = false
+	_solution_button.disabled = false
+	if routes.is_empty():
+		_status_text = "Saglam veya basarili cozum rotasi bulunamadi."
+	_refresh_solution_state()
+
+
+func _route_from_scan(scan_result: Dictionary, excluded: Array[RID], label: String,
+		prebroken_count: int, cluster_index := 0) -> Dictionary:
+	var candidates := LevelSolver.analyse_solution_clusters(scan_result)
+	if candidates.is_empty():
+		var fallback := _first_hit_candidate(scan_result)
+		if not fallback.is_empty():
+			candidates.append(fallback)
+	if cluster_index >= candidates.size():
+		return {}
+	var route: Dictionary = candidates[cluster_index].duplicate(true)
+	var direction := Vector2.UP.rotated(deg_to_rad(float(route["angle"])))
+	var trace := _solver.simulate(
+		_solver.spawn_position(level.launcher_position), direction * float(route["power"]),
+		level.target_position, _world.get_play_rect(), excluded, true)
+	if not bool(trace.get("hit", false)):
+		return {}
+	route["label"] = label
+	route["prebroken_count"] = prebroken_count
+	route["trace_points"] = trace.get("trace_points", PackedVector2Array())
+	route["collision_points"] = trace.get("collision_points", [])
+	route["broken_order"] = trace.get("broken_order", PackedInt32Array())
+	route["target_hit_position"] = trace.get("target_hit_position", Vector2.ZERO)
+	route["bounces"] = int(trace.get("bounces", route.get("bounces", 0)))
+	return route
+
+
+func _first_hit_candidate(scan_result: Dictionary) -> Dictionary:
+	var angles: Array[float] = scan_result["angles"]
+	var powers: Array[float] = scan_result["powers"]
+	var hits: Array = scan_result["hits"]
+	var bounces: Array = scan_result["bounces"]
+	var best := {}
+	var best_bounces := 999
+	for ai in angles.size():
+		for pi in powers.size():
+			if hits[ai][pi] and int(bounces[ai][pi]) < best_bounces:
+				best_bounces = int(bounces[ai][pi])
+				best = {
+					"robust": 0, "angle": angles[ai], "power": powers[pi],
+					"bounces": best_bounces, "angle_lo": angles[ai],
+					"angle_hi": angles[ai], "power_lo": powers[pi], "power_hi": powers[pi],
+				}
+	return best
+
+
+func _clear_solution() -> void:
+	if _solution_overlay != null:
+		_solution_overlay.clear()
+	if _solution_button != null:
+		_solution_button.text = "COZUM"
+
+
+func _refresh_solution_state() -> void:
+	match _solution_overlay.get_mode():
+		LevelSolutionOverlay.Mode.MAIN:
+			_solution_button.text = "ANA ROTA"
+			_status_text = _solution_overlay.current_info()
+		LevelSolutionOverlay.Mode.ALTERNATIVE:
+			_solution_button.text = "ALT ROTA"
+			_status_text = _solution_overlay.current_info()
+		_:
+			_solution_button.text = "COZUM"
+			if _solution_overlay.has_routes():
+				_status_text = "Cozum kapali"
 	_refresh_info()
 
 
@@ -526,10 +667,11 @@ func _on_save() -> void:
 # atiyordu, yani gozden gecirmek imkansizdi.
 
 func _set_batch(levels: Array[LevelData], names: PackedStringArray,
-		bucket: CustomLevelStore.Bucket) -> void:
+		bucket: CustomLevelStore.Bucket, metadata: Array[Dictionary] = []) -> void:
 	_batch = levels
 	_batch_names = names
 	_batch_bucket = bucket
+	_batch_metadata.assign(metadata)
 	_batch_index = 0
 	_load_batch_entry()
 
@@ -559,6 +701,11 @@ func _refresh_batch_row() -> void:
 	if _batch_row.visible:
 		_batch_label.text = "%d / %d — %s" % [
 			_batch_index + 1, _batch.size(), level.display_name]
+		if _batch_index < _batch_metadata.size():
+			var meta := _batch_metadata[_batch_index]
+			_batch_label.text += "\nPuan %d  Yenilik %d  Saglam %d  Sekme %d" % [
+				int(meta.get("quality_score", 0)), int(meta.get("novelty_score", 0)),
+				int(meta.get("robust_cells", 0)), int(meta.get("bounce_count", 0))]
 
 
 func _on_toggle_panel() -> void:
@@ -582,6 +729,7 @@ func _open_modal(title: String, show_tabs: bool, show_actions: bool) -> void:
 
 
 func _clear_modal_list() -> void:
+	_generation_form = null
 	for child in _modal_list.get_children():
 		_modal_list.remove_child(child)
 		child.queue_free()
@@ -590,6 +738,12 @@ func _clear_modal_list() -> void:
 func _on_modal_close() -> void:
 	if _generator.is_running():
 		_generator.cancel()
+	if _ai_coordinator != null and _ai_coordinator.is_running():
+		_ai_coordinator.cancel_generation()
+	var focus := get_viewport().gui_get_focus_owner()
+	if focus != null:
+		focus.release_focus()
+	DisplayServer.virtual_keyboard_hide()
 	_modal.hide()
 
 
@@ -606,6 +760,7 @@ func _show_library(bucket: CustomLevelStore.Bucket) -> void:
 	_clear_modal_list()
 
 	_library_names = CustomLevelStore.list_names(bucket)
+	var manifest := _metadata_store.load_all() if bucket == CustomLevelStore.Bucket.GENERATED else {}
 	if _library_names.is_empty():
 		_modal_status.text = ("Bu partide bölüm yok - ÜRET ile ara."
 			if bucket == CustomLevelStore.Bucket.GENERATED else "Henüz kayıt yok.")
@@ -615,6 +770,7 @@ func _show_library(bucket: CustomLevelStore.Bucket) -> void:
 	for entry_name in _library_names:
 		var button := _make_list_button("", _on_library_toggle.bind(entry_name))
 		button.set_meta("entry", entry_name)
+		button.set_meta("generation", manifest.get(entry_name, {}))
 		_modal_list.add_child(button)
 	_refresh_library_rows()
 
@@ -637,6 +793,9 @@ func _refresh_library_rows() -> void:
 		var entry_name := String(button.get_meta("entry"))
 		var mark := "[x]" if _library_selected.has(entry_name) else "[  ]"
 		button.text = "%s  %s" % [mark, entry_name]
+		var generation = button.get_meta("generation", {})
+		if generation is Dictionary and generation.has("quality_score"):
+			button.text += " - %d/100" % int(generation["quality_score"])
 		button.emphasis = LumaButton.Emphasis.PRIMARY if _library_selected.has(entry_name) 			else LumaButton.Emphasis.SECONDARY
 	_refresh_library_actions()
 
@@ -680,7 +839,12 @@ func _on_library_edit() -> void:
 		_modal_status.text = "Yüklenemedi."
 		return
 	_modal.hide()
-	_set_batch(levels, names, _library_bucket)
+	var metadata: Array[Dictionary] = []
+	if _library_bucket == CustomLevelStore.Bucket.GENERATED:
+		var manifest := _metadata_store.load_all()
+		for entry_name in names:
+			metadata.append(manifest.get(entry_name, {}))
+	_set_batch(levels, names, _library_bucket, metadata)
 	_status_text = "%d bölüm açıldı — ‹ › ile gez" % levels.size()
 	_refresh_info()
 
@@ -720,12 +884,17 @@ func _on_library_delete() -> void:
 # --- Uretec -------------------------------------------------------------------
 
 func _on_open_generator() -> void:
+	if not OS.is_debug_build():
+		return
 	_open_modal("Bölüm Üret", false, false)
-	_modal_status.text = "Bir profil seç; 10 aday aranacak."
-	_modal_list.add_child(_make_list_button("Kolay", _start_generation.bind("easy")))
-	_modal_list.add_child(_make_list_button("Orta", _start_generation.bind("medium")))
-	_modal_list.add_child(_make_list_button("Zor", _start_generation.bind("hard")))
-	_modal_list.add_child(_make_list_button("Bloklu", _start_generation.bind("blocks")))
+	_modal_status.text = "Yerel veya OpenRouter AI uretim modunu sec."
+	_generation_form = AIGenerationForm.new()
+	_generation_form.name = "GenerationForm"
+	_generation_form.local_generation_requested.connect(_start_generation)
+	_generation_form.ai_generation_requested.connect(_start_ai_generation)
+	_generation_form.cancel_requested.connect(_cancel_generation)
+	_generation_form.validation_failed.connect(_on_ai_generation_failed)
+	_modal_list.add_child(_generation_form)
 
 
 func _start_generation(profile_name: String) -> void:
@@ -740,9 +909,57 @@ func _start_generation(profile_name: String) -> void:
 		_:
 			profile = LevelGenerator.Profile.medium()
 
-	_clear_modal_list()
+	if _generation_form != null:
+		_generation_form.set_busy(true)
 	_modal_status.text = "Aranıyor..."
 	_generator.generate(profile, 10)
+
+
+func _start_ai_generation(request: Dictionary) -> void:
+	if _generation_form != null:
+		_generation_form.set_busy(true)
+	_modal_status.text = "AI taslaklari bekleniyor..."
+	var error := _ai_coordinator.start(request)
+	if error != OK and _generation_form != null:
+		_generation_form.set_busy(false)
+
+
+func _cancel_generation() -> void:
+	if _generator.is_running():
+		_generator.cancel()
+	if _ai_coordinator.is_running():
+		_ai_coordinator.cancel_generation()
+	_modal_status.text = "Uretim iptal ediliyor..."
+
+
+func _on_ai_status_changed(message: String) -> void:
+	if _modal.visible:
+		_modal_status.text = message
+
+
+func _on_ai_generation_failed(message: String) -> void:
+	if _generation_form != null:
+		_generation_form.set_busy(false)
+	if _modal.visible:
+		_modal_status.text = message
+
+
+func _on_ai_generation_cancelled() -> void:
+	if _generation_form != null:
+		_generation_form.set_busy(false)
+	if _modal.visible:
+		_modal_status.text = "Uretim iptal edildi; onceki parti korundu."
+
+
+func _on_ai_generation_completed(levels: Array[LevelData], names: PackedStringArray,
+		metadata: Array[Dictionary]) -> void:
+	if _generation_form != null:
+		_generation_form.set_busy(false)
+	_modal.hide()
+	DisplayServer.virtual_keyboard_hide()
+	_set_batch(levels, names, CustomLevelStore.Bucket.GENERATED, metadata)
+	_status_text = "%d AI bolumu puanlanip kaydedildi - en iyi aday ilk sirada" % levels.size()
+	_refresh_info()
 
 
 func _on_candidate_evaluated(tried: int, accepted: int) -> void:
@@ -754,10 +971,12 @@ func _on_candidate_evaluated(tried: int, accepted: int) -> void:
 ## duruyordu ve listeden birini secmek digerlerini yok ediyordu.
 func _on_generation_finished(levels: Array[LevelData]) -> void:
 	var rejections := _generator.describe_rejections()
+	if _generation_form != null:
+		_generation_form.set_busy(false)
 	if levels.is_empty():
 		if _modal.visible:
-			_modal_status.text = "Uygun aday çıkmadı.
-Eleme: %s" % rejections
+			_modal_status.text = ("Uretim iptal edildi; onceki parti korundu."
+				if _generator.was_cancelled() else "Uygun aday çıkmadı.\nEleme: %s" % rejections)
 		return
 
 	var names := CustomLevelStore.replace_generated(levels)
