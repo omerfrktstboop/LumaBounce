@@ -50,6 +50,14 @@ func _test_response_rules() -> void:
 	_check("429 tek retry", OpenRouterClient.should_retry_status(429, false), true)
 	_check("429 ikinci retry yok", OpenRouterClient.should_retry_status(429, true), false)
 	_check("5xx tek retry", OpenRouterClient.should_retry_status(503, false), true)
+	_check("DNS hatasi ayirt ediliyor",
+		OpenRouterClient.transport_error_message(HTTPRequest.RESULT_CANT_RESOLVE).contains("DNS"), true)
+	_check("TLS hatasi ayirt ediliyor",
+		OpenRouterClient.transport_error_message(HTTPRequest.RESULT_TLS_HANDSHAKE_ERROR).contains("tarih/saat"), true)
+	_check("timeout ayirt ediliyor",
+		OpenRouterClient.transport_error_message(HTTPRequest.RESULT_TIMEOUT).contains("zaman asimi"), true)
+	_check("mesgul istemci ayirt ediliyor",
+		OpenRouterClient.request_start_error_message(ERR_BUSY).contains("mesgul"), true)
 	var invalid := OpenRouterClient.parse_chat_response("not-json".to_utf8_buffer())
 	_check("gecersiz json reddediliyor", invalid["ok"], false)
 	var valid_body := JSON.stringify({

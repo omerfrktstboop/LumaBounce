@@ -122,6 +122,42 @@ static func should_retry_status(status_code: int, already_retried: bool) -> bool
 	return not already_retried and (status_code == 429 or status_code >= 500)
 
 
+static func transport_error_message(result: int) -> String:
+	match result:
+		HTTPRequest.RESULT_CHUNKED_BODY_SIZE_MISMATCH:
+			return "OpenRouter yaniti aktarim sirasinda yarim kaldi. Tekrar dene."
+		HTTPRequest.RESULT_CANT_CONNECT:
+			return "OpenRouter sunucusuna baglanilamadi. Wi-Fi, VPN veya guvenlik duvarini kontrol et."
+		HTTPRequest.RESULT_CANT_RESOLVE:
+			return "OpenRouter adresi cozumlenemedi. Telefonun internet ve DNS ayarini kontrol et."
+		HTTPRequest.RESULT_CONNECTION_ERROR:
+			return "OpenRouter baglantisi aktarim sirasinda kesildi. Tekrar dene."
+		HTTPRequest.RESULT_TLS_HANDSHAKE_ERROR:
+			return "Guvenli OpenRouter baglantisi kurulamadi. Telefonun tarih/saatini kontrol et."
+		HTTPRequest.RESULT_NO_RESPONSE:
+			return "OpenRouter sunucusundan yanit alinamadi."
+		HTTPRequest.RESULT_BODY_SIZE_LIMIT_EXCEEDED:
+			return "OpenRouter yaniti izin verilen boyutu asti."
+		HTTPRequest.RESULT_BODY_DECOMPRESS_FAILED:
+			return "OpenRouter yaniti telefonda acilamadi. Tekrar dene."
+		HTTPRequest.RESULT_REDIRECT_LIMIT_REACHED:
+			return "OpenRouter istegi cok fazla yonlendirildi."
+		HTTPRequest.RESULT_TIMEOUT:
+			return "OpenRouter istegi zaman asimina ugradi. Baglantiyi kontrol edip tekrar dene."
+		_:
+			return "OpenRouter ag istegi tamamlanamadi (kod %d)." % result
+
+
+static func request_start_error_message(error_code: int) -> String:
+	match error_code:
+		ERR_BUSY:
+			return "OpenRouter istemcisi hala onceki istekle mesgul. Tekrar dene."
+		ERR_INVALID_PARAMETER:
+			return "OpenRouter istek adresi veya basliklari gecersiz."
+		_:
+			return "OpenRouter istegi baslatilamadi (kod %d)." % error_code
+
+
 static func parse_chat_response(bytes: PackedByteArray) -> Dictionary:
 	var text := bytes.get_string_from_utf8()
 	var envelope_parser := JSON.new()
@@ -168,7 +204,7 @@ func _send_current_request() -> Error:
 	var error := _http.request(
 		ENDPOINT, build_headers(_api_key), HTTPClient.METHOD_POST, JSON.stringify(body))
 	if error != OK:
-		_fail("Internet baglantisi kurulamadi.", 0)
+		_fail(request_start_error_message(error), 0)
 	return error
 
 
@@ -177,7 +213,7 @@ func _on_request_completed(result: int, response_code: int,
 	if not _running or _cancel_requested:
 		return
 	if result != HTTPRequest.RESULT_SUCCESS:
-		_fail("Internet baglantisi kurulamadi.", 0)
+		_fail(transport_error_message(result), 0)
 		return
 
 	var response = JSON.parse_string(body.get_string_from_utf8())
@@ -194,7 +230,7 @@ func _on_request_completed(result: int, response_code: int,
 		_fallback_used = true
 		_using_json_fallback = true
 		status_changed.emit("Model icin JSON uyumluluk modu deneniyor...")
-		_send_current_request()
+		_send_on_next_frame()
 		return
 	if should_retry_status(response_code, _transient_retry_used):
 		_transient_retry_used = true
@@ -209,6 +245,12 @@ func _on_request_completed(result: int, response_code: int,
 
 func _retry_after_delay() -> void:
 	await get_tree().create_timer(1.0, true, false, true).timeout
+	if _running and not _cancel_requested:
+		_send_current_request()
+
+
+func _send_on_next_frame() -> void:
+	await get_tree().process_frame
 	if _running and not _cancel_requested:
 		_send_current_request()
 
