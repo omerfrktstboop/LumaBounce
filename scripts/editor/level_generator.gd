@@ -53,6 +53,7 @@ signal blueprint_progress(tried: int, total: int, accepted: int)
 ## Referans olmadan bu sayilar anlamsizdir; "30 iyidir" gibi bir sezgi ilk
 ## denemede bolum 1'in kendisini bile eleyen bir filtre uretmisti.
 class Profile extends RefCounted:
+	var evaluation_mode := "standard"
 	var display_name := "Üretilen"
 	var min_robust := 12
 	var max_robust := 60
@@ -64,6 +65,8 @@ class Profile extends RefCounted:
 	var target_y_range := Vector2(235.0, 345.0)
 	## Blok varsa bloksuz rota da bulunmali (bkz. verifier tasarim sozlesmesi).
 	var require_block_free_route := true
+	var min_solution_shots := 1
+	var max_solution_shots := 1
 
 	## Bolum 1 seviyesinde ya da daha rahat: genis pencere, kisa rota.
 	static func easy() -> Profile:
@@ -114,6 +117,38 @@ class Profile extends RefCounted:
 		p.panel_count = Vector2i(1, 2)
 		p.block_count = Vector2i(1, 3)
 		p.target_y_range = Vector2(245.0, 360.0)
+		return p
+
+	## Uzun sekmelerde kucuk nisan farklari hizla buyur. Bu profil, gercek
+	## izgara cozumunu ve saglam kisa yol bulunmamasini ayri olcer.
+	static func ricochet_chain() -> Profile:
+		var p := Profile.new()
+		p.display_name = "Sekme Zinciri"
+		p.evaluation_mode = "ricochet_chain"
+		p.min_robust = 1
+		p.max_robust = 12
+		p.min_bounces = 5
+		p.max_bounces = 10
+		p.panel_count = Vector2i(2, 4)
+		p.block_count = Vector2i(0, 0)
+		p.max_lives = 5
+		p.target_y_range = Vector2(220.0, 500.0)
+		return p
+
+	## Hedef, en az bir blogun kalici kirilmasindan sonra 2-4 atista acilir.
+	static func block_corridor() -> Profile:
+		var p := Profile.new()
+		p.display_name = "Blok Koridoru"
+		p.evaluation_mode = "block_corridor"
+		p.min_robust = 6
+		p.max_robust = 80
+		p.panel_count = Vector2i(0, 2)
+		p.block_count = Vector2i(2, 4)
+		p.max_lives = 5
+		p.target_y_range = Vector2(230.0, 420.0)
+		p.require_block_free_route = false
+		p.min_solution_shots = 2
+		p.max_solution_shots = 4
 		return p
 
 var _solver: LevelSolver
@@ -298,8 +333,8 @@ func build_blueprint_variations(blueprints: Array, variations_per_blueprint: int
 			varied["variation_seed"] = variation_seed
 			varied["variation_scale"] = variation_scale
 			varied["physics_rescue"] = (
-				variation_scale >= MAX_VARIATION_SCALE
-				and profile != null and profile.min_bounces > 0)
+				variation_scale >= MAX_VARIATION_SCALE and profile != null
+				and (profile.min_bounces > 0 or profile.evaluation_mode != "standard"))
 			records.append(varied)
 	return records
 
@@ -324,10 +359,19 @@ func _vary_level(source: LevelData, variation_seed: int, scale: float,
 		profile: Profile) -> LevelData:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = variation_seed
-	if scale >= MAX_VARIATION_SCALE and profile != null and profile.min_bounces > 0:
-		var rescued := _build_hard_rescue_level(source, rng)
-		_repair_anchor_clearance(rescued, variation_seed + 48611)
-		return rescued
+	if scale >= MAX_VARIATION_SCALE and profile != null:
+		var rescued: LevelData = null
+		match profile.evaluation_mode:
+			"ricochet_chain":
+				rescued = _build_ricochet_rescue_level(source, rng)
+			"block_corridor":
+				rescued = _build_block_corridor_rescue_level(source, rng)
+			_:
+				if profile.min_bounces > 0:
+					rescued = _build_hard_rescue_level(source, rng)
+		if rescued != null:
+			_repair_anchor_clearance(rescued, variation_seed + 48611)
+			return rescued
 
 	var level := source.duplicate(true) as LevelData
 	level.target_position = Vector2(
@@ -357,6 +401,102 @@ func _vary_level(source: LevelData, variation_seed: int, scale: float,
 			rng.randf_range(profile.target_y_range.x, profile.target_y_range.y))
 	_repair_anchor_clearance(level, variation_seed + 48611)
 	return level
+
+
+func _build_ricochet_rescue_level(source: LevelData,
+		rng: RandomNumberGenerator) -> LevelData:
+	var seeds := [
+		{
+			"target": Vector2(111.5912, 237.2848),
+			"panels": [
+				[Vector2(557.6433, 538.7047), -31.2, 308.9],
+				[Vector2(309.9937, 791.0869), -17.2, 299.9],
+			],
+		},
+		{
+			"target": Vector2(597.2757, 398.7138),
+			"panels": [
+				[Vector2(258.1210, 725.6567), 19.2, 255.9],
+				[Vector2(534.3357, 538.9850), 32.6, 326.3],
+			],
+		},
+		{
+			"target": Vector2(491.1871, 483.0049),
+			"panels": [
+				[Vector2(486.3035, 854.7031), 6.7, 254.2],
+				[Vector2(145.9453, 694.3622), -3.0, 255.7],
+			],
+		},
+		{
+			"target": Vector2(371.0254, 471.0891),
+			"panels": [
+				[Vector2(242.1640, 846.6019), -3.4, 265.8],
+				[Vector2(527.7546, 743.9351), 41.2, 255.4],
+			],
+		},
+	]
+	var seed: Dictionary = seeds[rng.randi_range(0, seeds.size() - 1)]
+	var level := LevelData.new()
+	level.launcher_position = Vector2(360.0, 1120.0)
+	level.target_position = seed["target"]
+	var panels: Array[PanelData] = []
+	for definition in seed["panels"]:
+		var panel := PanelData.new()
+		panel.position = definition[0]
+		panel.rotation_degrees = float(definition[1])
+		panel.length = float(definition[2])
+		panel.thickness = 26.0
+		panels.append(panel)
+	level.panels = panels
+	_copy_generated_identity(level, source)
+	if rng.randf() < 0.5:
+		_mirror_level(level)
+	return level
+
+
+func _build_block_corridor_rescue_level(source: LevelData,
+		rng: RandomNumberGenerator) -> LevelData:
+	var level := LevelLibrary.load_level(21).duplicate(true) as LevelData
+	_copy_generated_identity(level, source)
+	level.max_lives = maxi(source.max_lives, 3)
+	var lower_gate := BreakableBlockData.new()
+	lower_gate.position = Vector2(360.0, 780.0)
+	lower_gate.size = Vector2(540.0, 46.0)
+	level.breakable_blocks.append(lower_gate)
+	var x_shift := rng.randf_range(-18.0, 18.0)
+	level.launcher_position.x += x_shift
+	level.target_position.x += x_shift
+	for block in level.breakable_blocks:
+		block.position.x += x_shift
+		block.position.y += rng.randf_range(-8.0, 8.0)
+	if rng.randf() < 0.5:
+		_mirror_level(level)
+	return level
+
+
+func _copy_generated_identity(level: LevelData, source: LevelData) -> void:
+	level.level_id = source.level_id
+	level.display_name = source.display_name
+	level.max_lives = source.max_lives
+	level.tutorial_text = source.tutorial_text
+	level.two_star_max_seconds = source.two_star_max_seconds
+	level.two_star_max_shots = source.two_star_max_shots
+	level.three_star_max_seconds = source.three_star_max_seconds
+	level.three_star_max_shots = source.three_star_max_shots
+
+
+func _mirror_level(level: LevelData) -> void:
+	level.launcher_position.x = 720.0 - level.launcher_position.x
+	level.target_position.x = 720.0 - level.target_position.x
+	for panel in level.panels:
+		panel.position.x = 720.0 - panel.position.x
+		panel.rotation_degrees = -panel.rotation_degrees
+	for block in level.breakable_blocks:
+		block.position.x = 720.0 - block.position.x
+		block.rotation_degrees = -block.rotation_degrees
+	var left_segments := level.left_wall_segments.duplicate()
+	level.left_wall_segments = level.right_wall_segments.duplicate()
+	level.right_wall_segments = left_segments
 
 
 func _build_hard_rescue_level(source: LevelData,
@@ -518,6 +658,11 @@ func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
 	# 0) Bedava statik kontroller - cogu kotu adayi hic simule etmeden eler.
 	if not _static_geometry_ok(level, spawn):
 		return _reject("yerlesim", 0)
+	match profile.evaluation_mode:
+		"ricochet_chain":
+			return await _evaluate_ricochet(level, profile, play_rect, spawn)
+		"block_corridor":
+			return await _evaluate_block_corridor(level, profile, play_rect, spawn)
 
 	var no_blocks: Array[RID] = []
 
@@ -574,6 +719,82 @@ func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
 		"ok": true, "sims": sims, "robust": robust, "bounces": bounces,
 		"opened_robust": opened_robust, "block_free": robust > 0,
 		"route_clusters": route_clusters,
+	}
+
+
+func _evaluate_ricochet(_level: LevelData, profile: Profile,
+		play_rect: Rect2, spawn: Vector2) -> Dictionary:
+	var fine := await _solver.scan_async(
+		spawn, _level.target_position, play_rect, [], FINE_ANGLE_STEP,
+		FINE_POWER_STEP, SIMS_PER_FRAME, Callable(self, "_is_cancelled"))
+	var sims := int(fine["total"])
+	if bool(fine.get("cancelled", false)):
+		return _reject("iptal", sims)
+	var band := LevelSolver.analyse_bounce_band(
+		fine, profile.min_bounces, profile.max_bounces)
+	var robust := int(band["largest_cluster"])
+	if robust < profile.min_robust:
+		return _reject("zincir-yok", sims)
+	if robust > profile.max_robust:
+		return _reject("pencere-genis", sims)
+	var ordinary := LevelSolver.analyse_robust(fine)
+	if (int(ordinary["robust"]) > 0
+			and int(ordinary["bounces"]) < profile.min_bounces):
+		return _reject("kisa-yol", sims)
+	var clusters: Array = band["clusters"]
+	var best: Dictionary = clusters[0]
+	return {
+		"ok": true, "sims": sims, "robust": robust,
+		"bounces": int(best["bounces"]), "opened_robust": robust,
+		"block_free": _level.breakable_blocks.is_empty(),
+		"route_clusters": clusters.size(),
+		"shortcut_robust": int(ordinary["robust"]),
+	}
+
+
+func _evaluate_block_corridor(level: LevelData, profile: Profile,
+		play_rect: Rect2, spawn: Vector2) -> Dictionary:
+	if level.breakable_blocks.size() < 2:
+		return _reject("blok-yok", 0)
+	var max_shots := mini(profile.max_solution_shots, maxi(level.max_lives, 1))
+	if max_shots < profile.min_solution_shots:
+		return _reject("hak-yetersiz", 0)
+	var search := await _solver.search_block_states_async(
+		spawn, level.target_position, play_rect, max_shots,
+		FINE_ANGLE_STEP, FINE_POWER_STEP, 32, SIMS_PER_FRAME,
+		Callable(self, "_is_cancelled"))
+	var sims := int(search["sims"])
+	if bool(search.get("cancelled", false)):
+		return _reject("iptal", sims)
+	var best: Dictionary = {}
+	for solution in search["solutions"]:
+		var analysis: Dictionary = solution["analysis"]
+		var robust := int(analysis["robust"])
+		var shots := int(solution["shots"])
+		var state := int(solution["state"])
+		if state == 0 and robust >= profile.min_robust:
+			return _reject("blok-kestirmesi", sims)
+		if (state == 0 or shots < profile.min_solution_shots
+				or shots > profile.max_solution_shots
+				or robust < profile.min_robust or robust > profile.max_robust):
+			continue
+		if (best.is_empty() or robust > int(best["analysis"]["robust"])
+				or (robust == int(best["analysis"]["robust"])
+					and shots < int(best["shots"]))):
+			best = solution
+	if best.is_empty():
+		return _reject("blok-koridoru", sims)
+	var analysis: Dictionary = best["analysis"]
+	var scan: Dictionary = best["scan"]
+	var robust := int(analysis["robust"])
+	return {
+		"ok": true, "sims": sims, "robust": robust,
+		"bounces": int(analysis["bounces"]), "opened_robust": robust,
+		"block_free": false,
+		"route_clusters": LevelSolver.analyse_solution_clusters(scan).size(),
+		"solution_shots": int(best["shots"]),
+		"broken_state": int(best["state"]),
+		"states_visited": int(search["states_visited"]),
 	}
 
 

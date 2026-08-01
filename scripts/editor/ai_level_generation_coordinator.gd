@@ -91,6 +91,13 @@ func rank_records(records: Array[Dictionary], request: Dictionary,
 		if (String(request.get("template", "auto")) == "two_routes"
 				and int(solver.get("route_clusters", 0)) < 2):
 			continue
+		if (String(request.get("template", "auto")) == "ricochet_chain"
+				and int(solver.get("bounces", 0)) < 5):
+			continue
+		if (String(request.get("template", "auto")) == "block_corridor"
+				and (int(solver.get("solution_shots", 0)) < 2
+					or int(solver.get("broken_state", 0)) == 0)):
+			continue
 		var comparison := references.duplicate()
 		comparison.append_array(batch_references)
 		var novelty := _novelty.score(level, solver, comparison)
@@ -189,6 +196,8 @@ func _build_metadata(record: Dictionary) -> Dictionary:
 		"robust_cells": int(solver.get("robust", 0)),
 		"bounce_count": int(solver.get("bounces", 0)),
 		"opened_robust": int(solver.get("opened_robust", 0)),
+		"solution_shots": int(solver.get("solution_shots", 0)),
+		"broken_state": int(solver.get("broken_state", 0)),
 		"novelty_score": int(novelty["novelty_score"]),
 		"quality_score": int(quality["quality_score"]),
 		"most_similar_level": String(novelty["most_similar_level"]),
@@ -199,6 +208,11 @@ func _build_metadata(record: Dictionary) -> Dictionary:
 
 
 func _profile_for(request: Dictionary) -> LevelGenerator.Profile:
+	match String(request.get("template", "auto")):
+		"ricochet_chain":
+			return LevelGenerator.Profile.ricochet_chain()
+		"block_corridor":
+			return LevelGenerator.Profile.block_corridor()
 	match String(request["difficulty"]):
 		"easy":
 			return LevelGenerator.Profile.easy()

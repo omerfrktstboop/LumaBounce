@@ -17,7 +17,9 @@ const TEMPLATE_OPTIONS := [
 	["Ters Rota", "reverse_route"], ["Iki Alternatif Rota", "two_routes"],
 	["Bloklu Guvenli Rota", "safe_block_route"],
 	["Bloksuz Ustalik Rotasi", "block_free_mastery"],
-	["Cok Atisli Ilerleme", "multi_shot"], ["Mini Final", "mini_final"],
+	["Cok Atisli Ilerleme", "multi_shot"],
+	["Sekme Zinciri", "ricochet_chain"], ["Blok Koridoru", "block_corridor"],
+	["Mini Final", "mini_final"],
 ]
 const DIFFICULTY_OPTIONS := [
 	["Kolay", "easy"], ["Orta", "medium"], ["Zor", "hard"], ["Final", "final"],
@@ -177,6 +179,7 @@ func _build_ai_page() -> void:
 		mechanics_row.add_child(check)
 		_mechanics[definition[1]] = check
 		_interactive.append(check)
+	_template.item_selected.connect(_on_template_selected)
 
 	_ai_page.add_child(_field_label("TASARIM NOTU"))
 	_design_note = TextEdit.new()
@@ -306,6 +309,7 @@ func _load_settings() -> void:
 	_select_metadata(_difficulty, String(values["difficulty"]))
 	for mechanic_id in _mechanics:
 		(_mechanics[mechanic_id] as CheckBox).button_pressed = values["mechanics"].has(mechanic_id)
+	_apply_template_requirements()
 	_design_note.text = String(values["design_note"])
 	_candidate_count.value = int(values["candidate_count"])
 	_blueprint_count.value = int(values["blueprint_count"])
@@ -324,7 +328,22 @@ func _on_generate_ai() -> void:
 	ai_generation_requested.emit(request)
 
 
+func _on_template_selected(_index: int) -> void:
+	_apply_template_requirements()
+
+
+func _apply_template_requirements() -> void:
+	if _template == null or _mechanics.is_empty():
+		return
+	var template_id := String(_template.get_item_metadata(_template.selected))
+	if template_id == "ricochet_chain":
+		(_mechanics["panel"] as CheckBox).button_pressed = true
+	elif template_id == "block_corridor":
+		(_mechanics["breakable_block"] as CheckBox).button_pressed = true
+
+
 func get_request() -> Dictionary:
+	_apply_template_requirements()
 	var mechanics := PackedStringArray()
 	for mechanic_id in _mechanics:
 		if (_mechanics[mechanic_id] as CheckBox).button_pressed:

@@ -12,6 +12,7 @@ const ALLOWED_FIELDS := [
 	"generation_timestamp", "prompt_version", "blueprint_index", "variation_seed",
 	"variation_scale", "physics_rescue",
 	"robust_cells", "bounce_count", "opened_robust", "novelty_score", "quality_score",
+	"solution_shots", "broken_state",
 	"most_similar_level", "similarity_reasons", "design_intent", "usage",
 ]
 

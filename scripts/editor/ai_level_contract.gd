@@ -3,7 +3,7 @@ extends RefCounted
 
 ## OpenRouter semasi, mapper sinirlari ve UI secenekleri icin tek kaynak.
 
-const PROMPT_VERSION := "1.3"
+const PROMPT_VERSION := "1.4"
 const MAX_LEVELS := 10
 const MAX_PANELS := 5
 const MAX_BLOCKS := 4
@@ -14,7 +14,8 @@ const MAX_DESIGN_NOTE := 1000
 const TEMPLATE_IDS := [
 	"auto", "tutorial", "single_bounce", "wall_bounce", "zigzag",
 	"narrow_passage", "reverse_route", "two_routes", "safe_block_route",
-	"block_free_mastery", "multi_shot", "mini_final",
+	"block_free_mastery", "multi_shot", "ricochet_chain", "block_corridor",
+	"mini_final",
 ]
 const DIFFICULTY_IDS := ["easy", "medium", "hard", "final"]
 const MECHANIC_IDS := ["panel", "wall_gap", "breakable_block"]

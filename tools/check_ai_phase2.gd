@@ -11,6 +11,7 @@ func _initialize() -> void:
 func _run() -> void:
 	await process_frame
 	_test_mapper()
+	_test_bounce_band_analysis()
 	await _test_variations_and_solver()
 	print("AI ASAMA 2: %d gecti, %d kaldi." % [_passed, _failed])
 	quit(0 if _failed == 0 else 1)
@@ -45,6 +46,28 @@ func _test_mapper() -> void:
 	for _i in AILevelContract.MAX_PANELS:
 		crowded["panels"].append(crowded["panels"][0].duplicate(true))
 	_check("fazla panel reddediliyor", mapper.map_document({"levels": [crowded]})["ok"], false)
+
+
+func _test_bounce_band_analysis() -> void:
+	var angles: Array[float] = [-3.0, 0.0, 3.0]
+	var powers: Array[float] = [1000.0, 1100.0, 1200.0]
+	var scan := {
+		"angles": angles,
+		"powers": powers,
+		"hits": [
+			[false, false, false],
+			[true, true, false],
+			[false, true, true],
+		],
+		"bounces": [
+			[-1, -1, -1],
+			[2, 6, -1],
+			[-1, 6, 7],
+		],
+	}
+	var band := LevelSolver.analyse_bounce_band(scan, 5, 10)
+	_check("sekme bandi bitisik hucreleri kumeliyor", band["largest_cluster"], 3)
+	_check("sekme bandi kisa yolu ayri sayiyor", band["largest_shortcut"], 1)
 
 
 func _test_variations_and_solver() -> void:
@@ -126,6 +149,50 @@ func _test_variations_and_solver() -> void:
 	if block_records.is_empty():
 		print("BLOKLU ZOR KURTARMA RET: %s" % generator.describe_rejections())
 	_check("bloklu zor kurtarmadan solver adayi cikiyor", block_records.is_empty(), false)
+	var ricochet_guided := generator.build_blueprint_variations(
+		[blueprint], 12, 20260801, LevelGenerator.Profile.ricochet_chain())
+	var ricochet_sources: Array = []
+	for ricochet_index in range(9, 13):
+		ricochet_sources.append(ricochet_guided[ricochet_index])
+	var ricochet_records: Array[Dictionary] = []
+	generator.blueprints_finished.connect(
+		func(items: Array[Dictionary]) -> void: ricochet_records.assign(items),
+		CONNECT_ONE_SHOT)
+	generator.generate_from_blueprints(
+		LevelGenerator.Profile.ricochet_chain(), ricochet_sources, 4, 0, 20260801)
+	while generator.is_running():
+		await process_frame
+	if ricochet_records.is_empty():
+		print("SEKME ZINCIRI RET: %s" % generator.describe_rejections())
+	_check("sekme zinciri kurtarmadan solver adayi cikiyor",
+		ricochet_records.is_empty(), false)
+	for record in ricochet_records:
+		_check("sekme zinciri 5-10 sekme bandinda",
+			int(record["solver"]["bounces"]) in range(5, 11), true)
+	var corridor_guided := generator.build_blueprint_variations(
+		[blueprint], 12, 20260802, LevelGenerator.Profile.block_corridor())
+	var corridor_sources: Array = []
+	for corridor_index in range(9, 13):
+		corridor_sources.append(corridor_guided[corridor_index])
+	var corridor_records: Array[Dictionary] = []
+	generator.blueprints_finished.connect(
+		func(items: Array[Dictionary]) -> void: corridor_records.assign(items),
+		CONNECT_ONE_SHOT)
+	generator.generate_from_blueprints(
+		LevelGenerator.Profile.block_corridor(), corridor_sources, 4, 0, 20260802)
+	while generator.is_running():
+		await process_frame
+	if corridor_records.is_empty():
+		print("BLOK KORIDORU RET: %s" % generator.describe_rejections())
+	_check("blok koridoru kurtarmadan solver adayi cikiyor",
+		corridor_records.is_empty(), false)
+	for record in corridor_records:
+		_check("blok koridoru en az iki tugla kullaniyor",
+			(record["level"] as LevelData).breakable_blocks.size() >= 2, true)
+		_check("blok koridoru cok atisli",
+			int(record["solver"]["solution_shots"]) in range(2, 5), true)
+		_check("blok koridoru kirik durum gerektiriyor",
+			int(record["solver"]["broken_state"]) != 0, true)
 	var crowded_level := original.duplicate(true) as LevelData
 	var crowded_panel := PanelData.new()
 	crowded_panel.position = crowded_level.target_position

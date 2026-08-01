@@ -63,6 +63,11 @@ func _route_contribution(level: LevelData, solver: Dictionary, template_id: Stri
 			return 1.0 if int(solver.get("route_clusters", 1)) >= 2 else 0.35
 		"safe_block_route", "multi_shot":
 			return 1.0 if not level.breakable_blocks.is_empty() and opened > robust else 0.0
+		"ricochet_chain":
+			return 1.0 if int(solver.get("bounces", 0)) >= 5 else 0.0
+		"block_corridor":
+			return 1.0 if (int(solver.get("solution_shots", 0)) >= 2
+				and int(solver.get("broken_state", 0)) != 0) else 0.0
 		"block_free_mastery":
 			return 1.0 if bool(solver.get("block_free", false)) else 0.0
 		_:

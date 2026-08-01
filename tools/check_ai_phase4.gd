@@ -60,6 +60,16 @@ func _test_mobile_form() -> void:
 		_check("tasarim notu pano dugmeleri",
 			ai_page.find_child("PasteDesignNote", true, false) != null
 			and ai_page.find_child("CopyDesignNote", true, false) != null, true)
+		var form_script := form as AIGenerationForm
+		var template := form_script.get("_template") as OptionButton
+		var mechanics: Dictionary = form_script.get("_mechanics")
+		for option_index in template.item_count:
+			if String(template.get_item_metadata(option_index)) == "block_corridor":
+				template.select(option_index)
+				form_script.call("_on_template_selected", option_index)
+				break
+		_check("blok koridoru secimi blogu etkinlestiriyor",
+			(mechanics["breakable_block"] as CheckBox).button_pressed, true)
 		form.call("_apply_paste", "api_key", "  sk-or-test\r\n")
 		_check("API key panodan temiz tek satir alinir",
 			(ai_page.get_node("APIKey") as LineEdit).text, "sk-or-test")

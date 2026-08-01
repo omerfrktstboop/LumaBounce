@@ -47,6 +47,29 @@ func _test_contract_and_request() -> void:
 		String(messages[0]["content"]).contains("hedefe 190 px"), true)
 	_check("prompt zorluk sozlesmesi veriyor",
 		String(messages[1]["content"]).contains("tek ana sektiriciyle"), true)
+	_check("yeni sablonlar sozlesmede",
+		"ricochet_chain" in AILevelContract.TEMPLATE_IDS
+			and "block_corridor" in AILevelContract.TEMPLATE_IDS, true)
+	var corridor_messages := AILevelPromptBuilder.build_messages({
+		"template": "block_corridor",
+		"difficulty": "hard",
+		"mechanics": PackedStringArray(["breakable_block"]),
+	}, 3)
+	_check("blok koridoru promptu zorunlu ilerleme istiyor",
+		String(corridor_messages[0]["content"]).contains("2-4 atislik"), true)
+	_check("blok koridorunda eski opsiyonel blok talimati yok",
+		String(corridor_messages[0]["content"]).contains("hepsini kirmak zorunlu olmamali"), false)
+	_check("blok koridoru eski blocksuz zorluk metnini almiyor",
+		String(corridor_messages[1]["content"]).contains("blocksuz/paneller"), false)
+	var chain_messages := AILevelPromptBuilder.build_messages({
+		"template": "ricochet_chain",
+		"difficulty": "hard",
+		"mechanics": PackedStringArray(["panel"]),
+	}, 3)
+	_check("sekme zinciri zorlugu uzun rota istiyor",
+		String(chain_messages[1]["content"]).contains("6-9 kontrollu sekme"), true)
+	_check("sekme zinciri eski 1-2 sekme metnini almiyor",
+		String(chain_messages[1]["content"]).contains("1-2 sekmeli"), false)
 	var headers := client.build_headers("secret-test-key")
 	_check("authorization olusuyor", headers[0], "Authorization: Bearer secret-test-key")
 	_check("prompt anahtari icermiyor", JSON.stringify(messages).contains("secret-test-key"), false)
@@ -94,6 +117,14 @@ func _test_settings() -> void:
 	var disk_text := FileAccess.get_file_as_string(SETTINGS_PATH)
 	_check("model saklaniyor", settings.load_values()["model_slug"], "vendor/model")
 	_check("remember false key yazmiyor", disk_text.contains("must-not-reach-disk"), false)
+	values["template"] = "ricochet_chain"
+	values["mechanics"] = PackedStringArray()
+	_check("sekme zinciri paneli zorunlu kiliyor",
+		settings.sanitize(values)["mechanics"].has("panel"), true)
+	values["template"] = "block_corridor"
+	values["mechanics"] = PackedStringArray(["panel"])
+	_check("blok koridoru kirilabilir blok ekliyor",
+		settings.sanitize(values)["mechanics"].has("breakable_block"), true)
 	values["remember_api_key"] = true
 	settings.save_values(values, "local-key")
 	_check("acik onayla key yerel kayitta", settings.load_values()["api_key"], "local-key")

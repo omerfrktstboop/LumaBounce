@@ -65,6 +65,23 @@ func _test_quality_and_ranking() -> void:
 	}]
 	_check("iki rota sablonu solver kumesi olmadan eleniyor",
 		coordinator.rank_records(no_two_routes, {"template": "two_routes"}, []).size(), 0)
+	_check("sekme zinciri kisa rota ile eleniyor",
+		coordinator.rank_records(no_two_routes, {"template": "ricochet_chain"}, []).size(), 0)
+	var corridor_level := high.duplicate(true) as LevelData
+	corridor_level.breakable_blocks.append(_block(Vector2(160, 580)))
+	var corridor_records: Array[Dictionary] = [{
+		"level": corridor_level,
+		"solver": {
+			"ok": true, "robust": 12, "bounces": 1, "opened_robust": 12,
+			"block_free": false, "solution_shots": 3, "broken_state": 1,
+		},
+	}]
+	_check("blok koridoru cok atis metriğiyle kabul ediliyor",
+		coordinator.rank_records(
+			corridor_records, {"template": "block_corridor"}, []).size(), 1)
+	var corridor_quality := quality.score(
+		corridor_level, corridor_records[0]["solver"], neutral_novelty, "block_corridor")
+	_check("blok koridoru rota puani aliyor", corridor_quality["breakdown"]["route"], 10)
 	root.remove_child(coordinator)
 	coordinator.free()
 

@@ -155,6 +155,66 @@ func scan_async(spawn: Vector2, target_position: Vector2, play_rect: Rect2,
 	return state
 
 
+## Kirilabilir bloklarin atislar arasinda kirik kaldigi durum uzayini tarar.
+## Sonuclar, hedefe ulasan atis sayisini ve o atistan once kirik blok maskesini
+## tasir. Uretici ve test araclari ayni cok atisli fizik modelini kullanabilir.
+func search_block_states_async(spawn: Vector2, target_position: Vector2,
+		play_rect: Rect2, max_shots: int, angle_step: float, power_step: float,
+		max_states := 48, sims_per_frame := 120,
+		cancel_check := Callable()) -> Dictionary:
+	var frontier: Array[int] = [0]
+	var seen := {0: true}
+	var solutions: Array[Dictionary] = []
+	var states_visited := 0
+	var simulations := 0
+
+	for depth in maxi(max_shots, 1):
+		var next_frontier: Array[int] = []
+		for state in frontier:
+			if states_visited >= maxi(max_states, 1):
+				break
+			states_visited += 1
+			var scan := await scan_async(
+				spawn, target_position, play_rect, _rids_for_state(state),
+				angle_step, power_step, sims_per_frame, cancel_check)
+			simulations += int(scan["total"])
+			if bool(scan.get("cancelled", false)):
+				return {
+					"cancelled": true, "solutions": solutions,
+					"states_visited": states_visited, "sims": simulations,
+				}
+			if int(scan["hit_count"]) > 0:
+				solutions.append({
+					"shots": depth + 1,
+					"state": state,
+					"scan": scan,
+					"analysis": analyse_robust(scan),
+				})
+			var reached: Dictionary = scan["reached"]
+			for raw_mask in reached:
+				var mask := state | int(raw_mask)
+				if mask == state or seen.has(mask):
+					continue
+				seen[mask] = true
+				next_frontier.append(mask)
+		if next_frontier.is_empty() or states_visited >= maxi(max_states, 1):
+			break
+		frontier = next_frontier
+
+	return {
+		"cancelled": false, "solutions": solutions,
+		"states_visited": states_visited, "sims": simulations,
+	}
+
+
+func _rids_for_state(state: int) -> Array[RID]:
+	var excluded: Array[RID] = []
+	for rid in _block_index:
+		if state & (1 << int(_block_index[rid])) != 0:
+			excluded.append(rid)
+	return excluded
+
+
 func _create_scan_state(angle_step: float, power_step: float) -> Dictionary:
 	var angles := build_angles(angle_step)
 	var powers := build_powers(power_step)
@@ -310,6 +370,67 @@ static func analyse_solution_clusters(scan_result: Dictionary) -> Array[Dictiona
 	return clusters
 
 
+## Uzun sekme zincirlerinde dort-komsunun TAMAMINI istemek, her sekmede
+## buyuyen kucuk farklar yuzunden oynanabilir rotalari da sifirlar. Bu analiz
+## isabetleri bitisik aci/guc kumelerine ayirir; kabul esigini profil belirler.
+static func analyse_bounce_band(scan_result: Dictionary,
+		min_bounces: int, max_bounces: int) -> Dictionary:
+	var desired := _bounce_clusters(scan_result, min_bounces, max_bounces)
+	var shortcuts := _bounce_clusters(scan_result, 0, min_bounces - 1)
+	return {
+		"clusters": desired,
+		"largest_cluster": int(desired[0]["cells"]) if not desired.is_empty() else 0,
+		"shortcut_clusters": shortcuts,
+		"largest_shortcut": int(shortcuts[0]["cells"]) if not shortcuts.is_empty() else 0,
+	}
+
+
+static func _bounce_clusters(scan_result: Dictionary,
+		min_bounces: int, max_bounces: int) -> Array[Dictionary]:
+	if max_bounces < min_bounces:
+		return []
+	var angles: Array[float] = scan_result["angles"]
+	var powers: Array[float] = scan_result["powers"]
+	var hits: Array = scan_result["hits"]
+	var bounce_counts: Array = scan_result["bounces"]
+	var visited := {}
+	var clusters: Array[Dictionary] = []
+	var offsets: Array[Vector2i] = [
+		Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
+	for ai in angles.size():
+		for pi in powers.size():
+			var key := ai * powers.size() + pi
+			var bounce_count := int(bounce_counts[ai][pi])
+			if (visited.has(key) or not bool(hits[ai][pi])
+					or bounce_count < min_bounces or bounce_count > max_bounces):
+				continue
+			var queue: Array[Vector2i] = [Vector2i(ai, pi)]
+			var cells: Array[Vector2i] = []
+			visited[key] = true
+			while not queue.is_empty():
+				var cell: Vector2i = queue.pop_front()
+				cells.append(cell)
+				for offset in offsets:
+					var neighbour := cell + offset
+					if (neighbour.x < 0 or neighbour.x >= angles.size()
+							or neighbour.y < 0 or neighbour.y >= powers.size()):
+						continue
+					var neighbour_key := neighbour.x * powers.size() + neighbour.y
+					var neighbour_bounces := int(bounce_counts[neighbour.x][neighbour.y])
+					if (visited.has(neighbour_key) or not bool(hits[neighbour.x][neighbour.y])
+							or neighbour_bounces < min_bounces
+							or neighbour_bounces > max_bounces):
+						continue
+					visited[neighbour_key] = true
+					queue.append(neighbour)
+			var described := _describe_cluster(cells, angles, powers, bounce_counts)
+			described["cells"] = cells.size()
+			clusters.append(described)
+	clusters.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return int(a["cells"]) > int(b["cells"]))
+	return clusters
+
+
 static func _is_robust_cell(hits: Array, ai: int, pi: int) -> bool:
 	return (hits[ai][pi] and hits[ai - 1][pi] and hits[ai + 1][pi]
 		and hits[ai][pi - 1] and hits[ai][pi + 1])
@@ -362,10 +483,12 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 	var ignored := excluded.duplicate()
 	var broke_this_frame: Array[RID] = []
 	var trace_points := PackedVector2Array()
+	var trace_bounces := PackedInt32Array()
 	var collision_points: Array[Dictionary] = []
 	var broken_order := PackedInt32Array()
 	if capture_trace:
 		trace_points.append(pos)
+		trace_bounces.append(0)
 
 	for frame_index in MAX_FRAMES:
 		vel.y += gravity * dt
@@ -396,6 +519,7 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 					broke_this_frame.append(rid)
 			if capture_trace:
 				trace_points.append(collision_position)
+				trace_bounces.append(bounces)
 				collision_points.append({
 					"position": collision_position,
 					"normal": normal,
@@ -416,30 +540,32 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 				ignored.append(rid)
 		if capture_trace and frame_index % 3 == 0:
 			trace_points.append(pos)
+			trace_bounces.append(bounces)
 
 		# Hedef algilamasi Area2D gibi kare sonunda yapilir.
 		if _circle_hits_target(pos, target_position, target_half):
 			return _simulation_result(true, "", bounces, broken, pos,
-				trace_points, collision_points, broken_order, capture_trace)
+				trace_points, trace_bounces, collision_points, broken_order, capture_trace)
 
 		if vel.length() < settle_speed:
 			settle_timer += dt
 			if settle_timer >= settle_time:
 				return _simulation_result(false, "settled", bounces, broken, pos,
-					trace_points, collision_points, broken_order, capture_trace)
+					trace_points, trace_bounces, collision_points, broken_order, capture_trace)
 		else:
 			settle_timer = 0.0
 
 		if not bounds.has_point(pos):
 			return _simulation_result(false, "oob", bounces, broken, pos,
-				trace_points, collision_points, broken_order, capture_trace)
+				trace_points, trace_bounces, collision_points, broken_order, capture_trace)
 
 	return _simulation_result(false, "timeout", bounces, broken, pos,
-		trace_points, collision_points, broken_order, capture_trace)
+		trace_points, trace_bounces, collision_points, broken_order, capture_trace)
 
 
 func _simulation_result(hit: bool, reason: String, bounces: int, broken: int,
 		end_position: Vector2, trace_points: PackedVector2Array,
+		trace_bounces: PackedInt32Array,
 		collision_points: Array[Dictionary], broken_order: PackedInt32Array,
 		capture_trace: bool) -> Dictionary:
 	var result := {"hit": hit, "bounces": bounces, "broken": broken}
@@ -448,7 +574,9 @@ func _simulation_result(hit: bool, reason: String, bounces: int, broken: int,
 	if capture_trace:
 		if trace_points.is_empty() or trace_points[-1].distance_to(end_position) > 0.5:
 			trace_points.append(end_position)
+			trace_bounces.append(bounces)
 		result["trace_points"] = trace_points
+		result["trace_bounces"] = trace_bounces
 		result["collision_points"] = collision_points
 		result["broken_order"] = broken_order
 		result["target_hit_position"] = end_position if hit else Vector2.ZERO
