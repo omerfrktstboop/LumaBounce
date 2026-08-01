@@ -27,6 +27,12 @@ const FINE_POWER_STEP := 100.0
 const COARSE_MIN_HITS := 2
 ## Arayuzun donmamasi icin bu kadar simulasyondan sonra bir kare beklenir.
 const SIMS_PER_FRAME := 120
+## AI varyasyonlari ayni kucuk komsuluga yigilirsa kotu bir blueprint'in 10+
+## kopyasi da ayni nedenle elenir. Dortlu kademeler ince -> orta -> genis
+## arama yapar; filtre esikleri degismez.
+const VARIATION_TIER_SIZE := 4
+const MAX_VARIATION_SCALE := 3.0
+const ANCHOR_CLEARANCE := 14.0
 
 ## Bir aday uretildi (kabul veya ret). [param accepted] kabul edildiyse true.
 signal candidate_evaluated(tried: int, accepted: int)
@@ -55,6 +61,7 @@ class Profile extends RefCounted:
 	var panel_count := Vector2i(1, 2)
 	var block_count := Vector2i(0, 1)
 	var max_lives := 4
+	var target_y_range := Vector2(235.0, 345.0)
 	## Blok varsa bloksuz rota da bulunmali (bkz. verifier tasarim sozlesmesi).
 	var require_block_free_route := true
 
@@ -68,6 +75,7 @@ class Profile extends RefCounted:
 		p.panel_count = Vector2i(1, 1)
 		p.block_count = Vector2i(0, 0)
 		p.max_lives = 5
+		p.target_y_range = Vector2(340.0, 460.0)
 		return p
 
 	## Rastgele dagilimin ortasi: cozulebilir ama dusunmek gerekir.
@@ -79,6 +87,7 @@ class Profile extends RefCounted:
 		p.max_bounces = 2
 		p.panel_count = Vector2i(1, 2)
 		p.block_count = Vector2i(0, 1)
+		p.target_y_range = Vector2(235.0, 345.0)
 		return p
 
 	## 21-25'in ustalik rotalari bandi: dar ama piksel hassasiyeti degil.
@@ -91,6 +100,7 @@ class Profile extends RefCounted:
 		p.max_bounces = 4
 		p.panel_count = Vector2i(2, 3)
 		p.block_count = Vector2i(1, 2)
+		p.target_y_range = Vector2(225.0, 320.0)
 		return p
 
 	## Bloklu bolumler ayrica "kirmak rotayi kolaylastirmali" testinden gecer,
@@ -103,6 +113,7 @@ class Profile extends RefCounted:
 		p.max_bounces = 3
 		p.panel_count = Vector2i(1, 2)
 		p.block_count = Vector2i(1, 3)
+		p.target_y_range = Vector2(245.0, 360.0)
 		return p
 
 var _solver: LevelSolver
@@ -222,7 +233,7 @@ func generate_from_blueprints(profile: Profile, blueprints: Array, wanted: int,
 		_rng.randomize()
 		effective_seed = _rng.randi()
 	var candidates := build_blueprint_variations(
-		blueprints, clampi(variations_per_blueprint, 0, 30), effective_seed)
+		blueprints, clampi(variations_per_blueprint, 0, 30), effective_seed, profile)
 	var accepted_levels: Array[LevelData] = []
 	var accepted_records: Array[Dictionary] = []
 	var tried := 0
@@ -260,7 +271,7 @@ func generate_from_blueprints(profile: Profile, blueprints: Array, wanted: int,
 
 ## Testler ve coordinator icin saf/deterministik varyasyon adimi. Fizik yoktur.
 func build_blueprint_variations(blueprints: Array, variations_per_blueprint: int,
-		seed_value: int) -> Array[Dictionary]:
+		seed_value: int, profile: Profile = null) -> Array[Dictionary]:
 	var records: Array[Dictionary] = []
 	var sources: Array[Dictionary] = []
 	for i in blueprints.size():
@@ -269,16 +280,23 @@ func build_blueprint_variations(blueprints: Array, variations_per_blueprint: int
 			sources.append(source)
 	for source in sources:
 		var original := source.duplicate(true)
-		original["level"] = (source["level"] as LevelData).duplicate(true)
+		var original_level := (source["level"] as LevelData).duplicate(true)
+		_repair_anchor_clearance(
+			original_level, seed_value + int(source["blueprint_index"]) * 1000003)
+		original["level"] = original_level
 		original["variation_seed"] = 0
+		original["variation_scale"] = 0.0
 		records.append(original)
 	for variation_index in clampi(variations_per_blueprint, 0, 30):
 		for source in sources:
 			var blueprint_index := int(source["blueprint_index"])
 			var variation_seed := seed_value + blueprint_index * 1000003 + (variation_index + 1) * 9176
+			var variation_scale := _variation_scale(variation_index)
 			var varied := source.duplicate(true)
-			varied["level"] = _vary_level(source["level"], variation_seed)
+			varied["level"] = _vary_level(
+				source["level"], variation_seed, variation_scale, profile)
 			varied["variation_seed"] = variation_seed
+			varied["variation_scale"] = variation_scale
 			records.append(varied)
 	return records
 
@@ -293,41 +311,132 @@ func _normalize_blueprint(value: Variant, fallback_index: int) -> Dictionary:
 	return {}
 
 
-func _vary_level(source: LevelData, variation_seed: int) -> LevelData:
+func _variation_scale(variation_index: int) -> float:
+	return minf(
+		1.0 + floorf(float(variation_index) / float(VARIATION_TIER_SIZE)),
+		MAX_VARIATION_SCALE)
+
+
+func _vary_level(source: LevelData, variation_seed: int, scale: float,
+		profile: Profile) -> LevelData:
 	var level := source.duplicate(true) as LevelData
 	var rng := RandomNumberGenerator.new()
 	rng.seed = variation_seed
 	level.target_position = Vector2(
-		clampf(level.target_position.x + rng.randf_range(-25.0, 25.0), 80.0, 640.0),
-		clampf(level.target_position.y + rng.randf_range(-25.0, 25.0), 180.0, 560.0))
+		clampf(level.target_position.x + rng.randf_range(-25.0, 25.0) * scale, 80.0, 640.0),
+		clampf(level.target_position.y + rng.randf_range(-25.0, 25.0) * scale, 180.0, 560.0))
 	for panel in level.panels:
 		panel.position = Vector2(
-			clampf(panel.position.x + rng.randf_range(-40.0, 40.0), 60.0, 660.0),
-			clampf(panel.position.y + rng.randf_range(-40.0, 40.0), 180.0, 1080.0))
+			clampf(panel.position.x + rng.randf_range(-40.0, 40.0) * scale, 60.0, 660.0),
+			clampf(panel.position.y + rng.randf_range(-40.0, 40.0) * scale, 180.0, 1080.0))
 		panel.rotation_degrees = clampf(
-			panel.rotation_degrees + rng.randf_range(-6.0, 6.0), -80.0, 80.0)
-		panel.length = clampf(panel.length + rng.randf_range(-40.0, 40.0), 140.0, 420.0)
+			panel.rotation_degrees + rng.randf_range(-6.0, 6.0) * scale, -80.0, 80.0)
+		panel.length = clampf(
+			panel.length + rng.randf_range(-40.0, 40.0) * scale, 140.0, 420.0)
 	for block in level.breakable_blocks:
 		block.position = Vector2(
-			clampf(block.position.x + rng.randf_range(-35.0, 35.0), 60.0, 660.0),
-			clampf(block.position.y + rng.randf_range(-35.0, 35.0), 180.0, 1080.0))
-		block.size.x = clampf(block.size.x + rng.randf_range(-30.0, 30.0), 120.0, 360.0)
-	_vary_wall(level.left_wall_segments, rng)
-	_vary_wall(level.right_wall_segments, rng)
+			clampf(block.position.x + rng.randf_range(-35.0, 35.0) * scale, 60.0, 660.0),
+			clampf(block.position.y + rng.randf_range(-35.0, 35.0) * scale, 180.0, 1080.0))
+		block.size.x = clampf(
+			block.size.x + rng.randf_range(-30.0, 30.0) * scale, 120.0, 360.0)
+	_vary_wall(level.left_wall_segments, rng, scale)
+	_vary_wall(level.right_wall_segments, rng, scale)
+	if scale >= MAX_VARIATION_SCALE and profile != null:
+		# Son kademe, AI'nin ayni fizik kusurunu tasiyan yakin kopyalarina
+		# takilmak yerine zorluk icin kalibre edilmis hedef bandini tarar.
+		level.target_position = Vector2(
+			rng.randf_range(145.0, 575.0),
+			rng.randf_range(profile.target_y_range.x, profile.target_y_range.y))
+	_repair_anchor_clearance(level, variation_seed + 48611)
 	return level
 
 
-func _vary_wall(segments: Array[Vector2], rng: RandomNumberGenerator) -> void:
+func _vary_wall(segments: Array[Vector2], rng: RandomNumberGenerator, scale: float) -> void:
 	if segments.size() != 2:
 		return
-	var top := clampf(segments[0].y + rng.randf_range(-40.0, 40.0), 120.0, 1064.0)
-	var bottom := clampf(segments[1].x + rng.randf_range(-40.0, 40.0), top + 96.0, 1160.0)
+	var top := clampf(
+		segments[0].y + rng.randf_range(-40.0, 40.0) * scale, 120.0, 1064.0)
+	var bottom := clampf(
+		segments[1].x + rng.randf_range(-40.0, 40.0) * scale, top + 96.0, 1160.0)
 	var upper := segments[0]
 	var lower := segments[1]
 	upper.y = top
 	lower.x = bottom
 	segments[0] = upper
 	segments[1] = lower
+
+
+func _repair_anchor_clearance(level: LevelData, repair_seed: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = repair_seed
+	var occupied: Array[Dictionary] = []
+	for panel in level.panels:
+		var size := Vector2(panel.length, panel.thickness)
+		panel.position = _clear_obstacle_position(
+			panel.position, size, panel.rotation_degrees, level, occupied,
+			Rect2(130.0, 460.0, 460.0, 470.0), rng)
+		occupied.append({"position": panel.position, "radius": panel.length * 0.32})
+	for block in level.breakable_blocks:
+		block.position = _clear_obstacle_position(
+			block.position, block.size, block.rotation_degrees, level, occupied,
+			Rect2(140.0, 420.0, 440.0, 480.0), rng)
+		occupied.append({"position": block.position, "radius": block.size.x * 0.32})
+
+
+func _clear_obstacle_position(initial: Vector2, size: Vector2, rotation_degrees: float,
+		level: LevelData, occupied: Array[Dictionary], bounds: Rect2,
+		rng: RandomNumberGenerator) -> Vector2:
+	if _obstacle_position_is_clear(
+			initial, size, rotation_degrees, level, occupied):
+		return initial
+	for _attempt in 16:
+		var candidate := Vector2(
+			rng.randf_range(bounds.position.x, bounds.end.x),
+			rng.randf_range(bounds.position.y, bounds.end.y))
+		if _obstacle_position_is_clear(
+				candidate, size, rotation_degrees, level, occupied):
+			return candidate
+	return initial
+
+
+func _obstacle_position_is_clear(position: Vector2, size: Vector2,
+		rotation_degrees: float, level: LevelData,
+		occupied: Array[Dictionary]) -> bool:
+	var spawn := (
+		_solver.spawn_position(level.launcher_position)
+		if _solver != null else level.launcher_position + Vector2.UP * 70.0)
+	var target_radius := (_solver.target_size * 0.5 if _solver != null else 46.0)
+	var ball_radius := (_solver.radius if _solver != null else 24.0)
+	if _circle_overlaps_rotated_rect(
+			level.target_position, target_radius + ANCHOR_CLEARANCE,
+			position, size, rotation_degrees):
+		return false
+	if _circle_overlaps_rotated_rect(
+			level.launcher_position, 60.0 + ANCHOR_CLEARANCE,
+			position, size, rotation_degrees):
+		return false
+	if _circle_overlaps_rotated_rect(
+			spawn, ball_radius + ANCHOR_CLEARANCE,
+			position, size, rotation_degrees):
+		return false
+	var radius := maxf(size.x, size.y) * 0.32
+	for other in occupied:
+		var minimum_distance := minf(
+			radius + float(other.get("radius", 0.0)) + 20.0, 180.0)
+		var other_position: Vector2 = other.get("position", Vector2.ZERO)
+		if position.distance_to(other_position) < minimum_distance:
+			return false
+	return true
+
+
+func _circle_overlaps_rotated_rect(circle: Vector2, radius: float,
+		rect_position: Vector2, rect_size: Vector2, rotation_degrees: float) -> bool:
+	var local_circle := (circle - rect_position).rotated(-deg_to_rad(rotation_degrees))
+	var half := rect_size * 0.5
+	var nearest := Vector2(
+		clampf(local_circle.x, -half.x, half.x),
+		clampf(local_circle.y, -half.y, half.y))
+	return local_circle.distance_squared_to(nearest) < radius * radius
 
 
 # --- Degerlendirme ------------------------------------------------------------

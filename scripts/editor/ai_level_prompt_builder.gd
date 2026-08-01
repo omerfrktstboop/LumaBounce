@@ -18,10 +18,10 @@ const TEMPLATE_RULES := {
 	"mini_final": "Ogrenilen mekanikleri birlestir; sansa veya kose hatasina dayanma.",
 }
 const DIFFICULTY_RULES := {
-	"easy": "1 panel, 0 blok, 0-1 sekme ve genis isabet penceresi.",
-	"medium": "1-2 panel, 0-1 blok, 0-2 sekme ve orta genislikte isabet penceresi.",
-	"hard": "2-3 panel, 1-2 blok, 1-4 sekme; yine de piksel hassasiyeti yok.",
-	"final": "2-3 panel, 1-2 blok ve 1-4 sekmeyle mekanikleri birlestir.",
+	"easy": "Hedef y=340..460; 1 panel, 0 blok, 0-1 sekme ve genis isabet penceresi.",
+	"medium": "Hedef y=235..345; 1-2 panel, 0-1 blok, 0-2 sekme ve orta genislikte isabet penceresi.",
+	"hard": "Hedef y=225..320; 2-3 panel, 1-2 blok ve 1-4 sekme. Dogrudan sifir-sekmeli rotayi geometriyle engelle; yine de piksel hassasiyeti isteme.",
+	"final": "Hedef y=225..320; 2-3 panel, 1-2 blok ve 1-4 sekmeyle mekanikleri birlestir. Dogrudan sifir-sekmeli rotayi engelle.",
 }
 
 

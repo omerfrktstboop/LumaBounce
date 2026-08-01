@@ -10,6 +10,7 @@ const MANIFEST_VERSION := 1
 const ALLOWED_FIELDS := [
 	"model_slug", "template", "difficulty", "user_design_note",
 	"generation_timestamp", "prompt_version", "blueprint_index", "variation_seed",
+	"variation_scale",
 	"robust_cells", "bounce_count", "opened_robust", "novelty_score", "quality_score",
 	"most_similar_level", "similarity_reasons", "design_intent", "usage",
 ]

@@ -143,9 +143,11 @@ func _on_physics_finished(records: Array[Dictionary]) -> void:
 		_on_cancelled()
 		return
 	if records.is_empty():
-		_finish_failed("LevelSolver filtrelerinden gecen aday bulunamadi.")
+		var rejections := _generator.describe_rejections()
+		_finish_failed("LevelSolver filtrelerinden gecen aday bulunamadi. Eleme: %s" % rejections)
 		return
-	status_changed.emit("Yenilik ve kalite puanlari hesaplaniyor...")
+	status_changed.emit(
+		"%d fizik adayi bulundu. Yenilik ve kalite puanlari hesaplaniyor..." % records.size())
 	var ranked := rank_records(records, _request, _novelty.default_references())
 	var wanted := int(_request["candidate_count"])
 	if ranked.size() > wanted:
@@ -182,6 +184,7 @@ func _build_metadata(record: Dictionary) -> Dictionary:
 		"prompt_version": AILevelContract.PROMPT_VERSION,
 		"blueprint_index": int(record.get("blueprint_index", 0)),
 		"variation_seed": int(record.get("variation_seed", 0)),
+		"variation_scale": float(record.get("variation_scale", 0.0)),
 		"robust_cells": int(solver.get("robust", 0)),
 		"bounce_count": int(solver.get("bounces", 0)),
 		"opened_robust": int(solver.get("opened_robust", 0)),

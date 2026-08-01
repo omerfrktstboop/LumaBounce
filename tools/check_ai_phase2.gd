@@ -65,6 +65,26 @@ func _test_variations_and_solver() -> void:
 		(first[1]["level"] as LevelData).panels[0].position,
 		(second[1]["level"] as LevelData).panels[0].position)
 	_check("varyasyon seed kayitli", int(first[1]["variation_seed"]) != 0, true)
+	var tiered := generator.build_blueprint_variations([blueprint], 12, 4242)
+	_check("ilk varyasyon ince arama", float(tiered[1]["variation_scale"]), 1.0)
+	_check("orta varyasyon orta arama", float(tiered[5]["variation_scale"]), 2.0)
+	_check("son varyasyon genis arama", float(tiered[9]["variation_scale"]), 3.0)
+	var guided := generator.build_blueprint_variations(
+		[blueprint], 12, 4242, LevelGenerator.Profile.medium())
+	var guided_target: Vector2 = (guided[9]["level"] as LevelData).target_position
+	_check("genis arama hedefi orta profil bandinda",
+		guided_target.y >= 235.0 and guided_target.y <= 345.0, true)
+	var crowded_level := original.duplicate(true) as LevelData
+	var crowded_panel := PanelData.new()
+	crowded_panel.position = crowded_level.target_position
+	crowded_panel.length = 320.0
+	crowded_panel.thickness = 26.0
+	crowded_level.panels = [crowded_panel]
+	var repaired := generator.build_blueprint_variations(
+		[{"level": crowded_level, "blueprint_index": 0}], 0, 991)
+	var repaired_level: LevelData = repaired[0]["level"]
+	_check("hedefle cakisan AI paneli onariliyor",
+		repaired_level.panels[0].position != repaired_level.target_position, true)
 
 	var produced: Array[LevelData] = []
 	var records: Array[Dictionary] = []
