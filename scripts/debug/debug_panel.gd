@@ -16,6 +16,7 @@ signal next_level_requested()
 signal restart_level_requested()
 signal unlock_all_toggled(enabled: bool)
 signal reset_stats_requested()
+signal editor_requested()
 
 ## Uc parmagin ayni anda basili kaldigi andan tum parmaklarin kalkmasina
 ## kadar gecen sure bunun altindaysa "kisa dokunma" sayilir.
@@ -48,6 +49,7 @@ func _ready() -> void:
 	$Panel/Margin/Rows/ActionRow/RestartButton.pressed.connect(restart_level_requested.emit)
 	_unlock_button.pressed.connect(_on_unlock_all_pressed)
 	$Panel/Margin/Rows/ToolRow/ResetStatsButton.pressed.connect(reset_stats_requested.emit)
+	$Panel/Margin/Rows/EditorButton.pressed.connect(editor_requested.emit)
 
 
 func _process(_delta: float) -> void:

@@ -21,6 +21,9 @@ extends Node
 @export var main_menu_scene: PackedScene
 @export var level_select_scene: PackedScene
 @export var gameplay_scene: PackedScene
+## Yalnizca debug build'de acilir (bkz. _on_debug_editor_requested); release
+## export'ta debug paneli var olmadigi icin bu ekrana giden yol yoktur.
+@export var level_editor_scene: PackedScene
 @export var fade_time := 0.28
 @export var fade_color := Palette.INK_TOP
 
@@ -36,6 +39,9 @@ var _current: Node
 ## Son go_to_level cagrisinda istenen bolum. Debug onceki/sonraki/tekrar
 ## butonlari icin tutulur.
 var _current_level_id := LevelLibrary.FIRST_LEVEL_ID
+## Editorden test edilen bolum. Oynanistan cikildiginda editore ayni veriyle
+## donebilmek icin tutulur; kaydedilmemis duzenleme kaybolmaz.
+var _editor_level: LevelData
 var _busy := false
 
 
@@ -171,7 +177,15 @@ func _connect_screen(screen: Node) -> void:
 		gameplay.level_completed.connect(_on_level_completed)
 		gameplay.next_level_requested.connect(go_to_level)
 		gameplay.level_select_requested.connect(go_to_level_select)
-		gameplay.menu_requested.connect(go_to_main_menu)
+		# Editorden test edildiyse "menu" tusu editore geri doner; yoksa
+		# tasarladigin bolumu terk etmek icin tek yol kaydetmek olurdu.
+		gameplay.menu_requested.connect(_on_gameplay_menu_requested)
+		return
+
+	var editor := screen as LevelEditor
+	if editor != null:
+		editor.test_requested.connect(_on_editor_test_requested)
+		editor.menu_requested.connect(_on_editor_closed)
 
 
 func _configure_main_menu(screen: Node) -> void:
@@ -198,8 +212,56 @@ func _configure_gameplay(screen: Node, level_id: int) -> void:
 ## Kazanilan yildiz yalnizca oncekinden IYIYSE kaydedilir; eski 3, yeni 1
 ## ise kayit 3 kalir (bkz. ProgressStore.set_level_stars_if_higher).
 func _on_level_completed(level_id: int, stars: int) -> void:
+	# Editorden test edilen bolum gercek ilerlemeye YAZILMAZ; henuz oyunun
+	# bir parcasi degil ve kaydi kirletmesi anlamsiz olurdu.
+	if _editor_level != null:
+		return
 	_progress.mark_completed(level_id)
 	_progress.set_level_stars_if_higher(level_id, stars)
+
+
+func _on_gameplay_menu_requested() -> void:
+	if _editor_level != null:
+		go_to_editor(_editor_level)
+		return
+	go_to_main_menu()
+
+
+# --- Bolum editoru (yalnizca debug) -------------------------------------------
+#
+# Ayri bir "admin" yapisi yok: bu ekrana giden tek yol debug panelidir, o da
+# release export'ta kendini agactan siler. Editor ekrani release APK'da
+# bulunur ama ulasilamaz.
+
+func go_to_editor(edit_level: LevelData = null) -> void:
+	_editor_level = edit_level
+	await _transition(level_editor_scene, _configure_editor)
+
+
+func _configure_editor(screen: Node) -> void:
+	var editor := screen as LevelEditor
+	if editor != null and _editor_level != null:
+		editor.level = _editor_level
+
+
+## Editordeki bolumu oynatir. Kopya DEGIL ayni kaynak verilir: test sirasinda
+## bolum degismez, ve geri donuldugunde duzenleme aynen durur.
+func _on_editor_test_requested(edit_level: LevelData) -> void:
+	_editor_level = edit_level
+	await _transition(gameplay_scene, _configure_editor_gameplay)
+
+
+func _configure_editor_gameplay(screen: Node) -> void:
+	var gameplay := screen as Gameplay
+	if gameplay != null:
+		gameplay.level_data = _editor_level
+		gameplay.playtest_stats = _playtest_stats
+		gameplay.progress = _progress
+
+
+func _on_editor_closed() -> void:
+	_editor_level = null
+	go_to_main_menu()
 
 
 # --- Geri tusu ---------------------------------------------------------------
@@ -213,9 +275,18 @@ func _handle_go_back() -> void:
 		splash.skip()
 		return
 
+	var editor := _current as LevelEditor
+	if editor != null:
+		_on_editor_closed()
+		return
+
 	var gameplay := _current as Gameplay
 	if gameplay != null:
-		go_to_level_select()
+		# Editorden test ediliyorsa geri tusu de editore doner.
+		if _editor_level != null:
+			go_to_editor(_editor_level)
+		else:
+			go_to_level_select()
 		return
 
 	var select := _current as LevelSelect
@@ -241,6 +312,7 @@ func _connect_debug_panel() -> void:
 	_debug_panel.restart_level_requested.connect(_on_debug_restart_level)
 	_debug_panel.unlock_all_toggled.connect(_on_debug_unlock_all_toggled)
 	_debug_panel.reset_stats_requested.connect(_on_debug_reset_stats)
+	_debug_panel.editor_requested.connect(_on_debug_editor_requested)
 
 
 func _on_debug_previous_level() -> void:
@@ -271,3 +343,10 @@ func _on_debug_unlock_all_toggled(enabled: bool) -> void:
 func _on_debug_reset_stats() -> void:
 	if _playtest_stats != null:
 		_playtest_stats.reset_all()
+
+
+func _on_debug_editor_requested() -> void:
+	if _current is LevelEditor:
+		return
+	# Bos bolumle acilir; editordeki "AC" ile kayitli bir bolum yuklenebilir.
+	go_to_editor()

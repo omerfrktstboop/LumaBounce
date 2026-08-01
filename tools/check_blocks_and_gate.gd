@@ -38,6 +38,9 @@ func _run() -> void:
 	_register_audio_manager()
 
 	await _test_block_state_rules()
+	await _test_custom_level_store()
+	await _test_generator()
+	await _test_editor()
 	await _test_star_row()
 	await _test_attempt_timer()
 	await _test_level_select()
@@ -134,6 +137,161 @@ func _first_block(field: BreakableField) -> BreakableBlock:
 		if block != null and not block.is_broken():
 			return block
 	return null
+
+
+# --- Editor kayit katmani -------------------------------------------------------
+#
+# Telefonda tasarlanan bolumun repoya donebilmesi bu iki seye baglidir:
+# kaydin geri YUKLENEBILMESI ve panoya konan metnin gecerli bir .tres olmasi.
+# Ikisi de sessizce bozulabilecek seyler.
+
+func _test_custom_level_store() -> void:
+	print("")
+	print("--- Editor kayit katmani ---")
+
+	var level := LevelData.new()
+	level.level_id = 7
+	level.display_name = "Test Bölümü"
+	level.launcher_position = Vector2(360, 1120)
+	level.target_position = Vector2(280, 340)
+	level.max_lives = 3
+
+	var panel := PanelData.new()
+	panel.position = Vector2(400, 700)
+	panel.rotation_degrees = -22.0
+	panel.length = 260.0
+	level.panels = [panel]
+
+	var block := BreakableBlockData.new()
+	block.position = Vector2(250, 560)
+	block.size = Vector2(200, 44)
+	level.breakable_blocks = [block]
+
+	var path := CustomLevelStore.save(level, "Sınama Bölümü 1")
+	_check("kaydedildi", not path.is_empty(), true)
+	_check("dosya adi temizlendi", path.get_file(), "sinama_bolumu_1.tres")
+	_check("kayit listede gorunuyor",
+		CustomLevelStore.list_names().has("sinama_bolumu_1"), true)
+
+	var loaded := CustomLevelStore.load_level("sinama_bolumu_1")
+	_check("geri yuklendi", loaded != null, true)
+	if loaded != null:
+		_check("panel korundu", loaded.panels.size(), 1)
+		_check("blok korundu", loaded.breakable_blocks.size(), 1)
+		_check("panel acisi korundu", loaded.panels[0].rotation_degrees, -22.0)
+		_check("blok boyutu korundu", loaded.breakable_blocks[0].size, Vector2(200, 44))
+		_check("hedef korundu", loaded.target_position, Vector2(280, 340))
+		_check("yuklenen bolum dogrulamadan geciyor", loaded.validate().size(), 0)
+
+	# Panoya konan metin, repoya yapistirilabilecek gecerli bir .tres olmali.
+	var text := CustomLevelStore.to_text(level)
+	_check("metin uretildi", not text.is_empty(), true)
+	_check("metin LevelData kaynagi", text.contains("script_class=\"LevelData\""), true)
+	_check("alt kaynaklar gomulu", text.contains("[sub_resource"), true)
+	_check("blok verisi metinde", text.contains("breakable_block_data.gd"), true)
+
+	CustomLevelStore.delete("sinama_bolumu_1")
+	_check("silindi", CustomLevelStore.list_names().has("sinama_bolumu_1"), false)
+
+
+# --- Uretec ----------------------------------------------------------------------
+#
+# Uretecin isi "oynanabilir aday bulmak". Kabul ettigi her bolum kendi
+# profilini SAGLAMALI - yoksa eleme islevini yitirir ve sadece rastgele
+# yerlesim uretir.
+
+func _test_generator() -> void:
+	print("")
+	print("--- Bolum ureteci ---")
+
+	var generator := LevelGenerator.new()
+	root.add_child(generator)
+	await process_frame
+
+	var profile := LevelGenerator.Profile.easy()
+	# assign() SART: GDScript lambda'lari degeri KOPYALAYARAK yakalar, bu
+	# yuzden lambda icinde `produced = levels` yazmak yalnizca lambda'nin
+	# kendi kopyasini degistirir ve disaridaki dizi bos kalir. Diziyi yerinde
+	# doldurmak gerekir.
+	var produced: Array[LevelData] = []
+	generator.finished.connect(func(levels: Array[LevelData]) -> void: produced.assign(levels))
+	# Sabit tohum: sonuc tekrarlanabilir olsun, test rastgele dalgalanmasin.
+	generator.generate(profile, 2, 120, 20240517)
+	while generator.is_running():
+		await process_frame
+
+	_check("uretec aday buldu", produced.size() > 0, true)
+	_check("eleme dokumu tutuluyor", generator.describe_rejections().is_empty(), false)
+
+	# Kabul edilen her bolum profili saglamali ve gecerli olmali.
+	var solver := LevelSolver.from_scenes()
+	var world := LevelWorld.new()
+	root.add_child(world)
+	for level in produced:
+		_check("uretilen bolum dogrulamadan geciyor", level.validate().size(), 0)
+		world.build(level)
+		await physics_frame
+		await physics_frame
+		solver.bind_space(world.get_space(), world.get_block_rids())
+		var none: Array[RID] = []
+		var scan := solver.scan(
+			solver.spawn_position(level.launcher_position), level.target_position,
+			world.get_play_rect(), none,
+			LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP)
+		var robust := int(LevelSolver.analyse_robust(scan)["robust"])
+		_check("uretilen bolum profili sagliyor (%d >= %d saglam hucre)" % [
+			robust, profile.min_robust], robust >= profile.min_robust, true)
+
+	root.remove_child(world)
+	world.free()
+	root.remove_child(generator)
+	generator.free()
+
+
+# --- Editor ekrani ----------------------------------------------------------------
+
+func _test_editor() -> void:
+	print("")
+	print("--- Bolum editoru ---")
+
+	# Tipsiz: LevelEditor adini anmadan yuklenir (bkz. dosya basindaki not).
+	var editor: Node = (load("res://scenes/level_editor.tscn") as PackedScene).instantiate()
+	if editor == null:
+		_fail("editor sahnesi yuklenemedi")
+		return
+	root.add_child(editor)
+	await process_frame
+
+	_check("bos bolumle aciliyor", editor.level != null, true)
+	var world := editor.get_node("World") as LevelWorld
+	_check("onizleme dunyasi kuruldu", world.get_child_count() > 0, true)
+
+	# Ekle -> onizlemede gercek govde belirmeli.
+	editor.call("_on_add_panel")
+	await process_frame
+	_check("panel eklendi", editor.level.panels.size(), 1)
+	_check("panel onizlemede", world.get_panel_node(0) != null, true)
+
+	editor.call("_on_add_block")
+	await process_frame
+	_check("blok eklendi", editor.level.breakable_blocks.size(), 1)
+	_check("blok onizlemede", world.get_block_node(0) != null, true)
+	_check("blok RID'i kayitli", world.get_block_count(), 1)
+
+	# Stepper'lar secili ogeyi degistirmeli.
+	var width_before: float = editor.level.breakable_blocks[0].size.x
+	editor.call("_on_tune", 1, 1)
+	_check("B+ blok genisligini artiriyor",
+		editor.level.breakable_blocks[0].size.x > width_before, true)
+
+	# Sil -> hem veriden hem onizlemeden.
+	editor.call("_on_delete")
+	await process_frame
+	_check("blok silindi", editor.level.breakable_blocks.size(), 0)
+	_check("blok onizlemeden kalkti", world.get_block_count(), 0)
+
+	root.remove_child(editor)
+	editor.free()
 
 
 # --- Yildiz satiri -------------------------------------------------------------

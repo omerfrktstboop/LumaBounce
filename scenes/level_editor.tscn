@@ -1,0 +1,339 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/editor/level_editor.gd" id="1_editor"]
+[ext_resource type="Script" path="res://scripts/levels/level_world.gd" id="2_world"]
+[ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="3_ink"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="4_safe_area"]
+[ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="5_button"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.09, 0.137, 0.227, 0.94)
+border_width_top = 2
+border_color = Color(0.227, 0.31, 0.463, 1)
+corner_radius_top_left = 22
+corner_radius_top_right = 22
+
+[node name="LevelEditor" type="Node2D"]
+script = ExtResource("1_editor")
+
+[node name="BackgroundLayer" type="CanvasLayer" parent="."]
+layer = -100
+
+[node name="Background" type="TextureRect" parent="BackgroundLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_ink")
+
+[node name="EditorCamera" type="Camera2D" parent="."]
+position = Vector2(360, 640)
+
+[node name="World" type="Node2D" parent="."]
+script = ExtResource("2_world")
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="SafeArea" type="MarginContainer" parent="HUD"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("4_safe_area")
+base_padding = Vector2(20, 20)
+
+[node name="Root" type="Control" parent="HUD/SafeArea"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TopBar" type="HBoxContainer" parent="HUD/SafeArea/Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 62.0
+grow_horizontal = 2
+theme_override_constants/separation = 10
+
+[node name="BackButton" type="Button" parent="HUD/SafeArea/Root/TopBar"]
+custom_minimum_size = Vector2(110, 58)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "GERİ"
+script = ExtResource("5_button")
+corner_radius = 18
+content_margin = Vector2(10, 6)
+
+[node name="Title" type="Label" parent="HUD/SafeArea/Root/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
+theme_override_font_sizes/font_size = 26
+text = "BÖLÜM EDİTÖRÜ"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OpenButton" type="Button" parent="HUD/SafeArea/Root/TopBar"]
+custom_minimum_size = Vector2(100, 58)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "AÇ"
+script = ExtResource("5_button")
+corner_radius = 18
+content_margin = Vector2(10, 6)
+
+[node name="CollapseButton" type="Button" parent="HUD/SafeArea/Root/TopBar"]
+custom_minimum_size = Vector2(70, 58)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "▾"
+script = ExtResource("5_button")
+corner_radius = 18
+content_margin = Vector2(6, 6)
+
+[node name="BottomPanel" type="PanelContainer" parent="HUD/SafeArea/Root"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -286.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Rows" type="VBoxContainer" parent="HUD/SafeArea/Root/BottomPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="InfoLabel" type="Label" parent="HUD/SafeArea/Root/BottomPanel/Rows"]
+custom_minimum_size = Vector2(0, 76)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.576471, 0.654902, 0.788235, 1)
+theme_override_font_sizes/font_size = 20
+text = "Bir öğeye dokun ya da yeni ekle"
+autowrap_mode = 2
+
+[node name="AddRow" type="HBoxContainer" parent="HUD/SafeArea/Root/BottomPanel/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AddPanel" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/AddRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "+ PANEL"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="AddBlock" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/AddRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "+ BLOK"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="CycleWall" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/AddRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "KENAR"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="DeleteItem" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/AddRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "SİL"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="TuneRow" type="HBoxContainer" parent="HUD/SafeArea/Root/BottomPanel/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AMinus" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/TuneRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "A −"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="APlus" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/TuneRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "A +"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="BMinus" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/TuneRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "B −"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="BPlus" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/TuneRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "B +"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="ActionRow" type="HBoxContainer" parent="HUD/SafeArea/Root/BottomPanel/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TestButton" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ActionRow"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "TEST"
+script = ExtResource("5_button")
+emphasis = 0
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="AnalyseButton" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ActionRow"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "ANALİZ"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="GenerateButton" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ActionRow"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "ÜRET"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="SaveButton" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ActionRow"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 21
+text = "KAYDET"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(6, 6)
+
+[node name="Modal" type="Control" parent="HUD"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scrim" type="ColorRect" parent="HUD/Modal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.090196, 0.137255, 0.227451, 0.9)
+
+[node name="Card" type="MarginContainer" parent="HUD/Modal"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 80
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 80
+
+[node name="Rows" type="VBoxContainer" parent="HUD/Modal/Card"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="HUD/Modal/Card/Rows"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
+theme_override_font_sizes/font_size = 30
+text = "BÖLÜM ÜRET"
+horizontal_alignment = 1
+
+[node name="Status" type="Label" parent="HUD/Modal/Card/Rows"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.576471, 0.654902, 0.788235, 1)
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="HUD/Modal/Card/Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="List" type="VBoxContainer" parent="HUD/Modal/Card/Rows/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="CloseButton" type="Button" parent="HUD/Modal/Card/Rows"]
+custom_minimum_size = Vector2(0, 70)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 24
+text = "KAPAT"
+script = ExtResource("5_button")

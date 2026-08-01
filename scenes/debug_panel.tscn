@@ -83,3 +83,9 @@ text = "Kilitleri Ac: KAPALI"
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Istatistikleri Sifirla"
+
+[node name="EditorButton" type="Button" parent="Panel/Margin/Rows"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "BOLUM EDITORU"
