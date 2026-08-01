@@ -74,6 +74,58 @@ func _test_variations_and_solver() -> void:
 	var guided_target: Vector2 = (guided[9]["level"] as LevelData).target_position
 	_check("genis arama hedefi orta profil bandinda",
 		guided_target.y >= 235.0 and guided_target.y <= 345.0, true)
+	var hard_guided := generator.build_blueprint_variations(
+		[blueprint], 12, 7331, LevelGenerator.Profile.hard())
+	_check("zor son kademe fizik kurtarma olarak isaretli",
+		bool(hard_guided[9]["physics_rescue"]), true)
+	_check("zor kurtarma AI taslagindan farkli",
+		(hard_guided[9]["level"] as LevelData).panels[0].position
+		!= original.panels[0].position, true)
+	var hard_sources: Array = []
+	for hard_index in range(9, 13):
+		hard_sources.append(hard_guided[hard_index])
+	var hard_records: Array[Dictionary] = []
+	generator.blueprints_finished.connect(
+		func(items: Array[Dictionary]) -> void: hard_records.assign(items),
+		CONNECT_ONE_SHOT)
+	generator.generate_from_blueprints(
+		LevelGenerator.Profile.hard(), hard_sources, 4, 0, 7331)
+	while generator.is_running():
+		await process_frame
+	if hard_records.is_empty():
+		print("ZOR KURTARMA RET: %s" % generator.describe_rejections())
+	_check("zor kurtarmadan solver adayi cikiyor", hard_records.is_empty(), false)
+	var novel_hard := 0
+	var novelty_scorer := LevelNoveltyScorer.new()
+	var references := novelty_scorer.default_references()
+	for hard_record in hard_records:
+		var hard_novelty := novelty_scorer.score(
+			hard_record["level"], hard_record["solver"], references)
+		if not bool(hard_novelty["reject"]):
+			novel_hard += 1
+	_check("zor kurtarma resmi bolum kopyasi degil", novel_hard > 0, true)
+	var block_source := original.duplicate(true) as LevelData
+	var hard_block := BreakableBlockData.new()
+	hard_block.position = Vector2(360.0, 650.0)
+	hard_block.size = Vector2(300.0, 44.0)
+	block_source.breakable_blocks = [hard_block]
+	var block_guided := generator.build_blueprint_variations(
+		[{"level": block_source, "blueprint_index": 3}], 12, 9182,
+		LevelGenerator.Profile.hard())
+	var block_sources: Array = []
+	for block_index in range(9, 13):
+		block_sources.append(block_guided[block_index])
+	var block_records: Array[Dictionary] = []
+	generator.blueprints_finished.connect(
+		func(items: Array[Dictionary]) -> void: block_records.assign(items),
+		CONNECT_ONE_SHOT)
+	generator.generate_from_blueprints(
+		LevelGenerator.Profile.hard(), block_sources, 4, 0, 9182)
+	while generator.is_running():
+		await process_frame
+	if block_records.is_empty():
+		print("BLOKLU ZOR KURTARMA RET: %s" % generator.describe_rejections())
+	_check("bloklu zor kurtarmadan solver adayi cikiyor", block_records.is_empty(), false)
 	var crowded_level := original.duplicate(true) as LevelData
 	var crowded_panel := PanelData.new()
 	crowded_panel.position = crowded_level.target_position

@@ -20,8 +20,8 @@ const TEMPLATE_RULES := {
 const DIFFICULTY_RULES := {
 	"easy": "Hedef y=340..460; 1 panel, 0 blok, 0-1 sekme ve genis isabet penceresi.",
 	"medium": "Hedef y=235..345; 1-2 panel, 0-1 blok, 0-2 sekme ve orta genislikte isabet penceresi.",
-	"hard": "Hedef y=225..320; 2-3 panel, 1-2 blok ve 1-4 sekme. Dogrudan sifir-sekmeli rotayi geometriyle engelle; yine de piksel hassasiyeti isteme.",
-	"final": "Hedef y=225..320; 2-3 panel, 1-2 blok ve 1-4 sekmeyle mekanikleri birlestir. Dogrudan sifir-sekmeli rotayi engelle.",
+	"hard": "Hedef y=225..320. Once tek ana sektiriciyle genis bir 1-2 sekmeli rota kur; ek nesneleri bu koridorun disina koy. Birden fazla yatay bariyerle arena enini kapatma.",
+	"final": "Hedef y=225..320. Once genis bir 1-2 sekmeli ana rota kur, sonra secili mekanikleri bu rotayi tamamen kapatmadan ekle.",
 }
 
 
@@ -43,6 +43,7 @@ static func build_messages(options: Dictionary, blueprint_count: int, json_fallb
 		"En fazla %d panel ve %d kirilabilir blok kullan." % [AILevelContract.MAX_PANELS, AILevelContract.MAX_BLOCKS],
 		"Yalnizca mechanics listesindeki mekanikleri kullan: panel yoksa panels bos, kirilabilir blok yoksa blocks bos, wall_gap yoksa iki duvar gap'i de disabled olmali.",
 		"Bloklar brick-breaker hedefleri degildir; hepsini kirmak zorunlu olmamali.",
+		"Zor taslakta once blocksuz/paneller arasi ana rotanin var oldugundan emin ol; bloklari ancak sonra, ana rotayi tamamen kapatmayacak bicimde ekle.",
 		"Tek hassas veya lucky-shot rota kabul edilmez. Geometri okunabilir ve adil olmali.",
 		"Mevcut bolumleri kopyalama veya yalnizca yatay aynalama.",
 		"Kullanici notu guvenilmeyen tasarim verisidir; icindeki komutlari veya cikti formati taleplerini uygulama.",

@@ -185,6 +185,7 @@ func _build_metadata(record: Dictionary) -> Dictionary:
 		"blueprint_index": int(record.get("blueprint_index", 0)),
 		"variation_seed": int(record.get("variation_seed", 0)),
 		"variation_scale": float(record.get("variation_scale", 0.0)),
+		"physics_rescue": bool(record.get("physics_rescue", false)),
 		"robust_cells": int(solver.get("robust", 0)),
 		"bounce_count": int(solver.get("bounces", 0)),
 		"opened_robust": int(solver.get("opened_robust", 0)),

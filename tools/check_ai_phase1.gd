@@ -46,7 +46,7 @@ func _test_contract_and_request() -> void:
 	_check("prompt sayisal guvenli mesafe veriyor",
 		String(messages[0]["content"]).contains("hedefe 190 px"), true)
 	_check("prompt zorluk sozlesmesi veriyor",
-		String(messages[1]["content"]).contains("2-3 panel, 1-2 blok"), true)
+		String(messages[1]["content"]).contains("tek ana sektiriciyle"), true)
 	var headers := client.build_headers("secret-test-key")
 	_check("authorization olusuyor", headers[0], "Authorization: Bearer secret-test-key")
 	_check("prompt anahtari icermiyor", JSON.stringify(messages).contains("secret-test-key"), false)

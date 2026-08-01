@@ -3,7 +3,7 @@ extends RefCounted
 
 ## OpenRouter semasi, mapper sinirlari ve UI secenekleri icin tek kaynak.
 
-const PROMPT_VERSION := "1.2"
+const PROMPT_VERSION := "1.3"
 const MAX_LEVELS := 10
 const MAX_PANELS := 5
 const MAX_BLOCKS := 4

@@ -297,6 +297,9 @@ func build_blueprint_variations(blueprints: Array, variations_per_blueprint: int
 				source["level"], variation_seed, variation_scale, profile)
 			varied["variation_seed"] = variation_seed
 			varied["variation_scale"] = variation_scale
+			varied["physics_rescue"] = (
+				variation_scale >= MAX_VARIATION_SCALE
+				and profile != null and profile.min_bounces > 0)
 			records.append(varied)
 	return records
 
@@ -319,9 +322,14 @@ func _variation_scale(variation_index: int) -> float:
 
 func _vary_level(source: LevelData, variation_seed: int, scale: float,
 		profile: Profile) -> LevelData:
-	var level := source.duplicate(true) as LevelData
 	var rng := RandomNumberGenerator.new()
 	rng.seed = variation_seed
+	if scale >= MAX_VARIATION_SCALE and profile != null and profile.min_bounces > 0:
+		var rescued := _build_hard_rescue_level(source, rng)
+		_repair_anchor_clearance(rescued, variation_seed + 48611)
+		return rescued
+
+	var level := source.duplicate(true) as LevelData
 	level.target_position = Vector2(
 		clampf(level.target_position.x + rng.randf_range(-25.0, 25.0) * scale, 80.0, 640.0),
 		clampf(level.target_position.y + rng.randf_range(-25.0, 25.0) * scale, 180.0, 560.0))
@@ -348,6 +356,67 @@ func _vary_level(source: LevelData, variation_seed: int, scale: float,
 			rng.randf_range(145.0, 575.0),
 			rng.randf_range(profile.target_y_range.x, profile.target_y_range.y))
 	_repair_anchor_clearance(level, variation_seed + 48611)
+	return level
+
+
+func _build_hard_rescue_level(source: LevelData,
+		rng: RandomNumberGenerator) -> LevelData:
+	var uses_blocks := not source.breakable_blocks.is_empty()
+	var uses_wall_gaps := (
+		source.left_wall_segments.size() == 2
+		or source.right_wall_segments.size() == 2)
+	var seed_ids: Array[int]
+	if uses_blocks:
+		seed_ids.assign([22, 23, 24] if uses_wall_gaps else [22, 23])
+	else:
+		seed_ids.assign([2, 4, 12, 14, 17] if uses_wall_gaps else [2, 17])
+	var seed_id := seed_ids[rng.randi_range(0, seed_ids.size() - 1)]
+	var level := LevelLibrary.load_level(seed_id).duplicate(true) as LevelData
+
+	# Kaynak taslagin urun kimligi korunur; yalnizca son kademe geometrisi
+	# solver'dan gecen bir fizik iskeletinden turetilir.
+	level.level_id = source.level_id
+	level.display_name = source.display_name
+	level.max_lives = source.max_lives
+	level.tutorial_text = source.tutorial_text
+	level.two_star_max_seconds = source.two_star_max_seconds
+	level.two_star_max_shots = source.two_star_max_shots
+	level.three_star_max_seconds = source.three_star_max_seconds
+	level.three_star_max_shots = source.three_star_max_shots
+
+	var mirrored := rng.randf() < 0.5
+	if mirrored:
+		level.target_position.x = 720.0 - level.target_position.x
+		for panel in level.panels:
+			panel.position.x = 720.0 - panel.position.x
+			panel.rotation_degrees = -panel.rotation_degrees
+		for block in level.breakable_blocks:
+			block.position.x = 720.0 - block.position.x
+		var left_segments := level.left_wall_segments.duplicate()
+		level.left_wall_segments = level.right_wall_segments.duplicate()
+		level.right_wall_segments = left_segments
+
+	var shift_direction := -1.0 if rng.randf() < 0.5 else 1.0
+	var x_shift := shift_direction * rng.randf_range(8.0, 18.0)
+	level.target_position = Vector2(
+		clampf(level.target_position.x + x_shift + rng.randf_range(-4.0, 4.0), 120.0, 600.0),
+		clampf(level.target_position.y + rng.randf_range(-6.0, 6.0), 210.0, 340.0))
+	for panel in level.panels:
+		panel.position = Vector2(
+			clampf(panel.position.x + x_shift + rng.randf_range(-5.0, 5.0), 70.0, 650.0),
+			clampf(panel.position.y + rng.randf_range(-6.0, 6.0), 360.0, 940.0))
+		panel.rotation_degrees = clampf(
+			panel.rotation_degrees + rng.randf_range(-1.5, 1.5), -80.0, 80.0)
+		panel.length = clampf(panel.length + rng.randf_range(-6.0, 6.0), 180.0, 520.0)
+	for block in level.breakable_blocks:
+		block.position = Vector2(
+			clampf(block.position.x + x_shift + rng.randf_range(-5.0, 5.0), 80.0, 640.0),
+			clampf(block.position.y + rng.randf_range(-6.0, 6.0), 400.0, 940.0))
+		block.size.x = clampf(
+			block.size.x + rng.randf_range(-6.0, 6.0), 120.0, 560.0)
+	if uses_wall_gaps:
+		_vary_wall(level.left_wall_segments, rng, 0.15)
+		_vary_wall(level.right_wall_segments, rng, 0.15)
 	return level
 
 
