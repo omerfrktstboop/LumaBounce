@@ -38,6 +38,7 @@ func _run() -> void:
 	_register_audio_manager()
 
 	await _test_debug_panel_close()
+	await _test_launcher_power_feel()
 	await _test_block_state_rules()
 	await _test_practice_mode()
 	await _test_custom_level_store()
@@ -68,6 +69,46 @@ func _test_debug_panel_close() -> void:
 	_check("debug kapat dugmesi paneli kapatiyor", panel.get_node("Panel").visible, false)
 	root.remove_child(panel)
 	panel.free()
+
+
+func _test_launcher_power_feel() -> void:
+	print("")
+	print("--- Firlatici guc hissi ---")
+	var gameplay: Node = (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+	gameplay.level_data = LevelLibrary.load_level(1)
+	root.add_child(gameplay)
+	await physics_frame
+
+	var launcher := gameplay.get_node("Launcher") as Launcher
+	var ball := gameplay.get_node("Ball") as Ball
+	var meter := launcher.get_node("PowerMeter") as Node2D
+	var ball_visual := ball.get_node("Visual") as Node2D
+	var barrel_tip := launcher.get("_barrel_tip") as Polygon2D
+	var physical_start := ball.global_position
+	var crossed_steps: Array[int] = []
+	launcher.power_step_crossed.connect(
+		func(step_index: int, _step_count: int) -> void: crossed_steps.append(step_index))
+
+	var pointer_start := launcher.global_position
+	launcher.begin_aim(pointer_start)
+	for drag_distance in [90.0, 145.0, 200.0, 250.0, 300.0, 370.0]:
+		launcher.update_aim(pointer_start + Vector2.DOWN * drag_distance)
+
+	_check("guc bari nisanda gorunuyor", meter.visible, true)
+	_check("guc bari alti sabit segment", meter.get_child_count(), 6)
+	_check("her yeni guc kademesi bir kez yayiliyor", crossed_steps, [1, 2, 3, 4, 5, 6])
+	_check("cekiste fizik topu yerinde", ball.global_position, physical_start)
+	_check("cekiste yalnizca top gorseli geriliyor",
+		ball_visual.position.length() >= 13.5, true)
+	_check("namlu ucu gerilen topu takip ediyor",
+		barrel_tip.global_position.distance_to(ball_visual.global_position) < 0.5, true)
+	_check("gecerli nisan birakiliyor", launcher.release_aim(), true)
+	_check("birakinca top normal firliyor", ball.is_flying(), true)
+	_check("birakinca gorsel ofset sifir", ball_visual.position, Vector2.ZERO)
+	_check("birakinca guc bari gizleniyor", meter.visible, false)
+
+	root.remove_child(gameplay)
+	gameplay.free()
 
 
 ## Autoload'i elle kur; yoksa oynanis sahnesi hic yuklenemez (bkz. dosya basi).

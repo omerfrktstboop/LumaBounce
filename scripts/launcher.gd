@@ -16,6 +16,7 @@ signal aim_started()
 signal aim_updated(power_ratio: float, direction: Vector2)
 signal aim_cancelled()
 signal shot_fired(impulse: Vector2)
+signal power_step_crossed(step_index: int, step_count: int)
 
 ## Guvenlik siniri: kilavuz en fazla bu kadar fizik "tick"i ileri simule eder.
 const SIM_MAX_ITERATIONS := 400
@@ -69,6 +70,15 @@ const MAX_BOUNCES_PER_TICK := 6
 ## Nisan sirasinda namlu ucundaki vurgunun guce gore buyume carpani.
 @export var tip_power_scale := 1.7
 
+@export_group("Guc Gostergesi")
+@export_range(3, 8, 1) var power_step_count := 6
+@export var power_segment_size := Vector2(16.0, 7.0)
+@export var power_meter_offset := Vector2(82.0, 22.0)
+@export var power_segment_spacing := 13.0
+## Hazir topun gorseli tam gucte namlu boyunca bu kadar geriye gelir.
+## Ball govdesinin fizik konumu degismez.
+@export var loaded_ball_pullback_distance := 14.0
+
 @export_group("Geri Tepme")
 ## Atis birakildiginda namlunun ters yonde kacacagi kisa mesafe.
 @export var recoil_distance := 9.0
@@ -86,12 +96,15 @@ var enabled := true:
 			cancel_aim()
 
 @onready var _base: Node2D = $Base
+@onready var _power_meter: Node2D = $PowerMeter
 @onready var _barrel: Node2D = $Barrel
 @onready var _guide: AimGuide = $AimGuide
 
 var _barrel_tip: Polygon2D
+var _power_segments: Array[Polygon2D] = []
 var _recoil_tween: Tween
 var _max_power_tween: Tween
+var _barrel_rest_position := Vector2.ZERO
 
 var _aiming := false
 var _drag_start := Vector2.ZERO
@@ -99,13 +112,16 @@ var _drag_distance := 0.0
 var _direction := Vector2.UP
 var _power_ratio := 0.0
 var _was_at_max_power := false
+var _highest_power_step := 0
 
 
 func _ready() -> void:
 	_build_base()
 	_build_barrel()
+	_build_power_meter()
 	_guide.clear_guide()
-	_barrel.rotation = 0.0
+	_set_barrel_pose(0.0)
+	_set_power_meter(0, false)
 
 
 # --- Dis API -----------------------------------------------------------------
@@ -117,6 +133,18 @@ func get_spawn_position() -> Vector2:
 
 func get_power() -> float:
 	return lerpf(min_power, max_power, _power_ratio)
+
+
+func get_power_ratio() -> float:
+	return _power_ratio
+
+
+func get_aim_direction() -> Vector2:
+	return _direction
+
+
+func get_power_step() -> int:
+	return _power_step_for_ratio(_power_ratio)
 
 
 func is_aiming() -> bool:
@@ -137,7 +165,11 @@ func begin_aim(pointer_position: Vector2) -> void:
 	_drag_distance = 0.0
 	_power_ratio = 0.0
 	_was_at_max_power = false
+	_highest_power_step = 0
+	if _recoil_tween != null and _recoil_tween.is_valid():
+		_recoil_tween.kill()
 	_refresh_aim_visual()
+	_set_power_meter(0, true)
 	aim_started.emit()
 
 
@@ -145,6 +177,7 @@ func update_aim(pointer_position: Vector2) -> void:
 	if not _aiming:
 		return
 	_evaluate_drag(pointer_position)
+	_update_power_step()
 	_refresh_aim_visual()
 	aim_updated.emit(_power_ratio, _direction)
 
@@ -155,6 +188,8 @@ func release_aim() -> bool:
 		return false
 	_aiming = false
 	_guide.clear_guide()
+	_set_power_meter(0, false)
+	_set_barrel_pose(0.0)
 	# Tam guc titresimi ortasinda birakilmis olabilir; ipucu her durumda
 	# sifira donsun diye tweeni once iptal ediyoruz.
 	if _max_power_tween != null and _max_power_tween.is_valid():
@@ -174,6 +209,12 @@ func cancel_aim() -> void:
 	_drag_distance = 0.0
 	_power_ratio = 0.0
 	_guide.clear_guide()
+	_highest_power_step = 0
+	_set_power_meter(0, false)
+	_set_barrel_pose(0.0)
+	if _max_power_tween != null and _max_power_tween.is_valid():
+		_max_power_tween.kill()
+	_set_tip_power(0.0)
 	if was_aiming:
 		aim_cancelled.emit()
 
@@ -315,7 +356,7 @@ const MAX_POWER_THRESHOLD := 0.98
 
 
 func _refresh_aim_visual() -> void:
-	_barrel.rotation = Vector2.UP.angle_to(_direction)
+	_set_barrel_pose(_power_ratio if _aiming else 0.0)
 	if not _aiming or _drag_distance < min_drag_distance:
 		_guide.clear_guide()
 		_set_tip_power(0.0)
@@ -324,6 +365,43 @@ func _refresh_aim_visual() -> void:
 	_guide.set_guide(_build_guide_dots(), accent.lerp(accent_core, _power_ratio * 0.5))
 	_set_tip_power(_power_ratio)
 	_check_max_power_pulse()
+
+
+func _power_step_for_ratio(power_ratio: float) -> int:
+	return clampi(floori(clampf(power_ratio, 0.0, 1.0) * power_step_count), 0, power_step_count)
+
+
+func _update_power_step() -> void:
+	var step := _power_step_for_ratio(_power_ratio)
+	_set_power_meter(step, true)
+	if step <= _highest_power_step:
+		return
+	_highest_power_step = step
+	power_step_crossed.emit(step, power_step_count)
+
+
+func _set_barrel_pose(power_ratio: float) -> void:
+	_barrel.rotation = Vector2.UP.angle_to(_direction)
+	var loaded_ball_position := (
+		Vector2.UP * ball_spawn_offset
+		- _direction * loaded_ball_pullback_distance * clampf(power_ratio, 0.0, 1.0))
+	var tip_distance := barrel_length - 7.0
+	_barrel_rest_position = loaded_ball_position - _direction * tip_distance
+	_barrel.position = _barrel_rest_position
+
+
+func _set_power_meter(active_steps: int, show_meter: bool) -> void:
+	if _power_meter == null:
+		return
+	_power_meter.visible = show_meter
+	for i in _power_segments.size():
+		var segment := _power_segments[i]
+		var active := i < active_steps
+		var strength := float(i + 1) / float(maxi(power_step_count, 1))
+		segment.color = (
+			Color(accent.lerp(accent_core, strength * 0.65), 0.95)
+			if active else Color(Palette.SURFACE_LIGHT, 0.32))
+		segment.scale = Vector2.ONE * (1.12 if active and i == active_steps - 1 else 1.0)
 
 
 ## Namlu ucundaki vurgu, sürükleme gucuyle birlikte buyuyup parlayarak
@@ -368,10 +446,10 @@ func _play_max_power_pulse() -> void:
 func _play_recoil() -> void:
 	if _recoil_tween != null and _recoil_tween.is_valid():
 		_recoil_tween.kill()
-	_barrel.position = -_direction * recoil_distance
+	_barrel.position = _barrel_rest_position - _direction * recoil_distance
 	_recoil_tween = create_tween()
 	_recoil_tween.tween_interval(recoil_out_time)
-	_recoil_tween.tween_property(_barrel, "position", Vector2.ZERO, recoil_return_time) \
+	_recoil_tween.tween_property(_barrel, "position", _barrel_rest_position, recoil_return_time) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
@@ -415,3 +493,16 @@ func _build_barrel() -> void:
 		ShapeBuilder.circle(barrel_width * 0.34, 16), Color(accent, 0.75))
 	_barrel_tip.position = Vector2(0.0, -barrel_length + 7.0)
 	_barrel.add_child(_barrel_tip)
+
+
+func _build_power_meter() -> void:
+	for child in _power_meter.get_children():
+		child.queue_free()
+	_power_segments.clear()
+	for i in power_step_count:
+		var segment := ShapeBuilder.make_polygon(
+			ShapeBuilder.stadium(power_segment_size.x, power_segment_size.y),
+			Color(Palette.SURFACE_LIGHT, 0.32))
+		segment.position = power_meter_offset + Vector2.UP * power_segment_spacing * i
+		_power_meter.add_child(segment)
+		_power_segments.append(segment)

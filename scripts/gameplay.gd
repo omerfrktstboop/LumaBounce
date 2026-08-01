@@ -65,6 +65,9 @@ signal menu_requested()
 ## Hedefe vurulunca (destekleyen cihazlarda) kisa bir titresim; Android/iOS
 ## disinda ve destegi olmayan cihazlarda Godot bunu sessizce yok sayar.
 @export var target_hit_haptic_msec := 80
+## Guc bari yeni bir kademeye ilk kez ciktiginda verilen hafif dokunsal tik.
+@export var power_step_haptic_msec := 10
+@export var max_power_step_haptic_msec := 20
 
 ## AppRoot tarafindan add_child'dan ONCE atanir.
 var level_data: LevelData
@@ -248,6 +251,8 @@ func _position_shake_camera() -> void:
 
 func _connect_signals() -> void:
 	_launcher.shot_fired.connect(_on_shot_fired)
+	_launcher.aim_cancelled.connect(_on_aim_cancelled)
+	_launcher.power_step_crossed.connect(_on_power_step_crossed)
 	_ball.bounced.connect(_on_ball_bounced)
 	_ball.surface_touched.connect(_on_surface_touched)
 	_blocks.block_broken.connect(_on_block_broken)
@@ -369,6 +374,9 @@ func _cancel_active_shot_for_reaim() -> void:
 	_reaim_pending = false
 	_shot_token += 1
 	_ball.cancel_and_reset_to(_launcher.get_spawn_position(), manual_cancel_fade_time)
+	_ball.set_launcher_tension(
+		_launcher.get_power_ratio(), _launcher.get_aim_direction(),
+		_launcher.loaded_ball_pullback_distance)
 	_clear_effects()
 	_hide_message()
 
@@ -694,10 +702,25 @@ func _show_tutorial() -> void:
 ## Ayni tetigi paylasmalari kasitli - oyuncu icin "artik oynuyorum" ani budur.
 ## Ekrana dokunmak degil, gercek bir nisan olusmasi araniyor; boylece
 ## yanlislikla degen bir parmak sureyi baslatmaz.
-func _on_aim_updated(_power_ratio: float, _direction: Vector2) -> void:
+func _on_aim_updated(power_ratio: float, direction: Vector2) -> void:
+	if _ball.is_ready_to_launch():
+		_ball.set_launcher_tension(
+			power_ratio, direction, _launcher.loaded_ball_pullback_distance)
 	if _launcher.has_valid_aim():
 		_start_attempt_timer()
 		_dismiss_tutorial()
+
+
+func _on_aim_cancelled() -> void:
+	_ball.reset_launcher_tension()
+
+
+func _on_power_step_crossed(step_index: int, step_count: int) -> void:
+	var duration := (
+		max_power_step_haptic_msec if step_index >= step_count
+		else power_step_haptic_msec)
+	if duration > 0:
+		Input.vibrate_handheld(duration)
 
 
 func _dismiss_tutorial() -> void:

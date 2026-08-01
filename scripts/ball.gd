@@ -101,6 +101,7 @@ func reset_to(spawn_position: Vector2) -> void:
 	global_position = spawn_position
 	_settle_timer = 0.0
 	_stop_squash()
+	reset_launcher_tension()
 	_clear_trail()
 	show()
 
@@ -121,6 +122,7 @@ func cancel_and_reset_to(spawn_position: Vector2, fade_time: float = 0.12) -> vo
 func launch(impulse: Vector2) -> void:
 	if state != State.READY:
 		return
+	reset_launcher_tension()
 	velocity = impulse.limit_length(max_speed)
 	state = State.FLYING
 	_settle_timer = 0.0
@@ -141,6 +143,25 @@ func is_ready_to_launch() -> bool:
 
 func is_flying() -> bool:
 	return state == State.FLYING
+
+
+## Hazir topu fizik govdesini oynatmadan namlu boyunca gerer. Atis konumu,
+## collision ve solver koordinatlari degismez; yalnizca Visual hareket eder.
+func set_launcher_tension(power_ratio: float, direction: Vector2,
+		pullback_distance: float) -> void:
+	if state != State.READY or _visual == null:
+		return
+	var safe_direction := direction.normalized() if not direction.is_zero_approx() else Vector2.UP
+	var ratio := clampf(power_ratio, 0.0, 1.0)
+	_visual.position = -safe_direction * maxf(pullback_distance, 0.0) * ratio
+	_visual.scale = Vector2.ONE * lerpf(1.0, 0.96, ratio)
+
+
+func reset_launcher_tension() -> void:
+	if _visual == null:
+		return
+	_visual.position = Vector2.ZERO
+	_visual.scale = Vector2.ONE
 
 
 # --- Fizik -------------------------------------------------------------------
