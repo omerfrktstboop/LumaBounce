@@ -30,7 +30,7 @@ const MAX_BOUNCES_PER_TICK := 6
 ## Bu mesafeden kisa suruklemeler atis saymaz.
 @export var min_drag_distance := 30.0
 ## Bu mesafeden sonra guc artmaz.
-@export var max_drag_distance := 340.0
+@export var max_drag_distance := 140.0
 
 @export_group("Aci")
 ## Dik yukari yonden sapabilecegi en buyuk aci.
@@ -79,6 +79,12 @@ const MAX_BOUNCES_PER_TICK := 6
 ## Ball govdesinin fizik konumu degismez.
 @export var loaded_ball_pullback_distance := 14.0
 
+@export_group("Surukleme Alani")
+## Firlaticinin altinda, parmagin cekilebilecegi bolgeyi sessizce tarif eden
+## yarim halka. Dis yaricap dogrudan tam guc mesafesini kullanir.
+@export_range(0.02, 0.3, 0.01) var drag_hint_fill_alpha := 0.09
+@export_range(0.1, 1.0, 0.05) var drag_hint_idle_alpha := 0.62
+
 @export_group("Geri Tepme")
 ## Atis birakildiginda namlunun ters yonde kacacagi kisa mesafe.
 @export var recoil_distance := 9.0
@@ -92,10 +98,13 @@ const MAX_BOUNCES_PER_TICK := 6
 var enabled := true:
 	set(value):
 		enabled = value
-		if not value and is_node_ready():
-			cancel_aim()
+		if is_node_ready():
+			if not value:
+				cancel_aim()
+			_set_drag_hint(_aiming)
 
 @onready var _base: Node2D = $Base
+@onready var _drag_hint: Node2D = $DragHint
 @onready var _power_meter: Node2D = $PowerMeter
 @onready var _barrel: Node2D = $Barrel
 @onready var _guide: AimGuide = $AimGuide
@@ -116,12 +125,14 @@ var _highest_power_step := 0
 
 
 func _ready() -> void:
+	_build_drag_hint()
 	_build_base()
 	_build_barrel()
 	_build_power_meter()
 	_guide.clear_guide()
 	_set_barrel_pose(0.0)
 	_set_power_meter(0, false)
+	_set_drag_hint(false)
 
 
 # --- Dis API -----------------------------------------------------------------
@@ -170,6 +181,7 @@ func begin_aim(pointer_position: Vector2) -> void:
 		_recoil_tween.kill()
 	_refresh_aim_visual()
 	_set_power_meter(0, true)
+	_set_drag_hint(true)
 	aim_started.emit()
 
 
@@ -189,6 +201,7 @@ func release_aim() -> bool:
 	_aiming = false
 	_guide.clear_guide()
 	_set_power_meter(0, false)
+	_set_drag_hint(false)
 	_set_barrel_pose(0.0)
 	# Tam guc titresimi ortasinda birakilmis olabilir; ipucu her durumda
 	# sifira donsun diye tweeni once iptal ediyoruz.
@@ -211,6 +224,7 @@ func cancel_aim() -> void:
 	_guide.clear_guide()
 	_highest_power_step = 0
 	_set_power_meter(0, false)
+	_set_drag_hint(false)
 	_set_barrel_pose(0.0)
 	if _max_power_tween != null and _max_power_tween.is_valid():
 		_max_power_tween.kill()
@@ -404,6 +418,13 @@ func _set_power_meter(active_steps: int, show_meter: bool) -> void:
 		segment.scale = Vector2.ONE * (1.12 if active and i == active_steps - 1 else 1.0)
 
 
+func _set_drag_hint(active: bool) -> void:
+	if _drag_hint == null:
+		return
+	_drag_hint.visible = enabled
+	_drag_hint.modulate.a = 1.0 if active else drag_hint_idle_alpha
+
+
 ## Namlu ucundaki vurgu, sürükleme gucuyle birlikte buyuyup parlayarak
 ## yon + guc geri bildirimini firlaticinin uzerinde de belirginlestirir.
 ## Maksimum-guc titresimi calisirken (bkz. _play_max_power_pulse) devreye
@@ -473,6 +494,63 @@ func _build_base() -> void:
 		Color(Palette.SURFACE_LIGHT, 0.5))
 	top_edge.position = Vector2(0.0, -base_size.y * 0.5 + 8.0)
 	_base.add_child(top_edge)
+
+
+## Asagi dogru cekis hareketinin kullanilabilir alanini gosteren ince bir
+## yarim halka. Metin kullanmadan yonu ve tam guc sinirini okunur kilar.
+func _build_drag_hint() -> void:
+	for child in _drag_hint.get_children():
+		child.queue_free()
+
+	var outer_radius := max_drag_distance
+	var inner_radius := maxf(min_drag_distance + 12.0, 48.0)
+	var start_angle := deg_to_rad(18.0)
+	var end_angle := deg_to_rad(162.0)
+	var arc_segments := 28
+	var outer_points := PackedVector2Array()
+	var inner_points := PackedVector2Array()
+	for i in arc_segments + 1:
+		var angle := lerpf(start_angle, end_angle, float(i) / float(arc_segments))
+		outer_points.append(Vector2.from_angle(angle) * outer_radius)
+		inner_points.append(Vector2.from_angle(angle) * inner_radius)
+
+	var area_points := outer_points.duplicate()
+	for i in range(inner_points.size() - 1, -1, -1):
+		area_points.append(inner_points[i])
+	_drag_hint.add_child(ShapeBuilder.make_polygon(
+		area_points, Color(Palette.SURFACE_LIGHT, drag_hint_fill_alpha)))
+
+	var outer_line := Line2D.new()
+	outer_line.points = outer_points
+	outer_line.default_color = Color(Palette.SURFACE_LIGHT, 0.48)
+	outer_line.width = 2.0
+	outer_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	outer_line.end_cap_mode = Line2D.LINE_CAP_ROUND
+	outer_line.antialiased = true
+	_drag_hint.add_child(outer_line)
+
+	var inner_line := Line2D.new()
+	inner_line.points = inner_points
+	inner_line.default_color = Color(Palette.SURFACE_LIGHT, 0.24)
+	inner_line.width = 1.5
+	inner_line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	inner_line.end_cap_mode = Line2D.LINE_CAP_ROUND
+	inner_line.antialiased = true
+	_drag_hint.add_child(inner_line)
+
+	var chevron := Line2D.new()
+	chevron.points = PackedVector2Array([
+		Vector2(-9.0, outer_radius - 24.0),
+		Vector2(0.0, outer_radius - 15.0),
+		Vector2(9.0, outer_radius - 24.0),
+	])
+	chevron.default_color = Color(accent, 0.72)
+	chevron.width = 3.0
+	chevron.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	chevron.end_cap_mode = Line2D.LINE_CAP_ROUND
+	chevron.joint_mode = Line2D.LINE_JOINT_ROUND
+	chevron.antialiased = true
+	_drag_hint.add_child(chevron)
 
 
 func _build_barrel() -> void:

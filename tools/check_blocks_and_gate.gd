@@ -81,6 +81,7 @@ func _test_launcher_power_feel() -> void:
 
 	var launcher := gameplay.get_node("Launcher") as Launcher
 	var ball := gameplay.get_node("Ball") as Ball
+	var drag_hint := launcher.get_node("DragHint") as Node2D
 	var meter := launcher.get_node("PowerMeter") as Node2D
 	var ball_visual := ball.get_node("Visual") as Node2D
 	var barrel_tip := launcher.get("_barrel_tip") as Polygon2D
@@ -89,11 +90,18 @@ func _test_launcher_power_feel() -> void:
 	launcher.power_step_crossed.connect(
 		func(step_index: int, _step_count: int) -> void: crossed_steps.append(step_index))
 
+	_check("tam guc mesafesi mobil alt alana sigiyor", launcher.max_drag_distance <= 140.0, true)
+	_check("surukleme alani hazir durumda gorunuyor", drag_hint.visible, true)
+
 	var pointer_start := launcher.global_position
 	launcher.begin_aim(pointer_start)
-	for drag_distance in [90.0, 145.0, 200.0, 250.0, 300.0, 370.0]:
+	for step in range(1, launcher.power_step_count + 1):
+		var ratio := float(step) / float(launcher.power_step_count)
+		var drag_distance := lerpf(
+			launcher.min_drag_distance, launcher.max_drag_distance, ratio) + 0.5
 		launcher.update_aim(pointer_start + Vector2.DOWN * drag_distance)
 
+	_check("surukleme alani nisanda belirginlesiyor", drag_hint.modulate.a, 1.0)
 	_check("guc bari nisanda gorunuyor", meter.visible, true)
 	_check("guc bari alti sabit segment", meter.get_child_count(), 6)
 	_check("her yeni guc kademesi bir kez yayiliyor", crossed_steps, [1, 2, 3, 4, 5, 6])

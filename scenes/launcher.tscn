@@ -10,6 +10,9 @@ script = ExtResource("1_launcher")
 z_index = -1
 script = ExtResource("2_aim_guide")
 
+[node name="DragHint" type="Node2D" parent="."]
+z_index = -2
+
 [node name="Base" type="Node2D" parent="."]
 
 [node name="PowerMeter" type="Node2D" parent="."]
