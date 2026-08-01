@@ -91,6 +91,7 @@ func _test_launcher_power_feel() -> void:
 		func(step_index: int, _step_count: int) -> void: crossed_steps.append(step_index))
 
 	_check("tam guc mesafesi mobil alt alana sigiyor", launcher.max_drag_distance <= 140.0, true)
+	_check("azami atis gucu bir kademe dusuruldu", launcher.max_power, 2200.0)
 	_check("surukleme alani hazir durumda gorunuyor", drag_hint.visible, true)
 
 	var pointer_start := launcher.global_position

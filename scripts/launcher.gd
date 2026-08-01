@@ -26,7 +26,7 @@ const MAX_BOUNCES_PER_TICK := 6
 
 @export_group("Guc")
 @export var min_power := 900.0
-@export var max_power := 2300.0
+@export var max_power := 2200.0
 ## Bu mesafeden kisa suruklemeler atis saymaz.
 @export var min_drag_distance := 30.0
 ## Bu mesafeden sonra guc artmaz.

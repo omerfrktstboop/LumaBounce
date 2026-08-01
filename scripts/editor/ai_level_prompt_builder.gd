@@ -36,7 +36,7 @@ static func build_messages(options: Dictionary, blueprint_count: int, json_fallb
 	var system_parts := PackedStringArray([
 		"LumaBounce icin geometri taslaklari uretiyorsun; oynanabilirlik karari vermiyorsun.",
 		"Cikti daha sonra gercek yerel LevelSolver fizigiyle dogrulanacak ve gecersiz taslaklar elenecek.",
-		"Arena 720x1280, top yaricapi 24, yer cekimi 1500, guc 900-2300 ve azami hiz 3000.",
+		"Arena 720x1280, top yaricapi 24, yer cekimi 1500, guc 900-2200 ve azami hiz 3000.",
 		"Launcher alt bolgede, hedef ust bolgede ve ikisinin cevresi okunabilir/bos kalmali.",
 		"Launcher'i (360,1120) kullan. Hedef merkezi x=140..580, y=230..480 araliginda olsun.",
 		"Panel merkezleri x=130..590, y=460..930; uzunluk 220..340 ve aci -55..55 derece olsun.",
