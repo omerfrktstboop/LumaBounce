@@ -10,7 +10,7 @@ const MANIFEST_VERSION := 1
 const ALLOWED_FIELDS := [
 	"model_slug", "template", "difficulty", "user_design_note",
 	"generation_timestamp", "prompt_version", "blueprint_index", "variation_seed",
-	"variation_scale", "physics_rescue",
+	"variation_scale", "physics_rescue", "generation_seed",
 	"robust_cells", "bounce_count", "opened_robust", "novelty_score", "quality_score",
 	"solution_shots", "broken_state",
 	"similarity_fallback",

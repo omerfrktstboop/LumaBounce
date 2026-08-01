@@ -32,6 +32,7 @@ static func build_messages(options: Dictionary, blueprint_count: int, json_fallb
 	var difficulty := String(options.get("difficulty", "medium"))
 	var mechanics := PackedStringArray(options.get("mechanics", PackedStringArray(["panel"])))
 	var note := String(options.get("design_note", "")).left(AILevelContract.MAX_DESIGN_NOTE)
+	var diversity_seed := int(options.get("diversity_seed", 1))
 	var requested_count := clampi(blueprint_count, 1, AILevelContract.MAX_LEVELS)
 	var system_parts := PackedStringArray([
 		"LumaBounce icin geometri taslaklari uretiyorsun; oynanabilirlik karari vermiyorsun.",
@@ -89,8 +90,36 @@ static func build_messages(options: Dictionary, blueprint_count: int, json_fallb
 		"difficulty_contract": difficulty_contract,
 		"mechanics": Array(mechanics),
 		"design_note": note,
+		"diversity": _diversity_brief(diversity_seed),
 	}
 	return [
 		{"role": "system", "content": "\n".join(system_parts)},
 		{"role": "user", "content": "Su JSON verisine gore farkli taslaklar uret:\n%s" % JSON.stringify(user_data)},
 	]
+
+
+static func _diversity_brief(seed_value: int) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = maxi(seed_value, 1)
+	var target_zones := ["sol bant", "sol-merkez", "merkez", "sag-merkez", "sag bant"]
+	var route_shapes := [
+		"once sola acilip merkeze donen rota",
+		"once saga acilip merkeze donen rota",
+		"capraz yukselen rota",
+		"iki yon degisimli genis zigzag",
+		"asimetrik duvar destekli rota",
+	]
+	var layout_rhythms := [
+		"alt agirlikli baslayip yukarida acilan yerlesim",
+		"orta bantta bosluk birakan iki katmanli yerlesim",
+		"farkli yuksekliklerde asimetrik yerlesim",
+		"tek ana panel ve uzakta ikincil yonlendirici",
+		"kenarlari kullanan acik merkezli yerlesim",
+	]
+	return {
+		"nonce": maxi(seed_value, 1),
+		"target_emphasis": target_zones[rng.randi_range(0, target_zones.size() - 1)],
+		"route_character": route_shapes[rng.randi_range(0, route_shapes.size() - 1)],
+		"layout_rhythm": layout_rhythms[rng.randi_range(0, layout_rhythms.size() - 1)],
+		"batch_rule": "Her taslakta hedef bandi, panel acilari ve rota silueti belirgin bicimde farkli olsun.",
+	}

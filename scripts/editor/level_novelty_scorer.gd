@@ -8,7 +8,7 @@ const REJECT_SIMILARITY := 90.0
 const PENALTY_SIMILARITY := 75.0
 
 
-func default_references() -> Array[Dictionary]:
+func default_references(include_previous_generated := false) -> Array[Dictionary]:
 	var references: Array[Dictionary] = []
 	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, LevelLibrary.last_level_id() + 1):
 		references.append({
@@ -20,6 +20,15 @@ func default_references() -> Array[Dictionary]:
 		var level := CustomLevelStore.load_level(CustomLevelStore.Bucket.SAVED, level_name)
 		if level != null:
 			references.append({"name": "Kayit/%s" % level_name, "level": level, "metrics": {}})
+	if include_previous_generated:
+		for level_name in CustomLevelStore.list_names(CustomLevelStore.Bucket.GENERATED):
+			var level := CustomLevelStore.load_level(CustomLevelStore.Bucket.GENERATED, level_name)
+			if level != null:
+				references.append({
+					"name": "Onceki uretim/%s" % level_name,
+					"level": level,
+					"metrics": {},
+				})
 	return references
 
 

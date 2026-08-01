@@ -75,6 +75,20 @@ func _test_quality_and_ranking() -> void:
 		if bool(entry["novelty"].get("similarity_fallback", false)):
 			has_fallback = true
 	_check("doldurma adayi metadata ile isaretli", has_fallback, true)
+	var previous_near := high.duplicate(true) as LevelData
+	previous_near.target_position += Vector2(14.0, 10.0)
+	var previous_ranked := coordinator.rank_records([{
+		"level": previous_near,
+		"solver": {
+			"ok": true, "robust": 25, "bounces": 2,
+			"opened_robust": 25, "block_free": true,
+		},
+	}], {"template": "single_bounce"}, [{
+		"name": "Onceki uretim/01_onceki",
+		"level": high,
+		"metrics": {},
+	}], 1)
+	_check("onceki uretime cok yakin aday geri gelmiyor", previous_ranked.size(), 0)
 	if not ranked.is_empty():
 		_check("yuksek kalite once", ranked[0]["level"], high)
 	var quality := LevelQualityScorer.new()

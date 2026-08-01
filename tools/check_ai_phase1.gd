@@ -35,6 +35,7 @@ func _test_contract_and_request() -> void:
 	_check("json schema etkin", body["response_format"]["type"], "json_schema")
 	_check("strict schema", body["response_format"]["json_schema"]["strict"], true)
 	_check("reasoning geometri uretiminde kapali", body["reasoning"]["enabled"], false)
+	_check("yaratici cesitlilik sicakligi etkin", body["temperature"], 1.0)
 	_check("sema tam istenen taslak sayisi", body["response_format"]["json_schema"]
 		["schema"]["properties"]["levels"]["minItems"], 5)
 	_check("launcher semasi guvenli alt bantta", body["response_format"]["json_schema"]
@@ -47,6 +48,17 @@ func _test_contract_and_request() -> void:
 		String(messages[0]["content"]).contains("hedefe 190 px"), true)
 	_check("prompt zorluk sozlesmesi veriyor",
 		String(messages[1]["content"]).contains("tek ana sektiriciyle"), true)
+	var alternate_messages := AILevelPromptBuilder.build_messages({
+		"template": "two_routes",
+		"difficulty": "hard",
+		"mechanics": PackedStringArray(["panel", "wall_gap"]),
+		"design_note": "iki farkli rota",
+		"diversity_seed": 987654,
+	}, 5)
+	_check("istek cesitlilik nonce'i tasiyor",
+		String(alternate_messages[1]["content"]).contains("987654"), true)
+	_check("farkli seed farkli tasarim yonu veriyor",
+		alternate_messages[1]["content"] != messages[1]["content"], true)
 	_check("yeni sablonlar sozlesmede",
 		"ricochet_chain" in AILevelContract.TEMPLATE_IDS
 			and "block_corridor" in AILevelContract.TEMPLATE_IDS, true)

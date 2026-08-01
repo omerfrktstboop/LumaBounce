@@ -438,13 +438,21 @@ func _build_ricochet_rescue_level(source: LevelData,
 	var seed: Dictionary = seeds[rng.randi_range(0, seeds.size() - 1)]
 	var level := LevelData.new()
 	level.launcher_position = Vector2(360.0, 1120.0)
-	level.target_position = seed["target"]
+	var base_target: Vector2 = seed["target"]
+	level.target_position = Vector2(
+		clampf(base_target.x + rng.randf_range(-24.0, 24.0), 90.0, 630.0),
+		clampf(base_target.y + rng.randf_range(-16.0, 16.0), 190.0, 520.0))
 	var panels: Array[PanelData] = []
 	for definition in seed["panels"]:
 		var panel := PanelData.new()
-		panel.position = definition[0]
-		panel.rotation_degrees = float(definition[1])
-		panel.length = float(definition[2])
+		var base_position: Vector2 = definition[0]
+		panel.position = Vector2(
+			clampf(base_position.x + rng.randf_range(-18.0, 18.0), 100.0, 620.0),
+			clampf(base_position.y + rng.randf_range(-14.0, 14.0), 440.0, 940.0))
+		panel.rotation_degrees = clampf(
+			float(definition[1]) + rng.randf_range(-2.5, 2.5), -55.0, 55.0)
+		panel.length = clampf(
+			float(definition[2]) + rng.randf_range(-16.0, 16.0), 220.0, 360.0)
 		panel.thickness = 26.0
 		panels.append(panel)
 	level.panels = panels
@@ -460,15 +468,22 @@ func _build_block_corridor_rescue_level(source: LevelData,
 	_copy_generated_identity(level, source)
 	level.max_lives = maxi(source.max_lives, 3)
 	var lower_gate := BreakableBlockData.new()
-	lower_gate.position = Vector2(360.0, 780.0)
-	lower_gate.size = Vector2(540.0, 46.0)
+	lower_gate.position = Vector2(
+		360.0 + rng.randf_range(-24.0, 24.0), rng.randf_range(750.0, 820.0))
+	lower_gate.size = Vector2(rng.randf_range(480.0, 580.0), 46.0)
 	level.breakable_blocks.append(lower_gate)
-	var x_shift := rng.randf_range(-18.0, 18.0)
+	var x_shift := rng.randf_range(-28.0, 28.0)
 	level.launcher_position.x += x_shift
-	level.target_position.x += x_shift
+	level.target_position = Vector2(
+		clampf(level.target_position.x + x_shift + rng.randf_range(-16.0, 16.0), 120.0, 600.0),
+		clampf(level.target_position.y + rng.randf_range(-10.0, 10.0), 210.0, 420.0))
 	for block in level.breakable_blocks:
-		block.position.x += x_shift
-		block.position.y += rng.randf_range(-8.0, 8.0)
+		block.position.x = clampf(
+			block.position.x + x_shift + rng.randf_range(-12.0, 12.0), 80.0, 640.0)
+		block.position.y = clampf(
+			block.position.y + rng.randf_range(-14.0, 14.0), 400.0, 940.0)
+		block.size.x = clampf(
+			block.size.x + rng.randf_range(-24.0, 24.0), 140.0, 600.0)
 	if rng.randf() < 0.5:
 		_mirror_level(level)
 	return level
@@ -537,26 +552,28 @@ func _build_hard_rescue_level(source: LevelData,
 		level.right_wall_segments = left_segments
 
 	var shift_direction := -1.0 if rng.randf() < 0.5 else 1.0
-	var x_shift := shift_direction * rng.randf_range(8.0, 18.0)
+	var x_shift := shift_direction * rng.randf_range(10.0, 34.0)
+	level.launcher_position.x = clampf(
+		level.launcher_position.x + rng.randf_range(-18.0, 18.0), 330.0, 390.0)
 	level.target_position = Vector2(
-		clampf(level.target_position.x + x_shift + rng.randf_range(-4.0, 4.0), 120.0, 600.0),
-		clampf(level.target_position.y + rng.randf_range(-6.0, 6.0), 210.0, 340.0))
+		clampf(level.target_position.x + x_shift + rng.randf_range(-22.0, 22.0), 120.0, 600.0),
+		clampf(level.target_position.y + rng.randf_range(-16.0, 18.0), 210.0, 340.0))
 	for panel in level.panels:
 		panel.position = Vector2(
-			clampf(panel.position.x + x_shift + rng.randf_range(-5.0, 5.0), 70.0, 650.0),
-			clampf(panel.position.y + rng.randf_range(-6.0, 6.0), 360.0, 940.0))
+			clampf(panel.position.x + x_shift + rng.randf_range(-18.0, 18.0), 70.0, 650.0),
+			clampf(panel.position.y + rng.randf_range(-20.0, 20.0), 360.0, 940.0))
 		panel.rotation_degrees = clampf(
-			panel.rotation_degrees + rng.randf_range(-1.5, 1.5), -80.0, 80.0)
-		panel.length = clampf(panel.length + rng.randf_range(-6.0, 6.0), 180.0, 520.0)
+			panel.rotation_degrees + rng.randf_range(-4.0, 4.0), -80.0, 80.0)
+		panel.length = clampf(panel.length + rng.randf_range(-22.0, 22.0), 180.0, 520.0)
 	for block in level.breakable_blocks:
 		block.position = Vector2(
-			clampf(block.position.x + x_shift + rng.randf_range(-5.0, 5.0), 80.0, 640.0),
-			clampf(block.position.y + rng.randf_range(-6.0, 6.0), 400.0, 940.0))
+			clampf(block.position.x + x_shift + rng.randf_range(-18.0, 18.0), 80.0, 640.0),
+			clampf(block.position.y + rng.randf_range(-18.0, 18.0), 400.0, 940.0))
 		block.size.x = clampf(
-			block.size.x + rng.randf_range(-6.0, 6.0), 120.0, 560.0)
+			block.size.x + rng.randf_range(-24.0, 24.0), 120.0, 560.0)
 	if uses_wall_gaps:
-		_vary_wall(level.left_wall_segments, rng, 0.15)
-		_vary_wall(level.right_wall_segments, rng, 0.15)
+		_vary_wall(level.left_wall_segments, rng, 0.35)
+		_vary_wall(level.right_wall_segments, rng, 0.35)
 	return level
 
 

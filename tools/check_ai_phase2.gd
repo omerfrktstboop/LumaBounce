@@ -104,6 +104,20 @@ func _test_variations_and_solver() -> void:
 	_check("zor kurtarma AI taslagindan farkli",
 		(hard_guided[9]["level"] as LevelData).panels[0].position
 		!= original.panels[0].position, true)
+	var rescue_signatures := {}
+	for diversity_seed in [7331, 17731, 27731, 37731]:
+		var diversity_batch := generator.build_blueprint_variations(
+			[blueprint], 12, diversity_seed, LevelGenerator.Profile.hard())
+		var rescue_level := diversity_batch[9]["level"] as LevelData
+		var first_panel: PanelData = rescue_level.panels[0]
+		var signature := "%d:%d:%d:%d:%d" % [
+			roundi(rescue_level.target_position.x), roundi(rescue_level.target_position.y),
+			roundi(first_panel.position.x), roundi(first_panel.position.y),
+			roundi(first_panel.rotation_degrees),
+		]
+		rescue_signatures[signature] = true
+	_check("dort uretim seed'i en az uc farkli kurtarma geometrisi veriyor",
+		rescue_signatures.size() >= 3, true)
 	var hard_sources: Array = []
 	for hard_index in range(9, 13):
 		hard_sources.append(hard_guided[hard_index])

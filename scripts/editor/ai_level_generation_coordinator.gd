@@ -24,6 +24,8 @@ var _usage := {}
 ## Yenilik filtresi yakin varyasyonlari cezalandirabilir; yalnizca geometri
 ## tamamen ayniysa (yatay ayna dahil) adayi kesin kopya sayariz.
 const EXACT_DUPLICATE_SIMILARITY := 100
+const PREVIOUS_GENERATION_PREFIX := "Onceki uretim/"
+const PREVIOUS_GENERATION_REJECT_SIMILARITY := 95
 
 
 func _ready() -> void:
@@ -52,6 +54,10 @@ func start(request: Dictionary) -> Error:
 	if _running:
 		return ERR_BUSY
 	_request = _sanitize_request(request)
+	if int(_request["seed"]) == 0:
+		var rng := RandomNumberGenerator.new()
+		rng.randomize()
+		_request["seed"] = rng.randi_range(1, 2147483647)
 	_cancel_requested = false
 	_running = true
 	_usage = {}
@@ -60,6 +66,7 @@ func start(request: Dictionary) -> Error:
 		"difficulty": _request["difficulty"],
 		"mechanics": _request["mechanics"],
 		"design_note": _request["design_note"],
+		"diversity_seed": _request["seed"],
 	}
 	var error := _client.request_blueprints(
 		String(request.get("api_key", "")), String(_request["model_slug"]),
@@ -86,6 +93,9 @@ func rank_records(records: Array[Dictionary], request: Dictionary,
 	var ranked: Array[Dictionary] = []
 	var similar_fallbacks: Array[Dictionary] = []
 	var batch_references: Array[Dictionary] = []
+	var previous_references: Array = references.filter(func(reference: Variant) -> bool:
+		return (reference is Dictionary
+			and String(reference.get("name", "")).begins_with(PREVIOUS_GENERATION_PREFIX)))
 	for record in records:
 		if not record.get("level", null) is LevelData:
 			continue
@@ -102,6 +112,8 @@ func rank_records(records: Array[Dictionary], request: Dictionary,
 		if (String(request.get("template", "auto")) == "block_corridor"
 				and (int(solver.get("solution_shots", 0)) < 2
 					or int(solver.get("broken_state", 0)) == 0)):
+			continue
+		if _matches_previous_generation(level, solver, previous_references):
 			continue
 		var comparison := references.duplicate()
 		comparison.append_array(batch_references)
@@ -154,6 +166,14 @@ func rank_records(records: Array[Dictionary], request: Dictionary,
 		ranked.append(fallback)
 		selected_references.append(_reference_for(fallback, selected_references.size()))
 	return ranked
+
+
+func _matches_previous_generation(level: LevelData, solver: Dictionary,
+		previous_references: Array) -> bool:
+	if previous_references.is_empty():
+		return false
+	var previous_similarity := _novelty.score(level, solver, previous_references)
+	return int(previous_similarity.get("similarity", 0)) >= PREVIOUS_GENERATION_REJECT_SIMILARITY
 
 
 func _relax_novelty(novelty: Dictionary) -> Dictionary:
@@ -216,7 +236,7 @@ func _on_physics_finished(records: Array[Dictionary]) -> void:
 		"%d fizik adayi bulundu. Yenilik ve kalite puanlari hesaplaniyor..." % records.size())
 	var wanted := int(_request["candidate_count"])
 	var ranked := rank_records(
-		records, _request, _novelty.default_references(), wanted)
+		records, _request, _novelty.default_references(true), wanted)
 	if ranked.size() > wanted:
 		ranked.resize(wanted)
 	if ranked.is_empty():
@@ -253,6 +273,7 @@ func _build_metadata(record: Dictionary) -> Dictionary:
 		"variation_seed": int(record.get("variation_seed", 0)),
 		"variation_scale": float(record.get("variation_scale", 0.0)),
 		"physics_rescue": bool(record.get("physics_rescue", false)),
+		"generation_seed": int(_request.get("seed", 0)),
 		"robust_cells": int(solver.get("robust", 0)),
 		"bounce_count": int(solver.get("bounces", 0)),
 		"opened_robust": int(solver.get("opened_robust", 0)),

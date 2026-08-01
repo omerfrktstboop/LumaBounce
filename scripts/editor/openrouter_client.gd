@@ -84,7 +84,7 @@ func build_request_body(model_slug: String, messages: Array, requested_count: in
 	var body := {
 		"model": model_slug,
 		"messages": messages,
-		"temperature": 0.8,
+		"temperature": 1.0,
 		"max_tokens": MAX_TOKENS,
 		"stream": false,
 		"reasoning": {"enabled": false},
