@@ -3,29 +3,28 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 
-[sub_resource type="Resource" id="Resource_l10_lower"]
+[sub_resource type="Resource" id="Resource_l11_blocker"]
 script = ExtResource("2_panel_data")
-position = Vector2(240, 800)
-rotation_degrees = 0.0
-length = 600.0
+position = Vector2(320, 700)
+rotation_degrees = -8.0
+length = 520.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l10_upper"]
+[sub_resource type="Resource" id="Resource_l11_redirector"]
 script = ExtResource("2_panel_data")
-position = Vector2(540, 460)
-rotation_degrees = 0.0
-length = 480.0
+position = Vector2(150, 420)
+rotation_degrees = 25.0
+length = 280.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("1_level_data")
 level_id = 10
-display_name = "Çift Sekme"
+display_name = "Kırık Hat"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(420, 300)
-panels = Array[PanelData]([SubResource("Resource_l10_lower"), SubResource("Resource_l10_upper")])
+target_position = Vector2(160, 290)
+panels = Array[PanelData]([SubResource("Resource_l11_blocker"), SubResource("Resource_l11_redirector")])
 max_lives = 4
-tutorial_text = "Önce sağ, sonra sol kenar."
 two_star_max_seconds = 100.0
 two_star_max_shots = 3
 three_star_max_seconds = 52.0

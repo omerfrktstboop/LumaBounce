@@ -4,29 +4,30 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 [ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
 
-[sub_resource type="Resource" id="Resource_l38_panel"]
+[sub_resource type="Resource" id="Resource_l39_panel"]
 script = ExtResource("2_panel_data")
-position = Vector2(253.14, 744.113)
-rotation_degrees = 21.466
-length = 346.221
+position = Vector2(404.901, 693.376)
+rotation_degrees = -18.336
+length = 298.717
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l38_right"]
+[sub_resource type="Resource" id="Resource_l39_left"]
 script = ExtResource("3_block_data")
-position = Vector2(505, 850)
+position = Vector2(215, 860)
 rotation_degrees = 0.0
 size = Vector2(350, 46)
 hit_points = 2
 
-[sub_resource type="Resource" id="Resource_l38_left"]
+[sub_resource type="Resource" id="Resource_l39_upper"]
 script = ExtResource("3_block_data")
-position = Vector2(179.508, 426.686)
+position = Vector2(336.083, 462.913)
 rotation_degrees = 0.0
 size = Vector2(350, 46)
+hit_points = 2
 
-[sub_resource type="Resource" id="Resource_l38_middle"]
+[sub_resource type="Resource" id="Resource_l39_middle"]
 script = ExtResource("3_block_data")
-position = Vector2(360, 510)
+position = Vector2(542.245, 534.097)
 rotation_degrees = 0.0
 size = Vector2(500, 46)
 hit_points = 2
@@ -34,15 +35,14 @@ hit_points = 2
 [resource]
 script = ExtResource("1_level_data")
 level_id = 38
-display_name = "Ayna Üçlü"
-launcher_position = Vector2(360.212, 1120)
-target_position = Vector2(197.659, 296.973)
-panels = Array[PanelData]([SubResource("Resource_l38_panel")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l38_right"), SubResource("Resource_l38_left"), SubResource("Resource_l38_middle")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 186.446), Vector2(546.566, 1440)])
+display_name = "Zırhlı Hat"
+launcher_position = Vector2(359.446, 1120)
+target_position = Vector2(404.943, 229.45)
+panels = Array[PanelData]([SubResource("Resource_l39_panel")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l39_left"), SubResource("Resource_l39_upper"), SubResource("Resource_l39_middle")])
 max_lives = 8
-tutorial_text = "Dayanıklı iki kilidi seç; üçüncü blok dikkat dağıtır."
-two_star_max_seconds = 165.0
+tutorial_text = "Her temas değerli; üç kilidi tek rota gibi düşün."
+two_star_max_seconds = 180.0
 two_star_max_shots = 7
-three_star_max_seconds = 92.0
+three_star_max_seconds = 100.0
 three_star_max_shots = 6

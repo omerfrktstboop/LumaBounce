@@ -3,30 +3,30 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 
-[sub_resource type="Resource" id="Resource_l20_left"]
+[sub_resource type="Resource" id="Resource_l10_lower"]
 script = ExtResource("2_panel_data")
-position = Vector2(200, 820)
-rotation_degrees = 25.0
-length = 340.0
+position = Vector2(240, 800)
+rotation_degrees = 0.0
+length = 600.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l20_right"]
+[sub_resource type="Resource" id="Resource_l10_upper"]
 script = ExtResource("2_panel_data")
-position = Vector2(520, 560)
-rotation_degrees = -20.0
-length = 320.0
+position = Vector2(540, 460)
+rotation_degrees = 0.0
+length = 480.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("1_level_data")
 level_id = 20
-display_name = "Ustalık II"
+display_name = "Çift Sekme"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(380, 260)
-panels = Array[PanelData]([SubResource("Resource_l20_left"), SubResource("Resource_l20_right")])
-right_wall_segments = Array[Vector2]([Vector2(-320, 940), Vector2(1180, 1440)])
-max_lives = 3
-two_star_max_seconds = 110.0
+target_position = Vector2(420, 300)
+panels = Array[PanelData]([SubResource("Resource_l10_lower"), SubResource("Resource_l10_upper")])
+max_lives = 4
+tutorial_text = "Önce sağ, sonra sol kenar."
+two_star_max_seconds = 100.0
 two_star_max_shots = 3
-three_star_max_seconds = 60.0
+three_star_max_seconds = 52.0
 three_star_max_shots = 2

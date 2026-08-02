@@ -4,39 +4,38 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 [ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
 
-[sub_resource type="Resource" id="Resource_l35_panel"]
+[sub_resource type="Resource" id="Resource_l37_panel"]
 script = ExtResource("2_panel_data")
-position = Vector2(249.194, 752.748)
-rotation_degrees = -5.587
-length = 506.392
+position = Vector2(345.677, 687.302)
+rotation_degrees = -16.578
+length = 299.938
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l35_lower"]
+[sub_resource type="Resource" id="Resource_l37_right"]
 script = ExtResource("3_block_data")
-position = Vector2(470, 850)
+position = Vector2(406.126, 467.6)
 rotation_degrees = 0.0
-size = Vector2(440, 46)
+size = Vector2(540, 46)
 hit_points = 2
 
-[sub_resource type="Resource" id="Resource_l35_upper"]
+[sub_resource type="Resource" id="Resource_l37_upper"]
 script = ExtResource("3_block_data")
-position = Vector2(195.626, 423.985)
+position = Vector2(223.858, 424.107)
 rotation_degrees = 0.0
-size = Vector2(440, 46)
+size = Vector2(520, 46)
 hit_points = 2
 
 [resource]
 script = ExtResource("1_level_data")
 level_id = 35
-display_name = "Darboğaz"
-launcher_position = Vector2(370.154, 1120)
-target_position = Vector2(172.732, 279.525)
-panels = Array[PanelData]([SubResource("Resource_l35_panel")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l35_lower"), SubResource("Resource_l35_upper")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 385.468), Vector2(612.657, 1440)])
+display_name = "Çifte Çatlak"
+launcher_position = Vector2(368.559, 1120)
+target_position = Vector2(327.202, 226.217)
+panels = Array[PanelData]([SubResource("Resource_l37_panel")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l37_right"), SubResource("Resource_l37_upper")])
 max_lives = 7
-tutorial_text = "İki hazırlık atışı yap; üçüncüde açıklığı kullan."
-two_star_max_seconds = 135.0
+tutorial_text = "İki kilidin de ikinci temasını planla."
+two_star_max_seconds = 150.0
 two_star_max_shots = 6
-three_star_max_seconds = 75.0
+three_star_max_seconds = 85.0
 three_star_max_shots = 5

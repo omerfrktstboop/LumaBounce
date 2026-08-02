@@ -3,36 +3,35 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 
-[sub_resource type="Resource" id="Resource_l15_lower"]
+[sub_resource type="Resource" id="Resource_l13_lower"]
 script = ExtResource("2_panel_data")
-position = Vector2(500, 800)
-rotation_degrees = -15.0
-length = 400.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Resource_l15_mid"]
-script = ExtResource("2_panel_data")
-position = Vector2(200, 460)
+position = Vector2(360, 880)
 rotation_degrees = 15.0
 length = 380.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l15_far"]
+[sub_resource type="Resource" id="Resource_l13_opposite"]
 script = ExtResource("2_panel_data")
-position = Vector2(600, 350)
-rotation_degrees = -8.0
-length = 220.0
+position = Vector2(560, 620)
+rotation_degrees = -28.0
+length = 320.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l13_upper"]
+script = ExtResource("2_panel_data")
+position = Vector2(180, 400)
+rotation_degrees = 22.0
+length = 300.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("1_level_data")
 level_id = 15
-display_name = "Kör Sekme"
+display_name = "Üçgen"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(350, 260)
-panels = Array[PanelData]([SubResource("Resource_l15_lower"), SubResource("Resource_l15_mid"), SubResource("Resource_l15_far")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 380), Vector2(680, 1440)])
-max_lives = 3
+target_position = Vector2(380, 270)
+panels = Array[PanelData]([SubResource("Resource_l13_lower"), SubResource("Resource_l13_opposite"), SubResource("Resource_l13_upper")])
+max_lives = 4
 two_star_max_seconds = 105.0
 two_star_max_shots = 3
 three_star_max_seconds = 56.0

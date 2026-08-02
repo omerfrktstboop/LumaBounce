@@ -1,46 +1,40 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 [ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
 
-[sub_resource type="Resource" id="Resource_l34_panel"]
+[sub_resource type="Resource" id="Resource_l31_panel"]
 script = ExtResource("2_panel_data")
-position = Vector2(315.099, 693.376)
-rotation_degrees = 18.336
-length = 298.717
+position = Vector2(369.286, 707.682)
+rotation_degrees = -17.975
+length = 286.249
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l34_lower"]
+[sub_resource type="Resource" id="Resource_l31_gate_a"]
 script = ExtResource("3_block_data")
-position = Vector2(505, 860)
+position = Vector2(534.704, 626.621)
 rotation_degrees = 0.0
-size = Vector2(350, 46)
+size = Vector2(430, 46)
 
-[sub_resource type="Resource" id="Resource_l34_upper"]
+[sub_resource type="Resource" id="Resource_l31_gate_b"]
 script = ExtResource("3_block_data")
-position = Vector2(383.917, 462.913)
+position = Vector2(426.401, 897.852)
 rotation_degrees = 0.0
-size = Vector2(350, 46)
-
-[sub_resource type="Resource" id="Resource_l34_middle"]
-script = ExtResource("3_block_data")
-position = Vector2(177.755, 534.097)
-rotation_degrees = 0.0
-size = Vector2(500, 46)
+size = Vector2(430, 46)
 hit_points = 2
 
 [resource]
 script = ExtResource("1_level_data")
 level_id = 34
-display_name = "Tam Temizlik"
-launcher_position = Vector2(360.554, 1120)
-target_position = Vector2(315.057, 229.45)
-panels = Array[PanelData]([SubResource("Resource_l34_panel")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l34_lower"), SubResource("Resource_l34_upper"), SubResource("Resource_l34_middle")])
-max_lives = 7
-tutorial_text = "Üç bloğu tek hazırlık atışında zincirlemeyi dene."
-two_star_max_seconds = 125.0
-two_star_max_shots = 5
-three_star_max_seconds = 68.0
-three_star_max_shots = 4
+display_name = "Çapraz Anahtar"
+launcher_position = Vector2(345.127, 1120)
+target_position = Vector2(391.066, 250.913)
+panels = Array[PanelData]([SubResource("Resource_l31_panel")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l31_gate_a"), SubResource("Resource_l31_gate_b")])
+max_lives = 6
+tutorial_text = "Her bloğu kırmak zorunda değilsin; doğru olanı seç."
+two_star_max_seconds = 105.0
+two_star_max_shots = 4
+three_star_max_seconds = 60.0
+three_star_max_shots = 3

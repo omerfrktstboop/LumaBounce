@@ -4,37 +4,37 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 [ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
 
-[sub_resource type="Resource" id="Resource_l31_panel"]
+[sub_resource type="Resource" id="Resource_l32_panel"]
 script = ExtResource("2_panel_data")
-position = Vector2(369.286, 707.682)
-rotation_degrees = -17.975
-length = 286.249
+position = Vector2(374.323, 687.302)
+rotation_degrees = 16.578
+length = 299.938
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l31_gate_a"]
+[sub_resource type="Resource" id="Resource_l32_right"]
 script = ExtResource("3_block_data")
-position = Vector2(534.704, 626.621)
+position = Vector2(313.874, 467.6)
 rotation_degrees = 0.0
-size = Vector2(430, 46)
+size = Vector2(540, 46)
 
-[sub_resource type="Resource" id="Resource_l31_gate_b"]
+[sub_resource type="Resource" id="Resource_l32_lower"]
 script = ExtResource("3_block_data")
-position = Vector2(426.401, 897.852)
+position = Vector2(496.142, 424.107)
 rotation_degrees = 0.0
-size = Vector2(430, 46)
+size = Vector2(520, 46)
 hit_points = 2
 
 [resource]
 script = ExtResource("1_level_data")
 level_id = 31
-display_name = "Çapraz Anahtar"
-launcher_position = Vector2(345.127, 1120)
-target_position = Vector2(391.066, 250.913)
-panels = Array[PanelData]([SubResource("Resource_l31_panel")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l31_gate_a"), SubResource("Resource_l31_gate_b")])
+display_name = "Çifte Kilit"
+launcher_position = Vector2(351.441, 1120)
+target_position = Vector2(392.798, 226.217)
+panels = Array[PanelData]([SubResource("Resource_l32_panel")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l32_right"), SubResource("Resource_l32_lower")])
 max_lives = 6
-tutorial_text = "Her bloğu kırmak zorunda değilsin; doğru olanı seç."
-two_star_max_seconds = 105.0
+tutorial_text = "Tek atış iki kilidi birden hazırlayabilir."
+two_star_max_seconds = 110.0
 two_star_max_shots = 4
-three_star_max_seconds = 60.0
+three_star_max_seconds = 58.0
 three_star_max_shots = 3
