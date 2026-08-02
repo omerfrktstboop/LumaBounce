@@ -16,12 +16,14 @@ script = ExtResource("3_block_data")
 position = Vector2(470, 850)
 rotation_degrees = 0.0
 size = Vector2(440, 46)
+hit_points = 2
 
 [sub_resource type="Resource" id="Resource_l35_upper"]
 script = ExtResource("3_block_data")
 position = Vector2(195.626, 423.985)
 rotation_degrees = 0.0
 size = Vector2(440, 46)
+hit_points = 2
 
 [resource]
 script = ExtResource("1_level_data")
@@ -32,9 +34,9 @@ target_position = Vector2(172.732, 279.525)
 panels = Array[PanelData]([SubResource("Resource_l35_panel")])
 breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l35_lower"), SubResource("Resource_l35_upper")])
 left_wall_segments = Array[Vector2]([Vector2(-320, 385.468), Vector2(612.657, 1440)])
-max_lives = 5
+max_lives = 7
 tutorial_text = "İki hazırlık atışı yap; üçüncüde açıklığı kullan."
 two_star_max_seconds = 135.0
-two_star_max_shots = 4
+two_star_max_shots = 6
 three_star_max_seconds = 75.0
-three_star_max_shots = 3
+three_star_max_shots = 5

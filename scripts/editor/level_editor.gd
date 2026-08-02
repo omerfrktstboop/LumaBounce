@@ -356,9 +356,7 @@ func _set_selected_position(value: Vector2) -> void:
 				panel.position = value
 		Selection.BLOCK:
 			level.breakable_blocks[_selected_index].position = value
-			var block := _world.get_block_node(_selected_index)
-			if block != null:
-				block.position = value
+			_world.set_block_position(_selected_index, value)
 		Selection.TARGET:
 			level.target_position = value
 			_target_preview.position = value
@@ -518,7 +516,7 @@ func _on_analyse() -> void:
 		_refresh_info()
 		return
 
-	var all_broken := (1 << level.breakable_blocks.size()) - 1
+	var all_broken := _world.get_all_broken_state()
 	var open_scan := await _solver.scan_async(spawn, level.target_position, play_rect,
 		_world.rids_for_state(all_broken),
 		LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
@@ -561,7 +559,7 @@ func _on_solution_pressed() -> void:
 		if not alternative.is_empty():
 			routes.append(alternative)
 	else:
-		var all_broken := (1 << level.breakable_blocks.size()) - 1
+		var all_broken := _world.get_all_broken_state()
 		var opened_rids := _world.rids_for_state(all_broken)
 		var opened_scan := await _solver.scan_async(
 			spawn, level.target_position, play_rect, opened_rids,

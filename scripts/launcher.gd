@@ -59,6 +59,9 @@ const MAX_BOUNCES_PER_TICK := 6
 ## carpmadigi surece gecerlidir - carparsa kilavuz orada durur).
 @export var guide_length_min := 190.0
 @export var guide_length_max := 560.0
+## Bolum ilerledikce gameplay tarafindan 1.0'dan 0.5'e indirilir. Yalnizca
+## gorunen nokta sayisini/mesafeyi etkiler; hesaplanan impuls degismez.
+var guide_visibility_ratio := 1.0
 
 @export_group("Gorunum")
 @export var accent := Palette.ACCENT
@@ -156,6 +159,16 @@ func get_aim_direction() -> Vector2:
 
 func get_power_step() -> int:
 	return _power_step_for_ratio(_power_ratio)
+
+
+func set_guide_visibility_ratio(value: float) -> void:
+	guide_visibility_ratio = clampf(value, 0.4, 1.0)
+	if is_node_ready() and _aiming:
+		_refresh_aim_visual()
+
+
+func get_guide_visibility_ratio() -> float:
+	return guide_visibility_ratio
 
 
 func is_aiming() -> bool:
@@ -269,7 +282,10 @@ func _build_guide_dots() -> PackedVector2Array:
 	shape.radius = preview_ball_radius
 
 	var dots := PackedVector2Array()
-	var total_length := lerpf(guide_length_min, guide_length_max, _power_ratio)
+	var total_length := (
+		lerpf(guide_length_min, guide_length_max, _power_ratio)
+		* guide_visibility_ratio)
+	var visible_dot_limit := maxi(8, roundi(float(max_dots) * guide_visibility_ratio))
 	var point := Vector2.UP * ball_spawn_offset
 	var velocity := _direction * get_power()
 	var travelled := 0.0
@@ -297,7 +313,7 @@ func _build_guide_dots() -> PackedVector2Array:
 				var t := 0.0 if segment_length <= 0.0001 else (next_dot - travelled) / segment_length
 				dots.append(point.lerp(segment_end, t))
 				next_dot += dot_spacing
-				if dots.size() >= max_dots:
+				if dots.size() >= visible_dot_limit:
 					return dots
 
 			travelled += segment_length
@@ -310,7 +326,7 @@ func _build_guide_dots() -> PackedVector2Array:
 
 			# Tam carpisma noktasini net bir "sekme" isareti olarak da ekle.
 			dots.append(point)
-			if dots.size() >= max_dots or has_bounced:
+			if dots.size() >= visible_dot_limit or has_bounced:
 				return dots
 			has_bounced = true
 

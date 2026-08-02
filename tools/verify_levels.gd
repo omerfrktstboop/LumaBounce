@@ -15,7 +15,8 @@ extends SceneTree
 ##      21-25 ayrica 5-10 sekmelik ustalik zinciri ister.
 ##   2) Kirilabilir blogu olan bolumler (26+) - COK ATISLI durum arayisi.
 ##      Tek atislik model burada yanlis cevap verirdi: bir atisin kirdigi
-##      blok sonraki atisin geometrisini kalici olarak degistirir.
+##      blok sonraki atisin geometrisini kalici olarak degistirir. 30-40'ta
+##      iki canli kilitlerin ilk hasari da ayni durum agacinda kalici tutulur.
 ##
 ## Kullanim:
 ##   godot --headless --path . --script res://tools/verify_levels.gd
@@ -25,7 +26,7 @@ extends SceneTree
 
 ## Cok atisli aramada ziyaret edilecek en fazla "kirik blok" durumu.
 ## Kombinasyon sayisi 2^blok oldugu icin ust sinir sart.
-const MAX_BLOCK_STATES := 48
+const MAX_BLOCK_STATES := 96
 ## Cok atisli modda bir rotanin "rahat" sayilmasi icin gereken saglam hucre
 ## sayisi. Tek bir saglam hucre, kaba izgarada yalnizca ~3 derece x 100 guc
 ## demektir - teknik olarak "komsulari da isabet ediyor" ama oyuncu icin hala
@@ -38,11 +39,11 @@ const RICOCHET_LAST_LEVEL := 25
 const RICOCHET_MIN_BOUNCES := 5
 const RICOCHET_MAX_BOUNCES := 10
 const MIN_RICOCHET_CHAIN_CELLS := 2
-## 26 blok mekanigini zorunlu rota ile ogretir. 27-30'da bloklu guvenli rota
-## ve bloksuz ustalik rotasi birlikte vardir. 31-35 tekrar kalici blok durumu
-## kullanan cok atisli bulmacalara doner.
+## 26 blok mekanigini zorunlu rota ile ogretir. 27-29'da bloklu guvenli rota
+## ve bloksuz ustalik rotasi birlikte vardir. 30-40 kalici hasar/blok durumu
+## kullanan cok atisli bulmacalardir.
 const BLOCK_OPTIONAL_FIRST_LEVEL := 27
-const BLOCK_OPTIONAL_LAST_LEVEL := 30
+const BLOCK_OPTIONAL_LAST_LEVEL := 29
 
 var _angle_step := 2.0
 var _power_step := 50.0
@@ -333,7 +334,7 @@ func _report_solutions(level: LevelData, solutions: Array[Dictionary],
 	var optional_block_route := level.level_id in range(
 		BLOCK_OPTIONAL_FIRST_LEVEL, BLOCK_OPTIONAL_LAST_LEVEL + 1)
 	if not optional_block_route:
-		# 26 ogretici, 31-35 kalici blok durumu kullanan asil bulmacalardir.
+		# 26 ogretici, 30-40 kalici blok/hasar durumu kullanan asil bulmacalardir.
 		if (not free_route.is_empty()
 				and _robust_of(free_route) >= MIN_ROBUST_CELLS):
 			print("  UYARI: blok kirmadan saglam kestirme var; cok atisli rota atlanabiliyor.")

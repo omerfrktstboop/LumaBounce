@@ -20,9 +20,13 @@ const PANEL_SCENE := "res://scenes/bounce_panel.tscn"
 const BLOCK_SCENE := "res://scenes/breakable_block.tscn"
 
 var _arena: Arena
-## Kirilabilir blok govdesinin RID'i -> LevelData.breakable_blocks indeksi.
+## Kirilabilir blok govdesinin RID'i -> solver durum biti. Dayanikli bir blok
+## ayni geometride birden fazla bit/RID kullanir.
 var _block_rids: Dictionary = {}
 var _block_count := 0
+var _state_slot_count := 0
+var _block_nodes: Array[BreakableBlock] = []
+var _block_layers: Dictionary = {}
 
 
 ## Bolumu bastan kurar. Tekrar cagrilabilir; onceki govdeler once agactan
@@ -48,6 +52,9 @@ func clear() -> void:
 	_arena = null
 	_block_rids.clear()
 	_block_count = 0
+	_state_slot_count = 0
+	_block_nodes.clear()
+	_block_layers.clear()
 
 
 func get_space() -> PhysicsDirectSpaceState2D:
@@ -66,6 +73,14 @@ func get_block_count() -> int:
 	return _block_count
 
 
+func get_state_slot_count() -> int:
+	return _state_slot_count
+
+
+func get_all_broken_state() -> int:
+	return (1 << _state_slot_count) - 1 if _state_slot_count > 0 else 0
+
+
 ## Editorun surukleme sirasinda dugumu dogrudan oynatabilmesi icin. Tum
 ## bolumu her karede yeniden kurmak yerine yalnizca ilgili govde tasinir.
 func get_panel_node(index: int) -> BouncePanel:
@@ -81,19 +96,20 @@ func get_panel_node(index: int) -> BouncePanel:
 
 
 func get_block_node(index: int) -> BreakableBlock:
-	var found := 0
-	for child in get_children():
-		var block := child as BreakableBlock
-		if block == null:
-			continue
-		if found == index:
-			return block
-		found += 1
-	return null
+	return _block_nodes[index] if index >= 0 and index < _block_nodes.size() else null
 
 
-## Bit maskesindeki kirik bloklarin RID'leri. Simulasyon bunlari sorgudan
-## disladigi icin blok "kirilmis" gibi davranir ama dunya yeniden kurulmaz.
+## Editorde suruklenen dayanikli blogun gorunen ve solver'a ait gorunmez
+## can katmanlarini birlikte tasir.
+func set_block_position(index: int, value: Vector2) -> void:
+	for raw_layer in _block_layers.get(index, []):
+		var layer := raw_layer as BreakableBlock
+		if layer != null:
+			layer.position = value
+
+
+## Bit maskesindeki tuketilmis can katmanlarinin RID'leri. Simulasyon bunlari
+## sorgudan dislar; dunya yeniden kurulmadan hasar atislar arasinda korunur.
 func rids_for_state(state: int) -> Array[RID]:
 	var rids: Array[RID] = []
 	if state == 0:
@@ -129,11 +145,22 @@ func _build_blocks(level: LevelData) -> void:
 		var data := level.breakable_blocks[i]
 		if data == null:
 			continue
-		var block := block_scene.instantiate() as BreakableBlock
-		block.position = data.position
-		block.rotation_degrees = data.rotation_degrees
-		block.block_size = data.size
-		add_child(block)
-		# Indeks .tres sirasidir; raporlarda "blok 2" dosyadaki 2. blok demektir.
-		_block_rids[block.get_rid()] = i
+		var layers: Array[BreakableBlock] = []
+		# Her can ayni geometride ayri bir fizik katmanidir. Solver bir katmani
+		# temasla dislar; digeri ayni atista geri donuste veya sonraki atista
+		# kalir. Ilk dugum editor goruntusu, digerleri gorunmez collision katmani.
+		for hit_index in data.hit_points:
+			var block := block_scene.instantiate() as BreakableBlock
+			block.position = data.position
+			block.rotation_degrees = data.rotation_degrees
+			block.block_size = data.size
+			block.hit_points = data.hit_points if hit_index == 0 else 1
+			block.visible = hit_index == 0
+			add_child(block)
+			layers.append(block)
+			_block_rids[block.get_rid()] = _state_slot_count
+			_state_slot_count += 1
+			if hit_index == 0:
+				_block_nodes.append(block)
+		_block_layers[i] = layers
 		_block_count += 1

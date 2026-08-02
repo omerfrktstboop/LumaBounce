@@ -1,11 +1,11 @@
 class_name BreakableBlock
 extends StaticBody2D
 
-## Topun TEK vurusta kirdigi engel.
+## Top temaslariyla catlayip kirilan engel.
 ##
-## Bu bir brick-breaker tuglasi DEGILDIR: puan vermez, kirilmasi zorunlu
-## degildir. Islevi rotayi acmak ve sekme geometrisini degistirmektir.
-## Bu yuzden dayaniklilik/HP alani bilerek yoktur.
+## Normal tugla tek temasta, kilit tugla iki temasta kirilir. Hasar atislar
+## arasinda kalir; ayni atis dogru sekmeyle geri donerse ikinci temasi da
+## sayilir. Puan uretmez, yalnizca rota geometrisini degistirir.
 ##
 ## Fizik acisindan yalnizca "obstacle" katmanindaki siradan bir StaticBody2D'dir;
 ## topun sekme matematigi (bkz. ball.gd) bu dosyayi hic bilmez. Kirilma
@@ -17,11 +17,20 @@ extends StaticBody2D
 
 ## Blok gercekten bu cagriyla kirildi (tekrar cagrilarda yayilmaz).
 signal broken(at: Vector2)
+## Tugla kirilmadi ama bir can kaybetti.
+signal damaged(at: Vector2, remaining_hits: int, maximum_hits: int)
 
 @export var block_size := Vector2(160.0, 44.0):
 	set(value):
 		block_size = Vector2(maxf(value.x, 8.0), maxf(value.y, 8.0))
 		if is_node_ready():
+			_rebuild()
+
+@export_range(1, 2, 1) var hit_points := 1:
+	set(value):
+		hit_points = clampi(value, 1, 2)
+		if is_node_ready():
+			_remaining_hits = hit_points
 			_rebuild()
 
 @export_group("Gorunum")
@@ -44,6 +53,9 @@ signal broken(at: Vector2)
 @onready var _visual: Node2D = $Visual
 
 var _broken := false
+var _remaining_hits := 1
+var _last_hit_physics_frame := -1
+var _damage_tween: Tween
 ## 0 -> 1 arasi kirilma ilerlemesi; parcalar bununla cizilir.
 var _shatter := 0.0:
 	set(value):
@@ -56,11 +68,40 @@ func _ready() -> void:
 	# onu ortmemeleri icin gorsel katman ebeveynin ARKASINA alinir.
 	# (z_index yerine bu bayrak: kardes bloklarin siralamasini etkilemez.)
 	_visual.show_behind_parent = true
+	_remaining_hits = hit_points
 	_rebuild()
 
 
 func is_broken() -> bool:
 	return _broken
+
+
+func get_remaining_hits() -> int:
+	return _remaining_hits
+
+
+func get_max_hits() -> int:
+	return hit_points
+
+
+## Bir fizik karesinde yalnizca bir hasar kabul eder. Bu, ayni temas icin
+## move_and_collide alt adimlarindan gelebilecek cift bildirimi engeller;
+## top daha sonra geri donerse yeni karede yeniden hasar verebilir.
+func take_hit() -> bool:
+	if _broken:
+		return false
+	var physics_frame := Engine.get_physics_frames()
+	if physics_frame == _last_hit_physics_frame:
+		return false
+	_last_hit_physics_frame = physics_frame
+	_remaining_hits = maxi(_remaining_hits - 1, 0)
+	if _remaining_hits == 0:
+		shatter()
+		return true
+	damaged.emit(global_position, _remaining_hits, hit_points)
+	_rebuild()
+	_play_damage_effect()
+	return false
 
 
 ## Topun temasiyla cagrilir. Idempotenttir: ayni blok icin ikinci cagri
@@ -69,6 +110,9 @@ func shatter() -> void:
 	if _broken:
 		return
 	_broken = true
+	_remaining_hits = 0
+	if _damage_tween != null and _damage_tween.is_valid():
+		_damage_tween.kill()
 	_disable_collision()
 	broken.emit(global_position)
 	_play_break_effect()
@@ -97,6 +141,8 @@ func _apply_shape() -> void:
 
 
 func _build_visual() -> void:
+	_visual.scale = Vector2.ONE
+	_visual.modulate = Color.WHITE
 	for child in _visual.get_children():
 		child.queue_free()
 
@@ -104,6 +150,10 @@ func _build_visual() -> void:
 	_visual.add_child(ShapeBuilder.make_polygon(body, surface_color))
 	_visual.add_child(ShapeBuilder.make_outline(body, edge_color, outline_width))
 	_build_seam()
+	if hit_points > 1:
+		_build_armor_marks()
+	if _remaining_hits < hit_points:
+		_build_cracks()
 
 
 ## Merkezdeki dikis: govdeyi ikiye bolen ince bir cizgi ve iki ucundaki kisa
@@ -134,6 +184,51 @@ func _build_seam() -> void:
 		notch.width = 2.0
 		notch.antialiased = true
 		_visual.add_child(notch)
+
+
+## Iki canli tuglayi normal tugladan ilk bakista ayiran cift kenar isareti.
+func _build_armor_marks() -> void:
+	var half := block_size * 0.5
+	var color := Color(edge_color, 0.72)
+	for side in [-1.0, 1.0]:
+		var mark := Line2D.new()
+		mark.points = PackedVector2Array([
+			Vector2(side * (half.x - 18.0), -half.y + 7.0),
+			Vector2(side * (half.x - 18.0), half.y - 7.0),
+		])
+		mark.default_color = color
+		mark.width = 3.0
+		mark.begin_cap_mode = Line2D.LINE_CAP_ROUND
+		mark.end_cap_mode = Line2D.LINE_CAP_ROUND
+		mark.antialiased = true
+		_visual.add_child(mark)
+
+
+## Ilk darbeden sonra kalan kalici catlak. Yeni partikule gerek kalmadan
+## oyuncuya "bir temas daha" bilgisini verir.
+func _build_cracks() -> void:
+	var crack := Line2D.new()
+	var half_y := block_size.y * 0.5
+	crack.points = PackedVector2Array([
+		Vector2(-18.0, -half_y + 5.0), Vector2(-7.0, -6.0),
+		Vector2(-14.0, 2.0), Vector2(3.0, 9.0),
+		Vector2(12.0, half_y - 5.0),
+	])
+	crack.default_color = Color(Palette.TEXT, 0.82)
+	crack.width = 2.8
+	crack.joint_mode = Line2D.LINE_JOINT_ROUND
+	crack.antialiased = true
+	_visual.add_child(crack)
+
+
+func _play_damage_effect() -> void:
+	if _damage_tween != null and _damage_tween.is_valid():
+		_damage_tween.kill()
+	_damage_tween = create_tween()
+	_damage_tween.tween_property(_visual, "scale", Vector2.ONE * 1.07, 0.05) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_damage_tween.tween_property(_visual, "scale", Vector2.ONE, 0.11) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 
 ## Kisa scale punch + fade. Efekt bitince blok kendini agactan siler; kirilmis

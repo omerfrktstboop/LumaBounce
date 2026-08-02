@@ -51,7 +51,8 @@ var target_size := 92.0
 
 var _space: PhysicsDirectSpaceState2D
 var _ball_shape: CircleShape2D
-## Kirilabilir blok govdesinin RID'i -> LevelData.breakable_blocks indeksi.
+## Kirilabilir blok govdesinin RID'i -> kalici durum biti. Dayanikli bloklar
+## her can icin ayni geometride ayri bir RID/bit kullanir.
 var _block_index: Dictionary = {}
 
 
@@ -120,8 +121,8 @@ func build_powers(step: float) -> Array[float]:
 
 # --- Tarama -------------------------------------------------------------------
 
-## Verilen "kirik blok" durumundan tum aci x guc izgarasini tarar.
-## [param excluded] o durumda ARTIK OLMAYAN bloklarin RID'leridir.
+## Verilen kalici hasar durumundan tum aci x guc izgarasini tarar.
+## [param excluded] o durumda tuketilmis blok/can katmanlarinin RID'leridir.
 func scan(spawn: Vector2, target_position: Vector2, play_rect: Rect2,
 		excluded: Array[RID], angle_step: float, power_step: float) -> Dictionary:
 	var state := _create_scan_state(angle_step, power_step)
@@ -155,9 +156,10 @@ func scan_async(spawn: Vector2, target_position: Vector2, play_rect: Rect2,
 	return state
 
 
-## Kirilabilir bloklarin atislar arasinda kirik kaldigi durum uzayini tarar.
-## Sonuclar, hedefe ulasan atis sayisini ve o atistan once kirik blok maskesini
-## tasir. Uretici ve test araclari ayni cok atisli fizik modelini kullanabilir.
+## Kirilabilir bloklarin hasarinin atislar arasinda kaldigi durum uzayini tarar.
+## Sonuclar, hedefe ulasan atis sayisini ve o atistan once tuketilen can
+## katmanlari maskesini tasir. Uretici ve test araclari ayni cok atisli fizik
+## modelini kullanabilir.
 func search_block_states_async(spawn: Vector2, target_position: Vector2,
 		play_rect: Rect2, max_shots: int, angle_step: float, power_step: float,
 		max_states := 48, sims_per_frame := 120,

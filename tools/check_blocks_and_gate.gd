@@ -83,6 +83,7 @@ func _test_launcher_power_feel() -> void:
 	var ball := gameplay.get_node("Ball") as Ball
 	var drag_hint := launcher.get_node("DragHint") as Node2D
 	var meter := launcher.get_node("PowerMeter") as Node2D
+	var guide := launcher.get_node("AimGuide") as AimGuide
 	var ball_visual := ball.get_node("Visual") as Node2D
 	var barrel_tip := launcher.get("_barrel_tip") as Polygon2D
 	var physical_start := ball.global_position
@@ -92,6 +93,9 @@ func _test_launcher_power_feel() -> void:
 
 	_check("tam guc mesafesi mobil alt alana sigiyor", launcher.max_drag_distance <= 140.0, true)
 	_check("azami atis gucu bir kademe dusuruldu", launcher.max_power, 2200.0)
+	_check("29'a kadar nisan izi tam", gameplay.call("_preview_ratio_for_level", 29), 1.0)
+	_check("30'da nisan izi yumusak azalir", gameplay.call("_preview_ratio_for_level", 30), 0.95)
+	_check("40'ta nisan izi yariya iner", gameplay.call("_preview_ratio_for_level", 40), 0.5)
 	_check("surukleme alani hazir durumda gorunuyor", drag_hint.visible, true)
 
 	var pointer_start := launcher.global_position
@@ -111,6 +115,12 @@ func _test_launcher_power_feel() -> void:
 		ball_visual.position.length() >= 13.5, true)
 	_check("namlu ucu gerilen topu takip ediyor",
 		barrel_tip.global_position.distance_to(ball_visual.global_position) < 0.5, true)
+	var full_guide_count := (guide.get("_dots") as PackedVector2Array).size()
+	launcher.set_guide_visibility_ratio(0.5)
+	launcher.update_aim(pointer_start + Vector2.DOWN * launcher.max_drag_distance)
+	var short_guide_count := (guide.get("_dots") as PackedVector2Array).size()
+	_check("azalan oran gercek nokta sayisini kisaltiyor", short_guide_count < full_guide_count, true)
+	launcher.set_guide_visibility_ratio(1.0)
 	_check("gecerli nisan birakiliyor", launcher.release_aim(), true)
 	_check("birakinca top normal firliyor", ball.is_flying(), true)
 	_check("birakinca gorsel ofset sifir", ball_visual.position, Vector2.ZERO)
@@ -138,14 +148,14 @@ func _register_audio_manager() -> void:
 # --- Kirilabilir blok durum kurallari -----------------------------------------
 
 func _test_block_state_rules() -> void:
-	print("--- Kirilabilir blok durumu (bolum 26) ---")
+	print("--- Dayanikli blok durumu (bolum 30) ---")
 
 	# Tipsiz: Gameplay adini anmadan yuklenir (bkz. dosya basindaki not).
 	var gameplay: Node = (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
 	if gameplay == null:
 		_fail("oynanis sahnesi yuklenemedi")
 		return
-	gameplay.level_data = LevelLibrary.load_level(26)
+	gameplay.level_data = LevelLibrary.load_level(30)
 	root.add_child(gameplay)
 	await physics_frame
 
@@ -154,7 +164,23 @@ func _test_block_state_rules() -> void:
 	_check("bolumde 1 blok var", field.get_total_count(), 1)
 
 	var block := _first_block(field)
-	block.shatter()
+	_check("kilit tugla iki canli", block.get_max_hits(), 2)
+	block.take_hit()
+	_check("ilk temas tuglayi catlatiyor", block.get_remaining_hits(), 1)
+	_check("catlayan tugla hala sahnede", field.get_remaining_count(), 1)
+	_check("catlayan tugla kirik sayilmiyor", field.get_broken_count(), 0)
+	block.take_hit()
+	_check("ayni fizik karesinde cift hasar yok", block.get_remaining_hits(), 1)
+	await physics_frame
+	_check("ilk hasardan sonra collision acik", block.collision_layer, 1)
+
+	# ATIS SIFIRLAMA: kismi hasar da kirik durum gibi kalici olmalı.
+	var ball := gameplay.get_node("Ball") as Ball
+	ball.shot_failed.emit("out_of_bounds")
+	await create_timer(float(gameplay.auto_reset_delay) + 0.25).timeout
+	_check("atis sifirlamasi catlagi iyilestirmiyor", block.get_remaining_hits(), 1)
+
+	block.take_hit()
 	_check("kirilan blok kalanlardan dusuyor", field.get_remaining_count(), 0)
 	_check("kirik blok sayaci artiyor", field.get_broken_count(), 1)
 
@@ -167,8 +193,7 @@ func _test_block_state_rules() -> void:
 	_check("kirik blogun sekli devre disi",
 		(block.get_node("Shape") as CollisionShape2D).disabled, true)
 
-	# ATIS SIFIRLAMA: top kaybedildi -> bloklar kirik KALMALI.
-	var ball := gameplay.get_node("Ball") as Ball
+	# ATIS SIFIRLAMA: tamamen kirilan blok da kirik KALMALI.
 	ball.shot_failed.emit("out_of_bounds")
 	await create_timer(float(gameplay.auto_reset_delay) + 0.25).timeout
 	_check("atis sifirlamasi kirik blogu geri getirmiyor", field.get_remaining_count(), 0)
@@ -180,6 +205,7 @@ func _test_block_state_rules() -> void:
 		field.get_remaining_count(), field.get_total_count())
 	_check("yeniden baslatinca kirik sayaci sifir", field.get_broken_count(), 0)
 	_check("geri gelen blogun collision'i acik", _first_block(field).collision_layer, 1)
+	_check("yeniden baslatinca iki can geri geliyor", _first_block(field).get_remaining_hits(), 2)
 
 	# Blok kirmak atis sayacini ETKILEMEMELI (yildiz hesabi yalnizca sure+top).
 	var snapshot: Dictionary = gameplay.get_debug_snapshot()
@@ -300,6 +326,7 @@ func _test_custom_level_store() -> void:
 	var block := BreakableBlockData.new()
 	block.position = Vector2(250, 560)
 	block.size = Vector2(200, 44)
+	block.hit_points = 2
 	level.breakable_blocks = [block]
 
 	var saved := CustomLevelStore.Bucket.SAVED
@@ -317,6 +344,7 @@ func _test_custom_level_store() -> void:
 		_check("blok korundu", loaded.breakable_blocks.size(), 1)
 		_check("panel acisi korundu", loaded.panels[0].rotation_degrees, -22.0)
 		_check("blok boyutu korundu", loaded.breakable_blocks[0].size, Vector2(200, 44))
+		_check("blok dayanikliligi korundu", loaded.breakable_blocks[0].hit_points, 2)
 		_check("hedef korundu", loaded.target_position, Vector2(280, 340))
 		_check("yuklenen bolum dogrulamadan geciyor", loaded.validate().size(), 0)
 
@@ -437,10 +465,21 @@ func _test_editor() -> void:
 	_check("blok RID'i kayitli", world.get_block_count(), 1)
 
 	# Stepper'lar secili ogeyi degistirmeli.
+	editor.level.breakable_blocks[0].hit_points = 2
 	var width_before: float = editor.level.breakable_blocks[0].size.x
 	editor.call("_on_tune", 1, 1)
+	await process_frame
 	_check("B+ blok genisligini artiriyor",
 		editor.level.breakable_blocks[0].size.x > width_before, true)
+	_check("iki canli blok iki solver katmani kuruyor", world.get_state_slot_count(), 2)
+	var moved_position := Vector2(420.0, 680.0)
+	editor.call("_set_selected_position", moved_position)
+	var all_layers_moved := true
+	for child in world.get_children():
+		var block_layer := child as BreakableBlock
+		if block_layer != null and block_layer.position != moved_position:
+			all_layers_moved = false
+	_check("editor tum can katmanlarini birlikte tasiyor", all_layers_moved, true)
 
 	# Sil -> hem veriden hem onizlemeden.
 	editor.call("_on_delete")
@@ -648,7 +687,7 @@ func _test_level_select() -> void:
 	await process_frame
 
 	var grid := select.get_node("SafeArea/Content/GridScroll/GridHolder/Grid") as GridContainer
-	_check("35 bolum butonu uretiliyor", grid.get_child_count(), 35)
+	_check("40 bolum butonu uretiliyor", grid.get_child_count(), 40)
 
 	var unlocked := grid.get_node("Level20") as Button
 	_check("bolum 20 acik", unlocked.disabled, false)
@@ -663,7 +702,7 @@ func _test_level_select() -> void:
 	var gate_label := gated.get_node("StarGate").get_child(0) as Label
 	_check("kapi bilgisi 20 / 40 gosteriyor", gate_label.text, "20 / 40")
 
-	# 22-35 yildiz kapisi TASIMAZ; sirali ilerleme yuzunden kilitlidirler,
+	# 22-40 yildiz kapisi TASIMAZ; sirali ilerleme yuzunden kilitlidirler,
 	# bu yuzden kapi satiri degil normal (kisilmis) yildiz satiri gosterirler.
 	var plain := grid.get_node("Level22") as Button
 	_check("bolum 22 kilitli", plain.disabled, true)
@@ -671,7 +710,7 @@ func _test_level_select() -> void:
 	_check("kapisiz kilitli bolumde yildiz satiri var", plain.has_node("Stars"), true)
 
 	var total := select.get_node("SafeArea/Content/StarTotal") as Label
-	_check("toplam yildiz sayaci 20 / 105", total.text, "20 / 105")
+	_check("toplam yildiz sayaci 20 / 120", total.text, "20 / 120")
 
 	root.remove_child(select)
 	select.free()
@@ -718,15 +757,15 @@ func _test_star_gate() -> void:
 	for id in range(1, 21):
 		behind.completed_levels.append(id)
 		behind.level_stars[id] = 1
-	for id in range(21, 36):
+	for id in range(21, 41):
 		behind.level_stars[id] = 3
-	_check("21-35 yildizlari genel toplama giriyor", behind.get_total_stars(), 65)
-	_check("21-35 yildizlari kapiya SAYILMIYOR", behind.get_stars_before(21), 20)
+	_check("21-40 yildizlari genel toplama giriyor", behind.get_total_stars(), 80)
+	_check("21-40 yildizlari kapiya SAYILMIYOR", behind.get_stars_before(21), 20)
 	_check("kapi hala kapali", behind.is_unlocked(21), false)
 
 	# Yildiz kaydi yalnizca IYILESIRSE yazilir (eski kayitlar korunur).
 	var record := ProgressStore.new()
-	record.highest_unlocked_level = 35
+	record.highest_unlocked_level = 40
 	_check("ilk 21 yildizi kaydediliyor", record.set_level_stars_if_higher(21, 2), true)
 	_check("daha dusuk sonuc kaydi ezmiyor", record.set_level_stars_if_higher(21, 1), false)
 	_check("kayitli deger korunuyor", record.get_level_stars(21), 2)
@@ -737,21 +776,27 @@ func _test_star_gate() -> void:
 func _test_library_bounds() -> void:
 	print("")
 	print("--- LevelLibrary sinirlari ---")
-	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 35)
+	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 40)
 	_check("has_next(20)", LevelLibrary.has_next(20), true)
 	_check("has_next(24)", LevelLibrary.has_next(24), true)
 	_check("has_next(25)", LevelLibrary.has_next(25), true)
-	_check("has_next(34)", LevelLibrary.has_next(34), true)
-	_check("has_next(35)", LevelLibrary.has_next(35), false)
-	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 105)
+	_check("has_next(39)", LevelLibrary.has_next(39), true)
+	_check("has_next(40)", LevelLibrary.has_next(40), false)
+	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 120)
 
-	# 21-35 gercekten yuklenip dogrulamadan geciyor mu.
-	for id in range(21, 36):
+	# 21-40 gercekten yuklenip dogrulamadan geciyor mu.
+	for id in range(21, 41):
 		var level := LevelLibrary.load_level(id)
 		_check("bolum %d yukleniyor" % id, level.level_id, id)
 		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
 		_check("bolum %d blok donemi dogru" % id,
 			level.breakable_blocks.is_empty(), id <= 25)
+		if id in range(30, 41):
+			var durable_count := 0
+			for block_data in level.breakable_blocks:
+				if block_data.hit_points >= 2:
+					durable_count += 1
+			_check("bolum %d dayanikli kilit iceriyor" % id, durable_count > 0, true)
 		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
 			level.three_star_max_shots <= level.max_lives, true)
 		_check("bolum %d: 2-yildiz atis <= max_lives" % id,

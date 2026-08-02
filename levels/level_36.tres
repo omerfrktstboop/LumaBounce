@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
+
+[sub_resource type="Resource" id="Resource_l36_panel"]
+script = ExtResource("2_panel_data")
+position = Vector2(350.714, 707.682)
+rotation_degrees = 17.975
+length = 286.249
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l36_left"]
+script = ExtResource("3_block_data")
+position = Vector2(185.296, 626.621)
+rotation_degrees = 0.0
+size = Vector2(430, 46)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_l36_lower"]
+script = ExtResource("3_block_data")
+position = Vector2(293.599, 897.852)
+rotation_degrees = 0.0
+size = Vector2(430, 46)
+hit_points = 2
+
+[resource]
+script = ExtResource("1_level_data")
+level_id = 36
+display_name = "Ayna Anahtar"
+launcher_position = Vector2(374.873, 1120)
+target_position = Vector2(328.934, 250.913)
+panels = Array[PanelData]([SubResource("Resource_l36_panel")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l36_left"), SubResource("Resource_l36_lower")])
+max_lives = 7
+tutorial_text = "İki çatlağı aynı sekme zincirinde hazırla."
+two_star_max_seconds = 145.0
+two_star_max_shots = 6
+three_star_max_seconds = 80.0
+three_star_max_shots = 5

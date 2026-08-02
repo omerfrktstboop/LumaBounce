@@ -18,6 +18,7 @@ extends Node2D
 
 ## Bir blok kirildi (aynı blok icin yalnizca bir kez).
 signal block_broken(at: Vector2)
+signal block_damaged(at: Vector2, remaining_hits: int, maximum_hits: int)
 
 @export var block_scene: PackedScene
 
@@ -45,7 +46,9 @@ func build(blocks: Array[BreakableBlockData]) -> void:
 		block.position = data.position
 		block.rotation_degrees = data.rotation_degrees
 		block.block_size = data.size
+		block.hit_points = data.hit_points
 		block.broken.connect(_on_block_broken)
+		block.damaged.connect(_on_block_damaged)
 		add_child(block)
 		_total += 1
 
@@ -79,3 +82,7 @@ func get_broken_count() -> int:
 
 func _on_block_broken(at: Vector2) -> void:
 	block_broken.emit(at)
+
+
+func _on_block_damaged(at: Vector2, remaining_hits: int, maximum_hits: int) -> void:
+	block_damaged.emit(at, remaining_hits, maximum_hits)

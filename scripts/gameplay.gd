@@ -49,6 +49,13 @@ signal menu_requested()
 ## Veri atanmamissa (or. sahne dogrudan calistirilirsa) kullanilacak bolum.
 @export var fallback_level_id := 1
 
+@export_group("Nisan Zorlugu")
+## 30'dan 40'a ilerlerken kılavuz %95'ten %50'ye iner. Fizik ve impuls aynidir.
+@export var preview_reduction_start_level := 30
+@export var preview_reduction_end_level := 40
+@export_range(0.4, 1.0, 0.01) var preview_ratio_at_start := 0.95
+@export_range(0.4, 1.0, 0.01) var preview_ratio_at_end := 0.50
+
 @export_group("Carpma Efekti")
 ## Kivilcim siddetinin doygunluga ulastigi hiz.
 @export var spark_reference_speed := 1600.0
@@ -68,6 +75,8 @@ signal menu_requested()
 ## Guc bari yeni bir kademeye ilk kez ciktiginda verilen hafif dokunsal tik.
 @export var power_step_haptic_msec := 10
 @export var max_power_step_haptic_msec := 20
+## Iki canli tuglanin ilk catlamasinda verilen kisa dokunsal onay.
+@export var block_damage_haptic_msec := 12
 
 ## AppRoot tarafindan add_child'dan ONCE atanir.
 var level_data: LevelData
@@ -235,7 +244,17 @@ func _sync_tuning() -> void:
 	_launcher.preview_bounciness = _ball.bounciness
 	_launcher.preview_ball_radius = _ball.radius
 	_launcher.preview_max_speed = _ball.max_speed
+	_launcher.set_guide_visibility_ratio(_preview_ratio_for_level(level_data.level_id))
 	_ball.play_bounds = _arena.get_play_rect()
+
+
+func _preview_ratio_for_level(level_id: int) -> float:
+	if level_id < preview_reduction_start_level:
+		return 1.0
+	var span := maxi(preview_reduction_end_level - preview_reduction_start_level, 1)
+	var progress_ratio := clampf(
+		float(level_id - preview_reduction_start_level) / float(span), 0.0, 1.0)
+	return lerpf(preview_ratio_at_start, preview_ratio_at_end, progress_ratio)
 
 
 ## Kamerayi yatayda oyun alaninin merkezinde, dikeyde alt kenara hizali tutar.
@@ -256,6 +275,7 @@ func _connect_signals() -> void:
 	_ball.bounced.connect(_on_ball_bounced)
 	_ball.surface_touched.connect(_on_surface_touched)
 	_blocks.block_broken.connect(_on_block_broken)
+	_blocks.block_damaged.connect(_on_block_damaged)
 	_ball.shot_failed.connect(_on_shot_failed)
 	_target.hit.connect(_on_target_hit)
 	# Ilk gecerli nisan hareketinde ipucunu sondur.
@@ -535,8 +555,12 @@ func _on_surface_touched(collider: Object, _at: Vector2, _normal: Vector2) -> vo
 	var block := collider as BreakableBlock
 	if block == null:
 		return
-	# Idempotent: ayni blok ayni atista ikinci kez ses/efekt uretmez.
-	block.shatter()
+	block.take_hit()
+
+
+func _on_block_damaged(_at: Vector2, _remaining_hits: int, _maximum_hits: int) -> void:
+	if block_damage_haptic_msec > 0:
+		Input.vibrate_handheld(block_damage_haptic_msec)
 
 
 ## Gorsel parcalar blogun KENDI icinde cizilir (bkz. BreakableBlock._draw) ve

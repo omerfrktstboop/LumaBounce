@@ -721,7 +721,7 @@ func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
 			"route_clusters": route_clusters,
 		}
 
-	var all_broken := (1 << level.breakable_blocks.size()) - 1
+	var all_broken := _world.get_all_broken_state()
 	var opened := await _solver.scan_async(spawn, level.target_position, play_rect,
 		_world.rids_for_state(all_broken), FINE_ANGLE_STEP, FINE_POWER_STEP,
 		SIMS_PER_FRAME, Callable(self, "_is_cancelled"))
