@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
+
+[sub_resource type="Resource" id="Panel_lower"]
+script = ExtResource("2")
+position = Vector2(230, 830)
+rotation_degrees = 30.0
+length = 320.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Panel_upper"]
+script = ExtResource("2")
+position = Vector2(500, 520)
+rotation_degrees = 30.0
+length = 340.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Ring_main"]
+script = ExtResource("3")
+position = Vector2(120, 650)
+size = Vector2(190, 28)
+inner_radius = 78.0
+
+[sub_resource type="Resource" id="Bomb_main"]
+script = ExtResource("3")
+kind = 1
+position = Vector2(360, 760)
+rotation_degrees = 15.0
+size = Vector2(74, 74)
+
+[resource]
+script = ExtResource("1")
+level_id = 45
+display_name = "Delik ve Fitil"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(560, 280)
+panels = Array[PanelData]([SubResource("Panel_lower"), SubResource("Panel_upper")])
+obstacles = Array[ObstacleData]([SubResource("Ring_main"), SubResource("Bomb_main")])
+max_lives = 5
+two_star_max_seconds = 115.0
+two_star_max_shots = 3
+three_star_max_seconds = 60.0
+three_star_max_shots = 2

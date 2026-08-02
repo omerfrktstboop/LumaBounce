@@ -17,6 +17,8 @@ extends SceneTree
 ##      Tek atislik model burada yanlis cevap verirdi: bir atisin kirdigi
 ##      blok sonraki atisin geometrisini kalici olarak degistirir. 30-40'ta
 ##      iki canli kilitlerin ilk hasari da ayni durum agacinda kalici tutulur.
+##   3) 41-50 - halka, bomba ve hareketli engeller ayni deterministik
+##      simulasyonda taranir; her atis sifir fazindan baslar.
 ##
 ## Kullanim:
 ##   godot --headless --path . --script res://tools/verify_levels.gd
@@ -120,7 +122,8 @@ func _build_world(level: LevelData) -> void:
 	_world = LevelWorld.new()
 	root.add_child(_world)
 	_world.build(level)
-	_solver.bind_space(_world.get_space(), _world.get_block_rids())
+	_solver.bind_space(
+		_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 
 
 func _teardown_world() -> void:

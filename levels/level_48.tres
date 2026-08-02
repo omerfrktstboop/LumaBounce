@@ -1,0 +1,60 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
+
+[sub_resource type="Resource" id="Panel_lower"]
+script = ExtResource("2")
+position = Vector2(230, 830)
+rotation_degrees = 30.0
+length = 320.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Panel_upper"]
+script = ExtResource("2")
+position = Vector2(500, 520)
+rotation_degrees = 30.0
+length = 340.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Mover_low"]
+script = ExtResource("3")
+kind = 3
+position = Vector2(550, 970)
+rotation_degrees = 18.0
+size = Vector2(100, 28)
+motion_direction_degrees = 90.0
+travel_distance = 55.0
+motion_period = 3.5
+
+[sub_resource type="Resource" id="Mover_high"]
+script = ExtResource("3")
+kind = 3
+position = Vector2(150, 650)
+rotation_degrees = -18.0
+size = Vector2(100, 28)
+motion_direction_degrees = 0.0
+travel_distance = 55.0
+motion_period = 2.6
+phase_degrees = 90.0
+
+[sub_resource type="Resource" id="Bomb_main"]
+script = ExtResource("3")
+kind = 1
+position = Vector2(500, 700)
+size = Vector2(66, 66)
+
+[resource]
+script = ExtResource("1")
+level_id = 48
+display_name = "Cifte Zaman"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(560, 280)
+panels = Array[PanelData]([SubResource("Panel_lower"), SubResource("Panel_upper")])
+obstacles = Array[ObstacleData]([SubResource("Mover_low"), SubResource("Mover_high"), SubResource("Bomb_main")])
+max_lives = 5
+two_star_max_seconds = 120.0
+two_star_max_shots = 4
+three_star_max_seconds = 65.0
+three_star_max_shots = 2

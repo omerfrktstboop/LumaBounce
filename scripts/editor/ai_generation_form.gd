@@ -19,6 +19,7 @@ const TEMPLATE_OPTIONS := [
 	["Bloksuz Ustalik Rotasi", "block_free_mastery"],
 	["Cok Atisli Ilerleme", "multi_shot"],
 	["Sekme Zinciri", "ricochet_chain"], ["Blok Koridoru", "block_corridor"],
+	["Hareketli Parkur", "kinetic_course"],
 	["Mini Final", "mini_final"],
 ]
 const DIFFICULTY_OPTIONS := [
@@ -105,7 +106,9 @@ func _build_local_page() -> void:
 	var hint := _label("Mevcut fizik filtreli yerel uretim")
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_local_page.add_child(hint)
-	for option in [["Kolay", "easy"], ["Orta", "medium"], ["Zor", "hard"], ["Bloklu", "blocks"]]:
+	for option in [
+			["Kolay", "easy"], ["Orta", "medium"], ["Zor", "hard"],
+			["Bloklu", "blocks"], ["Engelli", "obstacles"]]:
 		var button := _button(option[0], local_generation_requested.emit.bind(option[1]))
 		_local_page.add_child(button)
 		_interactive.append(button)
@@ -168,10 +171,15 @@ func _build_ai_page() -> void:
 	_difficulty = _option_field("ZORLUK", DIFFICULTY_OPTIONS)
 
 	_ai_page.add_child(_field_label("MEKANIKLER"))
-	var mechanics_row := HBoxContainer.new()
+	var mechanics_row := GridContainer.new()
+	mechanics_row.columns = 2
 	mechanics_row.add_theme_constant_override("separation", 6)
 	_ai_page.add_child(mechanics_row)
-	for definition in [["Panel", "panel"], ["Duvar boslugu", "wall_gap"], ["Kirilabilir blok", "breakable_block"]]:
+	for definition in [
+			["Panel", "panel"], ["Duvar boslugu", "wall_gap"],
+			["Kirilabilir blok", "breakable_block"], ["Metal halka", "metal_ring"],
+			["Bomba", "bomb"], ["Donen cark", "rotating_wheel"],
+			["Kayan engel", "moving_bar"]]:
 		var check := CheckBox.new()
 		check.text = definition[0]
 		check.custom_minimum_size = Vector2(0, 54)
@@ -340,6 +348,9 @@ func _apply_template_requirements() -> void:
 		(_mechanics["panel"] as CheckBox).button_pressed = true
 	elif template_id == "block_corridor":
 		(_mechanics["breakable_block"] as CheckBox).button_pressed = true
+	elif template_id == "kinetic_course":
+		(_mechanics["rotating_wheel"] as CheckBox).button_pressed = true
+		(_mechanics["moving_bar"] as CheckBox).button_pressed = true
 
 
 func get_request() -> Dictionary:

@@ -20,7 +20,7 @@ extends Node2D
 signal test_requested(level: LevelData)
 signal menu_requested()
 
-enum Selection { NONE, PANEL, BLOCK, TARGET, LAUNCHER, LEFT_WALL, RIGHT_WALL }
+enum Selection { NONE, PANEL, BLOCK, OBSTACLE, TARGET, LAUNCHER, LEFT_WALL, RIGHT_WALL }
 
 ## Ince ayar adimlari. Dokunmatikte surukleme kaba, stepper hassas olsun.
 const ANGLE_STEP := 2.0
@@ -35,8 +35,8 @@ const BLOCK_HEIGHT := 44.0
 const DEFAULT_GAP := Vector2(420.0, 740.0)
 ## Alt serit sabit yukseklikte; parti gezinme satiri belirince tam o kadar
 ## buyur. Sabit en buyuk boyutta birakmak arenadan bosuna yer yerdi.
-const PANEL_HEIGHT := 286.0
-const PANEL_HEIGHT_WITH_BATCH := 350.0
+const PANEL_HEIGHT := 354.0
+const PANEL_HEIGHT_WITH_BATCH := 418.0
 
 ## AppRoot tarafindan add_child'dan ONCE atanabilir; bos birakilirsa bos bir
 ## bolumle baslanir.
@@ -148,6 +148,14 @@ func _connect_buttons() -> void:
 	get_node(rows + "AddRow/AddBlock").pressed.connect(_on_add_block)
 	get_node(rows + "AddRow/DeleteItem").pressed.connect(_on_delete)
 	get_node(rows + "AddRow/CycleWall").pressed.connect(_on_cycle_wall)
+	get_node(rows + "ObstacleRow/AddRing").pressed.connect(
+		_on_add_obstacle.bind(ObstacleData.Kind.METAL_RING))
+	get_node(rows + "ObstacleRow/AddBomb").pressed.connect(
+		_on_add_obstacle.bind(ObstacleData.Kind.BOMB))
+	get_node(rows + "ObstacleRow/AddWheel").pressed.connect(
+		_on_add_obstacle.bind(ObstacleData.Kind.ROTATING_WHEEL))
+	get_node(rows + "ObstacleRow/AddMover").pressed.connect(
+		_on_add_obstacle.bind(ObstacleData.Kind.MOVING_BAR))
 
 	get_node(rows + "TuneRow/AMinus").pressed.connect(_on_tune.bind(0, -1))
 	get_node(rows + "TuneRow/APlus").pressed.connect(_on_tune.bind(0, 1))
@@ -193,8 +201,9 @@ func _rebuild() -> void:
 
 func _refresh_info() -> void:
 	var lines := PackedStringArray()
-	lines.append("%d panel  %d blok  |  %d can" % [
-		level.panels.size(), level.breakable_blocks.size(), level.max_lives])
+	lines.append("%d panel  %d blok  %d engel  |  %d can" % [
+		level.panels.size(), level.breakable_blocks.size(),
+		level.obstacles.size(), level.max_lives])
 	lines.append(_selection_text())
 	if not _status_text.is_empty():
 		lines.append(_status_text)
@@ -213,6 +222,23 @@ func _selection_text() -> String:
 			var block := level.breakable_blocks[_selected_index]
 			return "Blok %d — A: açı %.0f°   B: genişlik %.0f" % [
 				_selected_index + 1, block.rotation_degrees, block.size.x]
+		Selection.OBSTACLE:
+			var obstacle := level.obstacles[_selected_index]
+			match obstacle.kind:
+				ObstacleData.Kind.METAL_RING:
+					return "Halka %d - A: dis cap %.0f  B: delik cap %.0f" % [
+						_selected_index + 1, obstacle.size.x, obstacle.inner_radius * 2.0]
+				ObstacleData.Kind.BOMB:
+					return "Bomba %d - A: cap %.0f  B: yon %.0f" % [
+						_selected_index + 1, obstacle.size.x, obstacle.rotation_degrees]
+				ObstacleData.Kind.ROTATING_WHEEL:
+					return "Cark %d - A: hiz %.0f  B: cap %.0f" % [
+						_selected_index + 1, obstacle.angular_speed_degrees, obstacle.size.x]
+				ObstacleData.Kind.MOVING_BAR:
+					return "Kayan %d - A: yon %.0f  B: mesafe %.0f" % [
+						_selected_index + 1, obstacle.motion_direction_degrees,
+						obstacle.travel_distance]
+			return obstacle.display_name()
 		Selection.TARGET:
 			return "Hedef — sürükleyerek taşı (%.0f, %.0f)" % [
 				level.target_position.x, level.target_position.y]
@@ -314,6 +340,13 @@ func _select_at(world: Vector2) -> void:
 			best_selection = Selection.BLOCK
 			best_index = i
 
+	for i in level.obstacles.size():
+		var distance := world.distance_to(level.obstacles[i].position)
+		if distance < best_distance:
+			best_distance = distance
+			best_selection = Selection.OBSTACLE
+			best_index = i
+
 	var target_distance := world.distance_to(level.target_position)
 	if target_distance < best_distance:
 		best_distance = target_distance
@@ -331,7 +364,8 @@ func _select_at(world: Vector2) -> void:
 
 func _selection_is_movable() -> bool:
 	return _selection in [
-		Selection.PANEL, Selection.BLOCK, Selection.TARGET, Selection.LAUNCHER]
+		Selection.PANEL, Selection.BLOCK, Selection.OBSTACLE,
+		Selection.TARGET, Selection.LAUNCHER]
 
 
 func _selected_position() -> Vector2:
@@ -340,6 +374,8 @@ func _selected_position() -> Vector2:
 			return level.panels[_selected_index].position
 		Selection.BLOCK:
 			return level.breakable_blocks[_selected_index].position
+		Selection.OBSTACLE:
+			return level.obstacles[_selected_index].position
 		Selection.TARGET:
 			return level.target_position
 		Selection.LAUNCHER:
@@ -357,6 +393,9 @@ func _set_selected_position(value: Vector2) -> void:
 		Selection.BLOCK:
 			level.breakable_blocks[_selected_index].position = value
 			_world.set_block_position(_selected_index, value)
+		Selection.OBSTACLE:
+			level.obstacles[_selected_index].position = value
+			_world.set_obstacle_position(_selected_index, value)
 		Selection.TARGET:
 			level.target_position = value
 			_target_preview.position = value
@@ -392,9 +431,35 @@ func _on_add_block() -> void:
 	_rebuild()
 
 
+func _on_add_obstacle(kind: ObstacleData.Kind) -> void:
+	var obstacle := ObstacleData.new()
+	obstacle.kind = kind
+	obstacle.position = _free_spot()
+	match kind:
+		ObstacleData.Kind.METAL_RING:
+			obstacle.size = Vector2(150.0, 28.0)
+			obstacle.inner_radius = 42.0
+		ObstacleData.Kind.BOMB:
+			obstacle.size = Vector2(68.0, 68.0)
+		ObstacleData.Kind.ROTATING_WHEEL:
+			obstacle.size = Vector2(150.0, 24.0)
+			obstacle.spoke_count = 6
+			obstacle.angular_speed_degrees = 55.0
+		ObstacleData.Kind.MOVING_BAR:
+			obstacle.size = Vector2(190.0, 34.0)
+			obstacle.motion_direction_degrees = 0.0
+			obstacle.travel_distance = 100.0
+			obstacle.motion_period = 2.8
+	level.obstacles.append(obstacle)
+	_selection = Selection.OBSTACLE
+	_selected_index = level.obstacles.size() - 1
+	_status_text = ""
+	_rebuild()
+
+
 ## Yeni ogeler ust uste binmesin diye her ekleyiste biraz kaydirilir.
 func _free_spot() -> Vector2:
-	var count := level.panels.size() + level.breakable_blocks.size()
+	var count := level.panels.size() + level.breakable_blocks.size() + level.obstacles.size()
 	return Vector2(300.0 + float(count % 3) * 60.0, 700.0 - float(count % 4) * 70.0)
 
 
@@ -403,6 +468,8 @@ func _on_delete() -> void:
 		level.panels.remove_at(_selected_index)
 	elif _selection == Selection.BLOCK:
 		level.breakable_blocks.remove_at(_selected_index)
+	elif _selection == Selection.OBSTACLE:
+		level.obstacles.remove_at(_selected_index)
 	else:
 		return
 	_selection = Selection.NONE
@@ -444,12 +511,51 @@ func _on_tune(axis: int, direction: int) -> void:
 			else:
 				block.size.x = clampf(
 					block.size.x + SIZE_STEP * direction, MIN_BLOCK_WIDTH, MAX_BLOCK_WIDTH)
+		Selection.OBSTACLE:
+			_tune_obstacle(level.obstacles[_selected_index], axis, direction)
 		Selection.LEFT_WALL, Selection.RIGHT_WALL:
 			_tune_wall(axis, direction)
 		_:
 			return
 	_status_text = ""
 	_rebuild()
+
+
+func _tune_obstacle(obstacle: ObstacleData, axis: int, direction: int) -> void:
+	match obstacle.kind:
+		ObstacleData.Kind.METAL_RING:
+			if axis == 0:
+				obstacle.size.x = clampf(
+					obstacle.size.x + SIZE_STEP * direction, 88.0, 300.0)
+				obstacle.inner_radius = minf(
+					obstacle.inner_radius, obstacle.outer_radius() - 12.0)
+			else:
+				obstacle.inner_radius = clampf(
+					obstacle.inner_radius + 8.0 * direction,
+					28.0, obstacle.outer_radius() - 12.0)
+		ObstacleData.Kind.BOMB:
+			if axis == 0:
+				obstacle.size = Vector2.ONE * clampf(
+					obstacle.size.x + 10.0 * direction, 48.0, 140.0)
+			else:
+				obstacle.rotation_degrees = wrapf(
+					obstacle.rotation_degrees + 15.0 * direction, -180.0, 180.0)
+		ObstacleData.Kind.ROTATING_WHEEL:
+			if axis == 0:
+				obstacle.angular_speed_degrees = clampf(
+					obstacle.angular_speed_degrees + 10.0 * direction, -180.0, 180.0)
+				if absf(obstacle.angular_speed_degrees) < 10.0:
+					obstacle.angular_speed_degrees = 10.0 * direction
+			else:
+				obstacle.size.x = clampf(
+					obstacle.size.x + SIZE_STEP * direction, 84.0, 260.0)
+		ObstacleData.Kind.MOVING_BAR:
+			if axis == 0:
+				obstacle.motion_direction_degrees = wrapf(
+					obstacle.motion_direction_degrees + 15.0 * direction, -180.0, 180.0)
+			else:
+				obstacle.travel_distance = clampf(
+					obstacle.travel_distance + SIZE_STEP * direction, 20.0, 260.0)
 
 
 func _tune_wall(axis: int, direction: int) -> void:
@@ -499,7 +605,8 @@ func _on_analyse() -> void:
 	await get_tree().process_frame
 	await get_tree().physics_frame
 
-	_solver.bind_space(_world.get_space(), _world.get_block_rids())
+	_solver.bind_space(
+		_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 	var spawn := _solver.spawn_position(level.launcher_position)
 	var play_rect := _world.get_play_rect()
 	var none: Array[RID] = []
@@ -541,7 +648,8 @@ func _on_solution_pressed() -> void:
 	_refresh_info()
 	await get_tree().physics_frame
 	await get_tree().physics_frame
-	_solver.bind_space(_world.get_space(), _world.get_block_rids())
+	_solver.bind_space(
+		_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 	var spawn := _solver.spawn_position(level.launcher_position)
 	var play_rect := _world.get_play_rect()
 	var none: Array[RID] = []
@@ -961,6 +1069,8 @@ func _start_generation(profile_name: String) -> void:
 			profile = LevelGenerator.Profile.hard()
 		"blocks":
 			profile = LevelGenerator.Profile.with_blocks()
+		"obstacles":
+			profile = LevelGenerator.Profile.kinetic()
 		_:
 			profile = LevelGenerator.Profile.medium()
 
@@ -1071,6 +1181,13 @@ func _draw() -> void:
 			var block := level.breakable_blocks[_selected_index]
 			_draw_marker(block.position, block.size,
 				deg_to_rad(block.rotation_degrees), color)
+		Selection.OBSTACLE:
+			var obstacle := level.obstacles[_selected_index]
+			var marker_size := obstacle.size
+			if obstacle.kind != ObstacleData.Kind.MOVING_BAR:
+				marker_size = Vector2.ONE * obstacle.size.x
+			_draw_marker(obstacle.position, marker_size,
+				deg_to_rad(obstacle.rotation_degrees), color)
 		Selection.TARGET:
 			_draw_marker(level.target_position, Vector2.ONE * _solver.target_size, 0.0, color)
 		Selection.LAUNCHER:

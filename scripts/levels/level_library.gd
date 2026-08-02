@@ -8,14 +8,14 @@ extends RefCounted
 ## bos/bozuk bir bolumle acilmaz.
 
 const FIRST_LEVEL_ID := 1
-const LEVEL_COUNT := 40
+const LEVEL_COUNT := 50
 const PATH_FORMAT := "res://levels/level_%02d.tres"
 
 ## Yildiz kapilari: bolum_id -> o bolumun acilmasi icin gereken yildiz sayisi.
 ## Sirali ilerlemeye EK bir kosuldur (bkz. ProgressStore.is_unlocked).
 ##
 ## Sayim her zaman kapinin ONUNDEKI bolumlerden yapilir (bkz.
-## ProgressStore.get_stars_before): 21'in kapisi 1-20'yi sayar, 21-40'i
+## ProgressStore.get_stars_before): 21'in kapisi 1-20'yi sayar, 21 sonrasini
 ## saymaz. Bu kural kapiya ozel bir ayar degil, sistemin tanimidir - ileride
 ## eklenecek her kapi kendiliginden dogru araligi sayar ve bir bolum asla
 ## kendi kilidini acmaya katkida bulunamaz.

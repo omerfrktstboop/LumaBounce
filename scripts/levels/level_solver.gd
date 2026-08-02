@@ -54,6 +54,9 @@ var _ball_shape: CircleShape2D
 ## Kirilabilir blok govdesinin RID'i -> kalici durum biti. Dayanikli bloklar
 ## her can icin ayni geometride ayri bir RID/bit kullanir.
 var _block_index: Dictionary = {}
+var _obstacles: Array[ObstacleData] = []
+var _hazard_shapes: Array[Dictionary] = []
+var _dynamic_shape_cache: Dictionary = {}
 
 
 ## Sabitleri gercek sahnelerden okur. Dugumler agaca EKLENMEZ - export
@@ -90,9 +93,13 @@ static func from_scenes() -> LevelSolver:
 
 ## Hangi fizik uzayinda calisilacagi ve o uzaydaki kirilabilir bloklarin
 ## kimligi. [param block_rids] bos verilebilir (bloksuz bolum).
-func bind_space(space: PhysicsDirectSpaceState2D, block_rids: Dictionary = {}) -> void:
+func bind_space(space: PhysicsDirectSpaceState2D, block_rids: Dictionary = {},
+		obstacles: Array[ObstacleData] = []) -> void:
 	_space = space
 	_block_index = block_rids
+	_obstacles.assign(obstacles)
+	_hazard_shapes = ObstacleGeometry.hazard_shapes(_obstacles)
+	_dynamic_shape_cache.clear()
 
 
 func spawn_position(launcher_position: Vector2) -> Vector2:
@@ -499,7 +506,7 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 		broke_this_frame.clear()
 
 		for _step in MAX_SUBSTEPS:
-			var hit := cast(pos, motion, ignored)
+			var hit := _cast_with_obstacles(pos, motion, ignored, frame_index)
 			if hit.is_empty():
 				pos += motion
 				break
@@ -508,9 +515,23 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 			var fraction: float = hit["fraction"]
 			var collision_position := pos + motion * fraction
 			pos = pos + motion * fraction + normal * CONTACT_EPSILON
+			if hit.has("hazard_reason"):
+				if capture_trace:
+					trace_points.append(collision_position)
+					trace_bounces.append(bounces)
+					collision_points.append({
+						"position": collision_position,
+						"normal": normal,
+						"block_index": -1,
+						"hazard_reason": String(hit["hazard_reason"]),
+					})
+				return _simulation_result(
+					false, String(hit["hazard_reason"]), bounces, broken,
+					collision_position, trace_points, trace_bounces,
+					collision_points, broken_order, capture_trace)
 			bounces += 1
 
-			var rid: RID = hit["rid"]
+			var rid := hit.get("rid", RID()) as RID
 			var block_index := -1
 			if _block_index.has(rid):
 				block_index = int(_block_index[rid])
@@ -619,6 +640,36 @@ func cast(from: Vector2, motion: Vector2, ignored: Array[RID]) -> Dictionary:
 	}
 
 
+func _cast_with_obstacles(from: Vector2, motion: Vector2,
+		ignored: Array[RID], frame_index: int) -> Dictionary:
+	var best := cast(from, motion, ignored)
+	var best_fraction := float(best.get("fraction", 2.0))
+	var dynamic_hit := ObstacleGeometry.cast_circle(
+		from, motion, radius, _dynamic_shapes_for_frame(frame_index))
+	if not dynamic_hit.is_empty() and float(dynamic_hit["fraction"]) < best_fraction:
+		best = dynamic_hit
+		best["rid"] = RID()
+		best_fraction = float(dynamic_hit["fraction"])
+	var hazard_hit := ObstacleGeometry.cast_circle(
+		from, motion, radius, _hazard_shapes)
+	# Esit anda tehlike ve yuzey temasi varsa bomba onceliklidir.
+	if not hazard_hit.is_empty() and float(hazard_hit["fraction"]) <= best_fraction:
+		best = hazard_hit
+		best["rid"] = RID()
+	return best
+
+
+func _dynamic_shapes_for_frame(frame_index: int) -> Array[Dictionary]:
+	if _dynamic_shape_cache.has(frame_index):
+		return _dynamic_shape_cache[frame_index]
+	# ObstacleField top firlatildiktan sonraki ilk fizik karesinde once
+	# ilerler (priority -10), sonra Ball hareket eder. Solver ayni zamani alir.
+	var seconds := float(frame_index + 1) / PHYSICS_FPS
+	var shapes := ObstacleGeometry.dynamic_shapes(_obstacles, seconds)
+	_dynamic_shape_cache[frame_index] = shapes
+	return shapes
+
+
 ## Verilen noktada engel var mi (hedef/firlatici panele gomulmus mu testi).
 func overlaps_obstacle(at: Vector2, probe_radius: float) -> bool:
 	var shape := CircleShape2D.new()
@@ -627,7 +678,10 @@ func overlaps_obstacle(at: Vector2, probe_radius: float) -> bool:
 	params.shape = shape
 	params.collision_mask = OBSTACLE_LAYER
 	params.transform = Transform2D(0.0, at)
-	return not _space.intersect_shape(params, 1).is_empty()
+	if not _space.intersect_shape(params, 1).is_empty():
+		return true
+	return ObstacleGeometry.overlaps_circle(
+		at, probe_radius, ObstacleGeometry.all_shapes(_obstacles, 0.0))
 
 
 func _circle_hits_target(center: Vector2, target: Vector2, half: float) -> bool:

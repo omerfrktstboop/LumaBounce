@@ -21,6 +21,9 @@ const WALL_OVERSHOOT := 320.0
 ## Topun kirabilecegi bloklar. Bos birakilirsa bolumde hic blok yoktur ve
 ## davranis eskisiyle birebir aynidir (bkz. BreakableField).
 @export var breakable_blocks: Array[BreakableBlockData] = []
+## Metal halka, bomba, donen cark ve kayan bariyerler. Eski bolumlerde bos
+## kalir; panel/blok fizigini veya 720x1280 koordinatlarini degistirmez.
+@export var obstacles: Array[ObstacleData] = []
 
 @export_group("Kenarlar")
 ## Her Vector2(baslangic_y, bitis_y) bir DUVAR parcasidir; aralardaki
@@ -76,6 +79,13 @@ func validate(play_rect := DEFAULT_PLAY_RECT) -> PackedStringArray:
 			problems.append("blok %d bos" % i)
 			continue
 		problems.append_array(block.validate(i))
+
+	for i in obstacles.size():
+		var obstacle := obstacles[i]
+		if obstacle == null:
+			problems.append("engel %d bos" % i)
+			continue
+		problems.append_array(obstacle.validate(i, play_rect))
 
 	problems.append_array(_validate_star_targets())
 	return problems

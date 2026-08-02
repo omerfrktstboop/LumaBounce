@@ -40,7 +40,7 @@ func _readability(level: LevelData) -> float:
 	if _nearest_object_distance(level.target_position, level) >= 90.0:
 		passed += 1.0
 	checks += 1.0
-	if level.panels.size() + level.breakable_blocks.size() <= 6:
+	if level.panels.size() + level.breakable_blocks.size() + level.obstacles.size() <= 8:
 		passed += 1.0
 	checks += 1.0
 	var long_panels := 0
@@ -68,6 +68,14 @@ func _route_contribution(level: LevelData, solver: Dictionary, template_id: Stri
 		"block_corridor":
 			return 1.0 if (int(solver.get("solution_shots", 0)) >= 2
 				and int(solver.get("broken_state", 0)) != 0) else 0.0
+		"kinetic_course":
+			var has_dynamic := false
+			for obstacle in level.obstacles:
+				if obstacle.kind in [
+						ObstacleData.Kind.ROTATING_WHEEL, ObstacleData.Kind.MOVING_BAR]:
+					has_dynamic = true
+					break
+			return 1.0 if has_dynamic else 0.0
 		"block_free_mastery":
 			return 1.0 if bool(solver.get("block_free", false)) else 0.0
 		_:
@@ -81,6 +89,8 @@ func _nearest_object_distance(point: Vector2, level: LevelData) -> float:
 		nearest = minf(nearest, point.distance_to(panel.position) - panel.length * 0.5)
 	for block in level.breakable_blocks:
 		nearest = minf(nearest, point.distance_to(block.position) - block.size.length() * 0.5)
+	for obstacle in level.obstacles:
+		nearest = minf(nearest, point.distance_to(obstacle.position) - obstacle.size.length() * 0.5)
 	return nearest
 
 
@@ -90,6 +100,8 @@ func _objects_overlap_heavily(level: LevelData) -> bool:
 		centers.append(panel.position)
 	for block in level.breakable_blocks:
 		centers.append(block.position)
+	for obstacle in level.obstacles:
+		centers.append(obstacle.position)
 	for i in centers.size():
 		for j in range(i + 1, centers.size()):
 			if centers[i].distance_to(centers[j]) < 56.0:

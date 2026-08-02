@@ -44,6 +44,11 @@ const ACCENT_CORE := Color("ecfffc")
 const ACCENT_ALT := Color("c07dff")
 const ACCENT_ALT_CORE := Color("f6ecff")
 
+# --- Tehlike vurgusu: yalnizca bomba ve temas geri bildirimi ---
+const HAZARD := Color("ff667d")
+const HAZARD_DARK := Color("63364a")
+const HAZARD_CORE := Color("ffe2e7")
+
 # --- Metin ---
 const TEXT := Color("e9f2ff")
 const TEXT_DIM := Color("93a7c9")

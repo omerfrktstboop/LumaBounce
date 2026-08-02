@@ -83,6 +83,11 @@ func _sanitize(source: Dictionary) -> Dictionary:
 		mechanics.append("panel")
 	if safe["template"] == "block_corridor" and not mechanics.has("breakable_block"):
 		mechanics.append("breakable_block")
+	if safe["template"] == "kinetic_course":
+		if not mechanics.has("rotating_wheel"):
+			mechanics.append("rotating_wheel")
+		if not mechanics.has("moving_bar"):
+			mechanics.append("moving_bar")
 	safe["mechanics"] = mechanics
 	safe["design_note"] = String(source.get("design_note", "")).left(AILevelContract.MAX_DESIGN_NOTE)
 	safe["blueprint_count"] = clampi(int(source.get("blueprint_count", 5)), 1, 10)

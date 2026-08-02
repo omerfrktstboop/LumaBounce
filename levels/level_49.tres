@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
+
+[sub_resource type="Resource" id="Panel_lower"]
+script = ExtResource("2")
+position = Vector2(490, 830)
+rotation_degrees = -30.0
+length = 320.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Panel_upper"]
+script = ExtResource("2")
+position = Vector2(220, 520)
+rotation_degrees = -30.0
+length = 340.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Ring_main"]
+script = ExtResource("3")
+position = Vector2(600, 650)
+size = Vector2(190, 28)
+inner_radius = 78.0
+
+[sub_resource type="Resource" id="Wheel_main"]
+script = ExtResource("3")
+kind = 2
+position = Vector2(600, 300)
+size = Vector2(86, 18)
+spoke_count = 4
+angular_speed_degrees = 72.0
+
+[sub_resource type="Resource" id="Mover_main"]
+script = ExtResource("3")
+kind = 3
+position = Vector2(360, 700)
+rotation_degrees = 12.0
+size = Vector2(80, 26)
+motion_direction_degrees = 0.0
+travel_distance = 40.0
+motion_period = 2.5
+phase_degrees = 40.0
+
+[resource]
+script = ExtResource("1")
+level_id = 49
+display_name = "Mekanik Dugum"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(160, 280)
+panels = Array[PanelData]([SubResource("Panel_lower"), SubResource("Panel_upper")])
+obstacles = Array[ObstacleData]([SubResource("Ring_main"), SubResource("Wheel_main"), SubResource("Mover_main")])
+max_lives = 5
+two_star_max_seconds = 125.0
+two_star_max_shots = 4
+three_star_max_seconds = 68.0
+three_star_max_shots = 2

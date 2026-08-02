@@ -145,6 +145,11 @@ func is_flying() -> bool:
 	return state == State.FLYING
 
 
+## Bomba gibi dis kurallar aktif atisi standart shot_failed akisi ile bitirir.
+func fail_shot(reason: String) -> void:
+	_fail(reason)
+
+
 ## Hazir topu fizik govdesini oynatmadan namlu boyunca gerer. Atis konumu,
 ## collision ve solver koordinatlari degismez; yalnizca Visual hareket eder.
 func set_launcher_tension(power_ratio: float, direction: Vector2,

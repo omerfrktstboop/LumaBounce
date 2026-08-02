@@ -77,6 +77,9 @@ signal menu_requested()
 @export var max_power_step_haptic_msec := 20
 ## Iki canli tuglanin ilk catlamasinda verilen kisa dokunsal onay.
 @export var block_damage_haptic_msec := 12
+## Bombaya temas, hedef kadar agir olmayan kisa bir tehlike vurgusudur.
+@export_range(0.0, 1.0, 0.01) var hazard_shake_trauma := 0.34
+@export var hazard_haptic_msec := 34
 
 ## AppRoot tarafindan add_child'dan ONCE atanir.
 var level_data: LevelData
@@ -95,6 +98,7 @@ var practice_mode := false
 @onready var _arena: Arena = $Arena
 @onready var _panels: Node2D = $Panels
 @onready var _blocks: BreakableField = $Blocks
+@onready var _obstacles: ObstacleField = $Obstacles
 @onready var _launcher: Launcher = $Launcher
 @onready var _ball: Ball = $Ball
 @onready var _target: Target = $Target
@@ -197,6 +201,7 @@ func _apply_level() -> void:
 	_max_lives = maxi(level_data.max_lives, 1)
 
 	_build_panels()
+	_obstacles.build(level_data.obstacles)
 	_apply_level_header()
 
 
@@ -276,6 +281,7 @@ func _connect_signals() -> void:
 	_ball.surface_touched.connect(_on_surface_touched)
 	_blocks.block_broken.connect(_on_block_broken)
 	_blocks.block_damaged.connect(_on_block_damaged)
+	_obstacles.hazard_triggered.connect(_on_hazard_triggered)
 	_ball.shot_failed.connect(_on_shot_failed)
 	_target.hit.connect(_on_target_hit)
 	# Ilk gecerli nisan hareketinde ipucunu sondur.
@@ -340,6 +346,7 @@ func _respawn_ball() -> void:
 	_launcher.cancel_aim()
 	_ball.reset_to(_launcher.get_spawn_position())
 	_target.reset()
+	_obstacles.reset_motion()
 	_clear_effects()
 	_hide_message()
 	_launcher.enabled = true
@@ -363,10 +370,12 @@ func _on_shot_fired(impulse: Vector2) -> void:
 		inverse_lerp(_launcher.min_power, _launcher.max_power, impulse.length()), 0.0, 1.0))
 
 	_ball.launch(impulse)
+	_obstacles.start_motion()
 
 
 func _on_shot_failed(reason: String) -> void:
 	_reaim_pending = false
+	_obstacles.stop_motion()
 	_last_failure_reason = reason
 	if playtest_stats != null:
 		playtest_stats.record_failure(level_data.level_id, reason)
@@ -394,6 +403,7 @@ func _cancel_active_shot_for_reaim() -> void:
 	_reaim_pending = false
 	_shot_token += 1
 	_ball.cancel_and_reset_to(_launcher.get_spawn_position(), manual_cancel_fade_time)
+	_obstacles.reset_motion()
 	_ball.set_launcher_tension(
 		_launcher.get_power_ratio(), _launcher.get_aim_direction(),
 		_launcher.loaded_ball_pullback_distance)
@@ -446,8 +456,11 @@ func _update_lives_hud() -> void:
 
 
 func _on_target_hit(_body: Node2D) -> void:
+	if not _ball.is_flying():
+		return
 	_reaim_pending = false
 	_ball.stop()
+	_obstacles.stop_motion()
 	_launcher.enabled = false
 	# Kazanma anini ikincil vurgu (menekse) ile isaretle.
 	SparkBurst.burst(
@@ -556,6 +569,18 @@ func _on_surface_touched(collider: Object, _at: Vector2, _normal: Vector2) -> vo
 	if block == null:
 		return
 	block.take_hit()
+
+
+func _on_hazard_triggered(reason: String, at: Vector2) -> void:
+	if not _ball.is_flying():
+		return
+	SparkBurst.burst(
+		_effects, at, Vector2.UP, 0.72,
+		Palette.HAZARD, Palette.HAZARD_CORE, 7, 34.0, 230.0)
+	_shake.add_trauma(hazard_shake_trauma)
+	if hazard_haptic_msec > 0:
+		Input.vibrate_handheld(hazard_haptic_msec)
+	_ball.fail_shot(reason)
 
 
 func _on_block_damaged(_at: Vector2, _remaining_hits: int, _maximum_hits: int) -> void:

@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
+
+[sub_resource type="Resource" id="Panel_main"]
+script = ExtResource("2")
+position = Vector2(280, 760)
+rotation_degrees = -6.0
+length = 500.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Wheel_main"]
+script = ExtResource("3")
+kind = 2
+position = Vector2(470, 535)
+size = Vector2(130, 20)
+spoke_count = 4
+angular_speed_degrees = 42.0
+
+[resource]
+script = ExtResource("1")
+level_id = 43
+display_name = "Cark Zamani"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(200, 280)
+panels = Array[PanelData]([SubResource("Panel_main")])
+obstacles = Array[ObstacleData]([SubResource("Wheel_main")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 380), Vector2(620, 1440)])
+max_lives = 5
+tutorial_text = "Cark her atista ayni aciyla donmeye baslar."
+two_star_max_seconds = 110.0
+two_star_max_shots = 3
+three_star_max_seconds = 58.0
+three_star_max_shots = 2

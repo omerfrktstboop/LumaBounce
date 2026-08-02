@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
+
+[sub_resource type="Resource" id="Panel_lower"]
+script = ExtResource("2")
+position = Vector2(230, 830)
+rotation_degrees = 30.0
+length = 320.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Panel_upper"]
+script = ExtResource("2")
+position = Vector2(500, 520)
+rotation_degrees = 30.0
+length = 340.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Bomb_left"]
+script = ExtResource("3")
+kind = 1
+position = Vector2(345, 640)
+rotation_degrees = -20.0
+size = Vector2(72, 72)
+
+[sub_resource type="Resource" id="Bomb_right"]
+script = ExtResource("3")
+kind = 1
+position = Vector2(560, 780)
+rotation_degrees = 25.0
+size = Vector2(72, 72)
+
+[resource]
+script = ExtResource("1")
+level_id = 42
+display_name = "Mayin Hatti"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(560, 280)
+panels = Array[PanelData]([SubResource("Panel_lower"), SubResource("Panel_upper")])
+obstacles = Array[ObstacleData]([SubResource("Bomb_left"), SubResource("Bomb_right")])
+max_lives = 5
+tutorial_text = "Bombaya temas atisi aninda bitirir."
+two_star_max_seconds = 105.0
+two_star_max_shots = 3
+three_star_max_seconds = 55.0
+three_star_max_shots = 2

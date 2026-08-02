@@ -55,7 +55,7 @@ func _ready() -> void:
 	_scroll.get_v_scroll_bar().value_changed.connect(_on_scrolled)
 
 
-## Ustte sade toplam: "34 / 120". Yeni panel acilmaz, mevcut baslik
+## Ustte sade toplam: "34 / 150". Yeni panel acilmaz, mevcut baslik
 ## seridinin altina tek satir eklenir.
 func _refresh_star_total() -> void:
 	_star_total.text = "%d / %d" % [progress.get_total_stars(), progress.get_max_available_stars()]

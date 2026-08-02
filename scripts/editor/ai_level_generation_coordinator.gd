@@ -210,12 +210,32 @@ func _on_blueprints_received(document: Dictionary, usage: Dictionary) -> void:
 		_finish_failed("AI taslaklari gecerli bolum geometrisine donusturulemedi.")
 		return
 	var blueprints: Array = mapped["blueprints"]
+	_apply_mechanic_filter(blueprints, PackedStringArray(_request.get("mechanics", [])))
 	status_changed.emit("%d taslak alindi. Varyasyonlar olusturuluyor..." % blueprints.size())
 	var wanted := int(_request["candidate_count"])
 	var physics_pool := mini(20, maxi(wanted, wanted * 2))
 	_generator.generate_from_blueprints(
 		_profile_for(_request), blueprints, physics_pool,
 		int(_request["variation_count"]), int(_request["seed"]))
+
+
+func _apply_mechanic_filter(blueprints: Array, mechanics: PackedStringArray) -> void:
+	for blueprint in blueprints:
+		if not blueprint is Dictionary or not blueprint.get("level", null) is LevelData:
+			continue
+		var level := blueprint["level"] as LevelData
+		if not mechanics.has("panel"):
+			level.panels.clear()
+		if not mechanics.has("breakable_block"):
+			level.breakable_blocks.clear()
+		if not mechanics.has("wall_gap"):
+			level.left_wall_segments.clear()
+			level.right_wall_segments.clear()
+		var allowed: Array[ObstacleData] = []
+		for obstacle in level.obstacles:
+			if obstacle != null and mechanics.has(obstacle.kind_id()):
+				allowed.append(obstacle)
+		level.obstacles = allowed
 
 
 func _on_generator_progress(tried: int, total: int, accepted: int) -> void:
@@ -295,6 +315,12 @@ func _profile_for(request: Dictionary) -> LevelGenerator.Profile:
 			return LevelGenerator.Profile.ricochet_chain()
 		"block_corridor":
 			return LevelGenerator.Profile.block_corridor()
+		"kinetic_course":
+			return LevelGenerator.Profile.kinetic()
+	var mechanics := PackedStringArray(request.get("mechanics", []))
+	if (mechanics.has("metal_ring") or mechanics.has("bomb")
+			or mechanics.has("rotating_wheel") or mechanics.has("moving_bar")):
+		return LevelGenerator.Profile.kinetic()
 	match String(request["difficulty"]):
 		"easy":
 			return LevelGenerator.Profile.easy()

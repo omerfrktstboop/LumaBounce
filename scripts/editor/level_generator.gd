@@ -61,6 +61,8 @@ class Profile extends RefCounted:
 	var max_bounces := 3
 	var panel_count := Vector2i(1, 2)
 	var block_count := Vector2i(0, 1)
+	var obstacle_count := Vector2i(0, 0)
+	var obstacle_kinds: Array[int] = []
 	var max_lives := 4
 	var target_y_range := Vector2(235.0, 345.0)
 	## Blok varsa bloksuz rota da bulunmali (bkz. verifier tasarim sozlesmesi).
@@ -151,6 +153,25 @@ class Profile extends RefCounted:
 		p.max_solution_shots = 4
 		return p
 
+	## 41+ mekanikleri: solver hareketi her atista ayni fazdan baslatir.
+	static func kinetic() -> Profile:
+		var p := Profile.new()
+		p.display_name = "Engelli"
+		p.min_robust = 4
+		p.max_robust = 34
+		p.min_bounces = 0
+		p.max_bounces = 5
+		p.panel_count = Vector2i(1, 2)
+		p.block_count = Vector2i(0, 0)
+		p.obstacle_count = Vector2i(1, 3)
+		p.obstacle_kinds = [
+			ObstacleData.Kind.METAL_RING, ObstacleData.Kind.BOMB,
+			ObstacleData.Kind.ROTATING_WHEEL, ObstacleData.Kind.MOVING_BAR,
+		]
+		p.max_lives = 5
+		p.target_y_range = Vector2(225.0, 390.0)
+		return p
+
 var _solver: LevelSolver
 var _world: LevelWorld
 var _rng := RandomNumberGenerator.new()
@@ -231,7 +252,8 @@ func generate(profile: Profile, wanted: int, max_tries := 400, seed_value := 0) 
 		# Yeni govdelerin fizik uzayina girmesi icin iki kare sart.
 		await get_tree().physics_frame
 		await get_tree().physics_frame
-		_solver.bind_space(_world.get_space(), _world.get_block_rids())
+		_solver.bind_space(
+			_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 
 		var verdict := await _evaluate(candidate, profile)
 		budget += int(verdict["sims"])
@@ -281,7 +303,8 @@ func generate_from_blueprints(profile: Profile, blueprints: Array, wanted: int,
 		_world.build(candidate)
 		await get_tree().physics_frame
 		await get_tree().physics_frame
-		_solver.bind_space(_world.get_space(), _world.get_block_rids())
+		_solver.bind_space(
+			_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 		var verdict := await _evaluate(candidate, profile)
 		if bool(verdict["ok"]) and not _cancelled:
 			if candidate.display_name.is_empty():
@@ -391,6 +414,16 @@ func _vary_level(source: LevelData, variation_seed: int, scale: float,
 			clampf(block.position.y + rng.randf_range(-35.0, 35.0) * scale, 180.0, 1080.0))
 		block.size.x = clampf(
 			block.size.x + rng.randf_range(-30.0, 30.0) * scale, 120.0, 360.0)
+	for obstacle in level.obstacles:
+		obstacle.position = Vector2(
+			clampf(obstacle.position.x + rng.randf_range(-32.0, 32.0) * scale, 70.0, 650.0),
+			clampf(obstacle.position.y + rng.randf_range(-32.0, 32.0) * scale, 180.0, 1060.0))
+		obstacle.rotation_degrees = wrapf(
+			obstacle.rotation_degrees + rng.randf_range(-8.0, 8.0) * scale,
+			-180.0, 180.0)
+		obstacle.phase_degrees = wrapf(
+			obstacle.phase_degrees + rng.randf_range(-18.0, 18.0) * scale,
+			-180.0, 180.0)
 	_vary_wall(level.left_wall_segments, rng, scale)
 	_vary_wall(level.right_wall_segments, rng, scale)
 	if scale >= MAX_VARIATION_SCALE and profile != null:
@@ -509,6 +542,12 @@ func _mirror_level(level: LevelData) -> void:
 	for block in level.breakable_blocks:
 		block.position.x = 720.0 - block.position.x
 		block.rotation_degrees = -block.rotation_degrees
+	for obstacle in level.obstacles:
+		obstacle.position.x = 720.0 - obstacle.position.x
+		obstacle.rotation_degrees = -obstacle.rotation_degrees
+		obstacle.motion_direction_degrees = wrapf(
+			180.0 - obstacle.motion_direction_degrees, -180.0, 180.0)
+		obstacle.angular_speed_degrees = -obstacle.angular_speed_degrees
 	var left_segments := level.left_wall_segments.duplicate()
 	level.left_wall_segments = level.right_wall_segments.duplicate()
 	level.right_wall_segments = left_segments
@@ -524,7 +563,10 @@ func _build_hard_rescue_level(source: LevelData,
 	if uses_blocks:
 		seed_ids.assign([27, 28, 29] if uses_wall_gaps else [27, 28])
 	else:
-		seed_ids.assign([2, 4, 12, 14, 17] if uses_wall_gaps else [2, 17])
+		# Bu iki iskelet 3 derece/100 guc taramasinda 7+ saglam hucreyi
+		# korur. Daha dar resmi bolumleri kurtarma tohumu yapmak, varyasyon
+		# eklenince adaylarin tamamini yeniden "pencere-dar"a dusuruyordu.
+		seed_ids.assign([2, 4])
 	var seed_id := seed_ids[rng.randi_range(0, seed_ids.size() - 1)]
 	var level := LevelLibrary.load_level(seed_id).duplicate(true) as LevelData
 
@@ -552,19 +594,30 @@ func _build_hard_rescue_level(source: LevelData,
 		level.right_wall_segments = left_segments
 
 	var shift_direction := -1.0 if rng.randf() < 0.5 else 1.0
-	var x_shift := shift_direction * rng.randf_range(10.0, 34.0)
+	var x_shift := shift_direction * rng.randf_range(8.0, 20.0)
 	level.launcher_position.x = clampf(
-		level.launcher_position.x + rng.randf_range(-18.0, 18.0), 330.0, 390.0)
+		level.launcher_position.x + rng.randf_range(-8.0, 8.0), 330.0, 390.0)
 	level.target_position = Vector2(
-		clampf(level.target_position.x + x_shift + rng.randf_range(-22.0, 22.0), 120.0, 600.0),
-		clampf(level.target_position.y + rng.randf_range(-16.0, 18.0), 210.0, 340.0))
+		clampf(level.target_position.x + x_shift + rng.randf_range(-10.0, 10.0), 120.0, 600.0),
+		clampf(level.target_position.y + rng.randf_range(-8.0, 10.0), 210.0, 340.0))
 	for panel in level.panels:
 		panel.position = Vector2(
-			clampf(panel.position.x + x_shift + rng.randf_range(-18.0, 18.0), 70.0, 650.0),
-			clampf(panel.position.y + rng.randf_range(-20.0, 20.0), 360.0, 940.0))
+			clampf(panel.position.x + x_shift + rng.randf_range(-10.0, 10.0), 70.0, 650.0),
+			clampf(panel.position.y + rng.randf_range(-10.0, 10.0), 360.0, 940.0))
 		panel.rotation_degrees = clampf(
-			panel.rotation_degrees + rng.randf_range(-4.0, 4.0), -80.0, 80.0)
-		panel.length = clampf(panel.length + rng.randf_range(-22.0, 22.0), 180.0, 520.0)
+			panel.rotation_degrees + rng.randf_range(-2.0, 2.0), -80.0, 80.0)
+		panel.length = clampf(panel.length + rng.randf_range(-12.0, 12.0), 180.0, 520.0)
+	if not uses_blocks and level.panels.size() < 2:
+		# Resmi iskeletin birebir kopyasi olmasin; ana cozumden uzaktaki kisa
+		# ikinci yuzey alternatif denemeleri toplar ve cesitlilik puanina girer.
+		var side := -1.0 if level.target_position.x >= 360.0 else 1.0
+		var route_shaper := PanelData.new()
+		route_shaper.position = Vector2(360.0 + side * rng.randf_range(205.0, 235.0),
+			rng.randf_range(900.0, 960.0))
+		route_shaper.rotation_degrees = side * rng.randf_range(16.0, 28.0)
+		route_shaper.length = rng.randf_range(170.0, 205.0)
+		route_shaper.thickness = 26.0
+		level.panels.append(route_shaper)
 	for block in level.breakable_blocks:
 		block.position = Vector2(
 			clampf(block.position.x + x_shift + rng.randf_range(-18.0, 18.0), 80.0, 640.0),
@@ -607,6 +660,14 @@ func _repair_anchor_clearance(level: LevelData, repair_seed: int) -> void:
 			block.position, block.size, block.rotation_degrees, level, occupied,
 			Rect2(140.0, 420.0, 440.0, 480.0), rng)
 		occupied.append({"position": block.position, "radius": block.size.x * 0.32})
+	for obstacle in level.obstacles:
+		var obstacle_size := obstacle.size
+		if obstacle.kind != ObstacleData.Kind.MOVING_BAR:
+			obstacle_size = Vector2.ONE * obstacle.size.x
+		obstacle.position = _clear_obstacle_position(
+			obstacle.position, obstacle_size, obstacle.rotation_degrees, level, occupied,
+			Rect2(100.0, 300.0, 520.0, 650.0), rng)
+		occupied.append({"position": obstacle.position, "radius": obstacle_size.length() * 0.32})
 
 
 func _clear_obstacle_position(initial: Vector2, size: Vector2, rotation_degrees: float,
@@ -852,6 +913,12 @@ func _random_level(profile: Profile) -> LevelData:
 		blocks.append(_random_block())
 	level.breakable_blocks = blocks
 
+	var obstacles: Array[ObstacleData] = []
+	if not profile.obstacle_kinds.is_empty():
+		for i in _rng.randi_range(profile.obstacle_count.x, profile.obstacle_count.y):
+			obstacles.append(_random_obstacle(profile.obstacle_kinds))
+	level.obstacles = obstacles
+
 	# Yildiz esikleri mevcut dengeye uyar; editorde elle degistirilebilir.
 	level.three_star_max_shots = 2
 	level.two_star_max_shots = mini(4, profile.max_lives)
@@ -877,3 +944,30 @@ func _random_block() -> BreakableBlockData:
 	block.rotation_degrees = 0.0
 	block.size = Vector2(_rng.randf_range(160.0, 300.0), 44.0)
 	return block
+
+
+func _random_obstacle(kinds: Array[int]) -> ObstacleData:
+	var obstacle := ObstacleData.new()
+	obstacle.kind = kinds[_rng.randi_range(0, kinds.size() - 1)] as ObstacleData.Kind
+	obstacle.position = Vector2(
+		_rng.randf_range(130.0, 590.0), _rng.randf_range(360.0, 920.0))
+	obstacle.rotation_degrees = _rng.randf_range(-55.0, 55.0)
+	match obstacle.kind:
+		ObstacleData.Kind.METAL_RING:
+			obstacle.size = Vector2(_rng.randf_range(120.0, 200.0), 28.0)
+			obstacle.inner_radius = clampf(
+				_rng.randf_range(34.0, 58.0), 28.0, obstacle.outer_radius() - 12.0)
+		ObstacleData.Kind.BOMB:
+			obstacle.size = Vector2.ONE * _rng.randf_range(56.0, 88.0)
+		ObstacleData.Kind.ROTATING_WHEEL:
+			obstacle.size = Vector2(_rng.randf_range(110.0, 190.0), _rng.randf_range(18.0, 30.0))
+			obstacle.spoke_count = _rng.randi_range(4, 7)
+			obstacle.angular_speed_degrees = _rng.randf_range(35.0, 90.0) * (
+				-1.0 if _rng.randf() < 0.5 else 1.0)
+		ObstacleData.Kind.MOVING_BAR:
+			obstacle.size = Vector2(_rng.randf_range(130.0, 240.0), _rng.randf_range(28.0, 44.0))
+			obstacle.motion_direction_degrees = _rng.randf_range(-90.0, 90.0)
+			obstacle.travel_distance = _rng.randf_range(60.0, 150.0)
+			obstacle.motion_period = _rng.randf_range(2.2, 4.2)
+			obstacle.phase_degrees = _rng.randf_range(-90.0, 90.0)
+	return obstacle

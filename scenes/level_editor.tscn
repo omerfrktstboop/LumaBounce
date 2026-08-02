@@ -111,7 +111,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -286.0
+offset_top = -354.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
@@ -213,6 +213,54 @@ text = "SİL"
 script = ExtResource("5_button")
 corner_radius = 16
 content_margin = Vector2(6, 6)
+
+[node name="ObstacleRow" type="HBoxContainer" parent="HUD/SafeArea/Root/BottomPanel/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="AddRing" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ObstacleRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "+ HALKA"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
+
+[node name="AddBomb" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ObstacleRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "+ BOMBA"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
+
+[node name="AddWheel" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ObstacleRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "+ CARK"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
+
+[node name="AddMover" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ObstacleRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "+ KAYAN"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
 
 [node name="TuneRow" type="HBoxContainer" parent="HUD/SafeArea/Root/BottomPanel/Rows"]
 layout_mode = 2

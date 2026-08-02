@@ -26,6 +26,7 @@ const AUDIO_AUTOLOAD := "autoload/AudioManager"
 
 var _passed := 0
 var _failed := 0
+var _owned_audio_manager: Node
 
 
 func _initialize() -> void:
@@ -51,6 +52,7 @@ func _run() -> void:
 	_test_library_bounds()
 
 	_restore_save()
+	await _unregister_audio_manager()
 	print("")
 	print("SONUC: %d gecti, %d kaldi." % [_passed, _failed])
 	quit(0 if _failed == 0 else 1)
@@ -143,6 +145,18 @@ func _register_audio_manager() -> void:
 	node.name = "AudioManager"
 	root.add_child(node)
 	Engine.register_singleton("AudioManager", node)
+	_owned_audio_manager = node
+
+
+func _unregister_audio_manager() -> void:
+	if _owned_audio_manager == null:
+		return
+	_owned_audio_manager.call("stop_transient_sounds")
+	await create_timer(0.1).timeout
+	Engine.unregister_singleton("AudioManager")
+	root.remove_child(_owned_audio_manager)
+	_owned_audio_manager.free()
+	_owned_audio_manager = null
 
 
 # --- Kirilabilir blok durum kurallari -----------------------------------------
@@ -272,7 +286,8 @@ func _test_practice_mode() -> void:
 	var completed := [false]
 	gameplay.level_completed.connect(func(_id: int, _stars: int) -> void: completed[0] = true)
 	var target := gameplay.get_node("Target") as Target
-	target.hit.emit(gameplay.get_node("Ball"))
+	ball.launch(Vector2.UP * 1000.0)
+	target.hit.emit(ball)
 	await create_timer(float(gameplay.practice_hit_reset_delay) + 0.3).timeout
 
 	_check("isabette basari karti acilmadi", panel.visible, false)
@@ -293,7 +308,9 @@ func _test_practice_mode() -> void:
 	await physics_frame
 	var normal_completed := [false]
 	normal.level_completed.connect(func(_id: int, _stars: int) -> void: normal_completed[0] = true)
-	(normal.get_node("Target") as Target).hit.emit(normal.get_node("Ball"))
+	var normal_ball := normal.get_node("Ball") as Ball
+	normal_ball.launch(Vector2.UP * 1000.0)
+	(normal.get_node("Target") as Target).hit.emit(normal_ball)
 	await process_frame
 	_check("normal modda level_completed yayiliyor", normal_completed[0], true)
 	root.remove_child(normal)
@@ -418,7 +435,8 @@ func _test_generator() -> void:
 		world.build(level)
 		await physics_frame
 		await physics_frame
-		solver.bind_space(world.get_space(), world.get_block_rids())
+		solver.bind_space(
+			world.get_space(), world.get_block_rids(), world.get_obstacles())
 		var none: Array[RID] = []
 		var scan := solver.scan(
 			solver.spawn_position(level.launcher_position), level.target_position,
@@ -687,7 +705,7 @@ func _test_level_select() -> void:
 	await process_frame
 
 	var grid := select.get_node("SafeArea/Content/GridScroll/GridHolder/Grid") as GridContainer
-	_check("40 bolum butonu uretiliyor", grid.get_child_count(), 40)
+	_check("50 bolum butonu uretiliyor", grid.get_child_count(), 50)
 
 	var unlocked := grid.get_node("Level20") as Button
 	_check("bolum 20 acik", unlocked.disabled, false)
@@ -702,7 +720,7 @@ func _test_level_select() -> void:
 	var gate_label := gated.get_node("StarGate").get_child(0) as Label
 	_check("kapi bilgisi 20 / 40 gosteriyor", gate_label.text, "20 / 40")
 
-	# 22-40 yildiz kapisi TASIMAZ; sirali ilerleme yuzunden kilitlidirler,
+	# 22-50 yildiz kapisi TASIMAZ; sirali ilerleme yuzunden kilitlidirler,
 	# bu yuzden kapi satiri degil normal (kisilmis) yildiz satiri gosterirler.
 	var plain := grid.get_node("Level22") as Button
 	_check("bolum 22 kilitli", plain.disabled, true)
@@ -710,7 +728,7 @@ func _test_level_select() -> void:
 	_check("kapisiz kilitli bolumde yildiz satiri var", plain.has_node("Stars"), true)
 
 	var total := select.get_node("SafeArea/Content/StarTotal") as Label
-	_check("toplam yildiz sayaci 20 / 120", total.text, "20 / 120")
+	_check("toplam yildiz sayaci 20 / 150", total.text, "20 / 150")
 
 	root.remove_child(select)
 	select.free()
@@ -776,27 +794,31 @@ func _test_star_gate() -> void:
 func _test_library_bounds() -> void:
 	print("")
 	print("--- LevelLibrary sinirlari ---")
-	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 40)
+	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 50)
 	_check("has_next(20)", LevelLibrary.has_next(20), true)
 	_check("has_next(24)", LevelLibrary.has_next(24), true)
 	_check("has_next(25)", LevelLibrary.has_next(25), true)
 	_check("has_next(39)", LevelLibrary.has_next(39), true)
-	_check("has_next(40)", LevelLibrary.has_next(40), false)
-	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 120)
+	_check("has_next(40)", LevelLibrary.has_next(40), true)
+	_check("has_next(49)", LevelLibrary.has_next(49), true)
+	_check("has_next(50)", LevelLibrary.has_next(50), false)
+	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 150)
 
-	# 21-40 gercekten yuklenip dogrulamadan geciyor mu.
-	for id in range(21, 41):
+	# 21-50 gercekten yuklenip dogrulamadan geciyor mu.
+	for id in range(21, 51):
 		var level := LevelLibrary.load_level(id)
 		_check("bolum %d yukleniyor" % id, level.level_id, id)
 		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
 		_check("bolum %d blok donemi dogru" % id,
-			level.breakable_blocks.is_empty(), id <= 25)
+			level.breakable_blocks.is_empty(), id <= 25 or id >= 41)
 		if id in range(30, 41):
 			var durable_count := 0
 			for block_data in level.breakable_blocks:
 				if block_data.hit_points >= 2:
 					durable_count += 1
 			_check("bolum %d dayanikli kilit iceriyor" % id, durable_count > 0, true)
+		if id >= 41:
+			_check("bolum %d yeni engel iceriyor" % id, level.obstacles.is_empty(), false)
 		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
 			level.three_star_max_shots <= level.max_lives, true)
 		_check("bolum %d: 2-yildiz atis <= max_lives" % id,

@@ -3,10 +3,11 @@ extends RefCounted
 
 ## OpenRouter semasi, mapper sinirlari ve UI secenekleri icin tek kaynak.
 
-const PROMPT_VERSION := "1.5"
+const PROMPT_VERSION := "1.6"
 const MAX_LEVELS := 10
 const MAX_PANELS := 5
 const MAX_BLOCKS := 4
+const MAX_OBSTACLES := 4
 const MAX_DISPLAY_NAME := 40
 const MAX_DESIGN_INTENT := 240
 const MAX_DESIGN_NOTE := 1000
@@ -15,10 +16,13 @@ const TEMPLATE_IDS := [
 	"auto", "tutorial", "single_bounce", "wall_bounce", "zigzag",
 	"narrow_passage", "reverse_route", "two_routes", "safe_block_route",
 	"block_free_mastery", "multi_shot", "ricochet_chain", "block_corridor",
-	"mini_final",
+	"kinetic_course", "mini_final",
 ]
 const DIFFICULTY_IDS := ["easy", "medium", "hard", "final"]
-const MECHANIC_IDS := ["panel", "wall_gap", "breakable_block"]
+const MECHANIC_IDS := [
+	"panel", "wall_gap", "breakable_block", "metal_ring", "bomb",
+	"rotating_wheel", "moving_bar",
+]
 
 
 static func response_schema(requested_count: int) -> Dictionary:
@@ -49,6 +53,27 @@ static func response_schema(requested_count: int) -> Dictionary:
 		"width": _number(120.0, 280.0),
 		"height": _number(36.0, 52.0),
 	}, ["x", "y", "rotation_degrees", "width", "height"])
+	var obstacle := _object({
+		"kind": {"type": "string", "enum": [
+			"metal_ring", "bomb", "rotating_wheel", "moving_bar"]},
+		"x": _number(100.0, 620.0),
+		"y": _number(260.0, 980.0),
+		"rotation_degrees": _number(-180.0, 180.0),
+		"width": _number(48.0, 360.0),
+		"height": _number(20.0, 72.0),
+		"inner_radius": _number(28.0, 110.0),
+		"spoke_count": {"type": "integer", "minimum": 3, "maximum": 8},
+		"speed_degrees": _number(-180.0, 180.0),
+		"motion_direction_degrees": _number(-180.0, 180.0),
+		"travel_distance": _number(20.0, 240.0),
+		"motion_period": _number(1.0, 8.0),
+		"phase_degrees": _number(-180.0, 180.0),
+	}, [
+		"kind", "x", "y", "rotation_degrees", "width", "height",
+		"inner_radius", "spoke_count", "speed_degrees",
+		"motion_direction_degrees", "travel_distance", "motion_period",
+		"phase_degrees",
+	])
 	var expected_solution := _object({
 		"estimated_bounces": {"type": "integer", "minimum": 0, "maximum": 12},
 		"blocks_required": {"type": "integer", "minimum": 0, "maximum": MAX_BLOCKS},
@@ -65,12 +90,16 @@ static func response_schema(requested_count: int) -> Dictionary:
 		"blocks": {
 			"type": "array", "maxItems": MAX_BLOCKS, "items": block,
 		},
+		"obstacles": {
+			"type": "array", "maxItems": MAX_OBSTACLES, "items": obstacle,
+		},
 		"left_wall_gap": wall_gap,
 		"right_wall_gap": wall_gap,
 		"max_lives": {"type": "integer", "minimum": 1, "maximum": 8},
 		"expected_solution": expected_solution,
 	}, [
 		"display_name", "design_intent", "launcher", "target", "panels", "blocks",
+		"obstacles",
 		"left_wall_gap", "right_wall_gap", "max_lives", "expected_solution",
 	])
 	return _object({

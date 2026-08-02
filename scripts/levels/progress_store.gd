@@ -109,7 +109,7 @@ func set_level_stars_if_higher(level_id: int, stars: int) -> bool:
 	return true
 
 
-## Tum bolumlerin toplami - bolum secim ekranindaki "N / 120" sayaci.
+## Tum bolumlerin toplami - bolum secim ekranindaki "N / 150" sayaci.
 func get_total_stars() -> int:
 	return get_stars_before(LevelLibrary.last_level_id() + 1)
 

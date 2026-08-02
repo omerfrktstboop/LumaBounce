@@ -78,6 +78,15 @@ func _similarity(candidate: LevelData, candidate_metrics: Dictionary,
 	total_weight += 6.0
 	if block_count_score >= 0.9:
 		reasons.append("blok sayisi")
+	var compare_obstacles := (
+		not candidate.obstacles.is_empty() or not reference.obstacles.is_empty())
+	if compare_obstacles:
+		var obstacle_count_score := _count_similarity(
+			candidate.obstacles.size(), reference.obstacles.size())
+		weighted += obstacle_count_score * 6.0
+		total_weight += 6.0
+		if obstacle_count_score >= 0.9:
+			reasons.append("engel sayisi")
 
 	var launcher_ref := _mirror_point(reference.launcher_position) if mirror_reference else reference.launcher_position
 	var target_ref := _mirror_point(reference.target_position) if mirror_reference else reference.target_position
@@ -102,6 +111,13 @@ func _similarity(candidate: LevelData, candidate_metrics: Dictionary,
 		reasons.append("blok geometrisi")
 	if wall_score >= 0.9:
 		reasons.append("duvar bosluklari")
+	if compare_obstacles:
+		var obstacle_score := _obstacle_similarity(
+			candidate.obstacles, reference.obstacles, mirror_reference)
+		weighted += obstacle_score * 20.0
+		total_weight += 20.0
+		if obstacle_score >= 0.86:
+			reasons.append("engel geometrisi")
 
 	var metric_pairs := [
 		["bounces", 4.0, 5.0, "sekme sayisi"],
@@ -189,6 +205,45 @@ func _block_features(blocks: Array[BreakableBlockData], mirrored: bool) -> Array
 			"width": block.size.x,
 		})
 	values.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if not is_equal_approx(a["position"].y, b["position"].y):
+			return a["position"].y < b["position"].y
+		return a["position"].x < b["position"].x)
+	return values
+
+
+func _obstacle_similarity(a: Array[ObstacleData], b: Array[ObstacleData],
+		mirrored: bool) -> float:
+	if a.is_empty() and b.is_empty():
+		return 1.0
+	if a.is_empty() or b.is_empty():
+		return 0.0
+	var aa := _obstacle_features(a, false)
+	var bb := _obstacle_features(b, mirrored)
+	var paired := mini(aa.size(), bb.size())
+	var total := 0.0
+	for i in paired:
+		var kind_score := 1.0 if aa[i]["kind"] == bb[i]["kind"] else 0.0
+		var point_score := _point_similarity(aa[i]["position"], bb[i]["position"])
+		var size_score := _scalar_similarity(aa[i]["size"], bb[i]["size"], 300.0)
+		var motion_score := _scalar_similarity(aa[i]["motion"], bb[i]["motion"], 260.0)
+		total += kind_score * 0.35 + point_score * 0.40 + size_score * 0.15 + motion_score * 0.10
+	return total / float(maxi(aa.size(), bb.size()))
+
+
+func _obstacle_features(obstacles: Array[ObstacleData], mirrored: bool) -> Array[Dictionary]:
+	var values: Array[Dictionary] = []
+	for obstacle in obstacles:
+		values.append({
+			"kind": obstacle.kind,
+			"position": _mirror_point(obstacle.position) if mirrored else obstacle.position,
+			"size": obstacle.size.x,
+			"motion": obstacle.travel_distance if obstacle.kind == ObstacleData.Kind.MOVING_BAR \
+				else (absf(obstacle.angular_speed_degrees) \
+					if obstacle.kind == ObstacleData.Kind.ROTATING_WHEEL else 0.0),
+		})
+	values.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		if int(a["kind"]) != int(b["kind"]):
+			return int(a["kind"]) < int(b["kind"])
 		if not is_equal_approx(a["position"].y, b["position"].y):
 			return a["position"].y < b["position"].y
 		return a["position"].x < b["position"].x)

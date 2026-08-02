@@ -1,8 +1,8 @@
 class_name LevelWorld
 extends Node2D
 
-## Bir bolumun govdelerini kuran tek yer: arena kenarlari, sekme panelleri ve
-## kirilabilir bloklar.
+## Bir bolumun govdelerini kuran tek yer: arena kenarlari, sekme panelleri,
+## kirilabilir bloklar ve 41+ engelleri.
 ##
 ## Hem headless dogrulama araci hem de oyun ici editor/uretec bunu kullanir.
 ## Kritik nokta: govdeler GERCEK sahnelerden (bounce_panel.tscn,
@@ -27,6 +27,8 @@ var _block_count := 0
 var _state_slot_count := 0
 var _block_nodes: Array[BreakableBlock] = []
 var _block_layers: Dictionary = {}
+var _obstacle_field: ObstacleField
+var _obstacles: Array[ObstacleData] = []
 
 
 ## Bolumu bastan kurar. Tekrar cagrilabilir; onceki govdeler once agactan
@@ -43,6 +45,7 @@ func build(level: LevelData) -> void:
 
 	_build_panels(level)
 	_build_blocks(level)
+	_build_obstacles(level)
 
 
 func clear() -> void:
@@ -55,6 +58,8 @@ func clear() -> void:
 	_state_slot_count = 0
 	_block_nodes.clear()
 	_block_layers.clear()
+	_obstacle_field = null
+	_obstacles.clear()
 
 
 func get_space() -> PhysicsDirectSpaceState2D:
@@ -75,6 +80,10 @@ func get_block_count() -> int:
 
 func get_state_slot_count() -> int:
 	return _state_slot_count
+
+
+func get_obstacles() -> Array[ObstacleData]:
+	return _obstacles
 
 
 func get_all_broken_state() -> int:
@@ -106,6 +115,11 @@ func set_block_position(index: int, value: Vector2) -> void:
 		var layer := raw_layer as BreakableBlock
 		if layer != null:
 			layer.position = value
+
+
+func set_obstacle_position(index: int, value: Vector2) -> void:
+	if _obstacle_field != null:
+		_obstacle_field.set_obstacle_position(index, value)
 
 
 ## Bit maskesindeki tuketilmis can katmanlarinin RID'leri. Simulasyon bunlari
@@ -164,3 +178,12 @@ func _build_blocks(level: LevelData) -> void:
 				_block_nodes.append(block)
 		_block_layers[i] = layers
 		_block_count += 1
+
+
+func _build_obstacles(level: LevelData) -> void:
+	_obstacles.assign(level.obstacles)
+	_obstacle_field = ObstacleField.new()
+	_obstacle_field.name = "Obstacles"
+	_obstacle_field.preview_only = true
+	add_child(_obstacle_field)
+	_obstacle_field.build(_obstacles)
