@@ -11,8 +11,9 @@ extends SceneTree
 ## iki taraf asla farkli cevap veremez.
 ##
 ## IKI MOD:
-##   1) Bloksuz bolumler (1-20) - tek atislik izgara taramasi.
-##   2) Kirilabilir blogu olan bolumler (21+) - COK ATISLI durum arayisi.
+##   1) Bloksuz bolumler (1-25) - tek atislik izgara taramasi.
+##      21-25 ayrica 5-10 sekmelik ustalik zinciri ister.
+##   2) Kirilabilir blogu olan bolumler (26+) - COK ATISLI durum arayisi.
 ##      Tek atislik model burada yanlis cevap verirdi: bir atisin kirdigi
 ##      blok sonraki atisin geometrisini kalici olarak degistirir.
 ##
@@ -20,7 +21,7 @@ extends SceneTree
 ##   godot --headless --path . --script res://tools/verify_levels.gd
 ##   godot --headless --path . --script res://tools/verify_levels.gd -- --angle-step 1 --power-step 25
 ##   godot --headless --path . --script res://tools/verify_levels.gd -- --level 21
-##   godot --headless --path . --script res://tools/verify_levels.gd -- --level 22 --free-only
+##   godot --headless --path . --script res://tools/verify_levels.gd -- --level 27 --free-only
 
 ## Cok atisli aramada ziyaret edilecek en fazla "kirik blok" durumu.
 ## Kombinasyon sayisi 2^blok oldugu icin ust sinir sart.
@@ -30,12 +31,18 @@ const MAX_BLOCK_STATES := 48
 ## demektir - teknik olarak "komsulari da isabet ediyor" ama oyuncu icin hala
 ## tek bir noktayi tutturmak.
 const MIN_ROBUST_CELLS := 6
-## TASARIM SOZLESMESI: bu bolumden itibaren kirilabilir blok ZORUNLU OLAMAZ.
-## Her bolumun hicbir blok kirmadan gecilebilen bir rotasi olmali, yoksa blok
-## bir bulmaca parcasi degil anahtar/kapi olur ve oyun brick-breaker'a kayar.
-## 21 disaridadir: mekanigi ogreten tek bolum oldugu icin orada blok kirmak
-## zorunlu olabilir.
-const BLOCK_OPTIONAL_FROM_LEVEL := 22
+## Uzun zincirlerde klasik dort-komsu saglamlik olcusu fazla serttir; burada
+## bitisik isabetlerden olusan en az iki hucrelik bir 5-10 sekme bandi aranir.
+const RICOCHET_FIRST_LEVEL := 21
+const RICOCHET_LAST_LEVEL := 25
+const RICOCHET_MIN_BOUNCES := 5
+const RICOCHET_MAX_BOUNCES := 10
+const MIN_RICOCHET_CHAIN_CELLS := 2
+## 26 blok mekanigini zorunlu rota ile ogretir. 27-30'da bloklu guvenli rota
+## ve bloksuz ustalik rotasi birlikte vardir. 31-35 tekrar kalici blok durumu
+## kullanan cok atisli bulmacalara doner.
+const BLOCK_OPTIONAL_FIRST_LEVEL := 27
+const BLOCK_OPTIONAL_LAST_LEVEL := 30
 
 var _angle_step := 2.0
 var _power_step := 50.0
@@ -171,12 +178,39 @@ func _check_solvability(level: LevelData) -> bool:
 	if int(scan["hit_count"]) == 0:
 		print("  HATA: hicbir atis hedefe ulasmiyor - bolum cozulemez.")
 		return false
+	if level.level_id in range(RICOCHET_FIRST_LEVEL, RICOCHET_LAST_LEVEL + 1):
+		return _check_ricochet_chain(level.level_id, scan)
 
 	var analysis := LevelSolver.analyse_robust(scan)
 	if int(analysis["robust"]) == 0:
 		print("  UYARI: saglam cozum yok - her isabet tek bir dar aci/guce bagli.")
 		return false
 	_print_robust(analysis)
+	return true
+
+
+func _check_ricochet_chain(level_id: int, scan: Dictionary) -> bool:
+	var minimum_bounces := RICOCHET_MIN_BOUNCES + int(
+		(level_id - RICOCHET_FIRST_LEVEL) / 2.0)
+	var band := LevelSolver.analyse_bounce_band(
+		scan, minimum_bounces, RICOCHET_MAX_BOUNCES)
+	var chain_cells := int(band["largest_cluster"])
+	if chain_cells < MIN_RICOCHET_CHAIN_CELLS:
+		print("  UYARI: %d-%d sekme zinciri fazla dar (%d/%d hucre)." % [
+			minimum_bounces, RICOCHET_MAX_BOUNCES,
+			chain_cells, MIN_RICOCHET_CHAIN_CELLS])
+		return false
+	var ordinary := LevelSolver.analyse_robust(scan)
+	if (int(ordinary["robust"]) > 0
+			and int(ordinary["bounces"]) < minimum_bounces):
+		print("  UYARI: %d sekmeli saglam kestirme var; ustalik zinciri atlanabiliyor." %
+			int(ordinary["bounces"]))
+		return false
+	var clusters: Array = band["clusters"]
+	var best: Dictionary = clusters[0]
+	print("  USTALIK ZINCIRI: %d hucre, %d sekme, aci %.1f..%.1f, guc %.0f..%.0f" % [
+		chain_cells, int(best["bounces"]), float(best["angle_lo"]),
+		float(best["angle_hi"]), float(best["power_lo"]), float(best["power_hi"])])
 	return true
 
 
@@ -296,12 +330,15 @@ func _report_solutions(level: LevelData, solutions: Array[Dictionary],
 		# Tasarim dongusu modu: yalnizca bloksuz rota olculur.
 		return _report_route("BLOKSUZ USTALIK ROTASI (tek atis)", free_route)
 
-	if level.level_id < BLOCK_OPTIONAL_FROM_LEVEL:
-		# Ogretici bolum: blok kirmak zorunlu olabilir, tek bir rahat rota yeter.
-		var main := block_route
-		if not free_route.is_empty() and _robust_of(free_route) >= MIN_ROBUST_CELLS:
-			main = free_route
-		return _report_route("ANA ROTA", main)
+	var optional_block_route := level.level_id in range(
+		BLOCK_OPTIONAL_FIRST_LEVEL, BLOCK_OPTIONAL_LAST_LEVEL + 1)
+	if not optional_block_route:
+		# 26 ogretici, 31-35 kalici blok durumu kullanan asil bulmacalardir.
+		if (not free_route.is_empty()
+				and _robust_of(free_route) >= MIN_ROBUST_CELLS):
+			print("  UYARI: blok kirmadan saglam kestirme var; cok atisli rota atlanabiliyor.")
+			return false
+		return _report_route("BLOKLU ANA ROTA", block_route)
 
 	var ok := _report_route("BLOKSUZ USTALIK ROTASI (tek atis)", free_route)
 	ok = _report_route("BLOKLU GUVENLI ROTA", block_route) and ok

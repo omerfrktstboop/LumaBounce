@@ -138,14 +138,14 @@ func _register_audio_manager() -> void:
 # --- Kirilabilir blok durum kurallari -----------------------------------------
 
 func _test_block_state_rules() -> void:
-	print("--- Kirilabilir blok durumu (bolum 21) ---")
+	print("--- Kirilabilir blok durumu (bolum 26) ---")
 
 	# Tipsiz: Gameplay adini anmadan yuklenir (bkz. dosya basindaki not).
 	var gameplay: Node = (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
 	if gameplay == null:
 		_fail("oynanis sahnesi yuklenemedi")
 		return
-	gameplay.level_data = LevelLibrary.load_level(21)
+	gameplay.level_data = LevelLibrary.load_level(26)
 	root.add_child(gameplay)
 	await physics_frame
 
@@ -303,6 +303,7 @@ func _test_custom_level_store() -> void:
 	level.breakable_blocks = [block]
 
 	var saved := CustomLevelStore.Bucket.SAVED
+	var saved_count_before := CustomLevelStore.list_names(saved).size()
 	var path := CustomLevelStore.save(saved, level, "Sınama Bölümü 1")
 	_check("kaydedildi", not path.is_empty(), true)
 	_check("dosya adi temizlendi", path.get_file(), "sinama_bolumu_1.tres")
@@ -341,7 +342,7 @@ func _test_custom_level_store() -> void:
 	CustomLevelStore.replace_generated([level, second])
 	_check("parti diske yazildi", CustomLevelStore.list_names(generated).size(), 2)
 	_check("parti kayitlar kovasina karismadi",
-		CustomLevelStore.list_names(saved).size(), 1)
+		CustomLevelStore.list_names(saved).size(), saved_count_before + 1)
 	CustomLevelStore.replace_generated([level])
 	_check("yeni parti eskisini siliyor", CustomLevelStore.list_names(generated).size(), 1)
 
@@ -647,7 +648,7 @@ func _test_level_select() -> void:
 	await process_frame
 
 	var grid := select.get_node("SafeArea/Content/GridScroll/GridHolder/Grid") as GridContainer
-	_check("25 bolum butonu uretiliyor", grid.get_child_count(), 25)
+	_check("35 bolum butonu uretiliyor", grid.get_child_count(), 35)
 
 	var unlocked := grid.get_node("Level20") as Button
 	_check("bolum 20 acik", unlocked.disabled, false)
@@ -662,7 +663,7 @@ func _test_level_select() -> void:
 	var gate_label := gated.get_node("StarGate").get_child(0) as Label
 	_check("kapi bilgisi 20 / 40 gosteriyor", gate_label.text, "20 / 40")
 
-	# 22-25 yildiz kapisi TASIMAZ; sirali ilerleme yuzunden kilitlidirler,
+	# 22-35 yildiz kapisi TASIMAZ; sirali ilerleme yuzunden kilitlidirler,
 	# bu yuzden kapi satiri degil normal (kisilmis) yildiz satiri gosterirler.
 	var plain := grid.get_node("Level22") as Button
 	_check("bolum 22 kilitli", plain.disabled, true)
@@ -670,7 +671,7 @@ func _test_level_select() -> void:
 	_check("kapisiz kilitli bolumde yildiz satiri var", plain.has_node("Stars"), true)
 
 	var total := select.get_node("SafeArea/Content/StarTotal") as Label
-	_check("toplam yildiz sayaci 20 / 75", total.text, "20 / 75")
+	_check("toplam yildiz sayaci 20 / 105", total.text, "20 / 105")
 
 	root.remove_child(select)
 	select.free()
@@ -717,15 +718,15 @@ func _test_star_gate() -> void:
 	for id in range(1, 21):
 		behind.completed_levels.append(id)
 		behind.level_stars[id] = 1
-	for id in range(21, 26):
+	for id in range(21, 36):
 		behind.level_stars[id] = 3
-	_check("21-25 yildizlari genel toplama giriyor", behind.get_total_stars(), 35)
-	_check("21-25 yildizlari kapiya SAYILMIYOR", behind.get_stars_before(21), 20)
+	_check("21-35 yildizlari genel toplama giriyor", behind.get_total_stars(), 65)
+	_check("21-35 yildizlari kapiya SAYILMIYOR", behind.get_stars_before(21), 20)
 	_check("kapi hala kapali", behind.is_unlocked(21), false)
 
 	# Yildiz kaydi yalnizca IYILESIRSE yazilir (eski kayitlar korunur).
 	var record := ProgressStore.new()
-	record.highest_unlocked_level = 25
+	record.highest_unlocked_level = 35
 	_check("ilk 21 yildizi kaydediliyor", record.set_level_stars_if_higher(21, 2), true)
 	_check("daha dusuk sonuc kaydi ezmiyor", record.set_level_stars_if_higher(21, 1), false)
 	_check("kayitli deger korunuyor", record.get_level_stars(21), 2)
@@ -736,18 +737,21 @@ func _test_star_gate() -> void:
 func _test_library_bounds() -> void:
 	print("")
 	print("--- LevelLibrary sinirlari ---")
-	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 25)
+	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 35)
 	_check("has_next(20)", LevelLibrary.has_next(20), true)
 	_check("has_next(24)", LevelLibrary.has_next(24), true)
-	_check("has_next(25)", LevelLibrary.has_next(25), false)
-	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 75)
+	_check("has_next(25)", LevelLibrary.has_next(25), true)
+	_check("has_next(34)", LevelLibrary.has_next(34), true)
+	_check("has_next(35)", LevelLibrary.has_next(35), false)
+	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 105)
 
-	# 21-25 gercekten yuklenip dogrulamadan geciyor mu.
-	for id in range(21, 26):
+	# 21-35 gercekten yuklenip dogrulamadan geciyor mu.
+	for id in range(21, 36):
 		var level := LevelLibrary.load_level(id)
 		_check("bolum %d yukleniyor" % id, level.level_id, id)
 		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
-		_check("bolum %d blok iceriyor" % id, level.breakable_blocks.size() > 0, true)
+		_check("bolum %d blok donemi dogru" % id,
+			level.breakable_blocks.is_empty(), id <= 25)
 		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
 			level.three_star_max_shots <= level.max_lives, true)
 		_check("bolum %d: 2-yildiz atis <= max_lives" % id,

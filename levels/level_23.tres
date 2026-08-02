@@ -1,45 +1,32 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
 
-[sub_resource type="Resource" id="Resource_l23_shelf"]
+[sub_resource type="Resource" id="Resource_l23_lower"]
 script = ExtResource("2_panel_data")
-position = Vector2(190, 470)
-rotation_degrees = 0.0
-length = 380.0
+position = Vector2(485.695, 855.693)
+rotation_degrees = 3.95
+length = 273.708
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l23_key"]
-script = ExtResource("3_block_data")
-position = Vector2(350, 660)
-rotation_degrees = 0.0
-size = Vector2(260, 44)
-
-[sub_resource type="Resource" id="Resource_l23_left"]
-script = ExtResource("3_block_data")
-position = Vector2(200, 860)
-rotation_degrees = 0.0
-size = Vector2(180, 44)
-
-[sub_resource type="Resource" id="Resource_l23_right"]
-script = ExtResource("3_block_data")
-position = Vector2(620, 860)
-rotation_degrees = 0.0
-size = Vector2(160, 44)
+[sub_resource type="Resource" id="Resource_l23_upper"]
+script = ExtResource("2_panel_data")
+position = Vector2(177.816, 733.466)
+rotation_degrees = -42.631
+length = 260.394
+thickness = 26.0
 
 [resource]
 script = ExtResource("1_level_data")
 level_id = 23
-display_name = "Doğru Seçim"
+display_name = "Uzun Yay"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(560, 300)
-panels = Array[PanelData]([SubResource("Resource_l23_shelf")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l23_key"), SubResource("Resource_l23_left"), SubResource("Resource_l23_right")])
-max_lives = 4
-tutorial_text = "Sağdaki aralık yeter. Yine de açabilirsin."
-two_star_max_seconds = 90.0
+target_position = Vector2(339.334, 469.579)
+panels = Array[PanelData]([SubResource("Resource_l23_lower"), SubResource("Resource_l23_upper")])
+max_lives = 5
+tutorial_text = "Açıyı kur; duvarlar yolun devamı."
+two_star_max_seconds = 95.0
 two_star_max_shots = 2
-three_star_max_seconds = 45.0
+three_star_max_seconds = 48.0
 three_star_max_shots = 1

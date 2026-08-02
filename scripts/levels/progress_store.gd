@@ -109,14 +109,14 @@ func set_level_stars_if_higher(level_id: int, stars: int) -> bool:
 	return true
 
 
-## Tum bolumlerin toplami - bolum secim ekranindaki "N / 75" sayaci.
+## Tum bolumlerin toplami - bolum secim ekranindaki "N / 105" sayaci.
 func get_total_stars() -> int:
 	return get_stars_before(LevelLibrary.last_level_id() + 1)
 
 
 ## [param level_id]'den ONCEKI bolumlerin yildiz toplami. Yildiz kapilari
 ## bunu kullanir: kapinin arkasindaki bolumler kendi kilidini acamaz, yani
-## 21-25'te kazanilan yildizlar 21'in 40-yildiz sartina sayilmaz.
+## 21-35'te kazanilan yildizlar 21'in 40-yildiz sartina sayilmaz.
 func get_stars_before(level_id: int) -> int:
 	var total := 0
 	for id in range(LevelLibrary.FIRST_LEVEL_ID, level_id):

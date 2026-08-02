@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
+
+[sub_resource type="Resource" id="Resource_l30_lower"]
+script = ExtResource("2_panel_data")
+position = Vector2(180, 640)
+rotation_degrees = 38.0
+length = 280.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l30_upper"]
+script = ExtResource("2_panel_data")
+position = Vector2(150, 380)
+rotation_degrees = -38.0
+length = 200.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l30_gate"]
+script = ExtResource("3_block_data")
+position = Vector2(280, 820)
+rotation_degrees = 0.0
+size = Vector2(300, 44)
+
+[sub_resource type="Resource" id="Resource_l30_upper_gate"]
+script = ExtResource("3_block_data")
+position = Vector2(300, 520)
+rotation_degrees = 0.0
+size = Vector2(280, 44)
+
+[sub_resource type="Resource" id="Resource_l30_corner"]
+script = ExtResource("3_block_data")
+position = Vector2(140, 880)
+rotation_degrees = 0.0
+size = Vector2(180, 44)
+
+[resource]
+script = ExtResource("1_level_data")
+level_id = 30
+display_name = "Zinciri Kır"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(480, 280)
+panels = Array[PanelData]([SubResource("Resource_l30_lower"), SubResource("Resource_l30_upper")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l30_gate"), SubResource("Resource_l30_upper_gate"), SubResource("Resource_l30_corner")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 480), Vector2(760, 1440)])
+max_lives = 4
+tutorial_text = "Kenar, panel ve tuğlayı tek rota gibi düşün."
+two_star_max_seconds = 95.0
+two_star_max_shots = 2
+three_star_max_seconds = 48.0
+three_star_max_shots = 1

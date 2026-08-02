@@ -1,0 +1,45 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
+
+[sub_resource type="Resource" id="Resource_l34_panel"]
+script = ExtResource("2_panel_data")
+position = Vector2(315.099, 693.376)
+rotation_degrees = 18.336
+length = 298.717
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l34_lower"]
+script = ExtResource("3_block_data")
+position = Vector2(505, 860)
+rotation_degrees = 0.0
+size = Vector2(350, 46)
+
+[sub_resource type="Resource" id="Resource_l34_upper"]
+script = ExtResource("3_block_data")
+position = Vector2(383.917, 462.913)
+rotation_degrees = 0.0
+size = Vector2(350, 46)
+
+[sub_resource type="Resource" id="Resource_l34_middle"]
+script = ExtResource("3_block_data")
+position = Vector2(177.755, 534.097)
+rotation_degrees = 0.0
+size = Vector2(500, 46)
+
+[resource]
+script = ExtResource("1_level_data")
+level_id = 34
+display_name = "Tam Temizlik"
+launcher_position = Vector2(360.554, 1120)
+target_position = Vector2(315.057, 229.45)
+panels = Array[PanelData]([SubResource("Resource_l34_panel")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l34_lower"), SubResource("Resource_l34_upper"), SubResource("Resource_l34_middle")])
+max_lives = 5
+tutorial_text = "Üç bloğu tek hazırlık atışında zincirlemeyi dene."
+two_star_max_seconds = 125.0
+two_star_max_shots = 3
+three_star_max_seconds = 68.0
+three_star_max_shots = 2

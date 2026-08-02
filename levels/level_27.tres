@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
+
+[sub_resource type="Resource" id="Resource_l27_bank"]
+script = ExtResource("2_panel_data")
+position = Vector2(630, 470)
+rotation_degrees = 64.0
+length = 280.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l27_key"]
+script = ExtResource("3_block_data")
+position = Vector2(400, 660)
+rotation_degrees = 0.0
+size = Vector2(240, 44)
+
+[sub_resource type="Resource" id="Resource_l27_side"]
+script = ExtResource("3_block_data")
+position = Vector2(580, 900)
+rotation_degrees = 0.0
+size = Vector2(180, 44)
+
+[resource]
+script = ExtResource("1_level_data")
+level_id = 27
+display_name = "Yan Yol"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(200, 300)
+panels = Array[PanelData]([SubResource("Resource_l27_bank")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l27_key"), SubResource("Resource_l27_side")])
+max_lives = 5
+tutorial_text = "Kırmak güvenli; doğru sekme daha kısa."
+two_star_max_seconds = 90.0
+two_star_max_shots = 2
+three_star_max_seconds = 45.0
+three_star_max_shots = 1

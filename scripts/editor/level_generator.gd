@@ -48,7 +48,7 @@ signal blueprint_progress(tried: int, total: int, accepted: int)
 ## ESIKLER ELLE YAPILMIS BOLUMLERE GORE KALIBRE EDILDI (3 derece / 100 guc
 ## izgarasinda olculmustur; baska bir izgarada sayilar degisir):
 ##   - Bolum 1  (en kolay, 0 sekme)          -> 25 saglam hucre
-##   - Bolum 21-25 bloksuz ustalik rotalari  -> 9-12 saglam hucre
+##   - Standart zor tek-sekme iskeletleri    -> 7-16 saglam hucre
 ##   - 40 rastgele adayin dagilimi           -> 5..58, ortanca ~20
 ## Referans olmadan bu sayilar anlamsizdir; "30 iyidir" gibi bir sezgi ilk
 ## denemede bolum 1'in kendisini bile eleyen bir filtre uretmisti.
@@ -93,7 +93,7 @@ class Profile extends RefCounted:
 		p.target_y_range = Vector2(235.0, 345.0)
 		return p
 
-	## 21-25'in ustalik rotalari bandi: dar ama piksel hassasiyeti degil.
+	## Standart zor aday bandi: dar ama piksel hassasiyeti degil.
 	static func hard() -> Profile:
 		var p := Profile.new()
 		p.display_name = "Zor"
@@ -464,7 +464,7 @@ func _build_ricochet_rescue_level(source: LevelData,
 
 func _build_block_corridor_rescue_level(source: LevelData,
 		rng: RandomNumberGenerator) -> LevelData:
-	var level := LevelLibrary.load_level(21).duplicate(true) as LevelData
+	var level := LevelLibrary.load_level(26).duplicate(true) as LevelData
 	_copy_generated_identity(level, source)
 	level.max_lives = maxi(source.max_lives, 3)
 	var lower_gate := BreakableBlockData.new()
@@ -522,7 +522,7 @@ func _build_hard_rescue_level(source: LevelData,
 		or source.right_wall_segments.size() == 2)
 	var seed_ids: Array[int]
 	if uses_blocks:
-		seed_ids.assign([22, 23, 24] if uses_wall_gaps else [22, 23])
+		seed_ids.assign([27, 28, 29] if uses_wall_gaps else [27, 28])
 	else:
 		seed_ids.assign([2, 4, 12, 14, 17] if uses_wall_gaps else [2, 17])
 	var seed_id := seed_ids[rng.randi_range(0, seed_ids.size() - 1)]

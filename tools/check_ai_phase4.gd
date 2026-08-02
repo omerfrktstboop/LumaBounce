@@ -16,7 +16,7 @@ func _run() -> void:
 	await _test_mobile_form()
 	await _test_cancelled_local_batch()
 	await _test_solution_overlay(2, false)
-	await _test_solution_overlay(22, true)
+	await _test_solution_overlay(27, true)
 	_test_release_guards()
 	print("AI ASAMA 4: %d gecti, %d kaldi." % [_passed, _failed])
 	quit(0 if _failed == 0 else 1)
@@ -60,7 +60,7 @@ func _test_mobile_form() -> void:
 		_check("tasarim notu pano dugmeleri",
 			ai_page.find_child("PasteDesignNote", true, false) != null
 			and ai_page.find_child("CopyDesignNote", true, false) != null, true)
-		var form_script := form as AIGenerationForm
+		var form_script := form as Control
 		var template := form_script.get("_template") as OptionButton
 		var mechanics: Dictionary = form_script.get("_mechanics")
 		for option_index in template.item_count:
