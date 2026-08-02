@@ -4,35 +4,38 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 [ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
 
-[sub_resource type="Resource" id="Resource_l27_bank"]
+[sub_resource type="Resource" id="Resource_l27_redirect"]
 script = ExtResource("2_panel_data")
-position = Vector2(630, 470)
-rotation_degrees = 64.0
+position = Vector2(463.0078, 607.91016)
+rotation_degrees = 28.0
 length = 280.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l27_key"]
-script = ExtResource("3_block_data")
-position = Vector2(400, 660)
+[sub_resource type="Resource" id="Resource_l27_return"]
+script = ExtResource("2_panel_data")
+position = Vector2(142.793, 762)
 rotation_degrees = 0.0
-size = Vector2(240, 44)
+length = 340.0
+thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l27_side"]
+[sub_resource type="Resource" id="Resource_l27_chain_block"]
 script = ExtResource("3_block_data")
-position = Vector2(580, 900)
+position = Vector2(179.3555, 509.2676)
 rotation_degrees = 0.0
-size = Vector2(180, 44)
+size = Vector2(300, 44)
+hit_points = 1
 
 [resource]
 script = ExtResource("1_level_data")
 level_id = 27
-display_name = "Yan Yol"
+display_name = "İki Yol"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(200, 300)
-panels = Array[PanelData]([SubResource("Resource_l27_bank")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l27_key"), SubResource("Resource_l27_side")])
-max_lives = 5
-tutorial_text = "Kırmak güvenli; doğru sekme daha kısa."
+target_position = Vector2(496.4844, 501.3379)
+panels = Array[PanelData]([SubResource("Resource_l27_redirect"), SubResource("Resource_l27_return")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l27_chain_block")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 640), Vector2(660, 1440)])
+max_lives = 4
+tutorial_text = "Kısa yolu ara; blok kırılırsa ikinci rota açılır."
 two_star_max_seconds = 90.0
 two_star_max_shots = 2
 three_star_max_seconds = 45.0
