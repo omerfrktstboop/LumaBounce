@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://scripts/breakable_field.gd" id="16_breakable_field"]
 [ext_resource type="PackedScene" path="res://scenes/breakable_block.tscn" id="17_block"]
 [ext_resource type="Script" path="res://scripts/obstacle_field.gd" id="18_obstacle_field"]
+[ext_resource type="PackedScene" path="res://scenes/tutorial_popup.tscn" id="8_tutorial_popup"]
 
 [node name="Gameplay" type="Node2D"]
 script = ExtResource("1_gameplay")
@@ -67,6 +68,9 @@ position = Vector2(360, 1050)
 
 [node name="Effects" type="Node2D" parent="."]
 z_index = 7
+
+[node name="TutorialPopup" parent="." instance=ExtResource("8_tutorial_popup")]
+visible = false
 
 [node name="HUD" type="CanvasLayer" parent="."]
 

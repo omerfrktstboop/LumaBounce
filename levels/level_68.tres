@@ -5,54 +5,30 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_ntj7m"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(642.6667, 386.66663)
-rotation_degrees = 0.0
-size = Vector2(150, 24)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_wvjk2"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(234, 770.0001)
-rotation_degrees = 0.0
-size = Vector2(150, 24)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_bi0i1"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(72.66666, 226.66663)
-rotation_degrees = 0.0
-size = Vector2(150, 24)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_m3uui"]
+[sub_resource type="Resource" id="Ring_1"]
 script = ExtResource("2")
 kind = 0
-position = Vector2(83.33333, 664.6666)
+position = Vector2(360, 300)
 rotation_degrees = 0.0
-size = Vector2(150, 28)
+size = Vector2(147.46666666666667, 28)
+inner_radius = 53.733333333333334
+spoke_count = 6
+angular_speed_degrees = 55.0
+motion_direction_degrees = 0.0
+travel_distance = 110.0
+motion_period = 2.8
+phase_degrees = 0.0
+[sub_resource type="Resource" id="P_1"]
+script = ExtResource("3")
+position = Vector2(360, 800)
+rotation_degrees = 0
+length = 150
+[sub_resource type="Resource" id="Boost_1"]
+script = ExtResource("2")
+kind = 4
+position = Vector2(150, 600)
+rotation_degrees = 0.0
+size = Vector2(40, 40)
 inner_radius = 42.0
 spoke_count = 6
 angular_speed_degrees = 55.0
@@ -60,13 +36,12 @@ motion_direction_degrees = 0.0
 travel_distance = 110.0
 motion_period = 2.8
 phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_krhwj"]
+[sub_resource type="Resource" id="Boost_2"]
 script = ExtResource("2")
-kind = 0
-position = Vector2(360, 356)
+kind = 4
+position = Vector2(570, 600)
 rotation_degrees = 0.0
-size = Vector2(150, 28)
+size = Vector2(40, 40)
 inner_radius = 42.0
 spoke_count = 6
 angular_speed_degrees = 55.0
@@ -74,13 +49,25 @@ motion_direction_degrees = 0.0
 travel_distance = 110.0
 motion_period = 2.8
 phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_lgnf6"]
+[sub_resource type="Resource" id="Mov_1"]
 script = ExtResource("2")
-kind = 0
-position = Vector2(471.33334, 790.6667)
+kind = 3
+position = Vector2(360, 500)
 rotation_degrees = 0.0
-size = Vector2(150, 28)
+size = Vector2(100, 30)
+inner_radius = 42.0
+spoke_count = 6
+angular_speed_degrees = 55.0
+motion_direction_degrees = 0.0
+travel_distance = 120
+motion_period = 3.0
+phase_degrees = 0.0
+[sub_resource type="Resource" id="Bomb_1"]
+script = ExtResource("2")
+kind = 1
+position = Vector2(360, 400)
+rotation_degrees = 0.0
+size = Vector2(80, 28)
 inner_radius = 42.0
 spoke_count = 6
 angular_speed_degrees = 55.0
@@ -91,18 +78,20 @@ phase_degrees = 0.0
 
 [resource]
 script = ExtResource("4")
-level_id = 13
-display_name = "Yeni Zor Bölüm 2"
+level_id = 68
+display_name = "Turuncu Faz 18"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(597.3334, 136)
-panels = Array[ExtResource("3")]([])
-breakable_blocks = Array[ExtResource("1")]([])
-obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj"), SubResource("Resource_lgnf6")])
+target_position = Vector2(360, 300)
+target_scale = 0.8
+ball_scale = 0.65
+panels = Array[PanelData]([SubResource("P_1")])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([SubResource("Ring_1"), SubResource("Boost_1"), SubResource("Boost_2"), SubResource("Mov_1"), SubResource("Bomb_1")])
 left_wall_segments = Array[Vector2]([])
 right_wall_segments = Array[Vector2]([])
-max_lives = 4
+max_lives = 5
 tutorial_text = ""
-two_star_max_seconds = 45.0
-two_star_max_shots = 4
-three_star_max_seconds = 25.0
-three_star_max_shots = 2
+two_star_max_seconds = 60.0
+two_star_max_shots = 6
+three_star_max_seconds = 35.0
+three_star_max_shots = 3

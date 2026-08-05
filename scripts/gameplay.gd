@@ -198,10 +198,58 @@ func _apply_level() -> void:
 
 	_launcher.position = level_data.launcher_position
 	_target.position = level_data.target_position
+	if level_data.level_id > 50:
+		var theme_scale := 0.8
+		if "target_scale" in level_data:
+			_target.scale = Vector2.ONE * float(level_data.get("target_scale"))
+		else:
+			_target.scale = Vector2.ONE * theme_scale
+			
+		if "ball_scale" in level_data:
+			_ball.set_radius(24.0 * float(level_data.get("ball_scale")))
+		else:
+			_ball.set_radius(24.0 * theme_scale)
+			
+		var new_accent = Color("ff633a") # Orange/Red
+		var new_core = Color("ffebd6")
+		
+		_launcher.accent = new_accent
+		_launcher.accent_core = new_core
+		_launcher._build_base()
+		_launcher._build_barrel()
+		_launcher._build_power_meter()
+		_launcher._build_drag_hint()
+		
+		_target.accent = new_accent
+		_target.core_color = new_core
+		_target._build_visual()
+	else:
+		if "target_scale" in level_data:
+			_target.scale = Vector2.ONE * float(level_data.get("target_scale"))
+		else:
+			_target.scale = Vector2.ONE
+			
+		if "ball_scale" in level_data:
+			_ball.set_radius(24.0 * float(level_data.get("ball_scale")))
+		else:
+			_ball.set_radius(24.0)
+			
+		_launcher.accent = Palette.ACCENT
+		_launcher.accent_core = Palette.ACCENT_CORE
+		_launcher._build_base()
+		_launcher._build_barrel()
+		_launcher._build_power_meter()
+		_launcher._build_drag_hint()
+		
+		_target.accent = Palette.ACCENT
+		_target.core_color = Palette.ACCENT_CORE
+		_target._build_visual()
+
 	_max_lives = maxi(level_data.max_lives, 1)
 
 	_build_panels()
 	_obstacles.build(level_data.obstacles)
+	_obstacles.start_motion()
 	_apply_level_header()
 
 
@@ -346,7 +394,6 @@ func _respawn_ball() -> void:
 	_launcher.cancel_aim()
 	_ball.reset_to(_launcher.get_spawn_position())
 	_target.reset()
-	_obstacles.reset_motion()
 	_clear_effects()
 	_hide_message()
 	_launcher.enabled = true
@@ -375,7 +422,6 @@ func _on_shot_fired(impulse: Vector2) -> void:
 
 func _on_shot_failed(reason: String) -> void:
 	_reaim_pending = false
-	_obstacles.stop_motion()
 	_last_failure_reason = reason
 	if playtest_stats != null:
 		playtest_stats.record_failure(level_data.level_id, reason)
@@ -403,7 +449,6 @@ func _cancel_active_shot_for_reaim() -> void:
 	_reaim_pending = false
 	_shot_token += 1
 	_ball.cancel_and_reset_to(_launcher.get_spawn_position(), manual_cancel_fade_time)
-	_obstacles.reset_motion()
 	_ball.set_launcher_tension(
 		_launcher.get_power_ratio(), _launcher.get_aim_direction(),
 		_launcher.loaded_ball_pullback_distance)
@@ -574,6 +619,29 @@ func _on_surface_touched(collider: Object, _at: Vector2, _normal: Vector2) -> vo
 func _on_hazard_triggered(reason: String, at: Vector2) -> void:
 	if not _ball.is_flying():
 		return
+	if reason == "speed_boost":
+		var blocks_node = get_node_or_null("Blocks")
+		if blocks_node and blocks_node.has_method("shatter_in_radius"):
+			blocks_node.shatter_in_radius(at, 180.0)
+		SparkBurst.burst(
+			_effects, at, Vector2.UP, 1.5,
+			Palette.ACCENT_ALT, Palette.ACCENT_ALT_CORE, 24, 100.0, 500.0)
+		_shake.add_trauma(0.6)
+		if power_step_haptic_msec > 0:
+			Input.vibrate_handheld(power_step_haptic_msec)
+		AudioManager.play_target_hit()
+		return
+		
+	if reason == "bomb":
+		SparkBurst.burst(
+			_effects, at, Vector2.UP, 2.0,
+			Palette.HAZARD, Palette.HAZARD_CORE, 30, 150.0, 600.0)
+		_shake.add_trauma(0.8)
+		if hazard_haptic_msec > 0:
+			Input.vibrate_handheld(hazard_haptic_msec * 2)
+		_ball.fail_shot(reason)
+		return
+		
 	SparkBurst.burst(
 		_effects, at, Vector2.UP, 0.72,
 		Palette.HAZARD, Palette.HAZARD_CORE, 7, 34.0, 230.0)

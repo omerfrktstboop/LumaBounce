@@ -1,66 +1,137 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Panel_lower"]
-script = ExtResource("2")
-position = Vector2(230, 830)
-rotation_degrees = 30.0
-length = 320.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Panel_upper"]
-script = ExtResource("2")
-position = Vector2(500, 520)
-rotation_degrees = 30.0
-length = 340.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Ring_final"]
+[sub_resource type="Resource" id="B_0"]
+script = ExtResource("1")
+position = Vector2(510.0, 200.0)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_1"]
+script = ExtResource("1")
+position = Vector2(441.04534588022096, 326.2206477211845)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_2"]
+script = ExtResource("1")
+position = Vector2(297.5779745179286, 336.3946140238522)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_3"]
+script = ExtResource("1")
+position = Vector2(211.5011255099332, 221.1680012089801)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_4"]
+script = ExtResource("1")
+position = Vector2(261.95345687045824, 86.47962570381077)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_5"]
+script = ExtResource("1")
+position = Vector2(402.54932781948395, 56.16135880052923)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_6"]
+script = ExtResource("1")
+position = Vector2(504.0255429975549, 158.08767527016113)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_7"]
+script = ExtResource("1")
+position = Vector2(473.0853381514957, 298.54798980781834)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_8"]
+script = ExtResource("1")
+position = Vector2(338.174994928708, 348.40373699350727)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_9"]
+script = ExtResource("1")
+position = Vector2(223.33046071729845, 261.8177727862635)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_10"]
+script = ExtResource("1")
+position = Vector2(234.13927063853214, 118.39683336659454)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_11"]
+script = ExtResource("1")
+position = Vector2(360.6638546982076, 50.00146901739447)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_12"]
+script = ExtResource("1")
+position = Vector2(486.57809380987385, 119.51406229993476)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_13"]
+script = ExtResource("1")
+position = Vector2(496.11701721752945, 263.0250555239961)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_14"]
+script = ExtResource("1")
+position = Vector2(380.510582731175, 348.59110335423054)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_15"]
+script = ExtResource("1")
+position = Vector2(246.0468130711768, 297.5431760235675)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_16"]
+script = ExtResource("1")
+position = Vector2(216.3510779514923, 156.8145025002402)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_17"]
+script = ExtResource("1")
+position = Vector2(318.72549929226045, 55.790376218066484)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_18"]
+script = ExtResource("1")
+position = Vector2(459.04750623661204, 87.35191298424857)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="B_19"]
+script = ExtResource("1")
+position = Vector2(508.3056927280004, 222.48158144944284)
+size = Vector2(40, 20)
+hit_points = 3
+[sub_resource type="Resource" id="P_1"]
 script = ExtResource("3")
-position = Vector2(120, 650)
-size = Vector2(190, 28)
-inner_radius = 78.0
-
-[sub_resource type="Resource" id="Bomb_final"]
+position = Vector2(200, 500)
+rotation_degrees = 45
+length = 200
+[sub_resource type="Resource" id="P_2"]
 script = ExtResource("3")
-kind = 1
-position = Vector2(500, 700)
-rotation_degrees = 18.0
-size = Vector2(70, 70)
-
-[sub_resource type="Resource" id="Wheel_final"]
-script = ExtResource("3")
-kind = 2
-position = Vector2(650, 1100)
-size = Vector2(96, 20)
-spoke_count = 6
-angular_speed_degrees = -78.0
-phase_degrees = 20.0
-
-[sub_resource type="Resource" id="Mover_final"]
-script = ExtResource("3")
-kind = 3
-position = Vector2(100, 1100)
-rotation_degrees = 18.0
-size = Vector2(90, 28)
-motion_direction_degrees = 90.0
-travel_distance = 40.0
-motion_period = 2.7
-phase_degrees = -25.0
+position = Vector2(520, 500)
+rotation_degrees = -45
+length = 200
 
 [resource]
-script = ExtResource("1")
+script = ExtResource("4")
 level_id = 50
-display_name = "Kinetik Final"
+display_name = "Boss Faz 2"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(560, 280)
-panels = Array[PanelData]([SubResource("Panel_lower"), SubResource("Panel_upper")])
-obstacles = Array[ObstacleData]([SubResource("Ring_final"), SubResource("Bomb_final"), SubResource("Wheel_final"), SubResource("Mover_final")])
-max_lives = 6
-two_star_max_seconds = 135.0
-two_star_max_shots = 4
-three_star_max_seconds = 72.0
-three_star_max_shots = 2
+target_position = Vector2(360, 200)
+target_scale = 0.8
+ball_scale = 0.65
+panels = Array[PanelData]([SubResource("P_1"), SubResource("P_2")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("B_0"), SubResource("B_1"), SubResource("B_2"), SubResource("B_3"), SubResource("B_4"), SubResource("B_5"), SubResource("B_6"), SubResource("B_7"), SubResource("B_8"), SubResource("B_9"), SubResource("B_10"), SubResource("B_11"), SubResource("B_12"), SubResource("B_13"), SubResource("B_14"), SubResource("B_15"), SubResource("B_16"), SubResource("B_17"), SubResource("B_18"), SubResource("B_19")])
+obstacles = Array[ObstacleData]([])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 60.0
+two_star_max_shots = 6
+three_star_max_seconds = 35.0
+three_star_max_shots = 3

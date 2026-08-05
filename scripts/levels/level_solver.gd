@@ -495,6 +495,7 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 	var trace_bounces := PackedInt32Array()
 	var collision_points: Array[Dictionary] = []
 	var broken_order := PackedInt32Array()
+	var ignored_hazards: Array = []
 	if capture_trace:
 		trace_points.append(pos)
 		trace_bounces.append(0)
@@ -506,7 +507,7 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 		broke_this_frame.clear()
 
 		for _step in MAX_SUBSTEPS:
-			var hit := _cast_with_obstacles(pos, motion, ignored, frame_index)
+			var hit := _cast_with_obstacles(pos, motion, ignored, frame_index, ignored_hazards)
 			if hit.is_empty():
 				pos += motion
 				break
@@ -516,6 +517,14 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 			var collision_position := pos + motion * fraction
 			pos = pos + motion * fraction + normal * CONTACT_EPSILON
 			if hit.has("hazard_reason"):
+				if String(hit["hazard_reason"]) == "speed_boost":
+					var obs_idx = int(hit.get("obstacle_index", -1))
+					if obs_idx >= 0 and not obs_idx in ignored_hazards:
+						ignored_hazards.append(obs_idx)
+						motion = (vel * dt) * (1.0 - fraction)
+						pos = collision_position
+						continue
+
 				if capture_trace:
 					trace_points.append(collision_position)
 					trace_bounces.append(bounces)
@@ -641,7 +650,7 @@ func cast(from: Vector2, motion: Vector2, ignored: Array[RID]) -> Dictionary:
 
 
 func _cast_with_obstacles(from: Vector2, motion: Vector2,
-		ignored: Array[RID], frame_index: int) -> Dictionary:
+		ignored: Array[RID], frame_index: int, ignored_hazards: Array) -> Dictionary:
 	var best := cast(from, motion, ignored)
 	var best_fraction := float(best.get("fraction", 2.0))
 	var dynamic_hit := ObstacleGeometry.cast_circle(
@@ -651,7 +660,7 @@ func _cast_with_obstacles(from: Vector2, motion: Vector2,
 		best["rid"] = RID()
 		best_fraction = float(dynamic_hit["fraction"])
 	var hazard_hit := ObstacleGeometry.cast_circle(
-		from, motion, radius, _hazard_shapes)
+		from, motion, radius, _hazard_shapes, ignored_hazards)
 	# Esit anda tehlike ve yuzey temasi varsa bomba onceliklidir.
 	if not hazard_hit.is_empty() and float(hazard_hit["fraction"]) <= best_fraction:
 		best = hazard_hit

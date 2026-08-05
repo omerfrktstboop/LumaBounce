@@ -17,6 +17,8 @@ const WALL_OVERSHOOT := 320.0
 @export_group("Yerlesim")
 @export var launcher_position := Vector2(360.0, 1120.0)
 @export var target_position := Vector2(360.0, 300.0)
+@export var target_scale := 1.0
+@export var ball_scale := 1.0
 @export var panels: Array[PanelData] = []
 ## Topun kirabilecegi bloklar. Bos birakilirsa bolumde hic blok yoktur ve
 ## davranis eskisiyle birebir aynidir (bkz. BreakableField).

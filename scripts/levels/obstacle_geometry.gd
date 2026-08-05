@@ -15,8 +15,13 @@ static func ring_rects(data: ObstacleData) -> Array[Dictionary]:
 	var middle := (outer + inner) * 0.5
 	var thickness := outer - inner
 	var chord := 2.0 * middle * sin(PI / float(RING_SEGMENTS)) + thickness * 0.42
-	for i in RING_SEGMENTS:
-		var angle := TAU * float(i) / float(RING_SEGMENTS)
+	# Leave an opening at the top by skipping segments.
+	# For 24 segments, let's skip 4 segments (60 degrees).
+	var skip_count := 4
+	var start_idx := skip_count / 2
+	var end_idx := RING_SEGMENTS - (skip_count - start_idx)
+	for i in range(start_idx, end_idx):
+		var angle := TAU * float(i) / float(RING_SEGMENTS) - PI * 0.5 # Start from top
 		rects.append({
 			"center": Vector2.RIGHT.rotated(angle) * middle,
 			"size": Vector2(chord, thickness),
@@ -70,13 +75,23 @@ static func dynamic_shapes(obstacles: Array[ObstacleData], seconds: float) -> Ar
 
 static func hazard_shapes(obstacles: Array[ObstacleData]) -> Array[Dictionary]:
 	var shapes: Array[Dictionary] = []
-	for data in obstacles:
+	for i in obstacles.size():
+		var data = obstacles[i]
 		if data != null and data.kind == ObstacleData.Kind.BOMB:
 			shapes.append({
 				"shape": "circle",
 				"center": data.position,
 				"radius": data.bomb_radius(),
 				"hazard_reason": "bomb",
+				"obstacle_index": i,
+			})
+		elif data != null and data.kind == ObstacleData.Kind.SPEED_BOOST:
+			shapes.append({
+				"shape": "circle",
+				"center": data.position,
+				"radius": data.outer_radius(),
+				"hazard_reason": "speed_boost",
+				"obstacle_index": i,
 			})
 	return shapes
 
@@ -100,7 +115,7 @@ static func all_shapes(obstacles: Array[ObstacleData], seconds: float) -> Array[
 
 
 static func cast_circle(from: Vector2, motion: Vector2, radius: float,
-		shapes: Array[Dictionary]) -> Dictionary:
+		shapes: Array[Dictionary], ignored_hazards: Array = []) -> Dictionary:
 	if motion.is_zero_approx():
 		return {}
 	var best := {}
@@ -116,10 +131,14 @@ static func cast_circle(from: Vector2, motion: Vector2, radius: float,
 				float(shape.get("rotation", 0.0)))
 		if hit.is_empty() or float(hit["fraction"]) >= best_fraction:
 			continue
+		if shape.has("hazard_reason") and shape.has("obstacle_index"):
+			if int(shape["obstacle_index"]) in ignored_hazards:
+				continue
 		best_fraction = float(hit["fraction"])
 		best = hit
 		if shape.has("hazard_reason"):
 			best["hazard_reason"] = String(shape["hazard_reason"])
+			best["obstacle_index"] = int(shape.get("obstacle_index", -1))
 	return best
 
 

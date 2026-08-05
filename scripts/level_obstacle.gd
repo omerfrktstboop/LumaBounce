@@ -34,6 +34,8 @@ func _ready() -> void:
 func apply_motion_time(seconds: float) -> void:
 	if _motion_root == null or data == null:
 		return
+	if seconds == 0.0 and _visual != null:
+		_visual.show()
 	_motion_root.position = data.motion_position(seconds) - data.position
 	_motion_root.rotation = data.motion_rotation(seconds)
 
@@ -65,18 +67,23 @@ func _build() -> void:
 			_build_wheel()
 		ObstacleData.Kind.MOVING_BAR:
 			_build_moving_bar()
+		ObstacleData.Kind.SPEED_BOOST:
+			_build_speed_boost()
 
 
 func _make_motion_root() -> Node2D:
 	if preview_only and data.kind != ObstacleData.Kind.METAL_RING:
 		return Node2D.new()
 	match data.kind:
-		ObstacleData.Kind.BOMB:
+		ObstacleData.Kind.BOMB, ObstacleData.Kind.SPEED_BOOST:
 			var area := Area2D.new()
 			area.collision_layer = HAZARD_LAYER
 			area.collision_mask = BALL_LAYER
 			area.monitoring = true
-			area.body_entered.connect(_on_bomb_body_entered)
+			if data.kind == ObstacleData.Kind.BOMB:
+				area.body_entered.connect(_on_bomb_body_entered)
+			else:
+				area.body_entered.connect(_on_speed_boost_body_entered)
 			return area
 		ObstacleData.Kind.ROTATING_WHEEL, ObstacleData.Kind.MOVING_BAR:
 			var body := AnimatableBody2D.new()
@@ -99,8 +106,8 @@ func _build_ring() -> void:
 	var inner := data.inner_radius
 	var middle := (outer + inner) * 0.5
 	var rim := outer - inner
-	_visual.add_child(_circle_line(middle, rim, Palette.SURFACE_BLOCK_EDGE, 72))
-	_visual.add_child(_circle_line(
+	_visual.add_child(_arc_line(middle, rim, Palette.SURFACE_BLOCK_EDGE, 72))
+	_visual.add_child(_arc_line(
 		middle - rim * 0.18, maxf(rim * 0.12, 2.0),
 		Color(Palette.SURFACE_LIGHT, 0.9), 72))
 	for angle in [PI * 0.25, PI * 0.75, PI * 1.25, PI * 1.75]:
@@ -243,7 +250,40 @@ func _circle_line(radius: float, width: float, color: Color, segments: int) -> L
 	line.antialiased = true
 	return line
 
+func _arc_line(radius: float, width: float, color: Color, segments: int) -> Line2D:
+	var line := Line2D.new()
+	var pts := PackedVector2Array()
+	# Same logic as collision: skip top 60 degrees.
+	var skip_count := segments / 6
+	var start_idx := skip_count / 2
+	var end_idx := segments - (skip_count - start_idx)
+	for i in range(start_idx, end_idx + 1):
+		var angle := TAU * float(i) / float(segments) - PI * 0.5
+		pts.append(Vector2.RIGHT.rotated(angle) * radius)
+	line.points = pts
+	line.default_color = color
+	line.width = width
+	line.joint_mode = Line2D.LINE_JOINT_ROUND
+	line.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	line.end_cap_mode = Line2D.LINE_CAP_ROUND
+	line.antialiased = true
+	return line
+
 
 func _on_bomb_body_entered(body: Node2D) -> void:
 	if body.is_in_group("ball"):
 		hazard_triggered.emit("bomb", global_position)
+
+
+func _build_speed_boost() -> void:
+	var radius := data.outer_radius()
+	_add_circle_shape(Vector2.ZERO, radius)
+	var poly := ShapeBuilder.make_polygon(ShapeBuilder.circle(radius, 6), Palette.ACCENT_ALT)
+	_visual.add_child(poly)
+	var core := ShapeBuilder.make_polygon(ShapeBuilder.circle(radius * 0.5, 6), Palette.ACCENT_ALT_CORE)
+	_visual.add_child(core)
+
+func _on_speed_boost_body_entered(body: Node2D) -> void:
+	if body.is_in_group("ball") and _visual.visible:
+		_visual.hide()
+		hazard_triggered.emit("speed_boost", global_position)

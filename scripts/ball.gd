@@ -94,6 +94,12 @@ func _ready() -> void:
 
 # --- Dis API -----------------------------------------------------------------
 
+func set_radius(new_radius: float) -> void:
+	radius = new_radius
+	_apply_shape()
+	_build_visual()
+	_setup_trail()
+
 func reset_to(spawn_position: Vector2) -> void:
 	set_physics_process(false)
 	state = State.READY

@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/level_select.tscn" id="5_level_select"]
 [ext_resource type="PackedScene" path="res://scenes/debug_panel.tscn" id="6_debug_panel"]
 [ext_resource type="PackedScene" path="res://scenes/level_editor.tscn" id="7_level_editor"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ambient_loop.wav" id="8_ambient"]
 
 [node name="AppRoot" type="Node"]
 process_mode = 3
@@ -16,6 +17,40 @@ main_menu_scene = ExtResource("3_main_menu")
 level_select_scene = ExtResource("5_level_select")
 gameplay_scene = ExtResource("4_gameplay")
 level_editor_scene = ExtResource("7_level_editor")
+
+[node name="BackgroundLayer" type="CanvasLayer" parent="."]
+layer = -10
+
+[node name="DeepSpace" type="ColorRect" parent="BackgroundLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.04, 0.05, 0.1, 1)
+
+[node name="DustParticles" type="CPUParticles2D" parent="BackgroundLayer"]
+position = Vector2(360, 1300)
+amount = 40
+lifetime = 12.0
+preprocess = 12.0
+emission_shape = 3
+emission_rect_extents = Vector2(360, 1)
+direction = Vector2(0, -1)
+spread = 20.0
+gravity = Vector2(0, -5)
+initial_velocity_min = 20.0
+initial_velocity_max = 80.0
+scale_amount_min = 2.0
+scale_amount_max = 6.0
+color = Color(0.2, 0.7, 1.0, 0.4)
+
+[node name="AmbientMusic" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_ambient")
+volume_db = -12.0
+autoplay = true
+bus = &"Music"
 
 [node name="ScreenHost" type="Node" parent="."]
 

@@ -63,6 +63,15 @@ func clear() -> void:
 	_total = 0
 
 
+func shatter_in_radius(center: Vector2, radius: float) -> void:
+	var r2 := radius * radius
+	for child in get_children():
+		var block := child as BreakableBlock
+		if block != null and not block.is_broken():
+			if block.global_position.distance_squared_to(center) <= r2:
+				block.shatter()
+
+
 func get_total_count() -> int:
 	return _total
 

@@ -9,6 +9,7 @@ enum Kind {
 	BOMB,
 	ROTATING_WHEEL,
 	MOVING_BAR,
+	SPEED_BOOST,
 }
 
 const KIND_IDS := {
@@ -16,6 +17,7 @@ const KIND_IDS := {
 	Kind.BOMB: "bomb",
 	Kind.ROTATING_WHEEL: "rotating_wheel",
 	Kind.MOVING_BAR: "moving_bar",
+	Kind.SPEED_BOOST: "speed_boost",
 }
 
 @export var kind: Kind = Kind.METAL_RING
@@ -55,6 +57,8 @@ func display_name() -> String:
 			return "Donen cark"
 		Kind.MOVING_BAR:
 			return "Kayan engel"
+		Kind.SPEED_BOOST:
+			return "Hızlandirici"
 	return "Engel"
 
 
@@ -89,6 +93,8 @@ static func from_kind_id(value: String) -> Kind:
 			return Kind.ROTATING_WHEEL
 		"moving_bar":
 			return Kind.MOVING_BAR
+		"speed_boost":
+			return Kind.SPEED_BOOST
 		_:
 			return Kind.METAL_RING
 
@@ -127,4 +133,8 @@ func validate(index: int, play_rect := LevelData.DEFAULT_PLAY_RECT) -> PackedStr
 				problems.append("%s hareket mesafesi 20-260 olmali" % label)
 			if motion_period < 1.0 or motion_period > 8.0:
 				problems.append("%s hareket suresi 1-8 sn olmali" % label)
+		Kind.SPEED_BOOST:
+			var outer := outer_radius()
+			if outer < 15.0 or outer > 120.0:
+				problems.append("%s hizlandirici yaricapi 15-120 olmali (%.1f)" % [label, outer])
 	return problems

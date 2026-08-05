@@ -1,46 +1,71 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_l34_panel"]
-script = ExtResource("2_panel_data")
-position = Vector2(315.099, 693.376)
-rotation_degrees = 18.336
-length = 298.717
-thickness = 26.0
-
-[sub_resource type="Resource" id="Resource_l34_lower"]
-script = ExtResource("3_block_data")
-position = Vector2(505, 860)
+[sub_resource type="Resource" id="Ring_1"]
+script = ExtResource("2")
+kind = 0
+position = Vector2(360, 300)
 rotation_degrees = 0.0
-size = Vector2(350, 46)
-
-[sub_resource type="Resource" id="Resource_l34_upper"]
-script = ExtResource("3_block_data")
-position = Vector2(383.917, 462.913)
+size = Vector2(185.86666666666667, 28)
+inner_radius = 72.93333333333334
+spoke_count = 6
+angular_speed_degrees = 55.0
+motion_direction_degrees = 0.0
+travel_distance = 110.0
+motion_period = 2.8
+phase_degrees = 0.0
+[sub_resource type="Resource" id="P_1"]
+script = ExtResource("3")
+position = Vector2(360, 800)
+rotation_degrees = 0
+length = 150
+[sub_resource type="Resource" id="Boost_1"]
+script = ExtResource("2")
+kind = 4
+position = Vector2(150, 600)
 rotation_degrees = 0.0
-size = Vector2(350, 46)
-
-[sub_resource type="Resource" id="Resource_l34_middle"]
-script = ExtResource("3_block_data")
-position = Vector2(177.755, 534.097)
+size = Vector2(40, 40)
+inner_radius = 42.0
+spoke_count = 6
+angular_speed_degrees = 55.0
+motion_direction_degrees = 0.0
+travel_distance = 110.0
+motion_period = 2.8
+phase_degrees = 0.0
+[sub_resource type="Resource" id="Boost_2"]
+script = ExtResource("2")
+kind = 4
+position = Vector2(570, 600)
 rotation_degrees = 0.0
-size = Vector2(500, 46)
-hit_points = 2
+size = Vector2(40, 40)
+inner_radius = 42.0
+spoke_count = 6
+angular_speed_degrees = 55.0
+motion_direction_degrees = 0.0
+travel_distance = 110.0
+motion_period = 2.8
+phase_degrees = 0.0
 
 [resource]
-script = ExtResource("1_level_data")
+script = ExtResource("4")
 level_id = 32
-display_name = "Tam Temizlik"
-launcher_position = Vector2(360.554, 1120)
-target_position = Vector2(315.057, 229.45)
-panels = Array[PanelData]([SubResource("Resource_l34_panel")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l34_lower"), SubResource("Resource_l34_upper"), SubResource("Resource_l34_middle")])
-max_lives = 7
-tutorial_text = "Üç bloğu tek hazırlık atışında zincirlemeyi dene."
-two_star_max_seconds = 125.0
-two_star_max_shots = 5
-three_star_max_seconds = 68.0
-three_star_max_shots = 4
+display_name = "Sıcak Faz 32"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(360, 300)
+target_scale = 0.8
+ball_scale = 0.65
+panels = Array[PanelData]([SubResource("P_1")])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([SubResource("Ring_1"), SubResource("Boost_1"), SubResource("Boost_2")])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 60.0
+two_star_max_shots = 6
+three_star_max_seconds = 35.0
+three_star_max_shots = 3

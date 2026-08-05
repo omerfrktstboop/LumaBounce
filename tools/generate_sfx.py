@@ -273,6 +273,37 @@ def build_logo_reveal() -> Signal:
     return mix((low, 0.85, 0.0), (high, 0.55, 0.05), (lift, 0.30, 0.10))
 
 
+def build_ambient_loop(rng: random.Random) -> Signal:
+    """Koyu, synthwave tarzi nabiz atan arkaplan ugultusu (120 BPM, 4 saniye = 8 vurus)."""
+    duration = 8.0
+    n = _samples(duration)
+    out = [0.0] * n
+    # Drone at A2 (110 Hz) and E3 (164.8 Hz)
+    phase1 = 0.0
+    phase2 = 0.0
+    step1 = 2.0 * math.pi * 110.0 / SAMPLE_RATE
+    step2 = 2.0 * math.pi * 164.81 / SAMPLE_RATE
+    for i in range(n):
+        # Yavas LFO ile nabiz (pulse)
+        lfo = 0.6 + 0.4 * math.sin(2.0 * math.pi * 2.0 * i / SAMPLE_RATE) # 2 Hz pulse
+        
+        # Ince testere disi (sawtooth) benzeri harmonikler
+        s1 = math.sin(phase1) + 0.3 * math.sin(2*phase1) + 0.1 * math.sin(3*phase1)
+        s2 = math.sin(phase2) + 0.3 * math.sin(2*phase2)
+        
+        out[i] = (s1 * 0.6 + s2 * 0.4) * lfo
+        
+        phase1 += step1
+        phase2 += step2
+        
+    # Hafif gurultu
+    air = noise_layer(duration, rng, lowpass_hz=800.0, highpass_hz=200.0, decay=0.0, attack=0.5)
+    
+    mixed = mix((out, 0.5, 0.0), (air, 0.3, 0.0))
+    # Fade in and out carefully for seamless looping
+    return fade(mixed, fade_in=0.5, fade_out=0.5)
+
+
 # --- Giris noktasi ------------------------------------------------------------
 
 def main() -> None:
@@ -295,6 +326,7 @@ def main() -> None:
         # eklenen her rng'li tarif kendinden SONRAKI tum seslerin orneklerini
         # kaydirir ve degismemis dosyalari gereksiz yere yeniden yazardi.
         finish("block_break.wav", build_block_break(rng), peak=0.62, fade_out=0.03),
+        finish("ambient_loop.wav", build_ambient_loop(rng), peak=0.45, fade_out=0.01),
     ]
 
     for path in written:

@@ -83,8 +83,8 @@ hit_points = 1
 
 [resource]
 script = ExtResource("4")
-level_id = 40
-display_name = "Sıcak Faz 40"
+level_id = 64
+display_name = "Turuncu Faz 14"
 launcher_position = Vector2(360, 1120)
 target_position = Vector2(360, 400)
 target_scale = 0.8
