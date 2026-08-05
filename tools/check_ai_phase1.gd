@@ -46,8 +46,11 @@ func _test_contract_and_request() -> void:
 		String(messages[0]["content"]).contains("Analiz, reasoning, Markdown"), true)
 	_check("prompt sayisal guvenli mesafe veriyor",
 		String(messages[0]["content"]).contains("hedefe 190 px"), true)
-	_check("prompt zorluk sozlesmesi veriyor",
-		String(messages[1]["content"]).contains("tek ana sektiriciyle"), true)
+	# Cipa bilerek "zor" kuralinin ASIL sartina bakiyor: cok sekmeli rota
+	# istemesi. Eski cipa ("tek ana sektiriciyle") yalnizca bir ifadenin
+	# varligini olcuyordu ve prompt tek sekmeli bolum isterken de gecerdi.
+	_check("prompt zorluk sozlesmesi cok sekme istiyor",
+		String(messages[1]["content"]).contains("2-4 kontrollu sekme"), true)
 	var alternate_messages := AILevelPromptBuilder.build_messages({
 		"template": "two_routes",
 		"difficulty": "hard",

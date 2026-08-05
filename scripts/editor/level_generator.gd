@@ -74,7 +74,11 @@ class Profile extends RefCounted:
 	static func easy() -> Profile:
 		var p := Profile.new()
 		p.display_name = "Kolay"
-		p.min_robust = 26
+		# Bolumler yeniden numaralandiginca bu esik oyunun KENDI en kolay
+		# bolumunden siki hale gelmisti: bolum 1 ayni izgarada 16 saglam
+		# hucre olcuyor, esik ise 26'ydi. Referanssiz secilen esik, uretecin
+		# resmi tasarim standardini reddetmesi demek.
+		p.min_robust = 14
 		p.max_robust = 200
 		p.max_bounces = 1
 		p.panel_count = Vector2i(1, 1)
@@ -89,6 +93,9 @@ class Profile extends RefCounted:
 		p.display_name = "Orta"
 		p.min_robust = 14
 		p.max_robust = 30
+		# min_bounces varsayilani 0'di, yani duz atisla gecilen bir bolum de
+		# "Orta" sayilabiliyordu. En az bir sekme artik zorunlu.
+		p.min_bounces = 1
 		p.max_bounces = 2
 		p.panel_count = Vector2i(1, 2)
 		p.block_count = Vector2i(0, 1)
@@ -99,10 +106,23 @@ class Profile extends RefCounted:
 	static func hard() -> Profile:
 		var p := Profile.new()
 		p.display_name = "Zor"
-		p.min_robust = 7
-		p.max_robust = 16
-		p.min_bounces = 1
-		p.max_bounces = 4
+		# min_bounces, analyse_robust()'un EN AZ sekmeli saglam hucresine
+		# bakar; yani "en kolay saglam rota bile en az bu kadar sekme
+		# istesin" demektir ve dolayli olarak kestirmeleri de eler.
+		# Eskiden 1'di: bu yalnizca 0 sekmeli duz atisi disliyordu, tek
+		# sekmeli bir rota "zor" sayiliyordu. Olcum (90 rastgele aday):
+		# 0 sekme x18, 1 sekme x50, 2 sekme x8, 3 sekme x2, 5 sekme x1.
+		# Yani "zor" adaylarin %76'si aslinda 0-1 sekmeydi.
+		p.min_bounces = 2
+		p.max_bounces = 6
+		# Sekme sayisi arttikca isabet penceresi daralir (ayni olcumde
+		# ortalama saglam hucre: 0 sekme->22, 1->10, 2->3, 3->1). Eski 7
+		# alt siniri 2+ sekmeli hicbir adayin gecemeyecegi bir esikti, bu
+		# yuzden profil pratikte yalnizca tek sekmeli bolum uretebiliyordu.
+		# 2, ortalamanin (3) altinda kalarak jitter'a pay birakir; 1 olsaydi
+		# tek hucrelik, yani piksel hassasiyetli rotalar da gecerdi.
+		p.min_robust = 2
+		p.max_robust = 24
 		p.panel_count = Vector2i(2, 3)
 		p.block_count = Vector2i(1, 2)
 		p.target_y_range = Vector2(225.0, 320.0)
@@ -553,22 +573,79 @@ func _mirror_level(level: LevelData) -> void:
 	level.right_wall_segments = left_segments
 
 
+## Zor kurtarma iskeletleri. RESMI BOLUM KOPYASI DEGIL, bilerek: hard profili
+## 2+ sekme isteyince kopyalanabilecek tek resmi bloksuz bolum 14 kaliyordu
+## (1-13 tek sekmeli, 15-24'un klasik saglam hucresi 0, 25 tek hucreli) ve tek
+## kaynaktan turetilen her kurtarma novelty tarafindan "resmi bolum kopyasi"
+## diye eleniyordu. Bu yuzden geometriler ricochet kurtarmasindaki gibi
+## sabittir; hepsi yerel uretecin hard profilinden HASAT EDILIP ayni solver
+## taramasindan gecirilmistir (3 derece/100 guc; olculen sekme/saglam hucre
+## degerleri yorumlarda).
+const HARD_RESCUE_SEEDS := [
+	# 3 sekme, 5 saglam hucre
+	{"target": Vector2(323.6, 265.8),
+		"panels": [[Vector2(492.6, 680.9), 10.2, 339.5], [Vector2(231.8, 919.0), 32.6, 293.1]]},
+	# 2 sekme, 13 saglam hucre - en genis pencere, jitter payi en yuksek
+	{"target": Vector2(354.2, 296.7),
+		"panels": [[Vector2(378.7, 687.1), -51.6, 290.4], [Vector2(531.4, 891.6), -32.3, 323.7],
+			[Vector2(157.4, 484.2), -31.4, 286.9]]},
+	# 2 sekme, 8 saglam hucre
+	{"target": Vector2(233.0, 350.7),
+		"panels": [[Vector2(242.2, 743.4), -12.3, 255.6], [Vector2(386.0, 464.3), -51.9, 234.0],
+			[Vector2(353.1, 730.9), -33.6, 242.0]]},
+	# 2 sekme, 4 saglam hucre
+	{"target": Vector2(486.2, 397.4),
+		"panels": [[Vector2(262.8, 748.4), -37.4, 261.0], [Vector2(559.6, 466.9), -45.2, 271.6],
+			[Vector2(467.4, 884.8), 44.1, 315.5]]},
+]
+
+## NEDEN BLOKLU KURTARMA TOHUMU YOK: bloklu geometri 2+ sekmede yapisal
+## olarak kirilgandir. Hasat edilmis bloklu iskeletler (olculen: 4/3/2/2 sekme,
+## 3-4 saglam hucre) kurtarmanin aynalama+kaydirmasindan sonra olculdugunde
+## ikisi saglam hucreyi tamamen kaybediyor, ikisi de TEK SEKMEYE dusuyordu:
+## blok birkac piksel kayinca rotayi kapatmayi birakiyor ve kestirme aciliyor.
+## Blok jitter'ini yarilamak da bu sonucu degistirmedi.
+##
+## Kurtarma zaten son care: yalnizca en yuksek varyasyon kademesinde, orijinal
+## geometri ve daha yumusak varyasyonlar elendikten sonra devreye girer. Orada
+## secenek "bloksuz saglam bir zor bolum" ile "hic aday yok" arasindadir, bu
+## yuzden blok birakilir. Zor profilinin zorlugu zaten sekme zincirinden gelir,
+## bloktan degil; blok isteyen tasarim icin block_corridor sablonu var.
+
+
+func _level_from_rescue_seed(seed_entry: Dictionary) -> LevelData:
+	var level := LevelData.new()
+	level.launcher_position = Vector2(360.0, 1120.0)
+	level.target_position = seed_entry["target"]
+
+	var panels: Array[PanelData] = []
+	for raw in (seed_entry["panels"] as Array):
+		var spec: Array = raw
+		var panel := PanelData.new()
+		panel.position = spec[0]
+		panel.rotation_degrees = float(spec[1])
+		panel.length = float(spec[2])
+		panel.thickness = 26.0
+		panels.append(panel)
+	level.panels = panels
+
+	var blocks: Array[BreakableBlockData] = []
+	for raw in (seed_entry.get("blocks", []) as Array):
+		var spec: Array = raw
+		var block := BreakableBlockData.new()
+		block.position = spec[0]
+		block.size = Vector2(float(spec[1]), 44.0)
+		blocks.append(block)
+	level.breakable_blocks = blocks
+	return level
+
+
 func _build_hard_rescue_level(source: LevelData,
 		rng: RandomNumberGenerator) -> LevelData:
-	var uses_blocks := not source.breakable_blocks.is_empty()
-	var uses_wall_gaps := (
-		source.left_wall_segments.size() == 2
-		or source.right_wall_segments.size() == 2)
-	var seed_ids: Array[int]
-	if uses_blocks:
-		seed_ids.assign([27, 28, 29] if uses_wall_gaps else [27, 28])
-	else:
-		# Bu iki iskelet 3 derece/100 guc taramasinda 7+ saglam hucreyi
-		# korur. Daha dar resmi bolumleri kurtarma tohumu yapmak, varyasyon
-		# eklenince adaylarin tamamini yeniden "pencere-dar"a dusuruyordu.
-		seed_ids.assign([2, 4])
-	var seed_id := seed_ids[rng.randi_range(0, seed_ids.size() - 1)]
-	var level := LevelLibrary.load_level(seed_id).duplicate(true) as LevelData
+	# Kaynakta blok olsa da kurtarma bloksuz iskelet uretir (bkz. yukaridaki not).
+	var seed_entry: Dictionary = HARD_RESCUE_SEEDS[
+		rng.randi_range(0, HARD_RESCUE_SEEDS.size() - 1)]
+	var level := _level_from_rescue_seed(seed_entry)
 
 	# Kaynak taslagin urun kimligi korunur; yalnizca son kademe geometrisi
 	# solver'dan gecen bir fizik iskeletinden turetilir.
@@ -607,7 +684,7 @@ func _build_hard_rescue_level(source: LevelData,
 		panel.rotation_degrees = clampf(
 			panel.rotation_degrees + rng.randf_range(-2.0, 2.0), -80.0, 80.0)
 		panel.length = clampf(panel.length + rng.randf_range(-12.0, 12.0), 180.0, 520.0)
-	if not uses_blocks and level.panels.size() < 2:
+	if level.panels.size() < 2:
 		# Resmi iskeletin birebir kopyasi olmasin; ana cozumden uzaktaki kisa
 		# ikinci yuzey alternatif denemeleri toplar ve cesitlilik puanina girer.
 		var side := -1.0 if level.target_position.x >= 360.0 else 1.0
@@ -618,14 +695,24 @@ func _build_hard_rescue_level(source: LevelData,
 		route_shaper.length = rng.randf_range(170.0, 205.0)
 		route_shaper.thickness = 26.0
 		level.panels.append(route_shaper)
+	# Blok oynatmasi bilerek panelinkinden DAR. Eski tohumlar resmi 27-29
+	# bolumleriydi ve genis pencereleri +-18/+-24'luk sapmayi tasiyabiliyordu;
+	# yeni tohumlar profil esiginde dogrulanmis geometriler oldugu icin ayni
+	# sapma onlari dogrudan "pencere-dar"a dusuruyor. Blok rotayi kapatan
+	# eleman oldugundan en hassas parca da odur.
 	for block in level.breakable_blocks:
 		block.position = Vector2(
-			clampf(block.position.x + x_shift + rng.randf_range(-18.0, 18.0), 80.0, 640.0),
-			clampf(block.position.y + rng.randf_range(-18.0, 18.0), 400.0, 940.0))
+			clampf(block.position.x + x_shift * 0.5 + rng.randf_range(-8.0, 8.0), 80.0, 640.0),
+			clampf(block.position.y + rng.randf_range(-8.0, 8.0), 400.0, 940.0))
 		block.size.x = clampf(
-			block.size.x + rng.randf_range(-24.0, 24.0), 120.0, 560.0)
-	if uses_wall_gaps:
+			block.size.x + rng.randf_range(-12.0, 12.0), 120.0, 560.0)
+	# Kurtarma iskeletleri artik resmi bolumlerden kopyalanmadigi icin kendi
+	# duvar bosluklari yok; kaynak taslakta varsa onlari devralir ve oynatiriz.
+	if source.left_wall_segments.size() == 2:
+		level.left_wall_segments = source.left_wall_segments.duplicate()
 		_vary_wall(level.left_wall_segments, rng, 0.35)
+	if source.right_wall_segments.size() == 2:
+		level.right_wall_segments = source.right_wall_segments.duplicate()
 		_vary_wall(level.right_wall_segments, rng, 0.35)
 	return level
 

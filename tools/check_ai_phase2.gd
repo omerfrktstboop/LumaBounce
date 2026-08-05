@@ -229,8 +229,12 @@ func _test_variations_and_solver() -> void:
 		"blueprint_index": 0,
 		"design_intent": "fizik kontrolu",
 	}
+	# Bolum 1 sifir sekmeli ogretici bir bolum; profil olarak "Kolay" dogru
+	# eslesmedir. Eskiden "Orta" kullaniliyordu, ama o yalnizca Orta'nin
+	# min_bounces esigi 0 oldugu icin geciyordu - yani testi ayakta tutan sey
+	# Orta'nin duz atisi kabul eden hatasiydi.
 	generator.generate_from_blueprints(
-		LevelGenerator.Profile.medium(), [physics_blueprint], 1, 0, 99)
+		LevelGenerator.Profile.easy(), [physics_blueprint], 1, 0, 99)
 	while generator.is_running():
 		observed_frames += 1
 		await process_frame

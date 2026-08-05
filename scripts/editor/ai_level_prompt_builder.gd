@@ -23,8 +23,8 @@ const TEMPLATE_RULES := {
 const DIFFICULTY_RULES := {
 	"easy": "Hedef y=340..460; 1 panel, 0 blok, 0-1 sekme ve genis isabet penceresi.",
 	"medium": "Hedef y=235..345; 1-2 panel, 0-1 blok, 0-2 sekme ve orta genislikte isabet penceresi.",
-	"hard": "Hedef y=225..320. Once tek ana sektiriciyle genis bir 1-2 sekmeli rota kur; ek nesneleri bu koridorun disina koy. Birden fazla yatay bariyerle arena enini kapatma.",
-	"final": "Hedef y=225..320. Once genis bir 1-2 sekmeli ana rota kur, sonra secili mekanikleri bu rotayi tamamen kapatmadan ekle.",
+	"hard": "Hedef y=225..320. Ana rota 2-4 kontrollu sekme icersin ve top sektiricileri SIRAYLA kullansin; saglam 0-1 sekmeli kestirme birakma. Sektiricileri birbirini besleyecek acilarla yerlestir, arena enini yatay bariyerle kapatma.",
+	"final": "Hedef y=225..320. Ana rota 3-5 kontrollu sekme icersin; saglam 0-2 sekmeli kestirme birakma. Secili mekanikleri bu zinciri tamamen kapatmadan ekle.",
 }
 
 
