@@ -21,9 +21,14 @@ config/quit_on_go_back=false
 config/features=PackedStringArray("4.7", "GL Compatibility")
 run/max_fps=60
 
+[audio]
+
+buses/default_bus_layout="uid://cqxf3ajnwrfkp"
+
 [autoload]
 
 AudioManager="*res://scripts/audio/audio_manager.gd"
+MCPRuntimeServer="*res://addons/godot_mcp_toolkit/runtime/mcp_runtime_server.gd"
 
 [display]
 
@@ -35,11 +40,21 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=1
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg")
+
 [layer_names]
 
 2d_physics/layer_1="obstacle"
 2d_physics/layer_2="ball"
 2d_physics/layer_3="target"
+
+[mcp_toolkit]
+
+status="No .mcp.json found — use Project > Tools > MCP Toolkit > Write .mcp.json to create one.
+
+NODE.JS NOT FOUND — The MCP server bridge requires Node.js 22+. Download it from https://nodejs.org"
 
 [physics]
 

@@ -64,8 +64,8 @@ rotation_degrees = {rot}
 length = {length}''')
         panels_str += f'SubResource("{r_id}"), '
 
-    # Difficulty increases from 0.0 to 1.0 between 1 and 75
-    difficulty = level_id / 75.0
+    # Difficulty increases from 0.0 to 1.0 between 51 and 125
+    difficulty = (level_id - 50) / 75.0
     pattern_type = level_id % 6
     
     # Tutorials & Boss
@@ -237,24 +237,9 @@ three_star_max_shots = 3
 '''
     return content
 
-for i in range(51, 76):
-    diff = i - 50
-    content = create_level(i, f"Turuncu Faz {diff}")
+for i in range(51, 126):
+    content = create_level(i, f"Uzay Fazı {i}")
     with open(f"D:/Windows/Desktop/LumaBounce/levels/level_{i}.tres", "w", encoding="utf-8") as f:
         f.write(content)
 
-for i in range(30, 41):
-    content = create_level(i, f"Sıcak Faz {i}")
-    with open(f"D:/Windows/Desktop/LumaBounce/levels/level_{i}.tres", "w", encoding="utf-8") as f:
-        f.write(content)
-
-# Generate Boss levels 25 and 50
-content25 = create_level(25, "Boss Faz 1")
-with open("D:/Windows/Desktop/LumaBounce/levels/level_25.tres", "w", encoding="utf-8") as f:
-    f.write(content25)
-
-content50 = create_level(50, "Boss Faz 2")
-with open("D:/Windows/Desktop/LumaBounce/levels/level_50.tres", "w", encoding="utf-8") as f:
-    f.write(content50)
-
-print("Levels 30-40, 51-75 and bosses 25, 50 generated.")
+print("Levels 51-125 generated.")

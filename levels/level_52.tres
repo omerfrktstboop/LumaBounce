@@ -31,19 +31,6 @@ motion_direction_degrees = 90.0
 travel_distance = 100
 motion_period = 3.5
 phase_degrees = 0.0
-[sub_resource type="Resource" id="Mov_V2"]
-script = ExtResource("2")
-kind = 3
-position = Vector2(470, 400)
-rotation_degrees = 0.0
-size = Vector2(100, 30)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 90.0
-travel_distance = 100
-motion_period = 3.5
-phase_degrees = 0.0
 [sub_resource type="Resource" id="Boost_1"]
 script = ExtResource("2")
 kind = 4
@@ -84,14 +71,14 @@ hit_points = 1
 [resource]
 script = ExtResource("4")
 level_id = 52
-display_name = "Turuncu Faz 2"
+display_name = "Uzay Fazı 52"
 launcher_position = Vector2(360, 1120)
 target_position = Vector2(360, 400)
 target_scale = 0.8
 ball_scale = 0.65
 panels = Array[PanelData]([])
 breakable_blocks = Array[BreakableBlockData]([SubResource("B_4"), SubResource("B_6")])
-obstacles = Array[ObstacleData]([SubResource("Mov_H"), SubResource("Mov_V"), SubResource("Mov_V2"), SubResource("Boost_1"), SubResource("Boost_2")])
+obstacles = Array[ObstacleData]([SubResource("Mov_H"), SubResource("Mov_V"), SubResource("Boost_1"), SubResource("Boost_2")])
 left_wall_segments = Array[Vector2]([])
 right_wall_segments = Array[Vector2]([])
 max_lives = 5

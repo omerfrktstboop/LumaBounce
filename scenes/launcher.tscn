@@ -1,21 +1,21 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://rt76gp0r85u3"]
 
-[ext_resource type="Script" path="res://scripts/launcher.gd" id="1_launcher"]
-[ext_resource type="Script" path="res://scripts/aim_guide.gd" id="2_aim_guide"]
+[ext_resource type="Script" uid="uid://rvw48qrmcxtd" path="res://scripts/launcher.gd" id="1_launcher"]
+[ext_resource type="Script" uid="uid://dbya7x38ihycu" path="res://scripts/aim_guide.gd" id="2_aim_guide"]
 
-[node name="Launcher" type="Node2D"]
+[node name="Launcher" type="Node2D" unique_id=567745221]
 script = ExtResource("1_launcher")
 
-[node name="AimGuide" type="Node2D" parent="."]
+[node name="AimGuide" type="Node2D" parent="." unique_id=996280860]
 z_index = -1
 script = ExtResource("2_aim_guide")
 
-[node name="DragHint" type="Node2D" parent="."]
+[node name="DragHint" type="Node2D" parent="." unique_id=418462599]
 z_index = -2
 
-[node name="Base" type="Node2D" parent="."]
+[node name="Base" type="Node2D" parent="." unique_id=1878994112]
 
-[node name="PowerMeter" type="Node2D" parent="."]
+[node name="PowerMeter" type="Node2D" parent="." unique_id=1132253855]
 z_index = 2
 
-[node name="Barrel" type="Node2D" parent="."]
+[node name="Barrel" type="Node2D" parent="." unique_id=452350972]

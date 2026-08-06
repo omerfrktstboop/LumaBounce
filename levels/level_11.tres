@@ -1,101 +1,26 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=4 format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 
-[sub_resource type="Resource" id="Resource_ntj7m"]
-script = ExtResource("2")
-kind = 1
-position = Vector2(516.6667, 258)
-rotation_degrees = 0.0
-size = Vector2(68, 68)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_wvjk2"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(642.6667, 386.66663)
-rotation_degrees = 0.0
-size = Vector2(150, 24)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_bi0i1"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(234, 770.0001)
-rotation_degrees = 0.0
-size = Vector2(150, 24)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_m3uui"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(72.66666, 226.66663)
-rotation_degrees = 0.0
-size = Vector2(150, 24)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_krhwj"]
-script = ExtResource("2")
-kind = 1
-position = Vector2(165.33333, 452.66663)
-rotation_degrees = 0.0
-size = Vector2(68, 68)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_lgnf6"]
-script = ExtResource("3")
-position = Vector2(544.6665, 769.9999)
-rotation_degrees = 0.0
-length = 400.0
+[sub_resource type="Resource" id="Resource_l4_shelf"]
+script = ExtResource("2_panel_data")
+position = Vector2(280, 760)
+rotation_degrees = -6.0
+length = 500.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4")
+script = ExtResource("1_level_data")
 level_id = 11
-display_name = "Yeni Zor Bölüm 1"
+display_name = "Açık Kenar"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(454.66666, 547.3334)
-panels = Array[ExtResource("3")]([SubResource("Resource_lgnf6")])
-breakable_blocks = Array[ExtResource("1")]([])
-obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
+target_position = Vector2(200, 280)
+panels = Array[PanelData]([SubResource("Resource_l4_shelf")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 380), Vector2(620, 1440)])
 max_lives = 4
-tutorial_text = ""
-two_star_max_seconds = 45.0
-two_star_max_shots = 4
-three_star_max_seconds = 25.0
+tutorial_text = "Sol kenarda boşluk var. Zayıf atış topu kaçırır."
+two_star_max_seconds = 95.0
+two_star_max_shots = 3
+three_star_max_seconds = 48.0
 three_star_max_shots = 2

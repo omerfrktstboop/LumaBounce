@@ -1,0 +1,18 @@
+{
+	"mcpServers": {
+		"godot-mcp-toolkit": {
+			"args": [
+				"C:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npx-cli.js",
+				"-y",
+				"@npgamedev/godot-mcp-server",
+				"--editor-port",
+				"6550"
+			],
+			"command": "C:\\Program Files\\nodejs\\node.exe",
+			"env": {
+				"GODOT_MCP_CONFIG_VERSION": "1",
+				"PATH": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.20.8-hotspot\\bin;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path;C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\javapath;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;C:\\Program Files\\NVIDIA Corporation\\NVIDIA app\\NvDLISR;C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\Program Files\\dotnet\\;C:\\MATRIKS;C:\\MATRIKS\\System32\\;E:\\Matlab\\runtime\\win64;E:\\Matlab\\bin;C:\\Program Files\\Git\\cmd;C:\\Program Files\\GitHub CLI\\;C:\\Program Files\\nodejs\\;C:\\Users\\Omerf\\AppData\\Local\\agy\\bin;C:\\Users\\Omerf\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\Omerf\\.dotnet\\tools;C:\\Users\\Omerf\\AppData\\Local\\Python\\bin;c:\\users\\omerf\\.local\\bin;C:\\Users\\Omerf\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C:\\Users\\Omerf\\AppData\\Roaming\\npm;C:\\Program Files\\nodejs\\"
+			}
+		}
+	}
+}

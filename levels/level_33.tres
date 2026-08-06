@@ -1,111 +1,47 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=8 format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
 
-[sub_resource type="Resource" id="P_1"]
-script = ExtResource("3")
-position = Vector2(400, 600)
-rotation_degrees = 30
-length = 250
-[sub_resource type="Resource" id="P_2"]
-script = ExtResource("3")
-position = Vector2(300, 400)
-rotation_degrees = -30
-length = 250
-[sub_resource type="Resource" id="Boost_1"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(360, 750)
+[sub_resource type="Resource" id="Resource_l33_panel"]
+script = ExtResource("2_panel_data")
+position = Vector2(466.86, 744.113)
+rotation_degrees = -21.466
+length = 346.221
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_l33_left"]
+script = ExtResource("3_block_data")
+position = Vector2(215, 850)
 rotation_degrees = 0.0
-size = Vector2(40, 40)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Bomb_1"]
-script = ExtResource("2")
-kind = 1
-position = Vector2(300, 600)
+size = Vector2(350, 46)
+
+[sub_resource type="Resource" id="Resource_l33_right"]
+script = ExtResource("3_block_data")
+position = Vector2(540.492, 426.686)
 rotation_degrees = 0.0
-size = Vector2(60, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Bomb_2"]
-script = ExtResource("2")
-kind = 1
-position = Vector2(400, 400)
+size = Vector2(350, 46)
+
+[sub_resource type="Resource" id="Resource_l33_middle"]
+script = ExtResource("3_block_data")
+position = Vector2(360, 510)
 rotation_degrees = 0.0
-size = Vector2(60, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="B_1"]
-script = ExtResource("1")
-position = Vector2(273, 272)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_2"]
-script = ExtResource("1")
-position = Vector2(411, 265)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_3"]
-script = ExtResource("1")
-position = Vector2(459, 252)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_4"]
-script = ExtResource("1")
-position = Vector2(419, 213)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_5"]
-script = ExtResource("1")
-position = Vector2(437, 190)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_6"]
-script = ExtResource("1")
-position = Vector2(313, 281)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_7"]
-script = ExtResource("1")
-position = Vector2(288, 255)
-size = Vector2(40, 20)
+size = Vector2(500, 46)
 hit_points = 2
 
 [resource]
-script = ExtResource("4")
+script = ExtResource("1_level_data")
 level_id = 33
-display_name = "Sıcak Faz 33"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(150, 150)
-target_scale = 0.8
-ball_scale = 0.65
-panels = Array[PanelData]([SubResource("P_1"), SubResource("P_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("B_1"), SubResource("B_2"), SubResource("B_3"), SubResource("B_4"), SubResource("B_5"), SubResource("B_6"), SubResource("B_7")])
-obstacles = Array[ObstacleData]([SubResource("Boost_1"), SubResource("Bomb_1"), SubResource("Bomb_2")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 60.0
-two_star_max_shots = 6
-three_star_max_seconds = 35.0
+display_name = "Üçlü Hat"
+launcher_position = Vector2(359.788, 1120)
+target_position = Vector2(522.341, 296.973)
+panels = Array[PanelData]([SubResource("Resource_l33_panel")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l33_left"), SubResource("Resource_l33_right"), SubResource("Resource_l33_middle")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 186.446), Vector2(546.566, 1440)])
+max_lives = 6
+tutorial_text = "İki doğru kırılma, üçüncü bloğu gereksiz bırakır."
+two_star_max_seconds = 120.0
+two_star_max_shots = 4
+three_star_max_seconds = 65.0
 three_star_max_shots = 3

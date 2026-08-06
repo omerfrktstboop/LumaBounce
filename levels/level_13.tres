@@ -1,108 +1,23 @@
-[gd_resource type="Resource" script_class="LevelData" format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://dw0xgqocft720"]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
+[ext_resource type="Script" uid="uid://dsifrlkfngd5e" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" uid="uid://ctxhdpcmtyoux" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 
-[sub_resource type="Resource" id="Resource_ntj7m"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(642.6667, 386.66663)
-rotation_degrees = 0.0
-size = Vector2(150, 24)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_wvjk2"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(234, 770.0001)
-rotation_degrees = 0.0
-size = Vector2(150, 24)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_bi0i1"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(72.66666, 226.66663)
-rotation_degrees = 0.0
-size = Vector2(150, 24)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_m3uui"]
-script = ExtResource("2")
-kind = 0
-position = Vector2(83.33333, 664.6666)
-rotation_degrees = 0.0
-size = Vector2(150, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_krhwj"]
-script = ExtResource("2")
-kind = 0
-position = Vector2(360, 356)
-rotation_degrees = 0.0
-size = Vector2(150, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-
-[sub_resource type="Resource" id="Resource_lgnf6"]
-script = ExtResource("2")
-kind = 0
-position = Vector2(471.33334, 790.6667)
-rotation_degrees = 0.0
-size = Vector2(150, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
+[sub_resource type="Resource" id="Resource_l3_shelf"]
+script = ExtResource("2_panel_data")
+position = Vector2(300, 720)
+rotation_degrees = -8.0
+length = 520.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4")
+script = ExtResource("1_level_data")
 level_id = 13
-display_name = "Yeni Zor Bölüm 2"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(597.3334, 136)
-panels = Array[ExtResource("3")]([])
-breakable_blocks = Array[ExtResource("1")]([])
-obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj"), SubResource("Resource_lgnf6")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 4
-tutorial_text = ""
-two_star_max_seconds = 45.0
+display_name = "İnce Ayar"
+target_position = Vector2(120, 260)
+panels = Array[ExtResource("2_panel_data")]([SubResource("Resource_l3_shelf")])
+tutorial_text = "Dar pencere için güç ve açıyı birlikte ayarla."
+two_star_max_seconds = 90.0
 two_star_max_shots = 4
-three_star_max_seconds = 25.0
+three_star_max_seconds = 45.0
 three_star_max_shots = 2

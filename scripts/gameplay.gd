@@ -198,6 +198,13 @@ func _apply_level() -> void:
 
 	_launcher.position = level_data.launcher_position
 	_target.position = level_data.target_position
+	
+	var app_root = get_tree().root.get_node_or_null("AppRoot")
+	if app_root:
+		var bg_layer = app_root.get_node_or_null("BackgroundLayer")
+		if bg_layer:
+			bg_layer.visible = (level_data.level_id > 50)
+			
 	if level_data.level_id > 50:
 		var theme_scale := 0.8
 		if "target_scale" in level_data:

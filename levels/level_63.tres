@@ -28,99 +28,43 @@ motion_direction_degrees = 0.0
 travel_distance = 110.0
 motion_period = 2.8
 phase_degrees = 0.0
-[sub_resource type="Resource" id="Bomb_1"]
-script = ExtResource("2")
-kind = 1
-position = Vector2(300, 600)
-rotation_degrees = 0.0
-size = Vector2(60, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Bomb_2"]
-script = ExtResource("2")
-kind = 1
-position = Vector2(400, 400)
-rotation_degrees = 0.0
-size = Vector2(60, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
 [sub_resource type="Resource" id="B_0"]
 script = ExtResource("1")
-position = Vector2(436, 164)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_1"]
-script = ExtResource("1")
-position = Vector2(430, 248)
+position = Vector2(437, 163)
 size = Vector2(40, 20)
 hit_points = 2
 [sub_resource type="Resource" id="B_2"]
 script = ExtResource("1")
-position = Vector2(248, 285)
+position = Vector2(570, 219)
+size = Vector2(40, 20)
+hit_points = 2
+[sub_resource type="Resource" id="B_3"]
+script = ExtResource("1")
+position = Vector2(505, 172)
 size = Vector2(40, 20)
 hit_points = 2
 [sub_resource type="Resource" id="B_4"]
 script = ExtResource("1")
-position = Vector2(292, 229)
+position = Vector2(354, 240)
 size = Vector2(40, 20)
 hit_points = 2
 [sub_resource type="Resource" id="B_5"]
 script = ExtResource("1")
-position = Vector2(568, 255)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_6"]
-script = ExtResource("1")
-position = Vector2(226, 278)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_8"]
-script = ExtResource("1")
-position = Vector2(337, 168)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_9"]
-script = ExtResource("1")
-position = Vector2(561, 158)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_10"]
-script = ExtResource("1")
-position = Vector2(461, 294)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_11"]
-script = ExtResource("1")
-position = Vector2(406, 275)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_12"]
-script = ExtResource("1")
-position = Vector2(200, 243)
+position = Vector2(491, 284)
 size = Vector2(40, 20)
 hit_points = 2
 
 [resource]
 script = ExtResource("4")
 level_id = 63
-display_name = "Turuncu Faz 13"
+display_name = "Uzay Fazı 63"
 launcher_position = Vector2(360, 1120)
 target_position = Vector2(150, 150)
 target_scale = 0.8
 ball_scale = 0.65
 panels = Array[PanelData]([SubResource("P_1"), SubResource("P_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("B_0"), SubResource("B_1"), SubResource("B_2"), SubResource("B_4"), SubResource("B_5"), SubResource("B_6"), SubResource("B_8"), SubResource("B_9"), SubResource("B_10"), SubResource("B_11"), SubResource("B_12")])
-obstacles = Array[ObstacleData]([SubResource("Boost_1"), SubResource("Bomb_1"), SubResource("Bomb_2")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("B_0"), SubResource("B_2"), SubResource("B_3"), SubResource("B_4"), SubResource("B_5")])
+obstacles = Array[ObstacleData]([SubResource("Boost_1")])
 left_wall_segments = Array[Vector2]([])
 right_wall_segments = Array[Vector2]([])
 max_lives = 5

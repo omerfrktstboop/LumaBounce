@@ -13,9 +13,9 @@ signal menu_requested()
 ## 10 bolum iki sutuna sigacak boyut: 5 satir x 132 + 4 x 20 bosluk = 740 px,
 ## 720x1280 referans ekranda kaydirmaya gerek kalmadan sigar. Daha kisa
 ## ekranlarda GridScroll devreye girer.
-@export var button_size := Vector2(132.0, 132.0)
-@export var button_font_size := 40
-@export var columns := 2
+@export var button_size := Vector2(100.0, 100.0)
+@export var button_font_size := 32
+@export var columns := 4
 @export var check_size := 24.0
 @export var lock_size := 24.0
 ## Buton icindeki mini yildiz satiri.
@@ -53,6 +53,14 @@ func _ready() -> void:
 	_refresh_star_total()
 	_back_button.pressed.connect(menu_requested.emit)
 	_scroll.get_v_scroll_bar().value_changed.connect(_on_scrolled)
+	_animate_buttons_entry()
+
+func _animate_buttons_entry() -> void:
+	for i in range(_grid.get_child_count()):
+		var btn = _grid.get_child(i)
+		btn.modulate.a = 0.0
+		var tw = create_tween()
+		tw.tween_property(btn, "modulate:a", 1.0, 0.4).set_delay(i * 0.015).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 
 
 ## Ustte sade toplam: "34 / 150". Yeni panel acilmaz, mevcut baslik
