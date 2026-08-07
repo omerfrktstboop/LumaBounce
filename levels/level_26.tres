@@ -1,24 +1,50 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block"]
 
-[sub_resource type="Resource" id="Resource_l26_gate"]
-script = ExtResource("3_block_data")
-position = Vector2(360, 620)
-rotation_degrees = 0.0
-size = Vector2(540, 46)
+[sub_resource type="Resource" id="Panel_0"]
+script = ExtResource("2_panel")
+position = Vector2(260, 900)
+rotation_degrees = -22
+length = 260
+thickness = 26.0
+
+[sub_resource type="Resource" id="Brick_0_0"]
+script = ExtResource("3_block")
+position = Vector2(176.25, 560)
+size = Vector2(92.5, 34)
+hit_points = 1
+
+[sub_resource type="Resource" id="Brick_0_1"]
+script = ExtResource("3_block")
+position = Vector2(298.75, 560)
+size = Vector2(92.5, 34)
+hit_points = 1
+
+[sub_resource type="Resource" id="Brick_0_2"]
+script = ExtResource("3_block")
+position = Vector2(421.25, 560)
+size = Vector2(92.5, 34)
+hit_points = 1
+
+[sub_resource type="Resource" id="Brick_0_3"]
+script = ExtResource("3_block")
+position = Vector2(543.75, 560)
+size = Vector2(92.5, 34)
+hit_points = 1
 
 [resource]
 script = ExtResource("1_level_data")
 level_id = 26
 display_name = "İlk Kırılma"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(360, 300)
-breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l26_gate")])
+target_position = Vector2(460, 300)
+panels = Array[PanelData]([SubResource("Panel_0")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Brick_0_0"), SubResource("Brick_0_1"), SubResource("Brick_0_2"), SubResource("Brick_0_3")])
 max_lives = 5
-tutorial_text = "Bloğu kır, yolu aç."
-two_star_max_seconds = 95.0
-two_star_max_shots = 4
-three_star_max_seconds = 50.0
+two_star_max_seconds = 95
+two_star_max_shots = 3
+three_star_max_seconds = 50
 three_star_max_shots = 2

@@ -17,3 +17,16 @@ builds/
 # System/editor specific
 .DS_Store
 Thumbs.db
+
+# --- Yayin gizlileri: ASLA repoya girmemeli ---
+# Release imzalama anahtari kaybolursa uygulama BIR DAHA guncellenemez;
+# repoya girerse baskasi senin adina guncelleme yayinlayabilir.
+*.keystore
+*.jks
+keystore.properties
+*.keystore.cfg
+
+# Export ciktilari
+builds/
+*.aab
+*.apk

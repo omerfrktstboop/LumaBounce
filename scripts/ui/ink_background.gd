@@ -13,9 +13,24 @@ extends TextureRect
 @export var ink_mid := Palette.INK_MID
 @export var ink_bottom := Palette.INK_BOTTOM
 @export_range(0.0, 1.0, 0.01) var mid_offset := 0.55
+## _ready'de renkleri Palette'ten TAZELER.
+##
+## Neden gerekli: yukaridaki baslangic degerleri sahne OLUSTURULURKEN
+## okunuyor, oysa AppRoot temayi ondan sonra uyguluyor (bkz. _swap_to:
+## instantiate -> configure -> add_child). Tazelenmezse zemin bir onceki
+## dunyanin murekkebiyle kalirdi - 51+ bolumlerde tema degistigi halde arka
+## planin lacivert kalmasinin sebebi tam olarak buydu.
+##
+## Kendi rengini veren ekranlar (bolum secim sayfalari) bunu kapatmaz;
+## apply_ink zaten _ready'den SONRA cagrildigi icin son sozu o soyler.
+@export var follow_palette := true
 
 
 func _ready() -> void:
+	if follow_palette:
+		ink_top = Palette.INK_TOP
+		ink_mid = Palette.INK_MID
+		ink_bottom = Palette.INK_BOTTOM
 	anchor_left = 0.0
 	anchor_top = 0.0
 	anchor_right = 1.0
@@ -27,6 +42,16 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	stretch_mode = TextureRect.STRETCH_SCALE
+	texture = _build_texture()
+
+
+## Zemini calisma zamaninda degistirir (bolum secim ekranindaki dunya
+## sayfalari). Renkler @export oldugu icin atamak yetmez - doku _ready'de bir
+## kez uretiliyor, bu yuzden yeniden kurulmasi gerekir.
+func apply_ink(top: Color, mid: Color, bottom: Color) -> void:
+	ink_top = top
+	ink_mid = mid
+	ink_bottom = bottom
 	texture = _build_texture()
 
 

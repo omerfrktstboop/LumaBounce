@@ -1,71 +1,59 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_thsie"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_g74tf"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_4p41w"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_s22kc"]
 
-[sub_resource type="Resource" id="Ring_1"]
-script = ExtResource("2")
-kind = 0
-position = Vector2(360, 300)
-rotation_degrees = 0.0
-size = Vector2(188.0, 28)
-inner_radius = 74.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="P_1"]
-script = ExtResource("3")
-position = Vector2(360, 800)
-rotation_degrees = 0
-length = 150
-[sub_resource type="Resource" id="Boost_1"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(150, 600)
-rotation_degrees = 0.0
-size = Vector2(40, 40)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Boost_2"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(570, 600)
-rotation_degrees = 0.0
-size = Vector2(40, 40)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
+[sub_resource type="Resource" id="Resource_sflys"]
+script = ExtResource("2_g74tf")
+position = Vector2(121.35362, 867.1863)
+rotation_degrees = 180.0
+size = Vector2(180, 28)
+inner_radius = 68.94594594594595
+
+[sub_resource type="Resource" id="Resource_rsa56"]
+script = ExtResource("2_g74tf")
+kind = 1
+position = Vector2(373.95932, 813.89246)
+size = Vector2(70.97298, 70.97298)
+
+[sub_resource type="Resource" id="Resource_pvng8"]
+script = ExtResource("2_g74tf")
+kind = 2
+position = Vector2(583.8773, 951.93097)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -74.39189189189189
+
+[sub_resource type="Resource" id="Resource_pye7u"]
+script = ExtResource("3_4p41w")
+position = Vector2(386, 550)
+rotation_degrees = 38.1
+length = 250.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_i6jvc"]
+script = ExtResource("3_4p41w")
+position = Vector2(445, 651)
+rotation_degrees = -15.9
+length = 279.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_jsy3e"]
+script = ExtResource("3_4p41w")
+position = Vector2(544, 665)
+rotation_degrees = 19.3
+length = 329.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4")
+script = ExtResource("4_s22kc")
 level_id = 80
-display_name = "Uzay Fazı 80"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(360, 300)
-target_scale = 0.8
-ball_scale = 0.65
-panels = Array[PanelData]([SubResource("P_1")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Ring_1"), SubResource("Boost_1"), SubResource("Boost_2")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 60.0
-two_star_max_shots = 6
-three_star_max_seconds = 35.0
-three_star_max_shots = 3
+display_name = "Faz 80"
+target_position = Vector2(357, 315)
+panels = Array[ExtResource("3_4p41w")]([SubResource("Resource_pye7u"), SubResource("Resource_i6jvc"), SubResource("Resource_jsy3e")])
+obstacles = Array[ExtResource("2_g74tf")]([SubResource("Resource_sflys"), SubResource("Resource_rsa56"), SubResource("Resource_pvng8")])
+two_star_max_seconds = 108.30000000000001
+two_star_max_shots = 3
+three_star_max_seconds = 57.6

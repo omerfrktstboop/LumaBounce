@@ -20,12 +20,16 @@ extends Node
 @export var splash_scene: PackedScene
 @export var main_menu_scene: PackedScene
 @export var level_select_scene: PackedScene
+@export var settings_scene: PackedScene
 @export var gameplay_scene: PackedScene
 ## Yalnizca debug build'de acilir (bkz. _on_debug_editor_requested); release
 ## export'ta debug paneli var olmadigi icin bu ekrana giden yol yoktur.
 @export var level_editor_scene: PackedScene
 @export var fade_time := 0.28
 @export var fade_color := Palette.INK_TOP
+## Arka katman, arenanin murekkep tonundan bu kadar koyu olur (bkz.
+## _apply_background_theme). Ayni tonda olsa derinlik hissi kaybolurdu.
+@export_range(0.0, 1.0, 0.01) var background_darken := 0.35
 
 @onready var _host: Node = $ScreenHost
 @onready var _fade: ColorRect = $FadeLayer/Fade
@@ -45,6 +49,8 @@ var _editor_level: LevelData
 ## Uretilen veya kaydedilen parti, acik indeks ve metadata. Test sahnesi
 ## LevelEditor'u yok ettigi icin bu baglam AppRoot'ta yasatilir.
 var _editor_batch_context := {}
+## Editorde duzenlenen sey bir resmi bolumden geldiyse onun numarasi, yoksa 0.
+var _editor_source_level_id := 0
 var _busy := false
 
 
@@ -53,6 +59,17 @@ func _ready() -> void:
 	# kaybetse bile bu dugum calismaya devam etmeli ki duraklatma/devam
 	# bildirimlerini kacirmasin.
 	_progress = ProgressStore.load_from_disk()
+	# Titresim tercihi tek okuma noktasina (Haptics) aktarilir; boylece
+	# cagiranlarin ProgressStore'a erisimi olmasi gerekmez (bkz. haptics.gd).
+	Haptics.enabled = _progress.haptics_enabled
+	# Dil ILK ekrandan once uygulanmali: bir Control'un metni cevrilirken
+	# o anki locale okunur, sonradan degistirmek zaten kurulmus etiketleri
+	# guncellemez. Kayitli tercih bos ise (oyuncu henuz secmedi) cihaz dili
+	# kullanilir ve HICBIR SEY kaydedilmez - bkz. Locale.apply_saved.
+	Locale.apply_saved(_progress.language)
+	# Sarsinti tercihi de tek kisma noktasina aktarilir (bkz. screen_shake.gd);
+	# Haptics ile ayni desen.
+	ScreenShake.trauma_scale = _progress.shake_scale
 	_playtest_stats = PlaytestStats.load_from_disk()
 	_connect_debug_panel()
 
@@ -105,16 +122,34 @@ func go_to_level_select() -> void:
 	await _transition(level_select_scene, _configure_level_select)
 
 
+func go_to_settings() -> void:
+	await _transition(settings_scene, _configure_settings)
+
+
 func go_to_level(level_id: int) -> void:
 	_current_level_id = LevelLibrary.clamp_id(level_id)
-	await _transition(gameplay_scene, _configure_gameplay.bind(_current_level_id))
+	await _transition(gameplay_scene, _configure_gameplay.bind(_current_level_id),
+		_current_level_id)
 
 
-func _transition(scene: PackedScene, configure: Callable) -> void:
+## [param theme_level] hangi bolumun temasi uygulanacak. 0 = notr taban tema
+## (menu, ayarlar, bolum secimi): oyuncu 3. dunyadan menuye dondugunde menu
+## mor kalmamali; bolum secim ekrani zaten dunya renklerini VERI olarak tasir.
+##
+## TEMA NEDEN BURADA UYGULANIYOR: bircok dugum rengini `@export var x :=
+## Palette.Y` seklinde alir ve bu baslangic degeri sahne OLUSTURULURKEN
+## okunur. Tema instantiate'ten sonra uygulanirsa o dugumler bir onceki
+## dunyanin rengiyle kalir - arena duvarlarinin 70. bolumde hala 1. dunyanin
+## yuzeyini gostermesinin sebebi buydu. Fade tam kapandiktan SONRA, sahne
+## kurulmadan ONCE uygulamak 17 ayri script'i yamamadan hepsini duzeltir;
+## ustelik degisim ekran tamamen ortuluyken olur, yani goze carpmaz.
+func _transition(scene: PackedScene, configure: Callable, theme_level := 0) -> void:
 	if _busy or scene == null:
 		return
 	_busy = true
 	await _fade_to(1.0)
+	Palette.apply_theme(PaletteThemes.for_level(theme_level))
+	_apply_background_theme()
 	_swap_to(scene, configure)
 	await _fade_to(0.0)
 	_busy = false
@@ -170,6 +205,12 @@ func _connect_screen(screen: Node) -> void:
 	if menu != null:
 		menu.play_pressed.connect(go_to_level)
 		menu.levels_requested.connect(go_to_level_select)
+		menu.settings_requested.connect(go_to_settings)
+		return
+
+	var settings := screen as SettingsScreen
+	if settings != null:
+		settings.menu_requested.connect(go_to_main_menu)
 		return
 
 	var select := screen as LevelSelect
@@ -186,6 +227,8 @@ func _connect_screen(screen: Node) -> void:
 		# Editorden test edildiyse "menu" tusu editore geri doner; yoksa
 		# tasarladigin bolumu terk etmek icin tek yol kaydetmek olurdu.
 		gameplay.menu_requested.connect(_on_gameplay_menu_requested)
+		gameplay.obstacle_kind_seen.connect(_on_obstacle_kind_seen)
+		gameplay.block_mechanic_seen.connect(_on_block_mechanic_seen)
 		return
 
 	var editor := screen as LevelEditor
@@ -207,12 +250,40 @@ func _configure_level_select(screen: Node) -> void:
 		select.debug_force_unlock = _debug_unlock_all
 
 
+func _configure_settings(screen: Node) -> void:
+	var settings := screen as SettingsScreen
+	if settings != null:
+		# Ayni ProgressStore ORNEGI verilir, kopyasi degil: ekran bir ayari
+		# yazdiginda AppRoot'un elindeki nesne de guncel olmali, yoksa bir
+		# sonraki save() eski degeri geri yazardi.
+		settings.progress = _progress
+
+
 func _configure_gameplay(screen: Node, level_id: int) -> void:
 	var gameplay := screen as Gameplay
 	if gameplay != null:
+		# Tema burada DEGIL, _transition icinde uygulanir (sahne kurulmadan
+		# once); bkz. oradaki not.
 		gameplay.level_data = LevelLibrary.load_level(level_id)
 		gameplay.playtest_stats = _playtest_stats
 		gameplay.progress = _progress
+		gameplay.aim_assist = _progress.aim_assist
+
+
+## Oynanisin arkasindaki "derin uzay" katmani temanin murekkep rengini takip
+## eder, boylece bant degisimi yalnizca vurgu renginde degil ZEMINDE de
+## gorunur - tema degisiminin fark edilmesini saglayan asil sey budur.
+##
+## Sahnedeki sabit renk yerine Palette'ten okunur ve biraz koyultulur: bu
+## katman arenanin ARKASINDA durur, ayni tonda olursa derinlik kaybolur.
+func _apply_background_theme() -> void:
+	var deep_space := get_node_or_null("BackgroundLayer/DeepSpace") as ColorRect
+	if deep_space == null:
+		return
+	deep_space.color = Palette.INK_TOP.darkened(background_darken)
+	var layer := get_node_or_null("BackgroundLayer") as CanvasLayer
+	if layer != null:
+		layer.visible = true
 
 
 ## Kazanilan yildiz yalnizca oncekinden IYIYSE kaydedilir; eski 3, yeni 1
@@ -224,6 +295,20 @@ func _on_level_completed(level_id: int, stars: int) -> void:
 		return
 	_progress.mark_completed(level_id)
 	_progress.set_level_stars_if_higher(level_id, stars)
+
+
+## Editordeki bolum icin de _on_level_completed ile ayni kural: gercek
+## ilerlemeye yazilmaz.
+func _on_obstacle_kind_seen(kind: int) -> void:
+	if _editor_level != null:
+		return
+	_progress.mark_obstacle_kind_seen(kind)
+
+
+func _on_block_mechanic_seen() -> void:
+	if _editor_level != null:
+		return
+	_progress.mark_block_mechanic_seen()
 
 
 func _on_gameplay_menu_requested() -> void:
@@ -239,12 +324,15 @@ func _on_gameplay_menu_requested() -> void:
 # release export'ta kendini agactan siler. Editor ekrani release APK'da
 # bulunur ama ulasilamaz.
 
-func go_to_editor(edit_level: LevelData = null) -> void:
+## [param source_level_id] 0'dan buyukse duzenlenen sey bir RESMI bolumdur;
+## editor bunu kaydederken sidecar'a yazar (bkz. LevelEditor.source_level_id).
+func go_to_editor(edit_level: LevelData = null, source_level_id := 0) -> void:
 	if not OS.is_debug_build():
 		return
 	if edit_level == null:
 		_editor_batch_context.clear()
 	_editor_level = edit_level
+	_editor_source_level_id = source_level_id
 	await _transition(level_editor_scene, _configure_editor)
 
 
@@ -252,6 +340,7 @@ func _configure_editor(screen: Node) -> void:
 	var editor := screen as LevelEditor
 	if editor == null:
 		return
+	editor.source_level_id = _editor_source_level_id
 	if not _editor_batch_context.is_empty():
 		editor.initial_batch_context = _editor_batch_context
 	elif _editor_level != null:
@@ -269,12 +358,15 @@ func _on_editor_test_requested(edit_level: LevelData) -> void:
 	# gizlerdi. Kose dugmesi durdugu icin tek dokunusla geri acilir.
 	if _debug_panel != null and is_instance_valid(_debug_panel):
 		_debug_panel.hide_panel()
-	await _transition(gameplay_scene, _configure_editor_gameplay)
+	await _transition(gameplay_scene, _configure_editor_gameplay,
+		_editor_level.level_id if _editor_level != null else 0)
 
 
 func _configure_editor_gameplay(screen: Node) -> void:
 	var gameplay := screen as Gameplay
 	if gameplay != null:
+		# Tema burada DEGIL, _transition icinde uygulanir (sahne kurulmadan
+		# once); bkz. oradaki not.
 		gameplay.level_data = _editor_level
 		gameplay.playtest_stats = _playtest_stats
 		gameplay.progress = _progress
@@ -345,7 +437,8 @@ func _on_debug_previous_level() -> void:
 		return
 	if _editor_level != null:
 		if _step_editor_batch(-1):
-			_transition(gameplay_scene, _configure_editor_gameplay)
+			_transition(gameplay_scene, _configure_editor_gameplay,
+				_editor_level.level_id if _editor_level != null else 0)
 		return
 	go_to_level(_current_level_id - 1)
 
@@ -355,7 +448,8 @@ func _on_debug_next_level() -> void:
 		return
 	if _editor_level != null:
 		if _step_editor_batch(1):
-			_transition(gameplay_scene, _configure_editor_gameplay)
+			_transition(gameplay_scene, _configure_editor_gameplay,
+				_editor_level.level_id if _editor_level != null else 0)
 		return
 	go_to_level(_current_level_id + 1)
 
@@ -399,8 +493,22 @@ func _on_debug_editor_requested() -> void:
 		return
 	if _current is LevelEditor:
 		return
+
+	# OYNANAN RESMI BOLUMU DUZENLE: debug panelini bir bolumun icinde acip
+	# "DUZENLE" demek, "su an oynadigim bolumu ac" anlamina gelir - eskiden
+	# bos bir editor aciliyordu ve resmi bolume dokunmanin tek yolu .tres'i
+	# elle bulmakti.
+	#
+	# KOPYA verilir: LevelLibrary'nin dondurdugu kaynak onbellege alinabildigi
+	# icin dogrudan duzenlemek, o oturumda o bolumu oynayan herkesi etkilerdi.
+	var gameplay := _current as Gameplay
+	if gameplay != null and gameplay.level_data != null:
+		var source_id := gameplay.level_data.level_id
+		go_to_editor(gameplay.level_data.duplicate(true) as LevelData, source_id)
+		return
+
 	if _editor_level != null:
-		go_to_editor(_editor_level)
+		go_to_editor(_editor_level, _editor_source_level_id)
 		return
 	# Bos bolumle acilir; editordeki "AC" ile kayitli bir bolum yuklenebilir.
 	go_to_editor()

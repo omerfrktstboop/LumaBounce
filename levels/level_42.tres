@@ -1,48 +1,46 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_y1e0r"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
 
-[sub_resource type="Resource" id="Panel_lower"]
-script = ExtResource("2")
-position = Vector2(230, 830)
-rotation_degrees = 30.0
-length = 320.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Panel_upper"]
-script = ExtResource("2")
-position = Vector2(500, 520)
-rotation_degrees = 30.0
-length = 340.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Bomb_left"]
+[sub_resource type="Resource" id="Resource_t6n5l"]
 script = ExtResource("3")
 kind = 1
-position = Vector2(345, 640)
+position = Vector2(351.76804, 711.75903)
 rotation_degrees = -20.0
 size = Vector2(72, 72)
 
-[sub_resource type="Resource" id="Bomb_right"]
+[sub_resource type="Resource" id="Resource_v2r67"]
 script = ExtResource("3")
 kind = 1
-position = Vector2(560, 780)
+position = Vector2(591.3034, 715.7526)
 rotation_degrees = 25.0
 size = Vector2(72, 72)
+
+[sub_resource type="Resource" id="Resource_n3c3b"]
+script = ExtResource("2")
+position = Vector2(279.95276, 859.7046)
+rotation_degrees = 28.983389
+length = 320.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_opbqw"]
+script = ExtResource("2")
+position = Vector2(547.3772, 571.51666)
+rotation_degrees = 27.428335666656494
+length = 340.0
+thickness = 26.0
 
 [resource]
 script = ExtResource("1")
 level_id = 42
 display_name = "Mayin Hatti"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(560, 280)
-panels = Array[PanelData]([SubResource("Panel_lower"), SubResource("Panel_upper")])
-obstacles = Array[ObstacleData]([SubResource("Bomb_left"), SubResource("Bomb_right")])
-max_lives = 5
+target_position = Vector2(532.261, 295.64594)
+panels = Array[ExtResource("2")]([SubResource("Resource_n3c3b"), SubResource("Resource_opbqw")])
+obstacles = Array[ExtResource("3")]([SubResource("Resource_t6n5l"), SubResource("Resource_v2r67")])
 tutorial_text = "Bombaya temas atisi aninda bitirir."
 two_star_max_seconds = 105.0
 two_star_max_shots = 3
 three_star_max_seconds = 55.0
-three_star_max_shots = 2

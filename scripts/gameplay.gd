@@ -14,6 +14,13 @@ signal level_completed(level_id: int, stars: int)
 signal next_level_requested(level_id: int)
 signal level_select_requested()
 signal menu_requested()
+## Tanitim toast'i bir engel turunu ilk kez gosterdiginde yayilir. AppRoot
+## dinler ve ProgressStore'a yazar (bkz. app_root.gd - "yazma AppRoot'a
+## aittir" kurali, ayni sey level_completed/yildizlar icin de gecerli).
+signal obstacle_kind_seen(kind: int)
+## Kirilabilir blok mekanigi ilk kez gosterildiginde yayilir - obstacle_kind_seen
+## ile ayni yazma kurali (bkz. app_root.gd).
+signal block_mechanic_seen()
 
 @export var completed_title := "BÖLÜM TAMAMLANDI"
 @export var failed_title := "BÖLÜM BAŞARISIZ"
@@ -69,17 +76,13 @@ signal menu_requested()
 ## titresimi zaten calistigi icin bilerek dusuk tutulur.
 @export_range(0.0, 1.0, 0.01) var block_break_shake_trauma := 0.22
 @export_range(0.0, 1.0, 0.01) var target_hit_shake_trauma := 0.75
-## Hedefe vurulunca (destekleyen cihazlarda) kisa bir titresim; Android/iOS
-## disinda ve destegi olmayan cihazlarda Godot bunu sessizce yok sayar.
-@export var target_hit_haptic_msec := 80
 ## Guc bari yeni bir kademeye ilk kez ciktiginda verilen hafif dokunsal tik.
+## (Diger titresim sureleri Haptics'te sabittir; bunlar nisan alma hissine ait
+## oldugu icin bolum bazinda ayarlanabilir kalir.)
 @export var power_step_haptic_msec := 10
 @export var max_power_step_haptic_msec := 20
-## Iki canli tuglanin ilk catlamasinda verilen kisa dokunsal onay.
-@export var block_damage_haptic_msec := 12
 ## Bombaya temas, hedef kadar agir olmayan kisa bir tehlike vurgusudur.
 @export_range(0.0, 1.0, 0.01) var hazard_shake_trauma := 0.34
-@export var hazard_haptic_msec := 34
 
 ## AppRoot tarafindan add_child'dan ONCE atanir.
 var level_data: LevelData
@@ -94,6 +97,9 @@ var progress: ProgressStore
 ## acilmaz, haklar tukenmez, ilerleme yazilmaz. Amac bolumu degerlendirmek
 ## degil, geometriyi istedigin kadar denemek.
 var practice_mode := false
+## Oyuncunun ayarlardan sectigi nisan yardimi. AppRoot tarafindan add_child'dan
+## ONCE atanir; ProgressStore'dan okunur, ekran kendi basina ayara bakmaz.
+var aim_assist := false
 
 @onready var _arena: Arena = $Arena
 @onready var _panels: Node2D = $Panels
@@ -106,6 +112,7 @@ var practice_mode := false
 @onready var _shake: ScreenShake = $ShakeCamera
 @onready var _message: Label = $HUD/SafeArea/Root/Message
 @onready var _tutorial: Label = $HUD/SafeArea/Root/TutorialLabel
+@onready var _intro_card: MechanicIntroCard = $HUD/MechanicIntroCard
 @onready var _level_title: Label = $HUD/SafeArea/Root/LevelHeader/LevelTitle
 @onready var _level_subtitle: Label = $HUD/SafeArea/Root/LevelHeader/LevelSubtitle
 @onready var _retry_button: Button = $HUD/SafeArea/Root/RetryButton
@@ -117,6 +124,17 @@ var _message_tween: Tween
 var _tutorial_tween: Tween
 ## Ipucu bu denemede zaten solduysa tekrar tetiklenmesin.
 var _tutorial_dismissed := false
+## Bu bolume GIRISTE (restart'ta degil) gosterilecek, oyuncunun daha once
+## hic gormedigi engel turleri - bkz. _apply_level(), reset_shot().
+var _pending_obstacle_intro_kinds: Array[int] = []
+## Bu bolum ilk kez kirilabilir blok iceriyorsa ve oyuncu mekanigi daha once
+## hic gormemisse true - engel turlerinden farkli olarak tek bir bayraktir.
+var _pending_block_intro := false
+## Su an acik olan kart bir engel mi yoksa blok mekanigi mi - kart kapaninca
+## hangi sinyalin yayilacagi buradan bilinir.
+var _showing_block_intro := false
+## Kart acilmadan onceki firlatici durumu; kapaninca aynen geri verilir.
+var _launcher_enabled_before_intro := true
 var _max_lives := 5
 var _lives_remaining := 0
 ## Her "gecerli atis denemesi" basladiginda artar (bkz. _respawn_ball).
@@ -198,59 +216,27 @@ func _apply_level() -> void:
 
 	_launcher.position = level_data.launcher_position
 	_target.position = level_data.target_position
-	
-	var app_root = get_tree().root.get_node_or_null("AppRoot")
-	if app_root:
-		var bg_layer = app_root.get_node_or_null("BackgroundLayer")
-		if bg_layer:
-			bg_layer.visible = (level_data.level_id > 50)
-			
-	if level_data.level_id > 50:
-		var theme_scale := 0.8
-		if "target_scale" in level_data:
-			_target.scale = Vector2.ONE * float(level_data.get("target_scale"))
-		else:
-			_target.scale = Vector2.ONE * theme_scale
-			
-		if "ball_scale" in level_data:
-			_ball.set_radius(24.0 * float(level_data.get("ball_scale")))
-		else:
-			_ball.set_radius(24.0 * theme_scale)
-			
-		var new_accent = Color("ff633a") # Orange/Red
-		var new_core = Color("ffebd6")
-		
-		_launcher.accent = new_accent
-		_launcher.accent_core = new_core
-		_launcher._build_base()
-		_launcher._build_barrel()
-		_launcher._build_power_meter()
-		_launcher._build_drag_hint()
-		
-		_target.accent = new_accent
-		_target.core_color = new_core
-		_target._build_visual()
-	else:
-		if "target_scale" in level_data:
-			_target.scale = Vector2.ONE * float(level_data.get("target_scale"))
-		else:
-			_target.scale = Vector2.ONE
-			
-		if "ball_scale" in level_data:
-			_ball.set_radius(24.0 * float(level_data.get("ball_scale")))
-		else:
-			_ball.set_radius(24.0)
-			
-		_launcher.accent = Palette.ACCENT
-		_launcher.accent_core = Palette.ACCENT_CORE
-		_launcher._build_base()
-		_launcher._build_barrel()
-		_launcher._build_power_meter()
-		_launcher._build_drag_hint()
-		
-		_target.accent = Palette.ACCENT
-		_target.core_color = Palette.ACCENT_CORE
-		_target._build_visual()
+
+	# NOT: burada eskiden AppRoot/BackgroundLayer'a ULASILIP gorunurlugu
+	# "level_id > 50" ile aciliyordu. Iki sorunu vardi: bir ekran AppRoot'un
+	# icine uzaniyordu (projenin "ekranlar yukari dogru bilmez" kuralina
+	# aykiri) ve zemin bir RENK degil, ikili bir ac/kapa olarak yonetiliyordu.
+	# Zemin artik temanin parcasi ve AppRoot tarafindan kuruluyor
+	# (bkz. AppRoot._configure_gameplay).
+
+	_target.scale = Vector2.ONE * level_data.target_scale
+	_ball.set_radius(24.0 * level_data.ball_scale)
+
+	_launcher.accent = Palette.ACCENT
+	_launcher.accent_core = Palette.ACCENT_CORE
+	_launcher._build_base()
+	_launcher._build_barrel()
+	_launcher._build_power_meter()
+	_launcher._build_drag_hint()
+
+	_target.accent = Palette.ACCENT
+	_target.core_color = Palette.ACCENT_CORE
+	_target._build_visual()
 
 	_max_lives = maxi(level_data.max_lives, 1)
 
@@ -258,6 +244,24 @@ func _apply_level() -> void:
 	_obstacles.build(level_data.obstacles)
 	_obstacles.start_motion()
 	_apply_level_header()
+	_pending_obstacle_intro_kinds = _newly_seen_obstacle_kinds()
+	_pending_block_intro = (not level_data.breakable_blocks.is_empty()
+		and progress != null and not progress.has_seen_block_mechanic())
+
+
+## Bu bolumun engelleri arasinda oyuncunun daha once hic gormedigi turler.
+## Sira level_data.obstacles sirasiyla aynidir; ayni tur birden fazla
+## engelde geçse bile listede bir kez gecer.
+func _newly_seen_obstacle_kinds() -> Array[int]:
+	var fresh: Array[int] = []
+	if progress == null:
+		return fresh
+	for obstacle in level_data.obstacles:
+		if obstacle == null:
+			continue
+		if not progress.has_seen_obstacle_kind(obstacle.kind) and not fresh.has(obstacle.kind):
+			fresh.append(obstacle.kind)
+	return fresh
 
 
 func _build_panels() -> void:
@@ -286,13 +290,20 @@ func _build_panels() -> void:
 ## Uzun ekranlarda ust tarafta olusan bosluga bolum kimligi. Metin gercek
 ## LevelData'dan gelir; home ve restart butonlarinin arasinda, safe area icinde.
 func _apply_level_header() -> void:
-	_level_title.text = level_title_format % level_data.level_id
+	# tr() BICIMLENDIRMEDEN ONCE: Control'un otomatik cevirisi hazir metni
+	# arar, yani "BÖLÜM 5" tabloda bulunamaz. Cevrilmesi gereken KALIPTIR.
+	_level_title.text = tr(level_title_format) % level_data.level_id
 	# Test modu basligi: bolum neden bitmiyor sorusunun yaniti gorunur olsun,
 	# yoksa "hedefi vurdum ama bir sey olmadi" bir hata gibi okunur.
-	var subtitle := level_data.display_name
+	# Bolum adi .tres icinde Turkce durur; ceviri tablosunun anahtari o metnin
+	# KENDISIDIR (bkz. assets/i18n/levels.csv), boylece 125 bolum dosyasina
+	# dokunmadan cevrilebiliyor ve cevirisi olmayan bir ad ekranda bos degil,
+	# Turkce gorunuyor.
+	var subtitle := tr(level_data.display_name) if not level_data.display_name.is_empty() \
+		else ""
 	if practice_mode:
-		subtitle = "%s · TEST (bölüm bitmez)" % subtitle if not subtitle.is_empty() \
-			else "TEST (bölüm bitmez)"
+		subtitle = tr("%s · TEST (bölüm bitmez)") % subtitle if not subtitle.is_empty() \
+			else tr("TEST (bölüm bitmez)")
 	_level_subtitle.text = subtitle
 	_level_subtitle.visible = not subtitle.is_empty()
 
@@ -309,6 +320,10 @@ func _sync_tuning() -> void:
 
 
 func _preview_ratio_for_level(level_id: int) -> float:
+	# Nisan yardimi acikken iz her bolumde tam uzunlukta kalir - ayarin
+	# tamami budur, baska hicbir sey degismez (zorluk, yildiz, fizik ayni).
+	if aim_assist:
+		return 1.0
 	if level_id < preview_reduction_start_level:
 		return 1.0
 	var span := maxi(preview_reduction_end_level - preview_reduction_start_level, 1)
@@ -344,6 +359,7 @@ func _connect_signals() -> void:
 	# Tiklama sesini LumaButton'un kendisi calar (HUD butonlari da LumaIconButton).
 	_retry_button.pressed.connect(reset_shot)
 	_home_button.pressed.connect(menu_requested.emit)
+	_intro_card.dismissed.connect(_on_intro_card_dismissed)
 	_result_panel.next_pressed.connect(_on_result_next)
 	_result_panel.retry_pressed.connect(_on_result_retry)
 	# Gameplay hicbir sahne acmaz; AppRoot mevcut fade gecisiyle karar verir.
@@ -360,6 +376,7 @@ func _connect_signals() -> void:
 ## _has_started, bolume ILK giris ile MANUEL yeniden baslatmayi ayirir:
 ## giriste ne restart sayaci artar ne de restart sesi calar.
 func reset_shot() -> void:
+	var is_first_entry := not _has_started
 	if _has_started:
 		AudioManager.play_restart()
 		if playtest_stats != null:
@@ -370,6 +387,12 @@ func reset_shot() -> void:
 	# Ipucu yalnizca bolum bastan baslarken geri gelir; basarisiz atistan
 	# sonraki otomatik top respawn'inda gelmez.
 	_show_tutorial()
+	# Tanitim karti ise SADECE gercek ilk giriste acilir - manuel "Tekrar Basla"
+	# ayni deneme icinde onu tekrar tekrar gostermemeli
+	# (bkz. _pending_obstacle_intro_kinds, _apply_level tarafindan bolum
+	# basina bir kez hesaplanir).
+	if is_first_entry:
+		_show_next_intro_card()
 
 	# Bloklar bilerek _apply_level'da degil BURADA kurulur: paneller ve
 	# duvarlar bolumun degismeyen iskeleti, bloklar ise deneme boyunca
@@ -519,7 +542,7 @@ func _on_target_hit(_body: Node2D) -> void:
 		_effects, _target.global_position, Vector2.UP, 1.0,
 		Palette.ACCENT_ALT, Palette.ACCENT_ALT_CORE, 12, 74.0, 350.0)
 	_shake.add_trauma(target_hit_shake_trauma)
-	Input.vibrate_handheld(target_hit_haptic_msec)
+	Haptics.target_hit()
 	AudioManager.play_target_hit()
 
 	# TEST MODU: isabetin tum geri bildirimi (kivilcim, titresim, ses) oynar
@@ -634,8 +657,7 @@ func _on_hazard_triggered(reason: String, at: Vector2) -> void:
 			_effects, at, Vector2.UP, 1.5,
 			Palette.ACCENT_ALT, Palette.ACCENT_ALT_CORE, 24, 100.0, 500.0)
 		_shake.add_trauma(0.6)
-		if power_step_haptic_msec > 0:
-			Input.vibrate_handheld(power_step_haptic_msec)
+		Haptics.pulse(power_step_haptic_msec)
 		AudioManager.play_target_hit()
 		return
 		
@@ -644,8 +666,7 @@ func _on_hazard_triggered(reason: String, at: Vector2) -> void:
 			_effects, at, Vector2.UP, 2.0,
 			Palette.HAZARD, Palette.HAZARD_CORE, 30, 150.0, 600.0)
 		_shake.add_trauma(0.8)
-		if hazard_haptic_msec > 0:
-			Input.vibrate_handheld(hazard_haptic_msec * 2)
+		Haptics.hazard(true)
 		_ball.fail_shot(reason)
 		return
 		
@@ -653,14 +674,12 @@ func _on_hazard_triggered(reason: String, at: Vector2) -> void:
 		_effects, at, Vector2.UP, 0.72,
 		Palette.HAZARD, Palette.HAZARD_CORE, 7, 34.0, 230.0)
 	_shake.add_trauma(hazard_shake_trauma)
-	if hazard_haptic_msec > 0:
-		Input.vibrate_handheld(hazard_haptic_msec)
+	Haptics.hazard()
 	_ball.fail_shot(reason)
 
 
 func _on_block_damaged(_at: Vector2, _remaining_hits: int, _maximum_hits: int) -> void:
-	if block_damage_haptic_msec > 0:
-		Input.vibrate_handheld(block_damage_haptic_msec)
+	Haptics.block_damage()
 
 
 ## Gorsel parcalar blogun KENDI icinde cizilir (bkz. BreakableBlock._draw) ve
@@ -680,6 +699,11 @@ func _on_ball_bounced(at: Vector2, normal: Vector2, impact_speed: float) -> void
 		_effects, at, normal, strength,
 		Palette.ACCENT, Palette.ACCENT_CORE, spark_count, spark_length)
 	_shake.add_trauma(strength * bounce_shake_trauma)
+	# Titresim de AYNI strength olcegini kullanir: siyirma gibi hafif bir temas
+	# ile sert bir carpisma ayni darbeyi verirse geri bildirim anlamsizlasir.
+	# Sinyalin kendisi zaten Ball.min_impact_for_feedback ile suzuldugu icin
+	# burada ayrica bir esik yok (bkz. ball.gd "bounced").
+	Haptics.bounce(strength)
 	# Ham impact_speed verilir; katman secimi ve cooldown AudioManager'da.
 	AudioManager.play_bounce(impact_speed)
 
@@ -816,7 +840,9 @@ func _show_tutorial() -> void:
 	if _tutorial_tween != null and _tutorial_tween.is_valid():
 		_tutorial_tween.kill()
 	_tutorial_dismissed = false
-	_tutorial.text = level_data.tutorial_text
+	# Bolum adinda oldugu gibi: anahtar Turkce metnin kendisi (levels.csv).
+	_tutorial.text = tr(level_data.tutorial_text) if not level_data.tutorial_text.is_empty() \
+		else ""
 	_tutorial.modulate.a = 1.0
 	_tutorial.visible = not level_data.tutorial_text.is_empty()
 
@@ -843,8 +869,7 @@ func _on_power_step_crossed(step_index: int, step_count: int) -> void:
 	var duration := (
 		max_power_step_haptic_msec if step_index >= step_count
 		else power_step_haptic_msec)
-	if duration > 0:
-		Input.vibrate_handheld(duration)
+	Haptics.pulse(duration)
 
 
 func _dismiss_tutorial() -> void:
@@ -856,6 +881,56 @@ func _dismiss_tutorial() -> void:
 	_tutorial_tween = create_tween()
 	_tutorial_tween.tween_property(_tutorial, "modulate:a", 0.0, tutorial_fade_time)
 	_tutorial_tween.tween_callback(_tutorial.hide)
+
+
+## Yeni bir mekanigi TANITIM KARTI ile gosterir (bkz. MechanicIntroCard).
+##
+## Kart ipucu etiketinden farkli olarak MODALDIR: kendiliginden solmaz, oyuncu
+## "Anladım" diyene kadar durur. Sebep, kartin bir kuralı ogretmesidir - oyuncu
+## nisan almaya baslayinca kaybolan bir toast, kurali okumaya firsat vermeden
+## kayboluyordu. Kart acikken firlatici kapatilir, boylece arkadan yanlislikla
+## atis yapilamaz.
+##
+## Bir bolum birden fazla yeni sey tanitiyorsa (mevcut kutuphanede olmaz - blok
+## bandi 26-40 ile engel bandi 41+ ayrik kumelerdir) sirayla gosterilir: biri
+## kapaninca digeri acilir. Blok mekanigi engel kuyrugundan ONCE gelir.
+func _show_next_intro_card() -> void:
+	if _intro_card.is_open():
+		return
+	if _pending_block_intro:
+		_pending_block_intro = false
+		_showing_block_intro = true
+		_suspend_launcher_for_intro()
+		_intro_card.show_block_mechanic()
+		return
+	if _pending_obstacle_intro_kinds.is_empty():
+		return
+	_showing_block_intro = false
+	_suspend_launcher_for_intro()
+	_intro_card.show_obstacle(_pending_obstacle_intro_kinds[0] as ObstacleData.Kind)
+
+
+func _suspend_launcher_for_intro() -> void:
+	# Ust uste acilan kartlarda ilk kaydedilen deger korunmali; aksi halde
+	# ikinci kart "kapali" durumu kaydedip firlaticiyi kalici kapatirdi.
+	if not _intro_card.is_open():
+		_launcher_enabled_before_intro = _launcher.enabled
+	_launcher.enabled = false
+
+
+## Kart kapandi: gorulen mekanik kalici olarak isaretlenir (AppRoot yazar),
+## sonra kuyrukta bekleyen varsa bir sonraki kart acilir.
+func _on_intro_card_dismissed() -> void:
+	if _showing_block_intro:
+		_showing_block_intro = false
+		block_mechanic_seen.emit()
+	elif not _pending_obstacle_intro_kinds.is_empty():
+		obstacle_kind_seen.emit(_pending_obstacle_intro_kinds.pop_front())
+
+	if _pending_block_intro or not _pending_obstacle_intro_kinds.is_empty():
+		_show_next_intro_card()
+		return
+	_launcher.enabled = _launcher_enabled_before_intro
 
 
 func _hide_message() -> void:

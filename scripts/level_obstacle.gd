@@ -16,6 +16,9 @@ var _motion_root: Node2D
 var _visual: Node2D
 var _path_visual: Node2D
 
+var _elapsed := 0.0
+var _running := false
+
 
 func setup(value: ObstacleData, as_preview := false) -> void:
 	data = value
@@ -28,6 +31,36 @@ func _ready() -> void:
 		return
 	position = data.position
 	_build()
+	apply_motion_time(0.0)
+	set_physics_process(false)
+
+
+## _motion_root'un pozisyonunu BURADAN, kendi _physics_process'imizden yaziyoruz -
+## ObstacleField'in disaridan cagirdigi bir metottan degil (bkz. _make_motion_root'taki
+## sync_to_physics notu icin obstacle_field.gd basligindaki aciklama).
+func _physics_process(delta: float) -> void:
+	if not _running:
+		return
+	_elapsed += delta
+	apply_motion_time(_elapsed)
+
+
+func start_motion() -> void:
+	_elapsed = 0.0
+	apply_motion_time(0.0)
+	_running = true
+	set_physics_process(true)
+
+
+func stop_motion() -> void:
+	_running = false
+	set_physics_process(false)
+
+
+func reset_motion() -> void:
+	_elapsed = 0.0
+	_running = false
+	set_physics_process(false)
 	apply_motion_time(0.0)
 
 
@@ -89,7 +122,17 @@ func _make_motion_root() -> Node2D:
 			var body := AnimatableBody2D.new()
 			body.collision_layer = OBSTACLE_LAYER
 			body.collision_mask = 0
-			body.sync_to_physics = true
+			# sync_to_physics BILEREK false: bu proje Godot 4.7.1'de sync_to_physics=true
+			# olan bir AnimatableBody2D, LevelObstacle agacinin bu derinliginde (govde ->
+			# bu dugum -> ObstacleField), _physics_process'ten gelen .position/.rotation
+			# yazimlarini sessizce yok sayiyor - donen cark hic donmuyor, kayan bariyer
+			# hic kaymiyordu (kullanicinin "kayan engeller hareket etmiyor" raporunun kok
+			# nedeni). sync_to_physics=false ile ayni yazimlar sorunsuz uyguluyor. Bunun
+			# pratikte bir bedeli yok: top zaten LevelSolver'la ayni sekilde her karede
+			# govdenin O ANKI konumuna gore taranan bir cast/rest-info testiyle hareket
+			# ediyor (bkz. CLAUDE.md, ball.gd), yani sync_to_physics'in asil sagladigi
+			# "govde hareketinden top'a hiz aktarimi" zaten hicbir yerde simule edilmiyor.
+			body.sync_to_physics = false
 			return body
 		_:
 			var body := StaticBody2D.new()

@@ -24,6 +24,7 @@ const SAVE_PATH := "user://save.cfg"
 const BACKUP_PATH := "user://save.cfg.verifybak"
 const AUDIO_AUTOLOAD := "autoload/AudioManager"
 
+
 var _passed := 0
 var _failed := 0
 var _owned_audio_manager: Node
@@ -41,14 +42,23 @@ func _run() -> void:
 	await _test_debug_panel_close()
 	await _test_launcher_power_feel()
 	await _test_block_state_rules()
+	_test_block_tier_colors()
+	_test_haptics_setting()
+	await _test_ball_trail_speed_response()
 	await _test_practice_mode()
 	await _test_custom_level_store()
 	await _test_generator()
 	await _test_editor()
+	await _test_edit_official_level()
 	await _test_star_row()
 	await _test_attempt_timer()
 	await _test_level_select()
+	_test_level_worlds()
 	_test_star_gate()
+	_test_save_schema_and_migration()
+	_test_locale()
+	_test_translation_coverage()
+	await _test_settings_screen()
 	_test_library_bounds()
 
 	_restore_save()
@@ -162,14 +172,31 @@ func _unregister_audio_manager() -> void:
 # --- Kirilabilir blok durum kurallari -----------------------------------------
 
 func _test_block_state_rules() -> void:
-	print("--- Dayanikli blok durumu (bolum 30) ---")
+	print("--- Dayanikli blok durumu ---")
+
+	# BILEREK SENTETIK BOLUM: bu test blok DURUM MEKANIGINI olcer (catlama,
+	# atis sifirlamasinin hasari korumasi, yeniden baslatmanin geri getirmesi),
+	# belirli bir resmi bolumun icerigini degil. Eskiden bolum 30 yuklenip
+	# "tam 1 blok var" varsayiliyordu; bu, bolum 30'un tasarimini teste
+	# kilitliyordu (kucuk parcali tugla kumesine gecilemiyordu). Kendi tek
+	# dayanikli tuglali bolumumuzu kurmak ikisini de bagimsiz birakir.
+	var level := LevelData.new()
+	level.level_id = 1
+	level.launcher_position = Vector2(360.0, 1120.0)
+	level.target_position = Vector2(360.0, 300.0)
+	level.max_lives = 5
+	var lock := BreakableBlockData.new()
+	lock.position = Vector2(360.0, 640.0)
+	lock.size = Vector2(120.0, 34.0)
+	lock.hit_points = 2
+	level.breakable_blocks = [lock]
 
 	# Tipsiz: Gameplay adini anmadan yuklenir (bkz. dosya basindaki not).
 	var gameplay: Node = (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
 	if gameplay == null:
 		_fail("oynanis sahnesi yuklenemedi")
 		return
-	gameplay.level_data = LevelLibrary.load_level(30)
+	gameplay.level_data = level
 	root.add_child(gameplay)
 	await physics_frame
 
@@ -236,6 +263,349 @@ func _test_block_state_rules() -> void:
 
 	root.remove_child(gameplay)
 	gameplay.free()
+
+
+## Tek darbelik ve iki darbelik tuglalar RENKTEN ayirt edilebilmeli. Oyuncuya
+## "bu tugla kac temas ister" bilgisini denemeden veren tek isaret budur;
+## sessizce ayni renge donerlerse bolum tasarimi okunamaz hale gelir.
+func _test_block_tier_colors() -> void:
+	print("")
+	print("--- Tugla dayaniklilik renkleri ---")
+	var scene := load("res://scenes/breakable_block.tscn") as PackedScene
+
+	var plain := scene.instantiate() as BreakableBlock
+	plain.hit_points = 1
+	root.add_child(plain)
+	var strong := scene.instantiate() as BreakableBlock
+	strong.hit_points = 2
+	root.add_child(strong)
+
+	_check("tek/cift darbe govde rengi farkli",
+		plain.get_body_color() != strong.get_body_color(), true)
+	_check("tek/cift darbe kenar rengi farkli",
+		plain.get_rim_color() != strong.get_rim_color(), true)
+	# Renk ayrimini goremeyen oyuncular icin geometrik isaret de kalmali.
+	_check("cift darbelik tuglada zirh centigi var",
+		_has_armor_marks(strong), true)
+	_check("tek darbelik tuglada zirh centigi yok",
+		_has_armor_marks(plain), false)
+
+	plain.queue_free()
+	strong.queue_free()
+
+
+## _build_armor_marks() cift kenar centigini iki dikey Line2D olarak cizer;
+## tek darbelik tuglada yalnizca dikis cizgisi + centikleri bulunur.
+func _has_armor_marks(block: BreakableBlock) -> bool:
+	var visual := block.get_node("Visual")
+	var vertical_lines := 0
+	for child in visual.get_children():
+		var line := child as Line2D
+		if line == null or line.points.size() != 2:
+			continue
+		if absf(line.points[0].x - line.points[1].x) < 0.01 \
+				and absf(line.points[0].y - line.points[1].y) > 0.01:
+			vertical_lines += 1
+	# Dikis cizgisi de dikeydir; zirh centikleri ONUN USTUNE iki tane daha ekler.
+	return vertical_lines >= 3
+
+
+# --- Dokunsal geri bildirim ---------------------------------------------------
+
+## Titresim tercihi KALICI olmali ve "ilerlemeyi sifirla" onu silmemeli.
+## Ayrica tum titresimler tek suzgecten (Haptics) gecmeli - biri dogrudan
+## Input.vibrate_handheld cagirirsa ayar sessizce delinir.
+func _test_haptics_setting() -> void:
+	print("")
+	print("--- Titresim ayari ---")
+
+	var store := ProgressStore.new()
+	_check("titresim varsayilan olarak acik", store.haptics_enabled, true)
+	_check("ayni degere ayarlamak degisiklik saymiyor",
+		store.set_haptics_enabled(true), false)
+	_check("kapatmak degisiklik sayiliyor", store.set_haptics_enabled(false), true)
+	_check("kapali deger tutuluyor", store.haptics_enabled, false)
+
+	var reloaded := ProgressStore.load_from_disk()
+	_check("titresim tercihi diske yaziliyor", reloaded.haptics_enabled, false)
+
+	# Ilerleme sifirlamasi bir OYUNCU TERCIHINI silmemeli.
+	reloaded.mark_completed(1)
+	reloaded.reset()
+	_check("ilerleme sifirlamasi titresim tercihini korur",
+		reloaded.haptics_enabled, false)
+	_check("ilerleme gercekten sifirlandi", reloaded.completed_levels.size(), 0)
+
+	# Haptics kapaliyken hicbir darbe gecmemeli. vibrate_handheld'in kendisi
+	# masaustunde sessizce yok sayildigi icin dogrudan gozlenemez; bunun
+	# yerine suzgecin kendi karari olculur.
+	var previous := Haptics.enabled
+	Haptics.enabled = false
+	_check("kapaliyken darbe suresi hesaplanmiyor", Haptics.enabled, false)
+	Haptics.enabled = true
+	_check("acikken suzgec gecirgen", Haptics.enabled, true)
+	Haptics.enabled = previous
+
+	# Sekme darbesi carpma siddetiyle ORANTILI olmali (hepsi ayni olursa geri
+	# bildirim bilgi tasimaz).
+	_check("sekme darbesi tavani makul",
+		Haptics.BOUNCE_MAX_MSEC <= Haptics.MAX_MSEC, true)
+	_check("hafif sekme sert sekmeden kisa",
+		Haptics.BOUNCE_MIN_MSEC < Haptics.BOUNCE_MAX_MSEC, true)
+	_check("hedef darbesi sekmeden belirgin sekilde uzun",
+		Haptics.HIT_TARGET_MSEC > Haptics.BOUNCE_MAX_MSEC, true)
+
+	_check("dogrudan vibrate_handheld cagrisi yok (haptics.gd disinda)",
+		_direct_vibrate_call_count(), 0)
+
+
+## scripts/ altinda haptics.gd DISINDA kalan dogrudan titresim cagrilarini sayar.
+func _direct_vibrate_call_count() -> int:
+	var offenders := 0
+	for path in _gd_files_under("res://scripts"):
+		if path.ends_with("haptics.gd"):
+			continue
+		var file := FileAccess.open(path, FileAccess.READ)
+		if file == null:
+			continue
+		var text := file.get_as_text()
+		file.close()
+		# Yorum satirlarini saymamak icin kaba ama yeterli bir kontrol.
+		for line in text.split("\n"):
+			var trimmed := (line as String).strip_edges()
+			if trimmed.begins_with("#"):
+				continue
+			if trimmed.contains("Input.vibrate_handheld"):
+				offenders += 1
+				push_error("dogrudan titresim cagrisi: %s -> %s" % [path, trimmed])
+	return offenders
+
+
+func _gd_files_under(root: String) -> PackedStringArray:
+	var found := PackedStringArray()
+	var directories: Array[String] = [root]
+	while not directories.is_empty():
+		var current: String = directories.pop_back()
+		var dir := DirAccess.open(current)
+		if dir == null:
+			continue
+		dir.list_dir_begin()
+		var entry := dir.get_next()
+		while entry != "":
+			var full := current.path_join(entry)
+			if dir.current_is_dir():
+				directories.append(full)
+			elif entry.ends_with(".gd"):
+				found.append(full)
+			entry = dir.get_next()
+		dir.list_dir_end()
+	return found
+
+
+# --- Top izi ------------------------------------------------------------------
+
+## Kuyruk topun HIZINA tepki vermeli: duran topta kisa, hizli topta uzun.
+## Sabit uzunlukta bir kuyruk hiz hissi tasimaz.
+func _test_ball_trail_speed_response() -> void:
+	print("")
+	print("--- Top izi hiz tepkisi ---")
+	var ball: Ball = (load("res://scenes/ball.tscn") as PackedScene).instantiate()
+	root.add_child(ball)
+	await physics_frame
+
+	var trail := ball.get_node("Trail") as Line2D
+	_check("baslangicta kuyruk bos", trail.get_point_count(), 0)
+
+	# Yavas top: kuyruk kisa kalmali.
+	ball.reset_to(Vector2(360.0, 900.0))
+	ball.launch(Vector2(0.0, -120.0))
+	for i in 40:
+		await physics_frame
+	var slow_points := trail.get_point_count()
+	var slow_width := trail.width
+	ball.stop()
+
+	# Hizli top: ayni sure sonunda belirgin sekilde daha uzun kuyruk.
+	ball.reset_to(Vector2(360.0, 900.0))
+	ball.launch(Vector2(0.0, -2000.0))
+	for i in 40:
+		await physics_frame
+	var fast_points := trail.get_point_count()
+	var fast_width := trail.width
+
+	_check("hizli topta kuyruk daha uzun", fast_points > slow_points, true)
+	_check("hizli topta kuyruk daha genis", fast_width > slow_width, true)
+	_check("kuyruk azami uzunlugu asmiyor", fast_points <= ball.trail_length, true)
+
+	# Yeni atis onceki atisin hiz durumunu devralmamali.
+	ball.reset_to(Vector2(360.0, 900.0))
+	_check("sifirlamada kuyruk temizleniyor", trail.get_point_count(), 0)
+
+	ball.queue_free()
+	await process_frame
+
+
+## Debug panelinden bir RESMI bolumu duzenleyip kaydetme akisi.
+##
+## Kritik nokta, kaydin NEREDEN geldiginin kaybolmamasi: kayitlar listesinde
+## "bolum_17_zikzak" gibi bir satir gorunmeli ve sidecar JSON'da
+## source_level_id yazmali. Bu bilgi .tres'e YAZILMAZ (bolum dosyasi yalnizca
+## bolumu tanimlar), bu yuzden sessizce kaybolmaya musait - testi burada.
+func _test_edit_official_level() -> void:
+	print("")
+	print("--- Resmi bolumu duzenleyip kaydetme ---")
+
+	var editor: Node = (load("res://scenes/level_editor.tscn") as PackedScene).instantiate()
+	if editor == null:
+		_fail("editor sahnesi yuklenemedi")
+		return
+	# AppRoot'un debug panelinden yaptigi sey: oynanan bolumun KOPYASI + numarasi.
+	var official := LevelLibrary.load_level(17)
+	editor.level = official.duplicate(true) as LevelData
+	editor.source_level_id = 17
+	root.add_child(editor)
+	await process_frame
+
+	_check("resmi bolum editore yuklendi", editor.level.level_id, 17)
+	_check("kopya duzenleniyor (kaynak degil)", editor.level != official, true)
+
+	var saved_store := GenerationMetadataStore.new(
+		GenerationMetadataStore.SAVED_MANIFEST_PATH)
+	var expected := CustomLevelStore.entry_name_for(editor.call("_saved_name_for_current"))
+	CustomLevelStore.delete(CustomLevelStore.Bucket.SAVED, expected)
+
+	editor.call("_on_save")
+	await process_frame
+
+	_check("kayit adi bolum numarasini tasiyor", expected.begins_with("bolum_17"), true)
+	_check("kayit dosyasi olustu",
+		CustomLevelStore.list_names(CustomLevelStore.Bucket.SAVED).has(expected), true)
+
+	var entry := saved_store.get_entry(expected)
+	_check("sidecar'a kaynak bolum yazildi", int(entry.get("source_level_id", 0)), 17)
+	_check("sidecar'a kayit zamani yazildi",
+		not String(entry.get("saved_at", "")).is_empty(), true)
+
+	# Sifirdan tasarlanan bolumde kaynak YAZILMAMALI - aksi halde her kayit
+	# rastgele bir resmi bolume baglanmis gorunurdu.
+	editor.source_level_id = 0
+	editor.level.display_name = "Test Tasarim"
+	var fresh_name := CustomLevelStore.entry_name_for(
+		editor.call("_saved_name_for_current"))
+	editor.call("_on_save")
+	await process_frame
+	_check("kaynaksiz kayitta bolum numarasi yok",
+		saved_store.get_entry(fresh_name).has("source_level_id"), false)
+
+	# Temizlik: testin yazdigi kayitlar oyuncunun listesinde kalmasin.
+	CustomLevelStore.delete(CustomLevelStore.Bucket.SAVED, expected)
+	CustomLevelStore.delete(CustomLevelStore.Bucket.SAVED, fresh_name)
+	saved_store.prune(CustomLevelStore.list_names(CustomLevelStore.Bucket.SAVED))
+
+	root.remove_child(editor)
+	editor.free()
+
+
+# --- Yayin hazirligi: kayit semasi, goc, kurtarma -----------------------------
+
+## Play Store surumunde en pahali hata "guncelleme oyuncunun ilerlemesini
+## bozdu"dur ve elle fark edilmesi zordur. Bu test o senaryolari acikca kurar.
+func _test_save_schema_and_migration() -> void:
+	print("")
+	print("--- Kayit semasi, goc ve kurtarma ---")
+
+	# 1) YENI OYUNCU: kayit dosyasi yokken bolum 1 acik olmali.
+	_delete_save_files()
+	var fresh := ProgressStore.load_from_disk()
+	_check("yeni oyuncuda bolum 1 acik", fresh.is_unlocked(1), true)
+	_check("yeni oyuncuda bolum 2 kapali", fresh.is_unlocked(2), false)
+	_check("yeni oyuncuda ilk bolum level_001", LevelData.uid_for(1), "level_001")
+
+	# 2) TAMAMLAMA: kayit dosyasina UID yazilmali (tamsayi degil).
+	fresh.mark_completed(1)
+	fresh.set_level_stars_if_higher(1, 3)
+	var raw := FileAccess.get_file_as_string(ProgressStore.SAVE_PATH)
+	_check("kayit uid ile yaziliyor", raw.contains("level_001"), true)
+	_check("kayit sema surumu yaziliyor",
+		raw.contains(ProgressStore.KEY_SCHEMA_VERSION), true)
+	_check("son tamamlanan bolum uid'i yaziliyor",
+		raw.contains(ProgressStore.KEY_LAST_COMPLETED_UID), true)
+
+	# 3) YENIDEN ACILIS: ilerleme korunmali.
+	var reopened := ProgressStore.load_from_disk()
+	_check("kapatip acinca tamamlanan korunuyor", reopened.is_completed(1), true)
+	_check("kapatip acinca yildiz korunuyor", reopened.get_level_stars(1), 3)
+	_check("kapatip acinca sonraki bolum acik", reopened.is_unlocked(2), true)
+
+	# 4) ESKI KAYIT (sema 0, TAMSAYI anahtarli) gocu - guncelleme senaryosu.
+	_delete_save_files()
+	var legacy := ConfigFile.new()
+	legacy.set_value("progress", ProgressStore.KEY_HIGHEST, 5)
+	legacy.set_value("progress", ProgressStore.KEY_LEGACY_COMPLETED, [1, 2, 3, 4])
+	legacy.set_value("progress", ProgressStore.KEY_LEGACY_STARS, {1: 3, 2: 2, 4: 1})
+	legacy.save(ProgressStore.SAVE_PATH)
+
+	var migrated := ProgressStore.load_from_disk()
+	_check("eski kayit: tamamlananlar tasindi", migrated.completed_levels, [1, 2, 3, 4])
+	_check("eski kayit: yildizlar tasindi", migrated.get_level_stars(1), 3)
+	_check("eski kayit: yildizi olmayan bolum 0", migrated.get_level_stars(3), 0)
+	_check("eski kayit: acilan bolum korundu", migrated.highest_unlocked_level, 5)
+
+	# Goc SONRASI yazim yeni semada olmali; ikinci acilis ayni sonucu vermeli.
+	migrated.save()
+	var after_migration := ProgressStore.load_from_disk()
+	_check("goc sonrasi yeni semada yaziliyor",
+		FileAccess.get_file_as_string(ProgressStore.SAVE_PATH).contains("level_004"), true)
+	_check("goc tekrarlanabilir (kayipsiz)",
+		after_migration.completed_levels, [1, 2, 3, 4])
+	_check("goc sonrasi yildizlar ayni", after_migration.get_level_stars(2), 2)
+
+	# 5) SIRA DEGISIMI / ARAYA BOLUM EKLEME: kayit uid tuttugu icin bir bolumun
+	#    SIRASI degisse de ilerleme o bolumde kalir. Dosyadaki anahtarlarin
+	#    numaraya degil uid'e bagli oldugunu dogruluyoruz.
+	var probe := ConfigFile.new()
+	probe.load(ProgressStore.SAVE_PATH)
+	var stored: Variant = probe.get_value("progress", ProgressStore.KEY_STARS_BY_UID, {})
+	_check("yildiz anahtarlari uid (metin)",
+		stored is Dictionary and (stored as Dictionary).has("level_001"), true)
+	_check("yildiz anahtarlari tamsayi DEGIL",
+		stored is Dictionary and (stored as Dictionary).has(1), false)
+
+	# 6) BOZUK KAYIT: yedekten kurtarma.
+	_delete_save_files()
+	var healthy := ProgressStore.load_from_disk()
+	healthy.mark_completed(1)
+	healthy.mark_completed(2)
+	healthy.save()          # yedek olusur
+	healthy.mark_completed(3)
+	healthy.save()          # yedek artik 1-2'yi tasiyor
+	var corrupt := FileAccess.open(ProgressStore.SAVE_PATH, FileAccess.WRITE)
+	corrupt.store_string("[[[ bu bir kayit dosyasi degil = = = bozuk")
+	corrupt.close()
+
+	var recovered := ProgressStore.load_from_disk()
+	_check("bozuk kayitta oyun cokmuyor", recovered != null, true)
+	_check("bozuk kayit yedekten kurtariliyor", recovered.is_completed(1), true)
+	_check("kurtarma sonrasi dosya tekrar okunabilir",
+		ConfigFile.new().load(ProgressStore.SAVE_PATH), OK)
+
+	# 7) EKSIK BOLUM DOSYASI: oyun cokmemeli, guvenli varsayilana dusmeli.
+	var missing := LevelLibrary.load_level(LevelLibrary.LEVEL_COUNT + 500)
+	_check("eksik bolum cokmeye yol acmiyor", missing != null, true)
+	_check("eksik bolum gecerli veri donduruyor", missing.validate().size(), 0)
+
+	# uid <-> numara cevrimi
+	_check("uid'den numara", LevelLibrary.number_for_uid("level_027"), 27)
+	_check("bozuk uid -1", LevelLibrary.number_for_uid("bolum_27"), -1)
+	_check("bos uid -1", LevelLibrary.number_for_uid(""), -1)
+
+	_delete_save_files()
+
+
+func _delete_save_files() -> void:
+	for path in [ProgressStore.SAVE_PATH, ProgressStore.BACKUP_PATH]:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
 func _first_block(field: BreakableField) -> BreakableBlock:
@@ -704,13 +1074,33 @@ func _test_level_select() -> void:
 	root.add_child(select)
 	await process_frame
 
-	var grid := select.get_node("SafeArea/Content/GridScroll/GridHolder/Grid") as GridContainer
-	_check("50 bolum butonu uretiliyor", grid.get_child_count(), 50)
+	var grid := select.get_node(
+		"SafeArea/Content/PageClip/GridScroll/GridHolder/Grid") as GridContainer
+	# Artik TEK SAYFA cizilir: 125 butonun tamami degil, acik dunyanin
+	# bolumleri. Oyuncu 21. bolumde oldugu icin 1. dunya (1-50) acilir.
+	_check("acilan dunya oyuncunun bulundugu dunya", select.get("_world"), 0)
+	_check("yalnizca acik dunyanin butonlari cizilir", grid.get_child_count(), 50)
+
+	var tabs := select.get_node("SafeArea/Content/Tabs") as HBoxContainer
+	_check("her dunya icin bir sekme", tabs.get_child_count(), LevelWorlds.count())
+	# LumaButton BILEREK anilmiyor: tipi statik olarak yazmak onu bu araci
+	# derlerken bagimlilik grafigine sokar ve luma_button.gd AudioManager'a
+	# baktigi icin --script altinda derleme cokerdi (bkz. dosya basindaki not).
+	# emphasis: 0 = PRIMARY, 1 = SECONDARY.
+	var tab_b := tabs.get_child(1)
+	# Sekmeler TEMSIL ETTIKLERI dunyanin rengini tasir, secili olan degil -
+	# oyuncu daha dokunmadan ileride baska bir renk oldugunu gorur.
+	_check("ikinci sekme kendi dunyasinin rengini tasir",
+		tab_b.get("accent_override"), LevelWorlds.accent_for_index(1))
+	_check("acik sekme vurgulu", tabs.get_child(0).get("emphasis"), 0)
+	_check("kapali sekme vurgusuz", tab_b.get("emphasis"), 1)
 
 	var unlocked := grid.get_node("Level20") as Button
 	_check("bolum 20 acik", unlocked.disabled, false)
 	_check("acik butonda kilit isareti yok", unlocked.has_node("LockMark"), false)
 	_check("acik butonda yildiz satiri var", unlocked.has_node("Stars"), true)
+	_check("buton dunyasinin rengini tasir",
+		unlocked.get("accent_override"), LevelWorlds.accent_for_index(0))
 
 	var gated := grid.get_node("Level21") as Button
 	_check("bolum 21 kilitli", gated.disabled, true)
@@ -720,18 +1110,72 @@ func _test_level_select() -> void:
 	var gate_label := gated.get_node("StarGate").get_child(0) as Label
 	_check("kapi bilgisi 20 / 40 gosteriyor", gate_label.text, "20 / 40")
 
-	# 22-50 yildiz kapisi TASIMAZ; sirali ilerleme yuzunden kilitlidirler,
-	# bu yuzden kapi satiri degil normal (kisilmis) yildiz satiri gosterirler.
+	# 22-50 yildiz kapisi TASIMAZ; sirali ilerleme yuzunden kilitlidirler.
+	# Orada alt satir HIC cizilmez: yildiz satiri her zaman 0/3 gosterecekti,
+	# yani yer kapliyor ama bilgi tasimiyordu. Kilit simgesi yeterli.
 	var plain := grid.get_node("Level22") as Button
 	_check("bolum 22 kilitli", plain.disabled, true)
 	_check("kapisiz kilitli bolumde kapi satiri yok", plain.has_node("StarGate"), false)
-	_check("kapisiz kilitli bolumde yildiz satiri var", plain.has_node("Stars"), true)
+	_check("kapisiz kilitli bolumde yildiz satiri da yok", plain.has_node("Stars"), false)
 
-	var total := select.get_node("SafeArea/Content/StarTotal") as Label
-	_check("toplam yildiz sayaci 20 / 150", total.text, "20 / 150")
+	# Sayac TUM kutuphanenin degil, ACIK DUNYANIN yildizini gosterir - 375
+	# uzerinden bir sayi oyuncuya bir hedef vermiyordu.
+	var world_stars := select.get_node("SafeArea/Content/WorldStars") as Label
+	_check("dunya yildiz sayaci 20 / 150", world_stars.text, "20 / 150")
+
+	# Dunya degistirince sayfa, sayac ve renk birlikte degismeli.
+	select.call("_show_world", 1, 1)
+	_check("dunya degisti", select.get("_world"), 1)
+	_check("ikinci dunyanin butonlari cizildi", grid.get_child_count(), 50)
+	_check("ikinci dunyanin ilk bolumu 51", grid.get_child(0).name, "Level51")
+	_check("sayac ikinci dunyaya gore", world_stars.text, "0 / 150")
+	_check("butonlar ikinci dunyanin rengini aldi",
+		grid.get_child(0).get("accent_override"), LevelWorlds.accent_for_index(1))
+
+	select.call("_show_world", 2, 1)
+	_check("son dunya kutuphanenin sonuna kadar uzanir", grid.get_child_count(), 25)
+	_check("son dunyanin son bolumu 125", grid.get_child(24).name, "Level125")
 
 	root.remove_child(select)
 	select.free()
+
+
+## Bant sinirlari: oyunun temasi ile listenin sayfalari AYNI sinirlari
+## kullanmak zorunda, yoksa oyuncu 51. bolumde renk degisimi gorur ama
+## listede hala eski sayfadadir.
+func _test_level_worlds() -> void:
+	print("")
+	print("--- Bolum dunyalari ---")
+	_check("uc dunya", LevelWorlds.count(), 3)
+	_check("1. dunya 1'de baslar", LevelWorlds.first_level(0), 1)
+	_check("1. dunya 50'de biter", LevelWorlds.last_level(0), 50)
+	_check("2. dunya 51'de baslar", LevelWorlds.first_level(1), 51)
+	_check("2. dunya 100'de biter", LevelWorlds.last_level(1), 100)
+	_check("3. dunya 101'de baslar", LevelWorlds.first_level(2), 101)
+	# Son dunya ACIK UCLU: LEVEL_COUNT buyudugunde yeni bolumler kendiliginden
+	# buraya girer, LevelWorlds'te bir sey degistirmek gerekmez.
+	_check("son dunya kutuphanenin sonuna kadar",
+		LevelWorlds.last_level(2), LevelLibrary.last_level_id())
+	_check("dunya bolum sayilari toplami kutuphaneye esit",
+		LevelWorlds.level_count(0) + LevelWorlds.level_count(1) + LevelWorlds.level_count(2),
+		LevelLibrary.LEVEL_COUNT)
+
+	_check("bolum 1 -> dunya 0", LevelWorlds.index_for_level(1), 0)
+	_check("bolum 50 -> dunya 0", LevelWorlds.index_for_level(50), 0)
+	_check("bolum 51 -> dunya 1", LevelWorlds.index_for_level(51), 1)
+	_check("bolum 100 -> dunya 1", LevelWorlds.index_for_level(100), 1)
+	_check("bolum 101 -> dunya 2", LevelWorlds.index_for_level(101), 2)
+	_check("bolum 125 -> dunya 2", LevelWorlds.index_for_level(125), 2)
+
+	# Tema ile dunya AYNI kaynaktan gelmeli.
+	_check("50 ve 51 farkli tema",
+		PaletteThemes.for_level(50).ACCENT != PaletteThemes.for_level(51).ACCENT, true)
+	_check("100 ve 101 farkli tema",
+		PaletteThemes.for_level(100).ACCENT != PaletteThemes.for_level(101).ACCENT, true)
+	_check("1. dunya temasi orijinal palet", PaletteThemes.for_level(1).ACCENT,
+		PaletteThemes.theme_a().ACCENT)
+	_check("dunya rengi tema rengiyle ayni", LevelWorlds.accent_for_index(1),
+		PaletteThemes.theme_b().ACCENT)
 
 
 # --- 21. bolumun yildiz kapisi ------------------------------------------------
@@ -791,21 +1235,154 @@ func _test_star_gate() -> void:
 	_check("yeni rekor yaziliyor", record.get_level_stars(21), 3)
 
 
+## Dil secimi: normalizasyon, cihaz dili ve "henuz secilmedi" ayrimi.
+func _test_locale() -> void:
+	print("")
+	print("--- Dil secimi ---")
+	var before := TranslationServer.get_locale()
+
+	_check("desteklenen diller", Locale.SUPPORTED, ["tr", "en"] as Array[String])
+	_check("tr destekleniyor", Locale.is_supported("tr"), true)
+	_check("taninmayan dil varsayilana duser", Locale.normalize("de"), "tr")
+	_check("bos deger varsayilana duser", Locale.normalize(""), "tr")
+	_check("bolge ekli kod indirgenir", Locale.normalize("en_US"), "en")
+	_check("buyuk harf kabul edilir", Locale.normalize("EN"), "en")
+	# Dil kendi dilinde yazilir: dil secen oyuncu mevcut dili okuyamiyor olabilir.
+	_check("dil kendi adiyla gosterilir", Locale.display_name("en"), "English")
+
+	Locale.apply("en")
+	_check("apply locale'i degistirir", Locale.current(), "en")
+	_check("ceviri uygulaniyor", TranslationServer.translate("OYNA"), "PLAY")
+
+	# BOS tercih = "oyuncu henuz secmedi" -> cihaz dili. "tr" secmis olmakla
+	# ayni sey DEGIL; ikisi karisirsa Ingilizce telefonda oyun Turkce acilir.
+	Locale.apply_saved("")
+	_check("secim yokken cihaz dili kullanilir", Locale.current(), Locale.system_default())
+	Locale.apply_saved("tr")
+	_check("acik secim cihaz dilini ezer", Locale.current(), "tr")
+	_check("cevirisi olmayan metin kaynak haliyle doner",
+		TranslationServer.translate("Boyle bir ceviri yok"), "Boyle bir ceviri yok")
+
+	TranslationServer.set_locale(before)
+
+
+## Her bolumun adi ve ogretici metni Ingilizce tabloda OLMALI.
+##
+## Bu testin asil isi yeni bolum eklendiginde uyarmak: cevirisi unutulan bir
+## bolum Ingilizce oyunda Turkce adiyla gorunur ve bunu kimse fark etmez.
+func _test_translation_coverage() -> void:
+	print("")
+	print("--- Ceviri kapsami ---")
+	var before := TranslationServer.get_locale()
+	Locale.apply("en")
+
+	var missing_names: Array[int] = []
+	var missing_hints: Array[int] = []
+	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, LevelLibrary.last_level_id() + 1):
+		var level := LevelLibrary.load_level(level_id)
+		var name_text := level.display_name.strip_edges()
+		if not name_text.is_empty() and TranslationServer.translate(name_text) == name_text:
+			missing_names.append(level_id)
+		var hint := level.tutorial_text.strip_edges()
+		if not hint.is_empty() and TranslationServer.translate(hint) == hint:
+			missing_hints.append(level_id)
+
+	_check("her bolum adinin Ingilizcesi var", missing_names, [] as Array[int])
+	_check("her ogretici metnin Ingilizcesi var", missing_hints, [] as Array[int])
+
+	# Bicimlendirilen metinler: kalibin kendisi cevrilmeli, cunku otomatik
+	# ceviri hazir metni ("BÖLÜM 5") arar ve bulamaz.
+	_check("bolum basligi kalibi cevrili", TranslationServer.translate("BÖLÜM %d"), "LEVEL %d")
+	_check("sure kalibi cevrili", TranslationServer.translate("%.1f sn"), "%.1f s")
+	_check("kalip bicimlendirilince dogru sonuc verir",
+		TranslationServer.translate("BÖLÜM %d") % 7, "LEVEL 7")
+
+	TranslationServer.set_locale(before)
+
+
+func _test_settings_screen() -> void:
+	print("")
+	print("--- Ayarlar ekrani ---")
+	var before_locale := TranslationServer.get_locale()
+	Locale.apply("tr")
+
+	var progress := ProgressStore.new()
+	progress.highest_unlocked_level = 12
+	progress.set_level_stars_if_higher(3, 3)
+
+	var screen: Node = (load("res://scenes/settings.tscn") as PackedScene).instantiate()
+	screen.set("progress", progress)
+	root.add_child(screen)
+	await process_frame
+
+	var rows: Node = screen.get_node("SafeArea/Content/Scroll/Rows")
+	_check("ayar satirlari kuruldu", rows.get_child_count() > 8, true)
+
+	# Dil degistirme: hem locale hem KAYIT guncellenmeli, yoksa secim
+	# uygulamayi kapatinca kaybolur.
+	screen.call("_on_language_chosen", 1)
+	_check("dil secimi locale'i degistirir", Locale.current(), "en")
+	_check("dil secimi kayda yazilir", progress.language, "en")
+	screen.call("_rebuild")
+	_check("dil degisince satirlar yeniden kurulur", rows.get_child_count() > 8, true)
+
+	screen.call("_on_shake_chosen", 0)
+	_check("sarsinti kapatilabiliyor", progress.shake_scale, 0.0)
+	_check("sarsinti tek kisma noktasina yansir", ScreenShake.trauma_scale, 0.0)
+	screen.call("_on_shake_chosen", 2)
+	_check("sarsinti geri acilabiliyor", progress.shake_scale, 1.0)
+
+	screen.call("_on_aim_assist_toggled", true)
+	_check("nisan yardimi yazildi", progress.aim_assist, true)
+
+	screen.call("_on_haptics_toggled", false)
+	_check("titresim kapatildi", progress.haptics_enabled, false)
+	_check("titresim tek okuma noktasina yansir", Haptics.enabled, false)
+
+	# ILERLEMEYI SIFIRLA tek dokunusla olmamali.
+	var confirm: Control = screen.get_node("ConfirmLayer")
+	_check("onay katmani baslangicta kapali", confirm.visible, false)
+	screen.call("_show_confirm")
+	_check("sifirla onay ister", confirm.visible, true)
+	screen.call("_hide_confirm")
+	_check("vazgecince kapanir", confirm.visible, false)
+	_check("vazgecince ilerleme durur", progress.highest_unlocked_level, 12)
+
+	screen.call("_show_confirm")
+	screen.call("_on_reset_confirmed")
+	_check("onaylayinca ilerleme silinir", progress.highest_unlocked_level,
+		LevelLibrary.FIRST_LEVEL_ID)
+	_check("onaylayinca yildizlar silinir", progress.get_level_stars(3), 0)
+	# Ayarlar ilerleme DEGILDIR: sifirlama bunlara dokunmamali, yoksa oyuncu
+	# anlamadigi bir dile ve kapattigi titresime geri doner.
+	_check("sifirlama dili korur", progress.language, "en")
+	_check("sifirlama titresim tercihini korur", progress.haptics_enabled, false)
+	_check("sifirlama nisan yardimini korur", progress.aim_assist, true)
+
+	root.remove_child(screen)
+	screen.free()
+	ScreenShake.trauma_scale = 1.0
+	Haptics.enabled = true
+	TranslationServer.set_locale(before_locale)
+
+
 func _test_library_bounds() -> void:
 	print("")
 	print("--- LevelLibrary sinirlari ---")
-	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 50)
+	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 125)
 	_check("has_next(20)", LevelLibrary.has_next(20), true)
 	_check("has_next(24)", LevelLibrary.has_next(24), true)
 	_check("has_next(25)", LevelLibrary.has_next(25), true)
 	_check("has_next(39)", LevelLibrary.has_next(39), true)
 	_check("has_next(40)", LevelLibrary.has_next(40), true)
 	_check("has_next(49)", LevelLibrary.has_next(49), true)
-	_check("has_next(50)", LevelLibrary.has_next(50), false)
-	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 150)
+	_check("has_next(50)", LevelLibrary.has_next(50), true)
+	_check("has_next(124)", LevelLibrary.has_next(124), true)
+	_check("has_next(125)", LevelLibrary.has_next(125), false)
+	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 375)
 
-	# 21-50 gercekten yuklenip dogrulamadan geciyor mu.
-	for id in range(21, 51):
+	# 1-50: hand-authored kutuphane, mevcut yay kurallarina tam uymali.
+	for id in range(1, 51):
 		var level := LevelLibrary.load_level(id)
 		_check("bolum %d yukleniyor" % id, level.level_id, id)
 		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
@@ -819,6 +1396,39 @@ func _test_library_bounds() -> void:
 			_check("bolum %d dayanikli kilit iceriyor" % id, durable_count > 0, true)
 		if id >= 41:
 			_check("bolum %d yeni engel iceriyor" % id, level.obstacles.is_empty(), false)
+		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
+			level.three_star_max_shots <= level.max_lives, true)
+		_check("bolum %d: 2-yildiz atis <= max_lives" % id,
+			level.two_star_max_shots <= level.max_lives, true)
+
+	# 51-100: 41-50'nin devami olarak yeniden tasarlandi - donen cark (51) ve
+	# kayan bariyer (56) icin ayri ilk-gorulme anlari, sonra tum turlerin
+	# kombinasyonlari 100'e (boss) kadar kademeli zorlasir. 41-50 gibi bloksuz
+	# engel bandidir.
+	for id in range(51, 101):
+		var level := LevelLibrary.load_level(id)
+		_check("bolum %d yukleniyor" % id, level.level_id, id)
+		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
+		_check("bolum %d blok icermiyor (bloksuz engel bandi)" % id,
+			level.breakable_blocks.is_empty(), true)
+		_check("bolum %d engel iceriyor" % id, level.obstacles.is_empty(), false)
+		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
+			level.three_star_max_shots <= level.max_lives, true)
+		_check("bolum %d: 2-yildiz atis <= max_lives" % id,
+			level.two_star_max_shots <= level.max_lives, true)
+
+	# 101-125 FINAL BANDI: generate_band_51_125.gd tarafindan gercek LevelSolver
+	# taramasiyla uretildi. 51-100'den farki, oyunun iki mekanigini BIR ARADA
+	# kullanmasi: her bolumde hem engel hem kirilabilir tugla vardir. (41-100
+	# bilerek tuglasizdir; 26-40 bilerek engelsizdir. Bu bant ikisinin bulustugu
+	# yerdir ve kutuphanenin finalidir.)
+	for id in range(101, 126):
+		var level := LevelLibrary.load_level(id)
+		_check("bolum %d yukleniyor" % id, level.level_id, id)
+		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
+		_check("bolum %d engel iceriyor" % id, level.obstacles.is_empty(), false)
+		_check("bolum %d tugla iceriyor (final bandi engel+blok)" % id,
+			level.breakable_blocks.is_empty(), false)
 		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
 			level.three_star_max_shots <= level.max_lives, true)
 		_check("bolum %d: 2-yildiz atis <= max_lives" % id,

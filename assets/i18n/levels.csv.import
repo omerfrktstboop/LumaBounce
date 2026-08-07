@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://clx4rh4ry848e"
+
+[deps]
+
+files=["res://assets/i18n/levels.tr.translation", "res://assets/i18n/levels.en.translation"]
+
+source_file="res://assets/i18n/levels.csv"
+dest_files=["res://assets/i18n/levels.tr.translation", "res://assets/i18n/levels.en.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

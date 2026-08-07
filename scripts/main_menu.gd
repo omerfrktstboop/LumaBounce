@@ -7,8 +7,8 @@ extends Control
 ## boylece 720x1280 referansindan sapan ekran oranlarinda ve centikli
 ## cihazlarda da dogru konumlanir.
 ##
-## OYNA kalinan bolumu acar, BOLUMLER bolum secim ekranini acar. Ayarlar
-## henuz yok ve sade bir "Yakinda" geri bildirimi verir.
+## OYNA kalinan bolumu acar, BOLUMLER bolum secim ekranini, dislisi de
+## ayarlar ekranini acar.
 ##
 ## Ses butonu yerel bir bayrak TUTMAZ: tek dogruluk kaynagi AudioManager'dir.
 ## Ikon hem acilista hem de mute_changed sinyaliyle guncellenir, boylece
@@ -19,11 +19,14 @@ extends Control
 
 signal play_pressed(level_id: int)
 signal levels_requested()
+signal settings_requested()
 
 ## AppRoot tarafindan add_child'dan ONCE atanir: kalinan bolum.
 var resume_level_id := 1
 
-@export var coming_soon_text := "Yakında"
+## Kisa bilgi mesaji icin ayarlar. Su an menude bunu tetikleyen bir yol yok
+## (ayarlar dislisi artik gercek ekrani aciyor); yapi ileride "kaydedildi",
+## "internet yok" gibi anlik geri bildirimler icin duruyor.
 @export var toast_visible_time := 1.2
 @export var toast_fade_in := 0.18
 @export var toast_fade_out := 0.32
@@ -46,17 +49,13 @@ func _ready() -> void:
 
 	_play_button.pressed.connect(_on_play_pressed)
 	_levels_button.pressed.connect(levels_requested.emit)
-	_settings_button.pressed.connect(_on_coming_soon_pressed)
+	_settings_button.pressed.connect(settings_requested.emit)
 	_sound_button.pressed.connect(AudioManager.toggle_muted)
 	AudioManager.mute_changed.connect(_on_mute_changed)
 
 
 func _on_play_pressed() -> void:
 	play_pressed.emit(resume_level_id)
-
-
-func _on_coming_soon_pressed() -> void:
-	_show_toast(coming_soon_text)
 
 
 func _on_mute_changed(_muted: bool) -> void:

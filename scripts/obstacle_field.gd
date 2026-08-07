@@ -2,19 +2,20 @@ class_name ObstacleField
 extends Node2D
 
 ## LevelData.obstacles dizisini runtime veya editor onizlemesine kurar.
+##
+## Zamanlama (start/stop/reset_motion) her LevelObstacle'a YONLENDIRILIR - kendi
+## _elapsed sayacini burada tutmuyoruz. Sebep: Godot 4.7.1'de sync_to_physics=true
+## + gercek CollisionShape2D'si olan bir AnimatableBody2D, pozisyonu yazan dugum
+## TORUNU ise (bu dugum -> LevelObstacle -> govde, iki seviye) yazimlari sessizce
+## yok sayiyor; ayni govde DOGRUDAN COCUK olarak yazilirsa (LevelObstacle kendi
+## _physics_process'inde kendi govdesini yaziyorsa) sorunsuz calisiyor. Bkz.
+## level_obstacle.gd'deki LevelObstacle._physics_process.
 
 signal hazard_triggered(reason: String, at: Vector2)
 
 @export var preview_only := false
 
 var _nodes: Array[LevelObstacle] = []
-var _elapsed := 0.0
-var _running := false
-
-
-func _ready() -> void:
-	process_physics_priority = -10
-	set_physics_process(false)
 
 
 func build(obstacles: Array[ObstacleData]) -> void:
@@ -31,8 +32,6 @@ func build(obstacles: Array[ObstacleData]) -> void:
 
 
 func clear() -> void:
-	_running = false
-	set_physics_process(false)
 	for obstacle in _nodes:
 		if is_instance_valid(obstacle):
 			remove_child(obstacle)
@@ -41,22 +40,21 @@ func clear() -> void:
 
 
 func start_motion() -> void:
-	_elapsed = 0.0
-	_apply_time(0.0)
-	_running = true
-	set_physics_process(true)
+	for obstacle in _nodes:
+		if is_instance_valid(obstacle):
+			obstacle.start_motion()
 
 
 func stop_motion() -> void:
-	_running = false
-	set_physics_process(false)
+	for obstacle in _nodes:
+		if is_instance_valid(obstacle):
+			obstacle.stop_motion()
 
 
 func reset_motion() -> void:
-	_elapsed = 0.0
-	_running = false
-	set_physics_process(false)
-	_apply_time(0.0)
+	for obstacle in _nodes:
+		if is_instance_valid(obstacle):
+			obstacle.reset_motion()
 
 
 func get_obstacle_node(index: int) -> LevelObstacle:
@@ -67,16 +65,3 @@ func set_obstacle_position(index: int, value: Vector2) -> void:
 	var obstacle := get_obstacle_node(index)
 	if obstacle != null:
 		obstacle.set_data_position(value)
-
-
-func _physics_process(delta: float) -> void:
-	if not _running:
-		return
-	_elapsed += delta
-	_apply_time(_elapsed)
-
-
-func _apply_time(seconds: float) -> void:
-	for obstacle in _nodes:
-		if is_instance_valid(obstacle):
-			obstacle.apply_motion_time(seconds)

@@ -14,6 +14,14 @@ extends Camera2D
 @export var max_offset := 14.0
 @export var decay_per_second := 3.2
 
+## Oyuncunun ayarlardan sectigi sarsinti carpani (0.0 = kapali, 1.0 = normal).
+##
+## Haptics.enabled ile AYNI desen ve ayni sebep: sarsinti alti ayri yerden
+## tetikleniyor (sekme, blok kirma, hedef, tehlike...). Ayari her cagri
+## yerinde carpmaya kalkarsak biri mutlaka unutulur ve tercih sessizce
+## sizar. Tek kisma noktasi burasi; AppRoot ProgressStore'dan doldurur.
+static var trauma_scale := 1.0
+
 var _trauma := 0.0
 
 
@@ -32,6 +40,9 @@ func _process(delta: float) -> void:
 	offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * max_offset * amount
 
 
-## [param amount] 0..1 araliginda eklenecek sarsinti siddeti.
+## [param amount] 0..1 araliginda eklenecek sarsinti siddeti. Oyuncunun
+## ayari burada uygulanir, cagiran yerlerde degil (bkz. trauma_scale).
 func add_trauma(amount: float) -> void:
-	_trauma = clampf(_trauma + amount, 0.0, 1.0)
+	if trauma_scale <= 0.0:
+		return
+	_trauma = clampf(_trauma + amount * trauma_scale, 0.0, 1.0)

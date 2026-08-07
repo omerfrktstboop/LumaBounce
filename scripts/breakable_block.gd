@@ -34,9 +34,18 @@ signal damaged(at: Vector2, remaining_hits: int, maximum_hits: int)
 			_rebuild()
 
 @export_group("Gorunum")
+## Tek darbelik (hit_points == 1) tugla renkleri.
 @export var surface_color := Palette.SURFACE_BLOCK
 @export var edge_color := Palette.SURFACE_BLOCK_EDGE
 @export var seam_color := Palette.SURFACE_BLOCK_SEAM
+## Iki darbelik (hit_points == 2) tugla renkleri - bilerek FARKLI bir ton
+## ailesi (bronz/amber). Oyuncu kac temas gerektigini denemeden, tek bakista
+## renkten anlar. Renk tek basina birakilmaz: _build_armor_marks() ayrica
+## cift kenar centigi de cizer, boylece renk ayrimini goremeyen oyuncular
+## icin de bilgi kaybolmaz.
+@export var strong_surface_color := Palette.SURFACE_BLOCK_STRONG
+@export var strong_edge_color := Palette.SURFACE_BLOCK_STRONG_EDGE
+@export var strong_seam_color := Palette.SURFACE_BLOCK_STRONG_SEAM
 ## Panellerin yuvarlak stadyumuna karsilik blok bilerek kose hatlidir.
 @export var corner_radius := 6.0
 @export var outline_width := 2.6
@@ -140,6 +149,19 @@ func _apply_shape() -> void:
 	_shape.shape = rect
 
 
+## Bu tuglanin renk seti - dayanikliligina gore secilir (bkz. strong_* exportlari).
+func get_body_color() -> Color:
+	return strong_surface_color if hit_points > 1 else surface_color
+
+
+func get_rim_color() -> Color:
+	return strong_edge_color if hit_points > 1 else edge_color
+
+
+func get_seam_color() -> Color:
+	return strong_seam_color if hit_points > 1 else seam_color
+
+
 func _build_visual() -> void:
 	_visual.scale = Vector2.ONE
 	_visual.modulate = Color.WHITE
@@ -147,8 +169,8 @@ func _build_visual() -> void:
 		child.queue_free()
 
 	var body := ShapeBuilder.rounded_rect(block_size, corner_radius, 3)
-	_visual.add_child(ShapeBuilder.make_polygon(body, surface_color))
-	_visual.add_child(ShapeBuilder.make_outline(body, edge_color, outline_width))
+	_visual.add_child(ShapeBuilder.make_polygon(body, get_body_color()))
+	_visual.add_child(ShapeBuilder.make_outline(body, get_rim_color(), outline_width))
 	_build_seam()
 	if hit_points > 1:
 		_build_armor_marks()
@@ -161,7 +183,7 @@ func _build_visual() -> void:
 func _build_seam() -> void:
 	var half := block_size * 0.5
 	var inset := minf(half.y * 0.42, 8.0)
-	var color := Color(seam_color, seam_alpha)
+	var color := Color(get_seam_color(), seam_alpha)
 
 	var seam := Line2D.new()
 	seam.points = PackedVector2Array([
@@ -189,7 +211,7 @@ func _build_seam() -> void:
 ## Iki canli tuglayi normal tugladan ilk bakista ayiran cift kenar isareti.
 func _build_armor_marks() -> void:
 	var half := block_size * 0.5
-	var color := Color(edge_color, 0.72)
+	var color := Color(get_rim_color(), 0.72)
 	for side in [-1.0, 1.0]:
 		var mark := Line2D.new()
 		mark.points = PackedVector2Array([
@@ -265,8 +287,8 @@ func _draw() -> void:
 	var half := block_size * 0.5
 	var slice_width := block_size.x / float(shard_count)
 	var shard_half := Vector2(slice_width * 0.40, half.y * 0.72)
-	var body_color := Color(surface_color, alpha)
-	var rim_color := Color(edge_color, alpha * 0.9)
+	var body_color := Color(get_body_color(), alpha)
+	var rim_color := Color(get_rim_color(), alpha * 0.9)
 
 	for i in shard_count:
 		var center_x := -half.x + slice_width * (float(i) + 0.5)

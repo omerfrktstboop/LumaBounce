@@ -1,44 +1,44 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_trws1"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
 
-[sub_resource type="Resource" id="Panel_lower"]
+[sub_resource type="Resource" id="Resource_kn154"]
+script = ExtResource("3")
+position = Vector2(416.52948, 703.02)
+size = Vector2(190, 28)
+inner_radius = 78.0
+
+[sub_resource type="Resource" id="Resource_skpx1"]
+script = ExtResource("3")
+kind = 1
+position = Vector2(233.45218, 677.2445)
+rotation_degrees = -12.0
+size = Vector2(70, 70)
+
+[sub_resource type="Resource" id="Resource_u7psm"]
 script = ExtResource("2")
-position = Vector2(230, 830)
-rotation_degrees = 30.0
+position = Vector2(174.21494, 788.549)
+rotation_degrees = 34.742255210876465
 length = 320.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Panel_upper"]
+[sub_resource type="Resource" id="Resource_yl12a"]
 script = ExtResource("2")
-position = Vector2(500, 520)
-rotation_degrees = 30.0
+position = Vector2(443.9955, 482.1493)
+rotation_degrees = 27.392773628234863
 length = 340.0
 thickness = 26.0
-
-[sub_resource type="Resource" id="Mover_main"]
-script = ExtResource("3")
-kind = 3
-position = Vector2(360, 650)
-rotation_degrees = 0.0
-size = Vector2(150, 30)
-motion_direction_degrees = 0.0
-travel_distance = 100.0
-motion_period = 3.2
 
 [resource]
 script = ExtResource("1")
 level_id = 44
-display_name = "Kayan Hat"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(560, 280)
-panels = Array[PanelData]([SubResource("Panel_lower"), SubResource("Panel_upper")])
-obstacles = Array[ObstacleData]([SubResource("Mover_main")])
-max_lives = 5
-tutorial_text = "Bariyer yalnizca top ucarken hareket eder."
+display_name = "Sıkı Geçit"
+target_position = Vector2(564.4249, 305.61957)
+panels = Array[ExtResource("2")]([SubResource("Resource_u7psm"), SubResource("Resource_yl12a")])
+obstacles = Array[ExtResource("3")]([SubResource("Resource_kn154"), SubResource("Resource_skpx1")])
 two_star_max_seconds = 110.0
 two_star_max_shots = 3
 three_star_max_seconds = 58.0
-three_star_max_shots = 2

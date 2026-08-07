@@ -50,6 +50,23 @@ static func level_path(level_id: int) -> String:
 	return PATH_FORMAT % level_id
 
 
+## uid -> bolum numarasi ("level_027" -> 27). Taninmayan bicimde -1 doner,
+## boylece cagiran (kayit okuyucusu) girisi sessizce atlar.
+##
+## Bugun uid'ler numaradan turetildigi icin cevrim saf metin islemidir ve
+## 125 dosyayi acmak gerekmez. Ileride bir bolume numarasindan BAGIMSIZ bir
+## uid verilirse burasi bir indeks tablosuna bakacak sekilde genisletilmeli;
+## cagiranlarin hicbiri degismek zorunda kalmaz.
+static func number_for_uid(uid: String) -> int:
+	var clean := uid.strip_edges()
+	if not clean.begins_with("level_"):
+		return -1
+	var digits := clean.substr(6)
+	if digits.is_empty() or not digits.is_valid_int():
+		return -1
+	return int(digits)
+
+
 ## Istenen bolumu yukler. Bulunamaz veya gecersizse level_01'e, o da
 ## yuklenemezse bos ama calisir bir varsayilana duser.
 static func load_level(level_id: int, play_rect := LevelData.DEFAULT_PLAY_RECT) -> LevelData:

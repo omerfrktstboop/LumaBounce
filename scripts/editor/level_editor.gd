@@ -44,6 +44,11 @@ var level: LevelData
 ## Test sahnesinden editore donerken AppRoot tarafindan add_child'dan ONCE
 ## atanir. Uretilen/kaydedilen parti ve acik indeks boylece kaybolmaz.
 var initial_batch_context := {}
+## Duzenlenen bolum bir RESMI bolumden geldiyse onun numarasi, yoksa 0.
+## AppRoot, debug panelinden "DUZENLE" ile girildiginde oynanan bolumun
+## numarasini buraya yazar; KAYDET bunu sidecar'a gecirir, boylece kayitlar
+## listesinde "Bölüm 17" etiketi gorunur (bkz. _on_save, _refresh_library_rows).
+var source_level_id := 0
 
 @onready var _world: LevelWorld = $World
 @onready var _camera: Camera2D = $EditorCamera
@@ -65,6 +70,10 @@ var _generator: LevelGenerator
 var _ai_coordinator: AILevelGenerationCoordinator
 var _generation_form: AIGenerationForm
 var _metadata_store := GenerationMetadataStore.new()
+## Kayitlar kovasinin kendi sidecar'i - uretim manifestinden ayri tutulur,
+## cunku uretim partisi her seferinde tamamen ezilir, kayitlar birikir.
+var _saved_metadata_store := GenerationMetadataStore.new(
+	GenerationMetadataStore.SAVED_MANIFEST_PATH)
 var _target_preview: Node2D
 var _launcher_preview: Node2D
 
@@ -758,18 +767,40 @@ func _refresh_solution_state() -> void:
 ## KAYDET her zaman KAYITLAR kovasina yazar - uretilen bir bolume basmak onu
 ## "begendim, kalsin" demektir ve bir sonraki uretimin silmesinden kurtarir.
 func _on_save() -> void:
-	var level_name := level.display_name
-	if level_name.is_empty() or level_name == "Yeni Bölüm":
-		level_name = "bolum_%s" % Time.get_datetime_string_from_system().replace(":", "")
+	var level_name := _saved_name_for_current()
 	var path := CustomLevelStore.save(CustomLevelStore.Bucket.SAVED, level, level_name)
 	var copied := CustomLevelStore.copy_to_clipboard(level)
 	if path.is_empty():
 		_status_text = "Kaydedilemedi."
-	elif copied:
-		_status_text = "Kayıtlara alındı + panoya kopyalandı: %s" % level_name
+		_refresh_info()
+		return
+
+	# Hangi resmi bolumden turedigi .tres'e DEGIL sidecar JSON'a yazilir:
+	# .tres yalnizca bolumun kendisini tanimlar, "bunu nereden duzenledim"
+	# bilgisi editorun defteridir (bkz. GenerationMetadataStore basligi).
+	var entry := {"saved_at": Time.get_datetime_string_from_system()}
+	if source_level_id > 0:
+		entry["source_level_id"] = source_level_id
+	_saved_metadata_store.upsert(CustomLevelStore.entry_name_for(level_name), entry)
+
+	var origin := " (bölüm %d)" % source_level_id if source_level_id > 0 else ""
+	if copied:
+		_status_text = "Kayıtlara alındı%s + panoya kopyalandı: %s" % [origin, level_name]
 	else:
-		_status_text = "Kayıtlara alındı: %s (pano başarısız)" % level_name
+		_status_text = "Kayıtlara alındı%s: %s (pano başarısız)" % [origin, level_name]
 	_refresh_info()
+
+
+## Kayit adi. Resmi bir bolum duzenleniyorsa numarasi ONE alinir: kayitlar
+## listesinde "zikzak" degil "bolum_17_zikzak" gorunur, yani hangi bolumun
+## varyanti oldugu dosya adindan da bellidir (JSON'a ek olarak).
+func _saved_name_for_current() -> String:
+	var base := level.display_name
+	if base.is_empty() or base == "Yeni Bölüm":
+		base = "bolum_%s" % Time.get_datetime_string_from_system().replace(":", "")
+	if source_level_id > 0:
+		return "bolum_%02d_%s" % [source_level_id, base]
+	return base
 
 
 # --- Parti gezinmesi ----------------------------------------------------------
@@ -911,7 +942,15 @@ func _show_library(bucket: CustomLevelStore.Bucket) -> void:
 	_clear_modal_list()
 
 	_library_names = CustomLevelStore.list_names(bucket)
-	var manifest := _metadata_store.load_all() if bucket == CustomLevelStore.Bucket.GENERATED else {}
+	# Her kovanin kendi sidecar'i var: uretilenlerde kalite/AI bilgisi,
+	# kayitlarda "hangi resmi bolumden turedi" bilgisi.
+	var manifest: Dictionary
+	if bucket == CustomLevelStore.Bucket.GENERATED:
+		manifest = _metadata_store.load_all()
+	else:
+		# Silinen kayitlarin girisleri birikmesin.
+		_saved_metadata_store.prune(_library_names)
+		manifest = _saved_metadata_store.load_all()
 	if _library_names.is_empty():
 		_modal_status.text = ("Bu partide bölüm yok - ÜRET ile ara."
 			if bucket == CustomLevelStore.Bucket.GENERATED else "Henüz kayıt yok.")
@@ -947,6 +986,10 @@ func _refresh_library_rows() -> void:
 		var generation = button.get_meta("generation", {})
 		if generation is Dictionary and generation.has("quality_score"):
 			button.text += " - %d/100" % int(generation["quality_score"])
+		# Resmi bir bolumden turetilmis kayitlar kaynagini gosterir; boylece
+		# listede "hangi bolumun varyantiydi bu" sorusu cevapsiz kalmaz.
+		if generation is Dictionary and generation.has("source_level_id"):
+			button.text += "  ← Bölüm %d" % int(generation["source_level_id"])
 		button.emphasis = LumaButton.Emphasis.PRIMARY if _library_selected.has(entry_name) 			else LumaButton.Emphasis.SECONDARY
 	_refresh_library_actions()
 

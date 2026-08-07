@@ -28,6 +28,29 @@ enum Emphasis {
 ## yoksa arenanin uzerinde silik kalirlar. Menu butonlari varsayilanda sessiz.
 @export var high_contrast := false
 @export var content_margin := Vector2(28.0, 14.0)
+## Vurgu rengini bu buton icin DEGISTIRIR. Alfasi 0 iken (varsayilan)
+## Palette.ACCENT kullanilir, yani mevcut hicbir buton etkilenmez.
+##
+## Neden gerekli: bolum secim ekraninda ayni anda UC dunyanin rengi temsil
+## ediliyor. Palette global bir static var oldugu icin onu degistirmek tum
+## ekrani birden boyar; renk butona veri olarak gecmek zorunda.
+@export var accent_override := Color(0.0, 0.0, 0.0, 0.0):
+	set(value):
+		accent_override = value
+		if is_node_ready():
+			_apply_style()
+## Dolgu rengini bu buton icin degistirir; alfasi 0 iken Palette.SURFACE
+## kullanilir. Vurgudan AYRI bir alan, cunku ikisi bagimsiz degisiyor:
+## bolum secim sekmelerinin hepsi ayni zeminin uzerinde durur (ayni yuzey)
+## ama her biri kendi dunyasinin vurgusunu tasir.
+##
+## Kenar ve basili haldeki tonlar bundan TURETILIR (lightened/darkened) -
+## her ton icin ayri bir alan API'yi sisirir ve tutarsizliga acik birakirdi.
+@export var surface_override := Color(0.0, 0.0, 0.0, 0.0):
+	set(value):
+		surface_override = value
+		if is_node_ready():
+			_apply_style()
 
 @export_group("Basis Animasyonu")
 @export_range(0.7, 1.0, 0.01) var press_scale := 0.95
@@ -82,29 +105,58 @@ func _apply_style() -> void:
 	var is_primary := emphasis == Emphasis.PRIMARY
 
 	var solid := is_primary or high_contrast
-	var normal_bg := Color(Palette.SURFACE, 0.92) if solid else Color(Palette.SURFACE, 0.5)
-	var hover_bg := Color(Palette.SURFACE_EDGE, 0.92) if solid else Color(Palette.SURFACE, 0.85)
-	var pressed_bg := Color(Palette.INK_MID, 1.0)
+	var surface := _surface()
+	var surface_edge := _surface_edge()
+	var solid_fill := Color(surface, 0.92)
+	var normal_bg := solid_fill if solid else Color(surface, 0.5)
+	var hover_bg := Color(surface_edge, 0.92) if solid else Color(surface, 0.85)
+	var pressed_bg := Color(_pressed_fill(), 1.0)
 
-	var normal_border := Color(Palette.SURFACE_EDGE, 0.9)
+	var accent := _accent()
+	var normal_border := Color(surface_edge, 0.9)
 	if is_primary:
-		normal_border = Color(Palette.ACCENT, 0.5)
+		normal_border = Color(accent, 0.5)
 	elif high_contrast:
-		normal_border = Color(Palette.SURFACE_LIGHT, 1.0)
-	var hover_border := Color(Palette.ACCENT, 0.95) if is_primary else Color(Palette.ACCENT, 0.55)
-	var pressed_border := Color(Palette.ACCENT, 1.0) if is_primary else Color(Palette.ACCENT, 0.85)
+		normal_border = Color(_surface_light(), 1.0)
+	var hover_border := Color(accent, 0.95) if is_primary else Color(accent, 0.55)
+	var pressed_border := Color(accent, 1.0) if is_primary else Color(accent, 0.85)
 
 	add_theme_stylebox_override("normal", _make_style(normal_bg, normal_border, 2, radius))
 	add_theme_stylebox_override("hover", _make_style(hover_bg, hover_border, 2, radius))
 	add_theme_stylebox_override("pressed", _make_style(pressed_bg, pressed_border, 3, radius))
 	add_theme_stylebox_override("focus", _make_style(hover_bg, hover_border, 2, radius))
 	add_theme_stylebox_override("disabled", _make_style(
-		Color(Palette.SURFACE, 0.26), Color(Palette.SURFACE_EDGE, 0.4), 2, radius))
+		Color(surface, 0.26), Color(surface_edge, 0.4), 2, radius))
 
 	add_theme_color_override("font_color", Palette.TEXT if is_primary else Palette.TEXT_DIM)
 	add_theme_color_override("font_hover_color", Palette.TEXT)
 	add_theme_color_override("font_pressed_color", Palette.ACCENT_CORE)
 	add_theme_color_override("font_disabled_color", Color(Palette.TEXT_DIM, 0.45))
+
+
+## accent_override atanmissa o, degilse paletin vurgusu. Alfa 0 "atanmadi"
+## demektir - Color'in kendisi null olamadigi icin sentinel gerekiyor.
+func _accent() -> Color:
+	return accent_override if accent_override.a > 0.0 else Palette.ACCENT
+
+
+func _surface() -> Color:
+	return surface_override if surface_override.a > 0.0 else Palette.SURFACE
+
+
+## Turetilmis tonlar: override YOKKEN paletin kendi degerleri kullanilir,
+## boylece oyundaki mevcut butonlarin gorunumu birebir korunur. Override
+## varsa tek bir renkten turetilir - her ton icin ayri alan API'yi sisirirdi.
+func _surface_edge() -> Color:
+	return surface_override.lightened(0.16) if surface_override.a > 0.0 else Palette.SURFACE_EDGE
+
+
+func _surface_light() -> Color:
+	return surface_override.lightened(0.38) if surface_override.a > 0.0 else Palette.SURFACE_LIGHT
+
+
+func _pressed_fill() -> Color:
+	return surface_override.darkened(0.35) if surface_override.a > 0.0 else Palette.INK_MID
 
 
 func _make_style(bg: Color, border: Color, border_width: int, radius: int) -> StyleBoxFlat:

@@ -1,0 +1,162 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/settings_screen.gd" id="1_settings"]
+[ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="2_ink"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="3_safe_area"]
+[ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="4_button"]
+
+[node name="SettingsScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_settings")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_ink")
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_safe_area")
+
+[node name="Content" type="Control" parent="SafeArea"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="SafeArea/Content"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 60.0
+offset_bottom = 140.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
+theme_override_font_sizes/font_size = 46
+text = "AYARLAR"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="SafeArea/Content"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.12
+anchor_right = 1.0
+anchor_bottom = 0.85
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Rows" type="VBoxContainer" parent="SafeArea/Content/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="BackButton" type="Button" parent="SafeArea/Content"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -140.0
+offset_top = -132.0
+offset_right = 140.0
+offset_bottom = -56.0
+grow_horizontal = 2
+grow_vertical = 0
+focus_mode = 0
+theme_override_font_sizes/font_size = 28
+text = "GERİ"
+script = ExtResource("4_button")
+
+[node name="ConfirmLayer" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Dim" type="ColorRect" parent="ConfirmLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0392157, 0.0666667, 0.113725, 0.82)
+
+[node name="Card" type="PanelContainer" parent="ConfirmLayer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -140.0
+offset_right = 300.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="ConfirmLayer/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 32
+
+[node name="Rows" type="VBoxContainer" parent="ConfirmLayer/Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="Message" type="Label" parent="ConfirmLayer/Card/Margin/Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "Tüm ilerlemen silinecek. Bu geri alınamaz."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="ConfirmLayer/Card/Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="CancelButton" type="Button" parent="ConfirmLayer/Card/Margin/Rows/Buttons"]
+custom_minimum_size = Vector2(240, 76)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "VAZGEÇ"
+script = ExtResource("4_button")
+
+[node name="ConfirmButton" type="Button" parent="ConfirmLayer/Card/Margin/Rows/Buttons"]
+custom_minimum_size = Vector2(240, 76)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 26
+text = "SIFIRLA"
+script = ExtResource("4_button")

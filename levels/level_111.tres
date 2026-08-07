@@ -1,136 +1,56 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_pgx7q"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_ntgdr"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_jkmy6"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_mivrg"]
 
-[sub_resource type="Resource" id="P_1"]
-script = ExtResource("3")
-position = Vector2(400, 600)
-rotation_degrees = 30
-length = 250
-[sub_resource type="Resource" id="P_2"]
-script = ExtResource("3")
-position = Vector2(300, 400)
-rotation_degrees = -30
-length = 250
-[sub_resource type="Resource" id="Boost_1"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(360, 750)
-rotation_degrees = 0.0
-size = Vector2(40, 40)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Bomb_1"]
-script = ExtResource("2")
-kind = 1
-position = Vector2(300, 600)
-rotation_degrees = 0.0
-size = Vector2(60, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Bomb_2"]
-script = ExtResource("2")
-kind = 1
-position = Vector2(400, 400)
-rotation_degrees = 0.0
-size = Vector2(60, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="B_0"]
-script = ExtResource("1")
-position = Vector2(431, 208)
-size = Vector2(40, 20)
+[sub_resource type="Resource" id="Resource_6eqym"]
+script = ExtResource("1_pgx7q")
+position = Vector2(214.73668, 672.82874)
+size = Vector2(104, 34)
 hit_points = 2
-[sub_resource type="Resource" id="B_1"]
-script = ExtResource("1")
-position = Vector2(169, 287)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_2"]
-script = ExtResource("1")
-position = Vector2(320, 213)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_3"]
-script = ExtResource("1")
-position = Vector2(201, 239)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_4"]
-script = ExtResource("1")
-position = Vector2(480, 221)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_5"]
-script = ExtResource("1")
-position = Vector2(347, 287)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_6"]
-script = ExtResource("1")
-position = Vector2(355, 274)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_7"]
-script = ExtResource("1")
-position = Vector2(451, 224)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_8"]
-script = ExtResource("1")
-position = Vector2(436, 181)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_9"]
-script = ExtResource("1")
-position = Vector2(494, 228)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_10"]
-script = ExtResource("1")
-position = Vector2(420, 297)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_12"]
-script = ExtResource("1")
-position = Vector2(412, 190)
-size = Vector2(40, 20)
-hit_points = 2
+
+[sub_resource type="Resource" id="Resource_ioi1v"]
+script = ExtResource("1_pgx7q")
+position = Vector2(348.7367, 672.82874)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_py2ar"]
+script = ExtResource("1_pgx7q")
+position = Vector2(482.7367, 672.82874)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_n28w8"]
+script = ExtResource("2_ntgdr")
+kind = 3
+position = Vector2(569.82544, 749.5866)
+size = Vector2(130, 26)
+travel_distance = 126.75675675675676
+motion_period = 2.145945945945946
+
+[sub_resource type="Resource" id="Resource_21i4x"]
+script = ExtResource("2_ntgdr")
+position = Vector2(239.47334, 655.9852)
+rotation_degrees = 180.0
+size = Vector2(180, 28)
+inner_radius = 61.4054054054054
+
+[sub_resource type="Resource" id="Resource_vv3y1"]
+script = ExtResource("3_jkmy6")
+position = Vector2(193, 853)
+rotation_degrees = -11.9
+length = 311.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4")
+script = ExtResource("4_mivrg")
 level_id = 111
-display_name = "Uzay Fazı 111"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(150, 150)
-target_scale = 0.8
-ball_scale = 0.65
-panels = Array[PanelData]([SubResource("P_1"), SubResource("P_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("B_0"), SubResource("B_1"), SubResource("B_2"), SubResource("B_3"), SubResource("B_4"), SubResource("B_5"), SubResource("B_6"), SubResource("B_7"), SubResource("B_8"), SubResource("B_9"), SubResource("B_10"), SubResource("B_12")])
-obstacles = Array[ObstacleData]([SubResource("Boost_1"), SubResource("Bomb_1"), SubResource("Bomb_2")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 60.0
-two_star_max_shots = 6
-three_star_max_seconds = 35.0
-three_star_max_shots = 3
+display_name = "Faz 111"
+target_position = Vector2(241, 409)
+panels = Array[ExtResource("3_jkmy6")]([SubResource("Resource_vv3y1")])
+breakable_blocks = Array[ExtResource("1_pgx7q")]([SubResource("Resource_6eqym"), SubResource("Resource_ioi1v"), SubResource("Resource_py2ar")])
+obstacles = Array[ExtResource("2_ntgdr")]([SubResource("Resource_n28w8"), SubResource("Resource_21i4x")])
+two_star_max_seconds = 143.9
+two_star_max_shots = 3
+three_star_max_seconds = 76.5

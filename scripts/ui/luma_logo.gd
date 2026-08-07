@@ -77,7 +77,12 @@ func _build() -> void:
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_row.add_theme_constant_override("separation", int(separation))
 	add_child(_row)
-	_row.set_anchors_preset(Control.PRESET_FULL_RECT)
+	# set_anchors_PRESET degil, set_anchors_AND_OFFSETS_preset: birincisi
+	# capalari degistirirken offsetleri korudugu icin satir kendi icerik
+	# genisliginde (720 yerine 440 px) kaliyordu. Boyle olunca
+	# ALIGNMENT_CENTER'in ortalayacagi bos alan olmuyor ve logo kilidi
+	# ekranin sol kenarina yapisiyordu.
+	_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	# Kare hedef, satir yuksekliginden bagimsiz olarak kendi boyutunda kalsin.
 	_glyph_slot = Control.new()

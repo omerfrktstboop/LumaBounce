@@ -1,19 +1,21 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_k16wb"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_tvqc1"]
 
-[sub_resource type="Resource" id="Resource_l10_lower"]
+[sub_resource type="Resource" id="Resource_pkuhu"]
 script = ExtResource("2_panel_data")
-position = Vector2(240, 800)
-rotation_degrees = 0.0
+position = Vector2(182.78528, 743.83484)
+rotation_degrees = 7.780966
 length = 600.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l10_upper"]
+[sub_resource type="Resource" id="Resource_5qgyk"]
 script = ExtResource("2_panel_data")
-position = Vector2(540, 460)
-rotation_degrees = 0.0
+position = Vector2(580, 517.4576)
+rotation_degrees = -6.588275
 length = 480.0
 thickness = 26.0
 
@@ -21,12 +23,10 @@ thickness = 26.0
 script = ExtResource("1_level_data")
 level_id = 20
 display_name = "Çift Sekme"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(420, 300)
-panels = Array[PanelData]([SubResource("Resource_l10_lower"), SubResource("Resource_l10_upper")])
-max_lives = 4
+target_position = Vector2(408.7425, 271.64072)
+panels = Array[ExtResource("2_panel_data")]([SubResource("Resource_pkuhu"), SubResource("Resource_5qgyk")])
 tutorial_text = "Önce sağ, sonra sol kenar."
 two_star_max_seconds = 100.0
-two_star_max_shots = 3
+two_star_max_shots = 2
 three_star_max_seconds = 52.0
-three_star_max_shots = 2
+three_star_max_shots = 1

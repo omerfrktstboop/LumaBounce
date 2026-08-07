@@ -1,50 +1,44 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=8 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_xrb3h"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
 
-[sub_resource type="Resource" id="Panel_lower"]
-script = ExtResource("2")
-position = Vector2(490, 830)
-rotation_degrees = -30.0
-length = 320.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Panel_upper"]
-script = ExtResource("2")
-position = Vector2(220, 520)
-rotation_degrees = -30.0
-length = 340.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Ring_main"]
+[sub_resource type="Resource" id="Resource_337ey"]
 script = ExtResource("3")
-position = Vector2(600, 650)
+position = Vector2(559.16705, 599.9676)
 size = Vector2(190, 28)
 inner_radius = 78.0
 
-[sub_resource type="Resource" id="Mover_main"]
+[sub_resource type="Resource" id="Resource_4r474"]
 script = ExtResource("3")
-kind = 3
-position = Vector2(360, 650)
+kind = 1
+position = Vector2(344.09207, 662.5011)
 rotation_degrees = -8.0
-size = Vector2(150, 32)
-motion_direction_degrees = 0.0
-travel_distance = 100.0
-motion_period = 2.8
-phase_degrees = -35.0
+size = Vector2(72, 72)
+
+[sub_resource type="Resource" id="Resource_0llpo"]
+script = ExtResource("2")
+position = Vector2(541.627, 781.2778)
+rotation_degrees = -27.63766
+length = 320.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_onuiv"]
+script = ExtResource("2")
+position = Vector2(189.26656, 486.16498)
+rotation_degrees = -28.043784141540527
+length = 340.0
+thickness = 26.0
 
 [resource]
 script = ExtResource("1")
 level_id = 47
-display_name = "Hareketli Delik"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(160, 280)
-panels = Array[PanelData]([SubResource("Panel_lower"), SubResource("Panel_upper")])
-obstacles = Array[ObstacleData]([SubResource("Ring_main"), SubResource("Mover_main")])
-max_lives = 5
+display_name = "Halka ve Fitil"
+target_position = Vector2(146.10852, 284.35333)
+panels = Array[ExtResource("2")]([SubResource("Resource_0llpo"), SubResource("Resource_onuiv")])
+obstacles = Array[ExtResource("3")]([SubResource("Resource_337ey"), SubResource("Resource_4r474")])
 two_star_max_seconds = 120.0
-two_star_max_shots = 4
+two_star_max_shots = 3
 three_star_max_seconds = 62.0
-three_star_max_shots = 2

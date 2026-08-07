@@ -1,19 +1,21 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_ntjn7"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_rk1d8"]
 
-[sub_resource type="Resource" id="Resource_l20_left"]
+[sub_resource type="Resource" id="Resource_f0c3q"]
 script = ExtResource("2_panel_data")
-position = Vector2(200, 820)
-rotation_degrees = 25.0
-length = 340.0
+position = Vector2(381.3178, 809.8296)
+rotation_degrees = -16.395798683166504
+length = 420.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l20_right"]
+[sub_resource type="Resource" id="Resource_l45ay"]
 script = ExtResource("2_panel_data")
-position = Vector2(520, 560)
-rotation_degrees = -20.0
+position = Vector2(183.67365, 517.8847)
+rotation_degrees = 31.758001
 length = 320.0
 thickness = 26.0
 
@@ -21,12 +23,9 @@ thickness = 26.0
 script = ExtResource("1_level_data")
 level_id = 18
 display_name = "Ustalık II"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(380, 260)
-panels = Array[PanelData]([SubResource("Resource_l20_left"), SubResource("Resource_l20_right")])
-right_wall_segments = Array[Vector2]([Vector2(-320, 940), Vector2(1180, 1440)])
-max_lives = 3
+target_position = Vector2(515.88196, 273.52612)
+panels = Array[ExtResource("2_panel_data")]([SubResource("Resource_f0c3q"), SubResource("Resource_l45ay")])
 two_star_max_seconds = 110.0
-two_star_max_shots = 3
+two_star_max_shots = 2
 three_star_max_seconds = 60.0
-three_star_max_shots = 2
+three_star_max_shots = 1

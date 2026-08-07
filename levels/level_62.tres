@@ -1,97 +1,40 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_wr3ov"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_rwcet"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_fg8kl"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_33qct"]
 
-[sub_resource type="Resource" id="Ring_1"]
-script = ExtResource("2")
-kind = 0
-position = Vector2(360, 300)
-rotation_degrees = 0.0
-size = Vector2(153.86666666666667, 28)
-inner_radius = 56.93333333333334
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="P_1"]
-script = ExtResource("3")
-position = Vector2(360, 800)
-rotation_degrees = 0
-length = 150
-[sub_resource type="Resource" id="Boost_1"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(150, 600)
-rotation_degrees = 0.0
-size = Vector2(40, 40)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Boost_2"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(570, 600)
-rotation_degrees = 0.0
-size = Vector2(40, 40)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Mov_1"]
-script = ExtResource("2")
+[sub_resource type="Resource" id="Resource_oxkje"]
+script = ExtResource("2_rwcet")
+kind = 2
+position = Vector2(474.76456, 551.80597)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -56.148648648648646
+
+[sub_resource type="Resource" id="Resource_sn2kt"]
+script = ExtResource("2_rwcet")
 kind = 3
-position = Vector2(360, 500)
-rotation_degrees = 0.0
-size = Vector2(100, 30)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 120
-motion_period = 3.0
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Bomb_1"]
-script = ExtResource("2")
-kind = 1
-position = Vector2(360, 400)
-rotation_degrees = 0.0
-size = Vector2(80, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
+position = Vector2(121.08586, 921.26935)
+size = Vector2(130, 26)
+travel_distance = 80.4054054054054
+motion_period = 3.006756756756757
+
+[sub_resource type="Resource" id="Resource_6hl07"]
+script = ExtResource("3_fg8kl")
+position = Vector2(351, 660)
+rotation_degrees = 43.0
+length = 327.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4")
+script = ExtResource("4_33qct")
 level_id = 62
-display_name = "Turuncu Faz 12"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(360, 300)
-target_scale = 0.8
-ball_scale = 0.65
-panels = Array[PanelData]([SubResource("P_1")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Ring_1"), SubResource("Boost_1"), SubResource("Boost_2"), SubResource("Mov_1"), SubResource("Bomb_1")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 60.0
-two_star_max_shots = 6
-three_star_max_seconds = 35.0
-three_star_max_shots = 3
+display_name = "Faz 62"
+target_position = Vector2(229, 233)
+panels = Array[ExtResource("3_fg8kl")]([SubResource("Resource_6hl07")])
+obstacles = Array[ExtResource("2_rwcet")]([SubResource("Resource_oxkje"), SubResource("Resource_sn2kt")])
+two_star_max_seconds = 87.60000000000001
+two_star_max_shots = 3
+three_star_max_seconds = 46.7

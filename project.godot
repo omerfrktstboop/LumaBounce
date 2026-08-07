@@ -21,10 +21,6 @@ config/quit_on_go_back=false
 config/features=PackedStringArray("4.7", "GL Compatibility")
 run/max_fps=60
 
-[audio]
-
-buses/default_bus_layout="uid://cqxf3ajnwrfkp"
-
 [autoload]
 
 AudioManager="*res://scripts/audio/audio_manager.gd"
@@ -43,6 +39,11 @@ window/handheld/orientation=1
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg")
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://assets/i18n/ui.tr.translation", "res://assets/i18n/ui.en.translation", "res://assets/i18n/levels.tr.translation", "res://assets/i18n/levels.en.translation")
+locale/fallback="tr"
 
 [layer_names]
 

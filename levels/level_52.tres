@@ -1,89 +1,53 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_ea88g"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_oqhmo"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_0bcqc"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_4iyuk"]
 
-[sub_resource type="Resource" id="Mov_H"]
-script = ExtResource("2")
-kind = 3
-position = Vector2(360, 250)
-rotation_degrees = 0.0
-size = Vector2(100, 30)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 100
-motion_period = 3.0
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Mov_V"]
-script = ExtResource("2")
-kind = 3
-position = Vector2(250, 400)
-rotation_degrees = 0.0
-size = Vector2(100, 30)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 90.0
-travel_distance = 100
-motion_period = 3.5
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Boost_1"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(360, 700)
-rotation_degrees = 0.0
-size = Vector2(40, 40)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Boost_2"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(360, 150)
-rotation_degrees = 0.0
-size = Vector2(40, 40)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="B_4"]
-script = ExtResource("1")
-position = Vector2(294.6356379136388, 324.3197504692072)
-size = Vector2(40, 20)
-hit_points = 1
-[sub_resource type="Resource" id="B_6"]
-script = ExtResource("1")
-position = Vector2(456.0170286650366, 372.0584501801074)
-size = Vector2(40, 20)
-hit_points = 1
+[sub_resource type="Resource" id="Resource_4sxg7"]
+script = ExtResource("2_oqhmo")
+kind = 2
+position = Vector2(348.00687, 384.28574)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -46.013513513513516
+
+[sub_resource type="Resource" id="Resource_w325l"]
+script = ExtResource("2_oqhmo")
+position = Vector2(146.93117, 330.4727)
+rotation_degrees = 180.0
+size = Vector2(180, 28)
+inner_radius = 75.75675675675676
+
+[sub_resource type="Resource" id="Resource_54ymm"]
+script = ExtResource("3_0bcqc")
+position = Vector2(476.3598, 596.0958)
+rotation_degrees = -37.21160335540772
+length = 401.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_8xxda"]
+script = ExtResource("3_0bcqc")
+position = Vector2(478.14603, 724.6734)
+rotation_degrees = -36.63883
+length = 344.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_r02gw"]
+script = ExtResource("3_0bcqc")
+position = Vector2(487.3632, 853.1732)
+rotation_degrees = 38.61764402389527
+length = 408.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4")
+script = ExtResource("4_4iyuk")
 level_id = 52
-display_name = "Uzay Fazı 52"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(360, 400)
-target_scale = 0.8
-ball_scale = 0.65
-panels = Array[PanelData]([])
-breakable_blocks = Array[BreakableBlockData]([SubResource("B_4"), SubResource("B_6")])
-obstacles = Array[ObstacleData]([SubResource("Mov_H"), SubResource("Mov_V"), SubResource("Boost_1"), SubResource("Boost_2")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 60.0
-two_star_max_shots = 6
-three_star_max_seconds = 35.0
-three_star_max_shots = 3
+display_name = "Faz 52"
+target_position = Vector2(549.48035, 393.04205)
+panels = Array[ExtResource("3_0bcqc")]([SubResource("Resource_54ymm"), SubResource("Resource_8xxda"), SubResource("Resource_r02gw")])
+obstacles = Array[ExtResource("2_oqhmo")]([SubResource("Resource_4sxg7"), SubResource("Resource_w325l")])
+two_star_max_seconds = 76.10000000000001
+two_star_max_shots = 3
+three_star_max_seconds = 40.6

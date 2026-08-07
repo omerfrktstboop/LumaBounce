@@ -1,19 +1,21 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_0ktog"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_xfjkv"]
 
-[sub_resource type="Resource" id="Resource_l9_lower_left"]
+[sub_resource type="Resource" id="Resource_e5vkd"]
 script = ExtResource("2_panel_data")
-position = Vector2(230, 830)
-rotation_degrees = 30.0
+position = Vector2(173.95253, 878.35583)
+rotation_degrees = 36.862314224243164
 length = 320.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l9_mid_right"]
+[sub_resource type="Resource" id="Resource_570x6"]
 script = ExtResource("2_panel_data")
-position = Vector2(500, 520)
-rotation_degrees = 30.0
+position = Vector2(465.59933, 469.50818)
+rotation_degrees = 24.345371
 length = 340.0
 thickness = 26.0
 
@@ -21,12 +23,10 @@ thickness = 26.0
 script = ExtResource("1_level_data")
 level_id = 14
 display_name = "Çapraz Geçiş"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(560, 280)
-panels = Array[PanelData]([SubResource("Resource_l9_lower_left"), SubResource("Resource_l9_mid_right")])
-max_lives = 5
+target_position = Vector2(528.27124, 306.62457)
+panels = Array[ExtResource("2_panel_data")]([SubResource("Resource_e5vkd"), SubResource("Resource_570x6")])
 tutorial_text = "İki yüzeyi sırayla kullan."
 two_star_max_seconds = 100.0
-two_star_max_shots = 4
+two_star_max_shots = 2
 three_star_max_seconds = 52.0
-three_star_max_shots = 2
+three_star_max_shots = 1

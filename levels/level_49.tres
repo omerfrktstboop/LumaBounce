@@ -1,58 +1,50 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_qjowv"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
 
-[sub_resource type="Resource" id="Panel_lower"]
-script = ExtResource("2")
-position = Vector2(490, 830)
-rotation_degrees = -30.0
-length = 320.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Panel_upper"]
-script = ExtResource("2")
-position = Vector2(220, 520)
-rotation_degrees = -30.0
-length = 340.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Ring_main"]
+[sub_resource type="Resource" id="Resource_w687u"]
 script = ExtResource("3")
-position = Vector2(600, 650)
+position = Vector2(528.2182, 587.89984)
 size = Vector2(190, 28)
 inner_radius = 78.0
 
-[sub_resource type="Resource" id="Wheel_main"]
+[sub_resource type="Resource" id="Resource_xcw0a"]
 script = ExtResource("3")
-kind = 2
-position = Vector2(600, 300)
-size = Vector2(86, 18)
-spoke_count = 4
-angular_speed_degrees = 72.0
+position = Vector2(610, 343.3203)
+size = Vector2(150, 24)
+inner_radius = 60.0
 
-[sub_resource type="Resource" id="Mover_main"]
+[sub_resource type="Resource" id="Resource_eccsw"]
 script = ExtResource("3")
-kind = 3
-position = Vector2(360, 700)
+kind = 1
+position = Vector2(370.63983, 667.88763)
 rotation_degrees = 12.0
-size = Vector2(80, 26)
-motion_direction_degrees = 0.0
-travel_distance = 40.0
-motion_period = 2.5
-phase_degrees = 40.0
+size = Vector2(68, 68)
+
+[sub_resource type="Resource" id="Resource_rufno"]
+script = ExtResource("2")
+position = Vector2(440.03525, 788.5872)
+rotation_degrees = -28.358935356140137
+length = 320.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_1mtys"]
+script = ExtResource("2")
+position = Vector2(268.23553, 477.9422)
+rotation_degrees = -25.82799
+length = 340.0
+thickness = 26.0
 
 [resource]
 script = ExtResource("1")
 level_id = 49
-display_name = "Mekanik Dugum"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(160, 280)
-panels = Array[PanelData]([SubResource("Panel_lower"), SubResource("Panel_upper")])
-obstacles = Array[ObstacleData]([SubResource("Ring_main"), SubResource("Wheel_main"), SubResource("Mover_main")])
-max_lives = 5
+display_name = "Çifte Halka Düğümü"
+target_position = Vector2(129.47168, 277.72238)
+panels = Array[ExtResource("2")]([SubResource("Resource_rufno"), SubResource("Resource_1mtys")])
+obstacles = Array[ExtResource("3")]([SubResource("Resource_w687u"), SubResource("Resource_xcw0a"), SubResource("Resource_eccsw")])
 two_star_max_seconds = 125.0
-two_star_max_shots = 4
+two_star_max_shots = 3
 three_star_max_seconds = 68.0
-three_star_max_shots = 2

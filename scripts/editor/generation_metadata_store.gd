@@ -3,8 +3,16 @@ extends RefCounted
 
 ## Debug uretim bilgileri LevelData/.tres icine girmez; dosya adiyla eslesen
 ## ayri bir JSON sidecar'da tutulur.
+##
+## IKI KOVA, IKI MANIFEST: uretilenler MANIFEST_PATH'te, kayitlar
+## SAVED_MANIFEST_PATH'te tutulur. Ayni sinif ikisine de hizmet eder (_init bir
+## yol alir), cunku ihtiyac ayni: "dosya adi -> ek bilgi" eslemesini .tres'i
+## kirletmeden saklamak. Kayitlar tarafinda saklanan asil bilgi
+## source_level_id'dir: bir RESMI bolumu debug panelinden acip duzenledigimizde
+## kaydin hangi bolumden tureligi kaybolmasin (bkz. LevelEditor._on_save).
 
 const MANIFEST_PATH := "user://generated_levels/generated_manifest.json"
+const SAVED_MANIFEST_PATH := "user://custom_levels/saved_manifest.json"
 const MANIFEST_VERSION := 1
 
 const ALLOWED_FIELDS := [
@@ -15,6 +23,8 @@ const ALLOWED_FIELDS := [
 	"solution_shots", "broken_state",
 	"similarity_fallback",
 	"most_similar_level", "similarity_reasons", "design_intent", "usage",
+	# Kayitlar kovasi icin:
+	"source_level_id", "saved_at",
 ]
 
 var _path: String
@@ -29,6 +39,12 @@ func replace(names: PackedStringArray, metadata: Array) -> Error:
 	for i in mini(names.size(), metadata.size()):
 		if metadata[i] is Dictionary:
 			entries[names[i]] = _sanitize_entry(metadata[i])
+	return _write(entries)
+
+
+## Once .tmp'ye yazip sonra tasir: yazma yarida kesilirse eldeki manifest
+## bozulmaz, eski hali kalir.
+func _write(entries: Dictionary) -> Error:
 	var payload := {
 		"version": MANIFEST_VERSION,
 		"entries": entries,
@@ -48,6 +64,30 @@ func replace(names: PackedStringArray, metadata: Array) -> Error:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(_path))
 	return DirAccess.rename_absolute(
 		ProjectSettings.globalize_path(temp_path), ProjectSettings.globalize_path(_path))
+
+
+## TEK bir girisi ekler/gunceller, digerlerine dokunmaz.
+##
+## replace() bilerek tum manifesti ezer - bir URETIM PARTISI atomik bir sonuctur
+## ve eskisi tamamen gecersizdir. Kayitlar kovasi ise tam tersi: bolumler
+## teker teker, farkli zamanlarda kaydedilir. Orada replace() kullanmak her
+## kaydin oncekileri silmesi demekti.
+func upsert(level_name: String, entry: Dictionary) -> Error:
+	var entries := load_all()
+	entries[level_name] = _sanitize_entry(entry)
+	return _write(entries)
+
+
+## Artik var olmayan bolumlerin girislerini atar - kayit silindiginde sidecar
+## kalintisi birikmesin.
+func prune(existing_names: PackedStringArray) -> void:
+	var entries := load_all()
+	var kept := {}
+	for name in existing_names:
+		if entries.has(name):
+			kept[name] = entries[name]
+	if kept.size() != entries.size():
+		_write(kept)
 
 
 func load_all() -> Dictionary:

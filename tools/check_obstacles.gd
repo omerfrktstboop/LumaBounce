@@ -16,6 +16,8 @@ func _run() -> void:
 	_test_data_and_geometry()
 	await _test_world_and_solver()
 	await _test_gameplay_bomb()
+	await _test_real_obstacle_motion()
+	await _test_mechanic_intro_card()
 	_test_resource_roundtrip()
 	_test_ai_mapping()
 	_test_generation_contract()
@@ -46,6 +48,117 @@ func _test_data_and_geometry() -> void:
 		Vector2(360.0, 760.0), Vector2(0.0, -260.0), 24.0,
 		ObstacleGeometry.hazard_shapes([bomb]))
 	_check("bomba supurme testi", String(hazard.get("hazard_reason", "")), "bomb")
+
+
+## LevelSolver'in analitik hareket matematigini _test_data_and_geometry() zaten
+## dogruluyor, ama bu ObstacleField/LevelObstacle'in GERCEK oyun govdesini
+## (AnimatableBody2D + gercek _physics_process tik'leri) hic calistirmiyor. Bu
+## test o bosluu kapatiyor: gercek dugumleri kurup gercek fizik karesi
+## bekleyerek MotionRoot'un konumunun/donusunun GERCEKTEN degistigini olcuyor -
+## "donen cark/kayan bariyer hareket etmiyor" turu bir regresyon artik burada
+## sessizce gecemez.
+func _test_real_obstacle_motion() -> void:
+	var holder := Node2D.new()
+	get_root().add_child(holder)
+
+	var bar := _mover(Vector2(300.0, 500.0))
+	var wheel := _wheel(Vector2(500.0, 500.0))
+	var field := ObstacleField.new()
+	holder.add_child(field)
+	field.build([bar, wheel])
+	field.start_motion()
+	await physics_frame
+
+	var bar_node: LevelObstacle = field.get_obstacle_node(0)
+	var wheel_node: LevelObstacle = field.get_obstacle_node(1)
+	var bar_root: Node2D = bar_node.get_node("MotionRoot")
+	var wheel_root: Node2D = wheel_node.get_node("MotionRoot")
+	var bar_start := bar_root.position
+	var wheel_start := wheel_root.rotation
+
+	for i in 30:
+		await physics_frame
+
+	_check("gercek kayan bariyer govdesi zamanla hareket ediyor",
+		bar_root.position.distance_to(bar_start) > 20.0, true)
+	_check("gercek donen cark govdesi zamanla donuyor",
+		not is_equal_approx(wheel_root.rotation, wheel_start), true)
+
+	holder.queue_free()
+	await process_frame
+
+
+## Tanitim karti bir KURALI ogretir, bu yuzden kendiliginden kaybolmamali ve
+## her mekanik icin gercekten bir gosterim kurmali. Kart bozulursa oyuncu yeni
+## bir engelle hicbir aciklama gormeden karsilasir - sessizce kaybolan bir
+## regresyon oldugu icin burada acikca olculur.
+## NOT - kart neden TIPSIZ yukleniyor: kartin "Anladım" butonu LumaButton'dir,
+## LumaButton ise AudioManager'a bakar. `--script` ile ozel bir ana dongu
+## calistirildiginda Godot autoload'lari kurmaz; bu dosya MechanicIntroCard
+## tipini STATIK olarak anarsa zincir derleme zamaninda AudioManager'a takilir
+## ve kart bos bir Button ile yuklenir. Bu yuzden sahne yalnizca calisma
+## zamaninda, tipsiz bir Node olarak alinir (ayni gerekce icin bkz.
+## check_blocks_and_gate.gd dosya basi).
+func _test_mechanic_intro_card() -> void:
+	var card: Node = (
+		load("res://scenes/mechanic_intro_card.tscn") as PackedScene).instantiate()
+	get_root().add_child(card)
+	await process_frame
+
+	_check("kart baslangicta kapali", card.call("is_open"), false)
+
+	var stage: Node2D = card.get_node(
+		"CardCenter/Card/Margin/Rows/StageFrame/StageViewport/SubViewport/StageRoot")
+
+	# Her engel turu icin: kart acilmali, baslik/aciklama dolmali ve sahnede
+	# gercek bir gosterim (engel + top) kurulmali.
+	for kind in [ObstacleData.Kind.METAL_RING, ObstacleData.Kind.BOMB,
+			ObstacleData.Kind.ROTATING_WHEEL, ObstacleData.Kind.MOVING_BAR]:
+		card.call("show_obstacle", kind)
+		await process_frame
+		var title: Label = card.get_node("CardCenter/Card/Margin/Rows/Title")
+		var description: Label = card.get_node("CardCenter/Card/Margin/Rows/Description")
+		_check("engel %d karti aciliyor" % kind, card.call("is_open"), true)
+		_check("engel %d karti baslik gosteriyor" % kind, title.text.is_empty(), false)
+		_check("engel %d karti aciklama gosteriyor" % kind, description.text.is_empty(), false)
+		_check("engel %d gosteriminde gercek engel var" % kind,
+			_find_child_of_type(stage, "LevelObstacle") != null, true)
+		_check("engel %d gosteriminde top var" % kind,
+			stage.get_node_or_null("DemoBall") != null, true)
+
+	# Kart MODAL: nisan almak onu kapatmamali, yalnizca close()/buton kapatir.
+	var dismiss_count := [0]
+	card.dismissed.connect(func() -> void: dismiss_count[0] += 1)
+	card.call("close")
+	await process_frame
+	_check("kart kapaniyor", card.call("is_open"), false)
+	_check("kapaninca dismissed yayiliyor", dismiss_count[0], 1)
+	_check("kapali kartta gosterim temizleniyor", stage.get_child_count(), 0)
+	card.call("close")
+	_check("ikinci close() tekrar sinyal yaymiyor", dismiss_count[0], 1)
+
+	# Tugla gosterimi: iki dayaniklilik seviyesi YAN YANA olmali - renk farki
+	# ancak boyle ogretilebilir (bkz. Palette.SURFACE_BLOCK_STRONG).
+	card.call("show_block_mechanic")
+	await process_frame
+	var tiers := {}
+	for child in stage.get_children():
+		var brick := child as BreakableBlock
+		if brick != null:
+			tiers[brick.hit_points] = true
+	_check("tugla gosteriminde tek darbelik tugla var", tiers.has(1), true)
+	_check("tugla gosteriminde iki darbelik tugla var", tiers.has(2), true)
+
+	card.queue_free()
+	await process_frame
+
+
+func _find_child_of_type(parent: Node, type_name: String) -> Node:
+	for child in parent.get_children():
+		if child.is_class(type_name) or child.get_script() != null \
+				and child.get_script().get_global_name() == type_name:
+			return child
+	return null
 
 
 func _test_world_and_solver() -> void:
@@ -183,16 +296,42 @@ func _test_generation_contract() -> void:
 	_check("yerel engelli profil engel uretiyor", profile.obstacle_count.y > 0, true)
 
 
+## 41-50 bilerek yalnizca halka + bomba kullanir: cark ve kayan bariyer
+## tanitimi 51-100 bandina yayildi (51=cark ilk-gorulme, 56=kayan bariyer
+## ilk-gorulme, sonra tum turlerin kombinasyonlari 100'e kadar zorlasir).
+## Hizlandirici (SPEED_BOOST) 51-100'e BILEREK dahil edilmedi: gercek
+## mekanigi (yakindaki bloklari kirma, gameplay.gd _on_hazard_triggered)
+## LevelSolver'da hic simule edilmiyor, yani onu rota acan bir eleman olarak
+## kullanan bir bolum offline dogrulanamaz - bloksuz engel bandi olarak
+## kalmasi bu korlugu bastan onler. Ileride bloklu bir bantla eslenirse
+## buraya eklenebilir.
 func _test_official_obstacle_levels() -> void:
-	var kinds := {}
+	var kinds_41_50 := {}
 	for level_id in range(41, 51):
 		var level := LevelLibrary.load_level(level_id)
 		for obstacle in level.obstacles:
-			kinds[obstacle.kind] = true
-	_check("41-50 halka kullaniyor", kinds.has(ObstacleData.Kind.METAL_RING), true)
-	_check("41-50 bomba kullaniyor", kinds.has(ObstacleData.Kind.BOMB), true)
-	_check("41-50 donen cark kullaniyor", kinds.has(ObstacleData.Kind.ROTATING_WHEEL), true)
-	_check("41-50 kayan engel kullaniyor", kinds.has(ObstacleData.Kind.MOVING_BAR), true)
+			kinds_41_50[obstacle.kind] = true
+	_check("41-50 halka kullaniyor", kinds_41_50.has(ObstacleData.Kind.METAL_RING), true)
+	_check("41-50 bomba kullaniyor", kinds_41_50.has(ObstacleData.Kind.BOMB), true)
+	_check("41-50 sadece halka+bomba kullaniyor (cark/kayan bariyer 51-100'e ertelendi)",
+		kinds_41_50.size(), 2)
+
+	var kinds_51_100 := {}
+	var blocks_51_100 := 0
+	for level_id in range(51, 101):
+		var level := LevelLibrary.load_level(level_id)
+		blocks_51_100 += level.breakable_blocks.size()
+		for obstacle in level.obstacles:
+			kinds_51_100[obstacle.kind] = true
+	_check("51-100 halka kullaniyor", kinds_51_100.has(ObstacleData.Kind.METAL_RING), true)
+	_check("51-100 bomba kullaniyor", kinds_51_100.has(ObstacleData.Kind.BOMB), true)
+	_check("51-100 cark kullaniyor", kinds_51_100.has(ObstacleData.Kind.ROTATING_WHEEL), true)
+	_check("51-100 kayan bariyer kullaniyor", kinds_51_100.has(ObstacleData.Kind.MOVING_BAR), true)
+	_check("51-100 hizlandirici kullanmiyor (solver korlugu, bkz. yukaridaki not)",
+		kinds_51_100.has(ObstacleData.Kind.SPEED_BOOST), false)
+	_check("51-100 bloksuz engel bandi", blocks_51_100, 0)
+	_check("51 donen carkin ilk-gorulme anidir",
+		LevelLibrary.load_level(51).obstacles[0].kind, ObstacleData.Kind.ROTATING_WHEEL)
 
 
 func _ring(at: Vector2) -> ObstacleData:

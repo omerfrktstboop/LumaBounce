@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/level_select.gd" id="1_level_select"]
 [ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="2_ink"]
 [ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="3_safe_area"]
 [ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="4_button"]
+[ext_resource type="Script" path="res://scripts/ui/edge_fade.gd" id="5_edge_fade"]
 
 [node name="LevelSelect" type="Control"]
 layout_mode = 3
@@ -59,50 +60,93 @@ mouse_filter = 2
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_top = 60.0
-offset_bottom = 140.0
+offset_top = 46.0
+offset_bottom = 112.0
 grow_horizontal = 2
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
-theme_override_font_sizes/font_size = 46
+theme_override_font_sizes/font_size = 40
 text = "BÖLÜMLER"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="StarTotal" type="Label" parent="SafeArea/Content"]
+[node name="Tabs" type="HBoxContainer" parent="SafeArea/Content"]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_top = 142.0
-offset_bottom = 182.0
+offset_left = 24.0
+offset_top = 122.0
+offset_right = -24.0
+offset_bottom = 178.0
+grow_horizontal = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="WorldStars" type="Label" parent="SafeArea/Content"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 184.0
+offset_bottom = 220.0
 grow_horizontal = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.203922, 0.901961, 0.831373, 1)
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 24
 text = "0 / 150"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="GridScroll" type="ScrollContainer" parent="SafeArea/Content"]
+[node name="PageClip" type="Control" parent="SafeArea/Content"]
+clip_contents = true
 layout_mode = 1
 anchors_preset = -1
-anchor_top = 0.19
+anchor_top = 0.18
 anchor_right = 1.0
-anchor_bottom = 0.8
+anchor_bottom = 0.86
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="GridScroll" type="ScrollContainer" parent="SafeArea/Content/PageClip"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
 
-[node name="GridHolder" type="CenterContainer" parent="SafeArea/Content/GridScroll"]
+[node name="GridHolder" type="CenterContainer" parent="SafeArea/Content/PageClip/GridScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_filter = 2
 
-[node name="Grid" type="GridContainer" parent="SafeArea/Content/GridScroll/GridHolder"]
+[node name="Grid" type="GridContainer" parent="SafeArea/Content/PageClip/GridScroll/GridHolder"]
 layout_mode = 2
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 20
 columns = 2
+
+[node name="TopFade" type="Control" parent="SafeArea/Content/PageClip"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 34.0
+grow_horizontal = 2
+mouse_filter = 2
+script = ExtResource("5_edge_fade")
+
+[node name="BottomFade" type="Control" parent="SafeArea/Content/PageClip"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -34.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("5_edge_fade")
+opaque_at_top = false
 
 [node name="BackButton" type="Button" parent="SafeArea/Content"]
 layout_mode = 1
@@ -112,9 +156,9 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -140.0
-offset_top = -152.0
+offset_top = -128.0
 offset_right = 140.0
-offset_bottom = -76.0
+offset_bottom = -52.0
 grow_horizontal = 2
 grow_vertical = 0
 focus_mode = 0

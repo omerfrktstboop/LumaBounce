@@ -1,39 +1,38 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_i3jxk"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_e3rq5"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
 
-[sub_resource type="Resource" id="Resource_l15_lower"]
+[sub_resource type="Resource" id="Resource_uog5f"]
 script = ExtResource("2_panel_data")
-position = Vector2(500, 800)
-rotation_degrees = -15.0
+position = Vector2(580, 772.2757)
+rotation_degrees = -33.9123477935791
 length = 400.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l15_mid"]
+[sub_resource type="Resource" id="Resource_78vf0"]
 script = ExtResource("2_panel_data")
-position = Vector2(200, 460)
-rotation_degrees = 15.0
+position = Vector2(317.14557, 430)
+rotation_degrees = 17.444193
 length = 380.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l15_far"]
+[sub_resource type="Resource" id="Resource_hu5ch"]
 script = ExtResource("2_panel_data")
-position = Vector2(600, 350)
-rotation_degrees = -8.0
-length = 220.0
+position = Vector2(473.91193, 430)
+rotation_degrees = -18.377213
 thickness = 26.0
 
 [resource]
 script = ExtResource("1_level_data")
 level_id = 19
 display_name = "Kör Sekme"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(350, 260)
-panels = Array[PanelData]([SubResource("Resource_l15_lower"), SubResource("Resource_l15_mid"), SubResource("Resource_l15_far")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 380), Vector2(680, 1440)])
-max_lives = 3
+target_position = Vector2(418.66977, 223.91019)
+panels = Array[ExtResource("2_panel_data")]([SubResource("Resource_uog5f"), SubResource("Resource_78vf0"), SubResource("Resource_hu5ch")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 271.4933), Vector2(571.4933, 1440)])
 two_star_max_seconds = 105.0
-two_star_max_shots = 3
+two_star_max_shots = 2
 three_star_max_seconds = 56.0
-three_star_max_shots = 2
+three_star_max_shots = 1

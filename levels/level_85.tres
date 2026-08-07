@@ -1,109 +1,53 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_4ecxp"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_cbf3i"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_05hd7"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_mqg38"]
 
-[sub_resource type="Resource" id="P_1"]
-script = ExtResource("3")
-position = Vector2(150, 700)
-rotation_degrees = 35
-length = 200
-[sub_resource type="Resource" id="P_2"]
-script = ExtResource("3")
-position = Vector2(570, 700)
-rotation_degrees = -35
-length = 200
-[sub_resource type="Resource" id="W_1"]
-script = ExtResource("2")
+[sub_resource type="Resource" id="Resource_8xgwr"]
+script = ExtResource("2_cbf3i")
+kind = 1
+position = Vector2(370.39172, 868.4154)
+size = Vector2(72.86487, 72.86487)
+
+[sub_resource type="Resource" id="Resource_6i1q6"]
+script = ExtResource("2_cbf3i")
 kind = 2
-position = Vector2(200, 500)
-rotation_degrees = 0.0
-size = Vector2(100, 20)
-inner_radius = 42.0
+position = Vector2(603.503, 723.6599)
+size = Vector2(120, 20)
 spoke_count = 5
-angular_speed_degrees = 68.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="W_2"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(520, 500)
-rotation_degrees = 0.0
-size = Vector2(100, 20)
-inner_radius = 42.0
-spoke_count = 5
-angular_speed_degrees = -68.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="W_3"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(360, 350)
-rotation_degrees = 0.0
-size = Vector2(100, 20)
-inner_radius = 42.0
-spoke_count = 3
-angular_speed_degrees = 81.6
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Boost_1"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(360, 800)
-rotation_degrees = 0.0
-size = Vector2(40, 40)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="B_1"]
-script = ExtResource("1")
-position = Vector2(506, 235)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_2"]
-script = ExtResource("1")
-position = Vector2(451, 300)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_6"]
-script = ExtResource("1")
-position = Vector2(433, 274)
-size = Vector2(40, 20)
-hit_points = 2
-[sub_resource type="Resource" id="B_7"]
-script = ExtResource("1")
-position = Vector2(415, 297)
-size = Vector2(40, 20)
-hit_points = 2
+angular_speed_degrees = 79.45945945945945
+
+[sub_resource type="Resource" id="Resource_8w8nb"]
+script = ExtResource("2_cbf3i")
+kind = 3
+position = Vector2(128.10736, 872.28375)
+size = Vector2(130, 26)
+travel_distance = 102.16216216216216
+motion_period = 2.602702702702703
+
+[sub_resource type="Resource" id="Resource_wh0n3"]
+script = ExtResource("3_05hd7")
+position = Vector2(288, 601)
+rotation_degrees = 47.4
+length = 275.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_bnp1e"]
+script = ExtResource("3_05hd7")
+position = Vector2(545, 617)
+rotation_degrees = -11.7
+length = 267.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4")
+script = ExtResource("4_mqg38")
 level_id = 85
-display_name = "Uzay Fazı 85"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(360, 200)
-target_scale = 0.8
-ball_scale = 0.65
-panels = Array[PanelData]([SubResource("P_1"), SubResource("P_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("B_1"), SubResource("B_2"), SubResource("B_6"), SubResource("B_7")])
-obstacles = Array[ObstacleData]([SubResource("W_1"), SubResource("W_2"), SubResource("W_3"), SubResource("Boost_1")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 60.0
-two_star_max_shots = 6
-three_star_max_seconds = 35.0
-three_star_max_shots = 3
+display_name = "Faz 85"
+target_position = Vector2(266, 370)
+panels = Array[ExtResource("3_05hd7")]([SubResource("Resource_wh0n3"), SubResource("Resource_bnp1e")])
+obstacles = Array[ExtResource("2_cbf3i")]([SubResource("Resource_8xgwr"), SubResource("Resource_6i1q6"), SubResource("Resource_8w8nb")])
+two_star_max_seconds = 114.10000000000001
+two_star_max_shots = 3
+three_star_max_seconds = 60.7

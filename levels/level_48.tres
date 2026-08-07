@@ -1,60 +1,51 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_p1yws"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
 
-[sub_resource type="Resource" id="Panel_lower"]
+[sub_resource type="Resource" id="Resource_ce1st"]
+script = ExtResource("3")
+kind = 1
+position = Vector2(559.54706, 960)
+rotation_degrees = 18.0
+size = Vector2(64, 64)
+
+[sub_resource type="Resource" id="Resource_evb1v"]
+script = ExtResource("3")
+kind = 1
+position = Vector2(151.73317, 615.35065)
+rotation_degrees = -18.0
+size = Vector2(64, 64)
+
+[sub_resource type="Resource" id="Resource_gxgq2"]
+script = ExtResource("3")
+kind = 1
+position = Vector2(469.44122, 709.80145)
+size = Vector2(66, 66)
+
+[sub_resource type="Resource" id="Resource_7kftw"]
 script = ExtResource("2")
-position = Vector2(230, 830)
-rotation_degrees = 30.0
+position = Vector2(200.00337, 882.6375)
+rotation_degrees = 36.851335525512695
 length = 320.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Panel_upper"]
+[sub_resource type="Resource" id="Resource_q2r7g"]
 script = ExtResource("2")
-position = Vector2(500, 520)
-rotation_degrees = 30.0
+position = Vector2(449.2003, 573.9467)
+rotation_degrees = 26.89106321334839
 length = 340.0
 thickness = 26.0
-
-[sub_resource type="Resource" id="Mover_low"]
-script = ExtResource("3")
-kind = 3
-position = Vector2(550, 970)
-rotation_degrees = 18.0
-size = Vector2(100, 28)
-motion_direction_degrees = 90.0
-travel_distance = 55.0
-motion_period = 3.5
-
-[sub_resource type="Resource" id="Mover_high"]
-script = ExtResource("3")
-kind = 3
-position = Vector2(150, 650)
-rotation_degrees = -18.0
-size = Vector2(100, 28)
-motion_direction_degrees = 0.0
-travel_distance = 55.0
-motion_period = 2.6
-phase_degrees = 90.0
-
-[sub_resource type="Resource" id="Bomb_main"]
-script = ExtResource("3")
-kind = 1
-position = Vector2(500, 700)
-size = Vector2(66, 66)
 
 [resource]
 script = ExtResource("1")
 level_id = 48
-display_name = "Cifte Zaman"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(560, 280)
-panels = Array[PanelData]([SubResource("Panel_lower"), SubResource("Panel_upper")])
-obstacles = Array[ObstacleData]([SubResource("Mover_low"), SubResource("Mover_high"), SubResource("Bomb_main")])
-max_lives = 5
+display_name = "Üçlü Mayın"
+target_position = Vector2(585.7998, 262.33887)
+panels = Array[ExtResource("2")]([SubResource("Resource_7kftw"), SubResource("Resource_q2r7g")])
+obstacles = Array[ExtResource("3")]([SubResource("Resource_ce1st"), SubResource("Resource_evb1v"), SubResource("Resource_gxgq2")])
 two_star_max_seconds = 120.0
-two_star_max_shots = 4
+two_star_max_shots = 3
 three_star_max_seconds = 65.0
-three_star_max_shots = 2

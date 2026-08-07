@@ -11,6 +11,25 @@ const DEFAULT_PLAY_RECT := Rect2(0.0, 0.0, 720.0, 1280.0)
 ## Duvar segmenti belirtilmeyen kenarlar bu araliktaki tek parca duvarla kapanir.
 const WALL_OVERSHOOT := 320.0
 
+@export_group("Kimlik")
+## DEGISMEZ benzersiz kimlik ("level_001"). Kayit dosyasi bolumleri BUNUNLA
+## anar; sira degisse veya araya yeni bolum eklense bile oyuncunun ilerlemesi
+## dogru bolumde kalir. Bos birakilirsa level_id'den turetilir (bkz. uid()),
+## boylece mevcut 125 .tres dosyasi degistirilmeden calismaya devam eder.
+@export var level_uid := ""
+## Bolumun kacinci sirada OYNANDIGI. Kimlikten AYRIDIR: sirayi degistirmek
+## icin bu alani degistirmek yeterlidir, kayitlar etkilenmez. 0 birakilirsa
+## level_id kullanilir.
+@export var display_order := 0
+## Hangi dunya/tema paketine ait. Tema paleti ve ileride dunya bazli klasorleme
+## icin (bkz. PaletteThemes.for_level).
+@export var theme_id := ""
+## Kaba zorluk etiketi (1-5). Yalnizca siralama/raporlama icindir; oynanisi
+## etkilemez - gercek zorluk olcusu LevelSolver'in saglam hucre sayisidir.
+@export_range(0, 5, 1) var difficulty := 0
+## Saniye cinsinden sure siniri; 0 = sinirsiz (bugunku davranis).
+@export var time_limit := 0.0
+
 @export var level_id := 1
 @export var display_name := ""
 
@@ -45,6 +64,29 @@ const WALL_OVERSHOOT := 320.0
 ## 3 yildiz icin daha siki esikler; ikisi de saglanmali.
 @export var three_star_max_seconds := 25.0
 @export var three_star_max_shots := 2
+
+
+## Bu bolumun KALICI kimligi. Kayit dosyasinda ve migration'da kullanilan
+## tek dogru anahtar budur.
+##
+## Alan bos birakildiginda level_id'den turetilir ("level_007"): boylece
+## mevcut bolum dosyalarinin hicbirine dokunmadan uid tabanli kayda gecilebilir
+## ve ileride bir bolume acikca uid verildiginde o kazanir. Turetim SABIT bir
+## kural oldugu icin ayni dosya her zaman ayni uid'i uretir.
+func uid() -> String:
+	var explicit := level_uid.strip_edges()
+	return explicit if not explicit.is_empty() else uid_for(level_id)
+
+
+## Bir bolum numarasindan kanonik uid. Kayit gocu (migration) eski tamsayi
+## anahtarlari bununla cevirir - bkz. ProgressStore._migrate_from_v0().
+static func uid_for(number: int) -> String:
+	return "level_%03d" % number
+
+
+## Bolumun oynanma sirasi. display_order verilmemisse level_id'ye duser.
+func order() -> int:
+	return display_order if display_order > 0 else level_id
 
 
 func get_left_segments(play_rect := DEFAULT_PLAY_RECT) -> Array[Vector2]:

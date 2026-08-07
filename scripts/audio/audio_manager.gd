@@ -79,6 +79,7 @@ func _ready() -> void:
 	# Mute, HERHANGI bir ses calmadan once uygulanmali (splash dahil).
 	_settings = AudioSettingsStore.load_from_disk()
 	_apply_mute()
+	_apply_volumes()
 
 	_build_pools()
 	_load_streams()
@@ -177,6 +178,63 @@ func set_muted(muted: bool) -> void:
 
 func toggle_muted() -> void:
 	set_muted(not is_muted())
+
+
+# --- Ses seviyeleri -----------------------------------------------------------
+#
+# Kaydiricilar 0..1 DOGRUSAL calisir; kulak logaritmik duydugu icin bus'a
+# desibel yazilir. 0.0 tam sessizdir - linear_to_db(0) sonsuz negatiftir,
+# o yuzden ayrica ele alinir, yoksa bus gecersiz bir degerle susar.
+
+const MIN_VOLUME_DB := -60.0
+
+
+func get_music_volume() -> float:
+	return _settings.music_volume if _settings != null else 1.0
+
+
+func get_sfx_volume() -> float:
+	return _settings.sfx_volume if _settings != null else 1.0
+
+
+func set_music_volume(value: float) -> void:
+	if _settings == null:
+		return
+	var wanted := clampf(value, 0.0, 1.0)
+	if is_equal_approx(_settings.music_volume, wanted):
+		return
+	_settings.music_volume = wanted
+	_apply_volumes()
+	_settings.save()
+
+
+func set_sfx_volume(value: float) -> void:
+	if _settings == null:
+		return
+	var wanted := clampf(value, 0.0, 1.0)
+	if is_equal_approx(_settings.sfx_volume, wanted):
+		return
+	_settings.sfx_volume = wanted
+	_apply_volumes()
+	_settings.save()
+
+
+func _apply_volumes() -> void:
+	if _settings == null:
+		return
+	# Arayuz sesleri SFX kaydiricisini takip eder: oyuncu "efektleri kis"
+	# dediginde tik seslerinin tam sesle kalmasi tutarsiz olurdu.
+	_set_bus_linear(MUSIC_BUS, _settings.music_volume)
+	_set_bus_linear(SFX_BUS, _settings.sfx_volume)
+	_set_bus_linear(UI_BUS, _settings.sfx_volume)
+
+
+func _set_bus_linear(bus_name: String, linear: float) -> void:
+	var index := AudioServer.get_bus_index(bus_name)
+	if index < 0:
+		return
+	AudioServer.set_bus_volume_db(
+		index, MIN_VOLUME_DB if linear <= 0.0 else linear_to_db(linear))
 
 
 func stop_transient_sounds() -> void:

@@ -56,12 +56,27 @@ enum State {
 @export var squash_time := 0.15
 
 @export_group("Iz")
-## Kisa bir hiz izi: uzun bir kuyruk topun kendisinden dikkat caliyordu.
+## Kuyrugun EN UZUN halindeki nokta sayisi (tam hizda). Yavas topta bu sayi
+## trail_min_length'e kadar duser - bkz. _target_trail_length().
 @export var trail_length := 12
 @export var trail_alpha := 0.40
 @export var trail_fade_time := 0.28
 ## Iki iz noktasi arasindaki en kucuk mesafe.
 @export var trail_min_step := 6.0
+
+@export_subgroup("Hiza Tepki")
+## Kuyruk topun HIZIYLA uzayip kisalir: duran topun arkasinda kuyruk olmasi
+## anlamsizdir, hizli topunki ise hiz hissini tasiyan asil ipucudur.
+## Kuyrugun doygunluga ulastigi hiz (bunun ustunde daha fazla uzamaz).
+@export var trail_reference_speed := 1800.0
+## Yavas topta kalan en kisa kuyruk (nokta sayisi).
+@export_range(2, 10, 1) var trail_min_length := 3
+## Yavas ve hizli topta kuyruk genisligi carpani (radius * trail_width_scale
+## degerine uygulanir).
+@export_range(0.2, 1.0, 0.05) var trail_width_at_rest := 0.55
+## Kuyruk uzunlugu/genisligi bu hizda ani zipdamalar yapmasin diye yumusatilir;
+## saniyedeki yakinsama orani.
+@export_range(1.0, 30.0, 0.5) var trail_response_speed := 12.0
 ## Iz genisligi = radius * bu carpan.
 @export_range(0.4, 1.2, 0.05) var trail_width_scale := 0.85
 ## Kuyruk ucunun govdeye orani. Cok kucuk degerler izi sivri bir ucgene
@@ -83,6 +98,12 @@ var _shell: Node2D
 var _settle_timer := 0.0
 var _squash_tween: Tween
 var _trail_tween: Tween
+## Yumusatilmis hiz orani (0..1). Ham hiz her sekmede aniden degistigi icin
+## kuyruk dogrudan ona baglanirsa carpismalarda goz alici sekilde zipliyor.
+var _trail_speed_ratio := 0.0
+## width_curve/gradient yalnizca gercekten degistiginde yeniden kurulur -
+## her fizik karesinde yeni Curve/Gradient uretmek bosuna cop olurdu.
+var _applied_trail_width := -1.0
 
 
 func _ready() -> void:
@@ -183,6 +204,7 @@ func _physics_process(delta: float) -> void:
 	velocity.y += gravity * delta
 	velocity = velocity.limit_length(max_speed)
 	_move_and_bounce(delta)
+	_update_trail_response(delta)
 	_push_trail_point()
 	if state != State.FLYING:
 		return
@@ -341,12 +363,41 @@ func _setup_trail() -> void:
 	_trail.gradient = gradient
 
 
+## Kuyrugu topun ANLIK hizina gore uzatir/kisaltir ve inceltir/kalinlastirir.
+##
+## Ham hiz dogrudan kullanilmaz: her sekmede hiz basamak basamak degistigi
+## icin kuyruk carpismalarda goz alici sekilde zipliyordu. Bunun yerine hiz
+## orani exponansiyel olarak yumusatilir (trail_response_speed).
+##
+## FIZIGE DOKUNMAZ: burada yalnizca gorsel alanlar degisir; velocity, konum
+## veya carpisma hicbir sekilde etkilenmez. Determinizm kurali korunur
+## (bkz. dosya basi) - ayni atis yine ayni sonucu verir.
+func _update_trail_response(delta: float) -> void:
+	var raw_ratio := clampf(velocity.length() / maxf(trail_reference_speed, 1.0), 0.0, 1.0)
+	# Kare hizindan bagimsiz yumusatma.
+	var blend := clampf(trail_response_speed * delta, 0.0, 1.0)
+	_trail_speed_ratio = lerpf(_trail_speed_ratio, raw_ratio, blend)
+
+	var width := radius * trail_width_scale * lerpf(trail_width_at_rest, 1.0, _trail_speed_ratio)
+	if absf(width - _applied_trail_width) > 0.25:
+		_applied_trail_width = width
+		_trail.width = width
+
+	while _trail.get_point_count() > _target_trail_length():
+		_trail.remove_point(0)
+
+
+## Su anki hizda kuyrugun tasiyacagi nokta sayisi.
+func _target_trail_length() -> int:
+	return int(round(lerpf(float(trail_min_length), float(trail_length), _trail_speed_ratio)))
+
+
 func _push_trail_point() -> void:
 	var count := _trail.get_point_count()
 	if count > 0 and _trail.get_point_position(count - 1).distance_to(global_position) < trail_min_step:
 		return
 	_trail.add_point(global_position)
-	while _trail.get_point_count() > trail_length:
+	while _trail.get_point_count() > _target_trail_length():
 		_trail.remove_point(0)
 
 
@@ -355,6 +406,9 @@ func _clear_trail() -> void:
 		_trail_tween.kill()
 	_trail.modulate.a = 1.0
 	_trail.clear_points()
+	# Yeni atis onceki atisin hiz durumunu devralmasin: aksi halde hizli bir
+	# atistan sonra firlatilan top, daha ilk karede uzun bir kuyrukla basliyor.
+	_trail_speed_ratio = 0.0
 
 
 func _fade_trail() -> void:

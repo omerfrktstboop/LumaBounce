@@ -1,0 +1,96 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/mechanic_intro_card.gd" id="1_card"]
+[ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="2_button"]
+
+[node name="MechanicIntroCard" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_card")
+
+[node name="Scrim" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.090196, 0.137255, 0.227451, 0.88)
+
+[node name="CardCenter" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Card" type="PanelContainer" parent="CardCenter"]
+custom_minimum_size = Vector2(524, 0)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="CardCenter/Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 34
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 34
+theme_override_constants/margin_bottom = 28
+
+[node name="Rows" type="VBoxContainer" parent="CardCenter/Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Kicker" type="Label" parent="CardCenter/Card/Margin/Rows"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 20
+text = "YENİ MEKANİK"
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="CardCenter/Card/Margin/Rows"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 40
+text = "Metal Halka"
+horizontal_alignment = 1
+
+[node name="StageFrame" type="PanelContainer" parent="CardCenter/Card/Margin/Rows"]
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="StageViewport" type="SubViewportContainer" parent="CardCenter/Card/Margin/Rows/StageFrame"]
+custom_minimum_size = Vector2(392, 212)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SubViewport" type="SubViewport" parent="CardCenter/Card/Margin/Rows/StageFrame/StageViewport"]
+transparent_bg = true
+handle_input_locally = false
+size = Vector2i(392, 212)
+render_target_update_mode = 4
+
+[node name="StageRoot" type="Node2D" parent="CardCenter/Card/Margin/Rows/StageFrame/StageViewport/SubViewport"]
+
+[node name="Description" type="Label" parent="CardCenter/Card/Margin/Rows"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/font_size = 24
+text = "Açıklama"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="ContinueButton" type="Button" parent="CardCenter/Card/Margin/Rows"]
+layout_mode = 2
+focus_mode = 0
+script = ExtResource("2_button")
+emphasis = 0
+text = "Anladım"

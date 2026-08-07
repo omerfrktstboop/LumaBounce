@@ -1,28 +1,39 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block"]
 
-[sub_resource type="Resource" id="Resource_l27_redirect"]
-script = ExtResource("2_panel_data")
-position = Vector2(463.0078, 607.91016)
-rotation_degrees = 28.0
-length = 280.0
+[sub_resource type="Resource" id="Panel_0"]
+script = ExtResource("2_panel")
+position = Vector2(463.0078, 607.9102)
+rotation_degrees = 28
+length = 280
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l27_return"]
-script = ExtResource("2_panel_data")
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("2_panel")
 position = Vector2(142.793, 762)
-rotation_degrees = 0.0
-length = 340.0
+rotation_degrees = 0
+length = 340
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l27_chain_block"]
-script = ExtResource("3_block_data")
+[sub_resource type="Resource" id="Brick_0_0"]
+script = ExtResource("3_block")
+position = Vector2(69.3555, 509.2676)
+size = Vector2(80, 34)
+hit_points = 1
+
+[sub_resource type="Resource" id="Brick_0_1"]
+script = ExtResource("3_block")
 position = Vector2(179.3555, 509.2676)
-rotation_degrees = 0.0
-size = Vector2(300, 44)
+size = Vector2(80, 34)
+hit_points = 1
+
+[sub_resource type="Resource" id="Brick_0_2"]
+script = ExtResource("3_block")
+position = Vector2(289.3555, 509.2676)
+size = Vector2(80, 34)
 hit_points = 1
 
 [resource]
@@ -31,12 +42,10 @@ level_id = 27
 display_name = "İki Yol"
 launcher_position = Vector2(360, 1120)
 target_position = Vector2(496.4844, 501.3379)
-panels = Array[PanelData]([SubResource("Resource_l27_redirect"), SubResource("Resource_l27_return")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l27_chain_block")])
-right_wall_segments = Array[Vector2]([Vector2(-320, 640), Vector2(660, 1440)])
-max_lives = 4
-tutorial_text = "Kısa yolu ara; blok kırılırsa ikinci rota açılır."
-two_star_max_seconds = 90.0
-two_star_max_shots = 2
-three_star_max_seconds = 45.0
-three_star_max_shots = 1
+panels = Array[PanelData]([SubResource("Panel_0"), SubResource("Panel_1")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Brick_0_0"), SubResource("Brick_0_1"), SubResource("Brick_0_2")])
+max_lives = 5
+two_star_max_seconds = 95
+two_star_max_shots = 3
+three_star_max_seconds = 50
+three_star_max_shots = 2

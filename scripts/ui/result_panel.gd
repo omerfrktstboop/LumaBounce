@@ -62,7 +62,9 @@ func show_success(title_text: String, next_text: String, retry_text: String,
 		_stars.set_stars(stars)
 
 	_stats.show()
-	_time_value.text = "%.1f sn" % seconds
+	# tr() BICIMLENDIRMEDEN ONCE: Control'un otomatik cevirisi hazir metni
+	# arar, "12.4 sn" tabloda yoktur. Cevrilmesi gereken kaliptir.
+	_time_value.text = tr("%.1f sn") % seconds
 	_shot_value.text = str(shots)
 
 	_next_button.text = next_text
@@ -81,7 +83,7 @@ func show_failure(title_text: String, subtitle_text: String, retry_text: String,
 	_stars.hide()
 
 	_stats.show()
-	_time_value.text = "%.1f sn" % seconds
+	_time_value.text = tr("%.1f sn") % seconds
 	_shot_value.text = str(shots)
 
 	_next_button.hide()

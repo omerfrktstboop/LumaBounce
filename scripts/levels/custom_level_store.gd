@@ -46,6 +46,13 @@ static func path_for(bucket: Bucket, level_name: String) -> String:
 	return "%s/%s.tres" % [dir_for(bucket), _sanitize(level_name)]
 
 
+## Bir bolum adinin LISTEDE gorunecek hali (dosya adi govdesi). Sidecar JSON
+## girislerinin anahtari da budur; list_names() ile ayni degeri uretmesi sart,
+## yoksa kayit ile metadata eslesmez.
+static func entry_name_for(level_name: String) -> String:
+	return _sanitize(level_name)
+
+
 static func list_names(bucket: Bucket) -> PackedStringArray:
 	ensure_dir(bucket)
 	var names := PackedStringArray()

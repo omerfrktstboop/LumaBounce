@@ -1,0 +1,139 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+[MCPRuntimeServer] port: scanning 6570-6585 (default)
+[MCPRuntimeServer] listening on 127.0.0.1:6570
+[MCPRegistry] runtime port 6570 registered for d:/windows/desktop/lumabounce
+LEVEL 1 robust=16 bounces=0 panels=0 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 2 robust=8 bounces=1 panels=1 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 3 robust=15 bounces=1 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 4 robust=9 bounces=1 panels=1 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 5 robust=7 bounces=1 panels=3 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 6 robust=5 bounces=1 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 7 robust=1 bounces=1 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 8 robust=4 bounces=1 panels=4 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 9 robust=4 bounces=1 panels=1 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 10 robust=5 bounces=1 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 11 robust=7 bounces=1 panels=1 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 12 robust=2 bounces=1 panels=3 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 13 robust=2 bounces=1 panels=1 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 14 robust=3 bounces=3 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 15 robust=0 bounces=9999 panels=3 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 16 robust=0 bounces=9999 panels=3 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 17 robust=0 bounces=9999 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 18 robust=0 bounces=9999 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 19 robust=0 bounces=9999 panels=3 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 20 robust=0 bounces=9999 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 21 robust=0 bounces=9999 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 22 robust=0 bounces=9999 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 23 robust=0 bounces=9999 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 24 robust=0 bounces=9999 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 25 robust=1 bounces=7 panels=2 blocks=0 obstacles=0 kinds=- solvable=true
+LEVEL 26 robust=0 bounces=9999 panels=0 blocks=1 obstacles=0 kinds=- solvable=true
+LEVEL 27 robust=11 bounces=1 panels=2 blocks=1 obstacles=0 kinds=- solvable=true
+LEVEL 28 robust=9 bounces=1 panels=1 blocks=2 obstacles=0 kinds=- solvable=true
+LEVEL 29 robust=6 bounces=1 panels=1 blocks=3 obstacles=0 kinds=- solvable=true
+LEVEL 30 robust=0 bounces=9999 panels=0 blocks=1 obstacles=0 kinds=- solvable=true
+LEVEL 31 robust=0 bounces=9999 panels=1 blocks=2 obstacles=0 kinds=- solvable=true
+LEVEL 32 robust=0 bounces=9999 panels=1 blocks=3 obstacles=0 kinds=- solvable=true
+LEVEL 33 robust=0 bounces=-1 panels=1 blocks=3 obstacles=0 kinds=- solvable=false
+LEVEL 34 robust=0 bounces=9999 panels=1 blocks=2 obstacles=0 kinds=- solvable=true
+LEVEL 35 robust=0 bounces=-1 panels=1 blocks=2 obstacles=0 kinds=- solvable=false
+LEVEL 36 robust=0 bounces=9999 panels=1 blocks=2 obstacles=0 kinds=- solvable=true
+LEVEL 37 robust=0 bounces=-1 panels=1 blocks=3 obstacles=0 kinds=- solvable=false
+LEVEL 38 robust=0 bounces=-1 panels=1 blocks=3 obstacles=0 kinds=- solvable=false
+LEVEL 39 robust=0 bounces=-1 panels=1 blocks=2 obstacles=0 kinds=- solvable=false
+LEVEL 40 robust=0 bounces=-1 panels=1 blocks=2 obstacles=0 kinds=- solvable=false
+LEVEL 41 robust=6 bounces=1 panels=1 blocks=0 obstacles=1 kinds=metal_ring solvable=true
+LEVEL 42 robust=1 bounces=6 panels=2 blocks=0 obstacles=2 kinds=bomb solvable=true
+LEVEL 43 robust=0 bounces=9999 panels=1 blocks=0 obstacles=1 kinds=rotating_wheel solvable=true
+LEVEL 44 robust=3 bounces=3 panels=2 blocks=0 obstacles=1 kinds=moving_bar solvable=true
+LEVEL 45 robust=0 bounces=9999 panels=2 blocks=0 obstacles=2 kinds=metal_ring,bomb solvable=true
+LEVEL 46 robust=0 bounces=9999 panels=2 blocks=0 obstacles=2 kinds=rotating_wheel,bomb solvable=true
+LEVEL 47 robust=0 bounces=9999 panels=2 blocks=0 obstacles=2 kinds=metal_ring,moving_bar solvable=true
+LEVEL 48 robust=0 bounces=9999 panels=2 blocks=0 obstacles=3 kinds=moving_bar,bomb solvable=true
+LEVEL 49 robust=0 bounces=9999 panels=2 blocks=0 obstacles=3 kinds=metal_ring,rotating_wheel,moving_bar solvable=true
+LEVEL 50 robust=0 bounces=9999 panels=2 blocks=0 obstacles=4 kinds=metal_ring,bomb,rotating_wheel,moving_bar solvable=true
+LEVEL 51 robust=7 bounces=1 panels=2 blocks=5 obstacles=1 kinds=speed_boost solvable=true
+LEVEL 52 robust=12 bounces=0 panels=0 blocks=2 obstacles=4 kinds=moving_bar,speed_boost solvable=true
+LEVEL 53 robust=7 bounces=1 panels=0 blocks=0 obstacles=6 kinds=bomb,speed_boost solvable=true
+LEVEL 54 robust=7 bounces=1 panels=0 blocks=12 obstacles=1 kinds=speed_boost solvable=true
+LEVEL 55 robust=2 bounces=0 panels=2 blocks=3 obstacles=3 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 56 robust=0 bounces=-1 panels=1 blocks=0 obstacles=3 kinds=metal_ring,speed_boost solvable=false
+LEVEL 57 robust=7 bounces=1 panels=2 blocks=5 obstacles=1 kinds=speed_boost solvable=true
+LEVEL 58 robust=12 bounces=0 panels=0 blocks=2 obstacles=4 kinds=moving_bar,speed_boost solvable=true
+LEVEL 59 robust=11 bounces=1 panels=0 blocks=0 obstacles=6 kinds=bomb,speed_boost solvable=true
+LEVEL 60 robust=9 bounces=1 panels=0 blocks=13 obstacles=1 kinds=speed_boost solvable=true
+LEVEL 61 robust=7 bounces=0 panels=2 blocks=3 obstacles=3 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 62 robust=0 bounces=-1 panels=1 blocks=0 obstacles=3 kinds=metal_ring,speed_boost solvable=false
+LEVEL 63 robust=2 bounces=1 panels=2 blocks=5 obstacles=1 kinds=speed_boost solvable=true
+LEVEL 64 robust=12 bounces=0 panels=0 blocks=2 obstacles=4 kinds=moving_bar,speed_boost solvable=true
+LEVEL 65 robust=4 bounces=1 panels=0 blocks=0 obstacles=7 kinds=bomb,speed_boost solvable=true
+LEVEL 66 robust=1 bounces=2 panels=0 blocks=14 obstacles=1 kinds=speed_boost solvable=true
+LEVEL 67 robust=10 bounces=0 panels=2 blocks=2 obstacles=3 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 68 robust=0 bounces=-1 panels=1 blocks=0 obstacles=3 kinds=metal_ring,speed_boost solvable=false
+LEVEL 69 robust=5 bounces=1 panels=2 blocks=7 obstacles=3 kinds=speed_boost,bomb solvable=true
+LEVEL 70 robust=12 bounces=0 panels=0 blocks=2 obstacles=4 kinds=moving_bar,speed_boost solvable=true
+LEVEL 71 robust=14 bounces=1 panels=0 blocks=0 obstacles=7 kinds=bomb,speed_boost solvable=true
+LEVEL 72 robust=5 bounces=1 panels=0 blocks=14 obstacles=1 kinds=speed_boost solvable=true
+LEVEL 73 robust=7 bounces=0 panels=2 blocks=5 obstacles=3 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 74 robust=0 bounces=9999 panels=1 blocks=0 obstacles=3 kinds=metal_ring,speed_boost solvable=true
+WARNING: LevelLibrary: res://levels/level_75.tres gecersiz -> blok 0: hit_points 1-2 araliginda olmali (3), blok 1: hit_points 1-2 araliginda olmali (3), blok 2: hit_points 1-2 araliginda olmali (3), blok 3: hit_points 1-2 araliginda olmali (3), blok 4: hit_points 1-2 araliginda olmali (3), blok 5: hit_points 1-2 araliginda olmali (3), blok 6: hit_points 1-2 araliginda olmali (3), blok 7: hit_points 1-2 araliginda olmali (3), blok 8: hit_points 1-2 araliginda olmali (3), blok 9: hit_points 1-2 araliginda olmali (3), blok 10: hit_points 1-2 araliginda olmali (3), blok 11: hit_points 1-2 araliginda olmali (3), blok 12: hit_points 1-2 araliginda olmali (3), blok 13: hit_points 1-2 araliginda olmali (3), blok 14: hit_points 1-2 araliginda olmali (3), blok 15: hit_points 1-2 araliginda olmali (3)
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _load_validated (res://scripts/levels/level_library.gd:87)
+       [1] load_level (res://scripts/levels/level_library.gd:61)
+       [2] _score_level (res://tools/score_levels.gd:64)
+       [3] _run (res://tools/score_levels.gd:52)
+       [4] _score_level (res://tools/score_levels.gd:108)
+LEVEL 75 ERROR load_mismatch_got=1
+LEVEL 76 robust=12 bounces=0 panels=0 blocks=2 obstacles=4 kinds=moving_bar,speed_boost solvable=true
+LEVEL 77 robust=7 bounces=1 panels=0 blocks=0 obstacles=8 kinds=bomb,speed_boost solvable=true
+LEVEL 78 robust=0 bounces=9999 panels=0 blocks=15 obstacles=2 kinds=speed_boost,moving_bar solvable=true
+LEVEL 79 robust=0 bounces=9999 panels=2 blocks=5 obstacles=3 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 80 robust=0 bounces=-1 panels=1 blocks=0 obstacles=3 kinds=metal_ring,speed_boost solvable=false
+LEVEL 81 robust=2 bounces=1 panels=2 blocks=9 obstacles=3 kinds=speed_boost,bomb solvable=true
+LEVEL 82 robust=12 bounces=0 panels=0 blocks=2 obstacles=4 kinds=moving_bar,speed_boost solvable=true
+LEVEL 83 robust=4 bounces=1 panels=0 blocks=0 obstacles=8 kinds=bomb,speed_boost solvable=true
+LEVEL 84 robust=2 bounces=1 panels=0 blocks=16 obstacles=2 kinds=speed_boost,moving_bar solvable=true
+LEVEL 85 robust=0 bounces=9999 panels=2 blocks=4 obstacles=4 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 86 robust=0 bounces=-1 panels=1 blocks=0 obstacles=3 kinds=metal_ring,speed_boost solvable=false
+LEVEL 87 robust=2 bounces=1 panels=2 blocks=7 obstacles=3 kinds=speed_boost,bomb solvable=true
+LEVEL 88 robust=8 bounces=0 panels=0 blocks=2 obstacles=5 kinds=moving_bar,speed_boost solvable=true
+LEVEL 89 robust=6 bounces=1 panels=0 blocks=0 obstacles=9 kinds=bomb,speed_boost solvable=true
+LEVEL 90 robust=7 bounces=1 panels=0 blocks=17 obstacles=2 kinds=speed_boost,moving_bar solvable=true
+LEVEL 91 robust=0 bounces=9999 panels=2 blocks=6 obstacles=4 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 92 robust=0 bounces=-1 panels=1 blocks=0 obstacles=5 kinds=metal_ring,speed_boost,moving_bar,bomb solvable=false
+LEVEL 93 robust=6 bounces=1 panels=2 blocks=9 obstacles=3 kinds=speed_boost,bomb solvable=true
+LEVEL 94 robust=8 bounces=0 panels=0 blocks=2 obstacles=5 kinds=moving_bar,speed_boost solvable=true
+LEVEL 95 robust=7 bounces=1 panels=0 blocks=0 obstacles=9 kinds=bomb,speed_boost solvable=true
+LEVEL 96 robust=1 bounces=2 panels=0 blocks=18 obstacles=4 kinds=speed_boost,moving_bar,bomb solvable=true
+LEVEL 97 robust=0 bounces=9999 panels=2 blocks=5 obstacles=4 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 98 robust=0 bounces=-1 panels=1 blocks=0 obstacles=5 kinds=metal_ring,speed_boost,moving_bar,bomb solvable=false
+LEVEL 99 robust=2 bounces=1 panels=2 blocks=10 obstacles=3 kinds=speed_boost,bomb solvable=true
+LEVEL 100 robust=8 bounces=0 panels=0 blocks=2 obstacles=5 kinds=moving_bar,speed_boost solvable=true
+LEVEL 101 robust=3 bounces=1 panels=0 blocks=0 obstacles=10 kinds=bomb,speed_boost solvable=true
+LEVEL 102 robust=0 bounces=9999 panels=0 blocks=18 obstacles=4 kinds=speed_boost,moving_bar,bomb solvable=true
+LEVEL 103 robust=0 bounces=9999 panels=2 blocks=5 obstacles=4 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 104 robust=0 bounces=-1 panels=1 blocks=0 obstacles=5 kinds=metal_ring,speed_boost,moving_bar,bomb solvable=false
+LEVEL 105 robust=5 bounces=1 panels=2 blocks=8 obstacles=3 kinds=speed_boost,bomb solvable=true
+LEVEL 106 robust=8 bounces=0 panels=0 blocks=2 obstacles=5 kinds=moving_bar,speed_boost solvable=true
+LEVEL 107 robust=7 bounces=1 panels=0 blocks=0 obstacles=10 kinds=bomb,speed_boost solvable=true
+LEVEL 108 robust=0 bounces=9999 panels=0 blocks=19 obstacles=4 kinds=speed_boost,moving_bar,bomb solvable=true
+LEVEL 109 robust=0 bounces=9999 panels=2 blocks=4 obstacles=4 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 110 robust=0 bounces=-1 panels=1 blocks=0 obstacles=5 kinds=metal_ring,speed_boost,moving_bar,bomb solvable=false
+LEVEL 111 robust=2 bounces=1 panels=2 blocks=12 obstacles=3 kinds=speed_boost,bomb solvable=true
+LEVEL 112 robust=8 bounces=0 panels=0 blocks=2 obstacles=5 kinds=moving_bar,speed_boost solvable=true
+LEVEL 113 robust=13 bounces=1 panels=0 blocks=0 obstacles=11 kinds=bomb,speed_boost solvable=true
+LEVEL 114 robust=0 bounces=9999 panels=0 blocks=20 obstacles=4 kinds=speed_boost,moving_bar,bomb solvable=true
+LEVEL 115 robust=0 bounces=9999 panels=2 blocks=4 obstacles=4 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 116 robust=0 bounces=-1 panels=1 blocks=0 obstacles=5 kinds=metal_ring,speed_boost,moving_bar,bomb solvable=false
+LEVEL 117 robust=5 bounces=1 panels=2 blocks=12 obstacles=3 kinds=speed_boost,bomb solvable=true
+LEVEL 118 robust=8 bounces=0 panels=0 blocks=2 obstacles=5 kinds=moving_bar,speed_boost solvable=true
+LEVEL 119 robust=0 bounces=9999 panels=0 blocks=0 obstacles=11 kinds=bomb,speed_boost solvable=true
+LEVEL 120 robust=0 bounces=9999 panels=0 blocks=21 obstacles=4 kinds=speed_boost,moving_bar,bomb solvable=true
+LEVEL 121 robust=0 bounces=9999 panels=2 blocks=3 obstacles=4 kinds=rotating_wheel,speed_boost solvable=true
+LEVEL 122 robust=0 bounces=-1 panels=1 blocks=0 obstacles=5 kinds=metal_ring,speed_boost,moving_bar,bomb solvable=false
+LEVEL 123 robust=4 bounces=1 panels=2 blocks=10 obstacles=3 kinds=speed_boost,bomb solvable=true
+LEVEL 124 robust=8 bounces=0 panels=0 blocks=2 obstacles=5 kinds=moving_bar,speed_boost solvable=true
+LEVEL 125 robust=8 bounces=1 panels=0 blocks=0 obstacles=12 kinds=bomb,speed_boost solvable=true
+SUMMARY scored=124 errors=1

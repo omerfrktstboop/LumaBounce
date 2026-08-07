@@ -1,0 +1,66 @@
+keys,tr,en
+OYNA,OYNA,PLAY
+BÖLÜMLER,BÖLÜMLER,LEVELS
+GERİ,GERİ,BACK
+AYARLAR,AYARLAR,SETTINGS
+Yakında,Yakında,Coming soon
+TOP HAKKI BİTTİ,TOP HAKKI BİTTİ,OUT OF BALLS
+BÖLÜM TAMAMLANDI,BÖLÜM TAMAMLANDI,LEVEL COMPLETE
+BÖLÜM BAŞARISIZ,BÖLÜM BAŞARISIZ,LEVEL FAILED
+HEDEFİ VURAMADIN,HEDEFİ VURAMADIN,YOU MISSED THE TARGET
+Süre,Süre,Time
+Top,Top,Balls
+SONRAKİ BÖLÜM,SONRAKİ BÖLÜM,NEXT LEVEL
+TEKRAR OYNA,TEKRAR OYNA,PLAY AGAIN
+TEKRAR BAŞLA,TEKRAR BAŞLA,RESTART
+BÖLÜM SEÇİMİ,BÖLÜM SEÇİMİ,LEVEL SELECT
+ANA MENÜ,ANA MENÜ,MAIN MENU
+BÖLÜM %d,BÖLÜM %d,LEVEL %d
+BÖLÜM 1,BÖLÜM 1,LEVEL 1
+%.1f sn,%.1f sn,%.1f s
+TEST (bölüm bitmez),TEST (bölüm bitmez),TEST (level will not end)
+%s · TEST (bölüm bitmez),%s · TEST (bölüm bitmez),%s · TEST (level will not end)
+YENİ MEKANİK,YENİ MEKANİK,NEW MECHANIC
+YENİ ENGEL,YENİ ENGEL,NEW OBSTACLE
+Açıklama,Açıklama,Description
+Anladım,Anladım,Got it
+Metal Halka,Metal Halka,Metal Ring
+Mayın,Mayın,Mine
+Hızlandırıcı,Hızlandırıcı,Speed Boost
+Kırılabilir Tuğla,Kırılabilir Tuğla,Breakable Brick
+Metal halka,Metal halka,Metal ring
+Bomba,Bomba,Mine
+Donen cark,Donen cark,Spinning wheel
+Kayan engel,Kayan engel,Sliding barrier
+Hızlandirici,Hızlandirici,Speed boost
+Engel,Engel,Obstacle
+"Halka bir at nalıdır: yalnızca üst tarafı açıktır. Alttan gelen top metal gövdeye çarpıp seker.","Halka bir at nalıdır: yalnızca üst tarafı açıktır. Alttan gelen top metal gövdeye çarpıp seker.","The ring is a horseshoe: only its top is open. A ball coming from below hits the metal body and bounces off."
+Mayına dokunma. Değdiği anda atış biter ve bir top hakkın gider.,Mayına dokunma. Değdiği anda atış biter ve bir top hakkın gider.,Do not touch the mine. On contact the shot ends and you lose a ball.
+Çark sürekli döner. Kollar arasındaki boşluğu zamanlaman gerekir.,Çark sürekli döner. Kollar arasındaki boşluğu zamanlaman gerekir.,The wheel spins constantly. You have to time the gap between its spokes.
+Bariyer ileri geri kayar. Açılan boşluğu doğru anda yakala.,Bariyer ileri geri kayar. Açılan boşluğu doğru anda yakala.,The barrier slides back and forth. Catch the gap at the right moment.
+İçinden geçen top hızlanır.,İçinden geçen top hızlanır.,A ball passing through it speeds up.
+"Mavi tuğla tek vuruşta kırılır. Bronz tuğla iki vuruş ister: önce çatlar, sonra dağılır.","Mavi tuğla tek vuruşta kırılır. Bronz tuğla iki vuruş ister: önce çatlar, sonra dağılır.","A blue brick breaks in one hit. A bronze brick needs two: first it cracks, then it shatters."
+Dil,Dil,Language
+Ses,Ses,Sound
+Müzik,Müzik,Music
+Efektler,Efektler,Effects
+Titreşim,Titreşim,Vibration
+Ekran sarsıntısı,Ekran sarsıntısı,Screen shake
+Nişan yardımı,Nişan yardımı,Aim assist
+İlerlemeyi sıfırla,İlerlemeyi sıfırla,Reset progress
+Açık,Açık,On
+Kapalı,Kapalı,Off
+Az,Az,Low
+Normal,Normal,Normal
+Sürüm,Sürüm,Version
+SIFIRLA,SIFIRLA,RESET
+VAZGEÇ,VAZGEÇ,CANCEL
+Tüm ilerlemen silinecek. Bu geri alınamaz.,Tüm ilerlemen silinecek. Bu geri alınamaz.,All your progress will be deleted. This cannot be undone.
+İlerleme sıfırlandı,İlerleme sıfırlandı,Progress reset
+Öğreticileri tekrar göster,Öğreticileri tekrar göster,Show tutorials again
+Öğreticiler tekrar gösterilecek,Öğreticiler tekrar gösterilecek,Tutorials will be shown again
+Sesler,Sesler,Audio
+Oynanış,Oynanış,Gameplay
+Genel,Genel,General
+Nişan izi uzun bölümlerde de tam görünür,Nişan izi uzun bölümlerde de tam görünür,The aim trail stays full length in later levels
+Sekme ve çarpmalarda titreşim,Sekme ve çarpmalarda titreşim,Vibration on bounces and impacts

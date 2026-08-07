@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/app_root.gd" id="1_app_root"]
 [ext_resource type="PackedScene" path="res://scenes/splash.tscn" id="2_splash"]
@@ -7,7 +7,8 @@
 [ext_resource type="PackedScene" path="res://scenes/level_select.tscn" id="5_level_select"]
 [ext_resource type="PackedScene" path="res://scenes/debug_panel.tscn" id="6_debug_panel"]
 [ext_resource type="PackedScene" path="res://scenes/level_editor.tscn" id="7_level_editor"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/ambient_loop.wav" id="8_ambient"]
+[ext_resource type="PackedScene" path="res://scenes/settings.tscn" id="8_settings"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/ambient_loop.wav" id="9_ambient"]
 
 [node name="AppRoot" type="Node"]
 process_mode = 3
@@ -15,6 +16,7 @@ script = ExtResource("1_app_root")
 splash_scene = ExtResource("2_splash")
 main_menu_scene = ExtResource("3_main_menu")
 level_select_scene = ExtResource("5_level_select")
+settings_scene = ExtResource("8_settings")
 gameplay_scene = ExtResource("4_gameplay")
 level_editor_scene = ExtResource("7_level_editor")
 
@@ -47,7 +49,7 @@ scale_amount_max = 6.0
 color = Color(0.2, 0.7, 1.0, 0.4)
 
 [node name="AmbientMusic" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("8_ambient")
+stream = ExtResource("9_ambient")
 volume_db = -12.0
 autoplay = true
 bus = &"Music"
