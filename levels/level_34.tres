@@ -1,62 +1,53 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=11 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel"]
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Panel_0"]
-script = ExtResource("2_panel")
-position = Vector2(369.286, 707.682)
-rotation_degrees = -17.975
-length = 286.249
-thickness = 26.0
-
-[sub_resource type="Resource" id="Brick_0_0"]
-script = ExtResource("3_block")
-position = Vector2(381.3707, 626.621)
-size = Vector2(123.3333, 34)
-hit_points = 1
-
-[sub_resource type="Resource" id="Brick_0_1"]
-script = ExtResource("3_block")
-position = Vector2(534.704, 626.621)
-size = Vector2(123.3333, 34)
-hit_points = 2
-
-[sub_resource type="Resource" id="Brick_0_2"]
-script = ExtResource("3_block")
-position = Vector2(688.0373, 626.621)
-size = Vector2(123.3333, 34)
-hit_points = 1
-
-[sub_resource type="Resource" id="Brick_1_3"]
-script = ExtResource("3_block")
-position = Vector2(273.0677, 897.852)
-size = Vector2(123.3333, 34)
-hit_points = 2
-
-[sub_resource type="Resource" id="Brick_1_4"]
-script = ExtResource("3_block")
-position = Vector2(426.401, 897.852)
-size = Vector2(123.3333, 34)
-hit_points = 1
-
-[sub_resource type="Resource" id="Brick_1_5"]
-script = ExtResource("3_block")
-position = Vector2(579.7343, 897.852)
-size = Vector2(123.3333, 34)
-hit_points = 2
+[sub_resource type="Resource" id="Bomb_1"]
+script = ExtResource("2")
+kind = 1
+position = Vector2(360, 500)
+rotation_degrees = 0.0
+size = Vector2(80, 28)
+inner_radius = 42.0
+spoke_count = 6
+angular_speed_degrees = 55.0
+motion_direction_degrees = 0.0
+travel_distance = 110.0
+motion_period = 2.8
+phase_degrees = 0.0
+[sub_resource type="Resource" id="Bomb_2"]
+script = ExtResource("2")
+kind = 1
+position = Vector2(200, 600)
+rotation_degrees = 0.0
+size = Vector2(90, 28)
+inner_radius = 42.0
+spoke_count = 6
+angular_speed_degrees = 55.0
+motion_direction_degrees = 0.0
+travel_distance = 110.0
+motion_period = 2.8
+phase_degrees = 0.0
 
 [resource]
-script = ExtResource("1_level_data")
+script = ExtResource("4")
 level_id = 34
-display_name = "Çapraz Anahtar"
-launcher_position = Vector2(345.127, 1120)
-target_position = Vector2(391.066, 250.913)
-panels = Array[PanelData]([SubResource("Panel_0")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Brick_0_0"), SubResource("Brick_0_1"), SubResource("Brick_0_2"), SubResource("Brick_1_3"), SubResource("Brick_1_4"), SubResource("Brick_1_5")])
+display_name = "Yeniden Tasarlanan Faz 34"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(165, 173)
+target_scale = 0.65
+ball_scale = 0.65
+panels = Array[PanelData]([])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([SubResource("Bomb_1"), SubResource("Bomb_2")])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
 max_lives = 5
-two_star_max_seconds = 115
+tutorial_text = ""
+two_star_max_seconds = 45.0
 two_star_max_shots = 3
-three_star_max_seconds = 60
+three_star_max_seconds = 20.0
 three_star_max_shots = 2
