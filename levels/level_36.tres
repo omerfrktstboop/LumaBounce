@@ -5,49 +5,59 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Wheel_1"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(360, 650)
-rotation_degrees = 0.0
-size = Vector2(120, 28)
-inner_radius = 42.0
-spoke_count = 4
-angular_speed_degrees = 90.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Speed_1"]
+[sub_resource type="Resource" id="Obs_0"]
 script = ExtResource("2")
 kind = 4
-position = Vector2(360, 850)
+position = Vector2(606, 568)
 rotation_degrees = 0.0
-size = Vector2(50, 50)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
+size = Vector2(102, 35)
+inner_radius = 38.3
+spoke_count = 4
+angular_speed_degrees = 91.6
+motion_direction_degrees = 90.0
+travel_distance = 191.2
+motion_period = 3.1
+phase_degrees = 38.3
+[sub_resource type="Resource" id="Obs_1"]
+script = ExtResource("2")
+kind = 3
+position = Vector2(336, 722)
+rotation_degrees = 0.0
+size = Vector2(85, 38)
+inner_radius = 33.7
+spoke_count = 5
+angular_speed_degrees = 117.3
+motion_direction_degrees = 90.0
+travel_distance = 122.4
 motion_period = 2.8
-phase_degrees = 0.0
+phase_degrees = 48.2
+[sub_resource type="Resource" id="Blk_0"]
+script = ExtResource("1")
+position = Vector2(332, 461)
+size = Vector2(81, 26)
+hit_points = 3
+[sub_resource type="Resource" id="Blk_1"]
+script = ExtResource("1")
+position = Vector2(192, 532)
+size = Vector2(41, 23)
+hit_points = 2
 
 [resource]
 script = ExtResource("4")
 level_id = 36
-display_name = "Yeniden Tasarlanan Faz 36"
+display_name = "Yeniden Tasarlanan Rastgele Faz 36"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(269, 279)
-target_scale = 0.65
+target_position = Vector2(591, 392)
+target_scale = 0.72
 ball_scale = 0.65
 panels = Array[PanelData]([])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Wheel_1"), SubResource("Speed_1")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Blk_0"), SubResource("Blk_1")])
+obstacles = Array[ObstacleData]([SubResource("Obs_0"), SubResource("Obs_1")])
 left_wall_segments = Array[Vector2]([])
 right_wall_segments = Array[Vector2]([])
 max_lives = 5
 tutorial_text = ""
-two_star_max_seconds = 45.0
-two_star_max_shots = 3
-three_star_max_seconds = 20.0
+two_star_max_seconds = 58.0
+two_star_max_shots = 5
+three_star_max_seconds = 23.8
 three_star_max_shots = 2

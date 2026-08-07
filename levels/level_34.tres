@@ -5,49 +5,41 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Bomb_1"]
+[sub_resource type="Resource" id="Obs_0"]
 script = ExtResource("2")
-kind = 1
-position = Vector2(360, 500)
+kind = 0
+position = Vector2(283, 612)
 rotation_degrees = 0.0
-size = Vector2(80, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-[sub_resource type="Resource" id="Bomb_2"]
-script = ExtResource("2")
-kind = 1
-position = Vector2(200, 600)
-rotation_degrees = 0.0
-size = Vector2(90, 28)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
+size = Vector2(105, 45)
+inner_radius = 31.1
+spoke_count = 4
+angular_speed_degrees = 102.3
+motion_direction_degrees = 90.0
+travel_distance = 158.5
+motion_period = 2.6
+phase_degrees = 52.8
+[sub_resource type="Resource" id="Blk_0"]
+script = ExtResource("1")
+position = Vector2(546, 361)
+size = Vector2(95, 28)
+hit_points = 3
 
 [resource]
 script = ExtResource("4")
 level_id = 34
-display_name = "Yeniden Tasarlanan Faz 34"
+display_name = "Yeniden Tasarlanan Rastgele Faz 34"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(165, 173)
-target_scale = 0.65
+target_position = Vector2(294, 268)
+target_scale = 0.64
 ball_scale = 0.65
 panels = Array[PanelData]([])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Bomb_1"), SubResource("Bomb_2")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Blk_0")])
+obstacles = Array[ObstacleData]([SubResource("Obs_0")])
 left_wall_segments = Array[Vector2]([])
 right_wall_segments = Array[Vector2]([])
 max_lives = 5
 tutorial_text = ""
-two_star_max_seconds = 45.0
+two_star_max_seconds = 34.4
 two_star_max_shots = 3
-three_star_max_seconds = 20.0
-three_star_max_shots = 2
+three_star_max_seconds = 17.5
+three_star_max_shots = 1
