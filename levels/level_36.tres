@@ -1,28 +1,50 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="LevelData" load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block_data"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block"]
 
-[sub_resource type="Resource" id="Resource_l36_panel"]
-script = ExtResource("2_panel_data")
+[sub_resource type="Resource" id="Panel_0"]
+script = ExtResource("2_panel")
 position = Vector2(350.714, 707.682)
 rotation_degrees = 17.975
-length = 286.249
+length = 243.3
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_l36_left"]
-script = ExtResource("3_block_data")
-position = Vector2(185.296, 626.621)
-rotation_degrees = 0.0
-size = Vector2(430, 46)
+[sub_resource type="Resource" id="Brick_0_0"]
+script = ExtResource("3_block")
+position = Vector2(31.9627, 626.621)
+size = Vector2(123.3333, 34)
 hit_points = 2
 
-[sub_resource type="Resource" id="Resource_l36_lower"]
-script = ExtResource("3_block_data")
+[sub_resource type="Resource" id="Brick_0_1"]
+script = ExtResource("3_block")
+position = Vector2(185.296, 626.621)
+size = Vector2(123.3333, 34)
+hit_points = 1
+
+[sub_resource type="Resource" id="Brick_0_2"]
+script = ExtResource("3_block")
+position = Vector2(338.6293, 626.621)
+size = Vector2(123.3333, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Brick_1_3"]
+script = ExtResource("3_block")
+position = Vector2(140.2657, 897.852)
+size = Vector2(123.3333, 34)
+hit_points = 1
+
+[sub_resource type="Resource" id="Brick_1_4"]
+script = ExtResource("3_block")
 position = Vector2(293.599, 897.852)
-rotation_degrees = 0.0
-size = Vector2(430, 46)
+size = Vector2(123.3333, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Brick_1_5"]
+script = ExtResource("3_block")
+position = Vector2(446.9323, 897.852)
+size = Vector2(123.3333, 34)
 hit_points = 2
 
 [resource]
@@ -30,12 +52,12 @@ script = ExtResource("1_level_data")
 level_id = 36
 display_name = "Ayna Anahtar"
 launcher_position = Vector2(374.873, 1120)
-target_position = Vector2(328.934, 250.913)
-panels = Array[PanelData]([SubResource("Resource_l36_panel")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Resource_l36_left"), SubResource("Resource_l36_lower")])
-max_lives = 7
-tutorial_text = "İki çatlağı aynı sekme zincirinde hazırla."
-two_star_max_seconds = 145.0
-two_star_max_shots = 6
-three_star_max_seconds = 80.0
-three_star_max_shots = 5
+target_position = Vector2(328.934, 200.913)
+panels = Array[PanelData]([SubResource("Panel_0")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Brick_0_0"), SubResource("Brick_0_1"), SubResource("Brick_0_2"), SubResource("Brick_1_3"), SubResource("Brick_1_4"), SubResource("Brick_1_5")])
+target_scale = 0.7
+max_lives = 5
+two_star_max_seconds = 94.4
+two_star_max_shots = 2
+three_star_max_seconds = 62
+three_star_max_shots = 2
