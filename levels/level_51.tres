@@ -26,7 +26,7 @@ angular_speed_degrees = 68.889854
 script = ExtResource("2_a8nkr")
 position = Vector2(312.81763, 550.81696)
 rotation_degrees = 281.41513
-size = Vector2(80, 28)
+size = Vector2(104, 28)
 inner_radius = 39.237854
 
 [sub_resource type="Resource" id="Resource_lnj4g"]

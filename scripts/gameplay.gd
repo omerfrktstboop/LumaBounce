@@ -53,7 +53,7 @@ signal block_mechanic_seen()
 @export_group("Bolum")
 ## Panellerin uretildigi sahne (bounce_panel.tscn).
 @export var panel_scene: PackedScene
-## Veri atanmamissa (or. sahne dogrudan calistirilirsa) kullanilacak bolum.
+## Eger load_level ile belirli bir bolum yuklenmeden sahne acilirsa (onizleme).
 @export var fallback_level_id := 1
 
 @export_group("Nisan Zorlugu")

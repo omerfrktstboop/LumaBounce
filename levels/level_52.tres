@@ -9,11 +9,12 @@
 script = ExtResource("2_oqhmo")
 position = Vector2(319.20575, 555.26764)
 rotation_degrees = 90.923996
-size = Vector2(80, 28)
+size = Vector2(124, 28)
 inner_radius = 48.86112
 
 [resource]
 script = ExtResource("4_4iyuk")
+level_id = 52
 display_name = "İlk Atış"
 obstacles = Array[ExtResource("2_oqhmo")]([SubResource("Resource_ea88g")])
 tutorial_text = "Sürükle, nişan al ve bırak"
