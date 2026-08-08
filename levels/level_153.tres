@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_70r15"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_wbmfk"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_20p7v"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_3gh63"]
+
+[sub_resource type="Resource" id="Resource_sfy8x"]
+script = ExtResource("2_wbmfk")
+kind = 2
+position = Vector2(448.81024, 824.1475)
+size = Vector2(130, 20)
+angular_speed_degrees = 130.0
+
+[sub_resource type="Resource" id="Resource_7xkbx"]
+script = ExtResource("2_wbmfk")
+kind = 3
+position = Vector2(115.592316, 745.19714)
+size = Vector2(150, 26)
+travel_distance = 150.0
+motion_period = 1.9
+
+[sub_resource type="Resource" id="Resource_45iqr"]
+script = ExtResource("3_20p7v")
+position = Vector2(346.8167, 558.2901)
+rotation_degrees = 48.675407
+length = 305.94156
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_50ymk"]
+script = ExtResource("3_20p7v")
+position = Vector2(436.7718, 556.86707)
+rotation_degrees = 47.066948
+length = 318.38004
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_3gh63")
+is_bonus = true
+level_id = 153
+display_name = "Kinetik Sınav I"
+target_position = Vector2(310.80164, 251.66798)
+panels = Array[ExtResource("3_20p7v")]([SubResource("Resource_45iqr"), SubResource("Resource_50ymk")])
+obstacles = Array[ExtResource("2_wbmfk")]([SubResource("Resource_sfy8x"), SubResource("Resource_7xkbx")])
+two_star_max_seconds = 999.0
+two_star_max_shots = 5
+three_star_max_seconds = 999.0
+three_star_max_shots = 5

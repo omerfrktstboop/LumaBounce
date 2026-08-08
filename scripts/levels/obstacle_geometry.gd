@@ -73,11 +73,30 @@ static func dynamic_shapes(obstacles: Array[ObstacleData], seconds: float) -> Ar
 	return shapes
 
 
-static func hazard_shapes(obstacles: Array[ObstacleData]) -> Array[Dictionary]:
+## [param seconds] ATIS BASINDAN itibaren gecen sure.
+##
+## Zaman parametresi lazer icin eklendi: bomba ve hizlandirici her zaman
+## tehlikeliyken lazer yalnizca isini ACIKKEN oldurur. Solver bu listeyi
+## artik kare basina yeniden hesaplar (bkz. LevelSolver._hazard_shapes_for_frame);
+## eskiden bir kez onbellege aliniyordu ve zamanla degisen bir tehlike
+## ifade edilemiyordu.
+static func hazard_shapes(obstacles: Array[ObstacleData],
+		seconds := 0.0) -> Array[Dictionary]:
 	var shapes: Array[Dictionary] = []
 	for i in obstacles.size():
 		var data = obstacles[i]
-		if data != null and data.kind == ObstacleData.Kind.BOMB:
+		if data != null and data.kind == ObstacleData.Kind.PULSE_LASER:
+			if not data.laser_is_active(seconds):
+				continue
+			shapes.append({
+				"shape": "rect",
+				"center": data.position,
+				"size": data.size,
+				"rotation": deg_to_rad(data.rotation_degrees),
+				"hazard_reason": "laser",
+				"obstacle_index": i,
+			})
+		elif data != null and data.kind == ObstacleData.Kind.BOMB:
 			shapes.append({
 				"shape": "circle",
 				"center": data.position,
@@ -110,7 +129,7 @@ static func all_shapes(obstacles: Array[ObstacleData], seconds: float) -> Array[
 					"size": local["size"],
 					"rotation": float(local["rotation"]) + base_rotation,
 				})
-	shapes.append_array(hazard_shapes(obstacles))
+	shapes.append_array(hazard_shapes(obstacles, seconds))
 	return shapes
 
 

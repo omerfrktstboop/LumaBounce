@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_h1pu7"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_p40ol"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_qkvfo"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_von7x"]
+
+[sub_resource type="Resource" id="Resource_c5wiq"]
+script = ExtResource("1_h1pu7")
+position = Vector2(407.62018, 575.14545)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_qa2qx"]
+script = ExtResource("1_h1pu7")
+position = Vector2(541.6202, 575.14545)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_w7pgi"]
+script = ExtResource("2_p40ol")
+kind = 5
+position = Vector2(598.84125, 921.53613)
+size = Vector2(323.43436, 14)
+motion_period = 2.2606060606060607
+phase_degrees = 253.24232
+pulse_on_ratio = 0.5924242424242424
+
+[sub_resource type="Resource" id="Resource_6r0q4"]
+script = ExtResource("2_p40ol")
+kind = 2
+position = Vector2(473.41788, 363.28305)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 116.21212121212122
+
+[sub_resource type="Resource" id="Resource_dbffw"]
+script = ExtResource("3_qkvfo")
+position = Vector2(210.76695, 505.33618)
+rotation_degrees = 44.01026363372803
+length = 325.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_75uqx"]
+script = ExtResource("3_qkvfo")
+position = Vector2(351.89832, 780.7755)
+rotation_degrees = -48.62759666442871
+length = 270.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_2l1k6"]
+script = ExtResource("3_qkvfo")
+position = Vector2(239.94061, 695.01807)
+rotation_degrees = 29.789477920532228
+length = 392.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_von7x")
+level_id = 145
+display_name = "Faz 145"
+target_position = Vector2(292.14267, 253.2135)
+panels = Array[ExtResource("3_qkvfo")]([SubResource("Resource_dbffw"), SubResource("Resource_75uqx"), SubResource("Resource_2l1k6")])
+breakable_blocks = Array[ExtResource("1_h1pu7")]([SubResource("Resource_c5wiq"), SubResource("Resource_qa2qx")])
+obstacles = Array[ExtResource("2_p40ol")]([SubResource("Resource_w7pgi"), SubResource("Resource_6r0q4")])
+two_star_max_seconds = 155.70000000000002
+two_star_max_shots = 3
+three_star_max_seconds = 82.7

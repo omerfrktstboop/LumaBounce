@@ -211,6 +211,21 @@ func _map_obstacle(raw: Variant) -> Dictionary:
 				float(raw.get("motion_period", 2.8)), 1.0, 8.0)
 			obstacle.phase_degrees = clampf(
 				float(raw.get("phase_degrees", 0.0)), -180.0, 180.0)
+		ObstacleData.Kind.PULSE_LASER:
+			# Lazer su an AI sozlesmesinde SUNULMUYOR (bkz. AILevelContract:
+			# turler listesi) - AI isinin ritmini kurmayi bilmiyor. Yine de
+			# kisitlama burada duruyor: elle duzenlenmis bir JSON bu yoldan
+			# gecerse degerler yine guvenli araliga cekilsin. Bu dosyanin isi
+			# AI'dan gelen HICBIR degere guvenmemektir.
+			obstacle.size = Vector2(
+				clampf(float(raw["width"]), 90.0, 460.0),
+				clampf(float(raw.get("height", 14.0)), 8.0, 30.0))
+			obstacle.motion_period = clampf(
+				float(raw.get("motion_period", 3.0)), 1.2, 6.0)
+			obstacle.pulse_on_ratio = clampf(
+				float(raw.get("pulse_on_ratio", 0.667)), 0.15, 0.85)
+			obstacle.phase_degrees = clampf(
+				float(raw.get("phase_degrees", 0.0)), -180.0, 180.0)
 	return {"ok": true, "value": obstacle}
 
 

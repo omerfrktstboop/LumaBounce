@@ -55,7 +55,7 @@ var _ball_shape: CircleShape2D
 ## her can icin ayni geometride ayri bir RID/bit kullanir.
 var _block_index: Dictionary = {}
 var _obstacles: Array[ObstacleData] = []
-var _hazard_shapes: Array[Dictionary] = []
+var _hazard_shape_cache: Dictionary = {}
 var _dynamic_shape_cache: Dictionary = {}
 
 
@@ -98,7 +98,9 @@ func bind_space(space: PhysicsDirectSpaceState2D, block_rids: Dictionary = {},
 	_space = space
 	_block_index = block_rids
 	_obstacles.assign(obstacles)
-	_hazard_shapes = ObstacleGeometry.hazard_shapes(_obstacles)
+	# Tehlikeler artik kare basina hesaplanir (lazer zamanla yanip soner);
+	# onbellek _hazard_shape_cache icinde tutulur.
+	_hazard_shape_cache.clear()
 	_dynamic_shape_cache.clear()
 
 
@@ -660,12 +662,24 @@ func _cast_with_obstacles(from: Vector2, motion: Vector2,
 		best["rid"] = RID()
 		best_fraction = float(dynamic_hit["fraction"])
 	var hazard_hit := ObstacleGeometry.cast_circle(
-		from, motion, radius, _hazard_shapes, ignored_hazards)
+		from, motion, radius, _hazard_shapes_for_frame(frame_index), ignored_hazards)
 	# Esit anda tehlike ve yuzey temasi varsa bomba onceliklidir.
 	if not hazard_hit.is_empty() and float(hazard_hit["fraction"]) <= best_fraction:
 		best = hazard_hit
 		best["rid"] = RID()
 	return best
+
+
+## Tehlike sekilleri de kare basina: lazer yalnizca isini acikken oldurur.
+## Zaman _dynamic_shapes_for_frame ile AYNI formulden gelir, yoksa isin ile
+## donen cark birbirine gore kayardi.
+func _hazard_shapes_for_frame(frame_index: int) -> Array[Dictionary]:
+	if _hazard_shape_cache.has(frame_index):
+		return _hazard_shape_cache[frame_index]
+	var seconds := float(frame_index + 1) / PHYSICS_FPS
+	var shapes := ObstacleGeometry.hazard_shapes(_obstacles, seconds)
+	_hazard_shape_cache[frame_index] = shapes
+	return shapes
 
 
 func _dynamic_shapes_for_frame(frame_index: int) -> Array[Dictionary]:

@@ -1,0 +1,62 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_p7v71"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_t6cqp"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_p3kaf"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_3iyo1"]
+
+[sub_resource type="Resource" id="Resource_gm5ec"]
+script = ExtResource("1_p7v71")
+position = Vector2(119.312256, 516.6124)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_npc8d"]
+script = ExtResource("1_p7v71")
+position = Vector2(253.31226, 516.6124)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_phyo3"]
+script = ExtResource("1_p7v71")
+position = Vector2(387.31226, 516.6124)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_ao1mo"]
+script = ExtResource("1_p7v71")
+position = Vector2(521.31226, 516.6124)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_kx1tq"]
+script = ExtResource("3_p3kaf")
+position = Vector2(193.82343, 670.67664)
+rotation_degrees = 26.168167
+length = 352.74384
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_kpp1o"]
+script = ExtResource("3_p3kaf")
+position = Vector2(469.86157, 912.5477)
+rotation_degrees = -38.9466
+length = 349.58627
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_a2jaq"]
+script = ExtResource("3_p3kaf")
+position = Vector2(371.47083, 707.4946)
+rotation_degrees = 29.234512
+length = 375.30966
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_3iyo1")
+is_bonus = true
+level_id = 151
+display_name = "Sınav I"
+target_position = Vector2(320.31226, 372.2472)
+panels = Array[ExtResource("3_p3kaf")]([SubResource("Resource_kx1tq"), SubResource("Resource_kpp1o"), SubResource("Resource_a2jaq")])
+breakable_blocks = Array[ExtResource("1_p7v71")]([SubResource("Resource_gm5ec"), SubResource("Resource_npc8d"), SubResource("Resource_phyo3"), SubResource("Resource_ao1mo")])
+two_star_max_seconds = 999.0
+two_star_max_shots = 5
+three_star_max_seconds = 999.0
+three_star_max_shots = 5

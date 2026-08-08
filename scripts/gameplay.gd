@@ -661,6 +661,17 @@ func _on_hazard_triggered(reason: String, at: Vector2) -> void:
 		AudioManager.play_target_hit()
 		return
 		
+	if reason == "laser":
+		# Bomba kadar olumcul ama gorsel dili farkli: patlama degil, isinin
+		# uzerinde ince ve keskin bir kivilcim cizgisi.
+		SparkBurst.burst(
+			_effects, at, Vector2.UP, 1.4,
+			Palette.HAZARD_CORE, Palette.HAZARD, 18, 90.0, 520.0)
+		_shake.add_trauma(0.7)
+		Haptics.hazard(true)
+		_ball.fail_shot(reason)
+		return
+
 	if reason == "bomb":
 		SparkBurst.burst(
 			_effects, at, Vector2.UP, 2.0,

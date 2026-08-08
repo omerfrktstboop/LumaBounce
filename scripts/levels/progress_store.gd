@@ -47,7 +47,11 @@ const KEY_LANGUAGE := "language"
 const KEY_SHAKE_SCALE := "shake_scale"
 const KEY_AIM_ASSIST := "aim_assist"
 
-const MAX_STARS_PER_LEVEL := 3
+## NORMAL bir bolumun azami yildizi. Bonus bolumler daha fazla verir, bu
+## yuzden yildiz SINIRLAMASI ve TOPLAMLARI bu sabite degil bolumun kendi
+## kapasitesine bakar (bkz. max_stars_for). Sabit yalnizca "bilinmeyen bolum"
+## icin guvenli bir tavan olarak durur.
+const MAX_STARS_PER_LEVEL := LevelData.NORMAL_MAX_STARS
 
 var highest_unlocked_level := LevelLibrary.FIRST_LEVEL_ID
 var completed_levels: Array[int] = []
@@ -184,6 +188,12 @@ func _last_completed_uid() -> String:
 func is_unlocked(level_id: int) -> bool:
 	if not LevelLibrary.is_valid_id(level_id):
 		return false
+	# BONUS bolumler sirali ilerlemeye TABI DEGILDIR: numaralari 151+ oldugu
+	# icin "onceki bolumu bitir" kurali onlari asla acmazdi. Kosul tek: ait
+	# olduklari dunyadan yeterince yildiz toplamak. Zaten amaclari da bu -
+	# bir dunyanin tamamina hakim olanin sinavi.
+	if LevelWorlds.is_bonus_id(level_id):
+		return get_world_stars(LevelWorlds.world_of_bonus(level_id)) 			>= LevelWorlds.bonus_required_stars(level_id)
 	if level_id > highest_unlocked_level:
 		return false
 	var required := LevelLibrary.required_stars_for(level_id)
@@ -192,9 +202,26 @@ func is_unlocked(level_id: int) -> bool:
 	return get_stars_before(level_id) >= required
 
 
+## Bir dunyanin NORMAL bolumlerinden toplanmis yildiz. Bonus bolumlerin
+## yildizi SAYILMAZ: bonus, esigin kendisi degil odulu.
+func get_world_stars(world_index: int) -> int:
+	if world_index < 0 or world_index >= LevelWorlds.count():
+		return 0
+	var total := 0
+	for level_id in range(LevelWorlds.first_level(world_index),
+			LevelWorlds.last_level(world_index) + 1):
+		total += get_level_stars(level_id)
+	return total
+
+
 ## Yildiz kapisi olan bir bolum icin (mevcut, gerekli). Kapi yoksa ikisi de
 ## 0 doner. Kilitli buton "34 / 40" bilgisini bundan uretir.
 func get_star_gate_progress(level_id: int) -> Vector2i:
+	if LevelWorlds.is_bonus_id(level_id):
+		var needed := LevelWorlds.bonus_required_stars(level_id)
+		if needed <= 0:
+			return Vector2i.ZERO
+		return Vector2i(get_world_stars(LevelWorlds.world_of_bonus(level_id)), needed)
 	var required := LevelLibrary.required_stars_for(level_id)
 	if required <= 0:
 		return Vector2i.ZERO
@@ -221,7 +248,7 @@ func get_resume_level_id() -> int:
 func get_level_stars(level_id: int) -> int:
 	var value: Variant = level_stars.get(level_id, 0)
 	if value is int or value is float:
-		return clampi(int(value), 0, MAX_STARS_PER_LEVEL)
+		return clampi(int(value), 0, max_stars_for(level_id))
 	return 0
 
 
@@ -230,7 +257,7 @@ func get_level_stars(level_id: int) -> int:
 func set_level_stars_if_higher(level_id: int, stars: int) -> bool:
 	if not LevelLibrary.is_valid_id(level_id):
 		return false
-	var clamped := clampi(stars, 0, MAX_STARS_PER_LEVEL)
+	var clamped := clampi(stars, 0, max_stars_for(level_id))
 	if clamped <= get_level_stars(level_id):
 		return false
 	level_stars[level_id] = clamped
@@ -249,12 +276,29 @@ func get_total_stars() -> int:
 func get_stars_before(level_id: int) -> int:
 	var total := 0
 	for id in range(LevelLibrary.FIRST_LEVEL_ID, level_id):
+		# Bonus bolumler kapi sayimina GIRMEZ: bir kapinin arkasindaki odul,
+		# bir sonraki kapiyi acmaya katkida bulunmamali.
+		if LevelWorlds.is_bonus_id(id):
+			continue
 		total += get_level_stars(id)
 	return total
 
 
 func get_max_available_stars() -> int:
-	return LevelLibrary.LEVEL_COUNT * MAX_STARS_PER_LEVEL
+	var total := 0
+	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, LevelLibrary.last_level_id() + 1):
+		total += max_stars_for(level_id)
+	return total
+
+
+## Bolumun yildiz kapasitesi. Bonus bolumler 5, digerleri 3 verir.
+##
+## Bolum dosyasindan OKUNUR, numaraya bakilarak tahmin edilmez: kapasite
+## bolumun bir ozelligi (LevelData.is_bonus), numaralarin bir ozelligi degil.
+static func max_stars_for(level_id: int) -> int:
+	if not LevelLibrary.is_valid_id(level_id):
+		return LevelData.NORMAL_MAX_STARS
+	return LevelLibrary.load_level(level_id).max_stars()
 
 
 # --- Engel tanitimi -------------------------------------------------------------

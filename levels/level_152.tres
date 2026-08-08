@@ -1,0 +1,70 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_56jem"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_vfdxu"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_a88wa"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_4ph2h"]
+
+[sub_resource type="Resource" id="Resource_re3bi"]
+script = ExtResource("1_56jem")
+position = Vector2(192.94586, 441.96973)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_l16vp"]
+script = ExtResource("1_56jem")
+position = Vector2(326.94586, 441.96973)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_tlcch"]
+script = ExtResource("1_56jem")
+position = Vector2(460.94586, 441.96973)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_0raj1"]
+script = ExtResource("1_56jem")
+position = Vector2(594.94586, 441.96973)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_xokdy"]
+script = ExtResource("2_vfdxu")
+position = Vector2(598.48157, 397.21756)
+rotation_degrees = 180.0
+size = Vector2(180, 28)
+inner_radius = 58.0
+
+[sub_resource type="Resource" id="Resource_lur5n"]
+script = ExtResource("2_vfdxu")
+kind = 1
+position = Vector2(255.0504, 740.7456)
+size = Vector2(88, 88)
+
+[sub_resource type="Resource" id="Resource_3t4pa"]
+script = ExtResource("3_a88wa")
+position = Vector2(421.58673, 901.9701)
+rotation_degrees = -43.15955
+length = 264.0924
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_ubkfg"]
+script = ExtResource("3_a88wa")
+position = Vector2(272.51733, 640.34155)
+rotation_degrees = 45.29212
+length = 242.55428
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_4ph2h")
+is_bonus = true
+level_id = 152
+display_name = "Sınav II"
+target_position = Vector2(393.94586, 274.56497)
+panels = Array[ExtResource("3_a88wa")]([SubResource("Resource_3t4pa"), SubResource("Resource_ubkfg")])
+breakable_blocks = Array[ExtResource("1_56jem")]([SubResource("Resource_re3bi"), SubResource("Resource_l16vp"), SubResource("Resource_tlcch"), SubResource("Resource_0raj1")])
+obstacles = Array[ExtResource("2_vfdxu")]([SubResource("Resource_xokdy"), SubResource("Resource_lur5n")])
+two_star_max_seconds = 999.0
+two_star_max_shots = 5
+three_star_max_seconds = 999.0
+three_star_max_shots = 5

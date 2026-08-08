@@ -1133,8 +1133,12 @@ func _test_level_select() -> void:
 		grid.get_child(0).get("accent_override"), LevelWorlds.accent_for_index(1))
 
 	select.call("_show_world", 2, 1)
-	_check("son dunya kutuphanenin sonuna kadar uzanir", grid.get_child_count(), 25)
-	_check("son dunyanin son bolumu 125", grid.get_child(24).name, "Level125")
+	# Son dunya ACIK UCLU: LEVEL_COUNT buyudukce buyur (101-150).
+	_check("son dunya kutuphanenin sonuna kadar uzanir", grid.get_child_count(),
+		LevelWorlds.level_count(2))
+	_check("son dunyanin son bolumu kutuphanenin sonu",
+		grid.get_child(grid.get_child_count() - 1).name,
+		"Level%d" % LevelLibrary.last_level_id())
 
 	root.remove_child(select)
 	select.free()
@@ -1166,6 +1170,7 @@ func _test_level_worlds() -> void:
 	_check("bolum 100 -> dunya 1", LevelWorlds.index_for_level(100), 1)
 	_check("bolum 101 -> dunya 2", LevelWorlds.index_for_level(101), 2)
 	_check("bolum 125 -> dunya 2", LevelWorlds.index_for_level(125), 2)
+	_check("bolum 150 -> dunya 2", LevelWorlds.index_for_level(150), 2)
 
 	# Tema ile dunya AYNI kaynaktan gelmeli.
 	_check("50 ve 51 farkli tema",
@@ -1369,7 +1374,7 @@ func _test_settings_screen() -> void:
 func _test_library_bounds() -> void:
 	print("")
 	print("--- LevelLibrary sinirlari ---")
-	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 125)
+	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 150)
 	_check("has_next(20)", LevelLibrary.has_next(20), true)
 	_check("has_next(24)", LevelLibrary.has_next(24), true)
 	_check("has_next(25)", LevelLibrary.has_next(25), true)
@@ -1377,9 +1382,10 @@ func _test_library_bounds() -> void:
 	_check("has_next(40)", LevelLibrary.has_next(40), true)
 	_check("has_next(49)", LevelLibrary.has_next(49), true)
 	_check("has_next(50)", LevelLibrary.has_next(50), true)
-	_check("has_next(124)", LevelLibrary.has_next(124), true)
-	_check("has_next(125)", LevelLibrary.has_next(125), false)
-	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 375)
+	_check("has_next(125)", LevelLibrary.has_next(125), true)
+	_check("has_next(149)", LevelLibrary.has_next(149), true)
+	_check("has_next(150)", LevelLibrary.has_next(150), false)
+	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 450)
 
 	# 1-50: hand-authored kutuphane, mevcut yay kurallarina tam uymali.
 	for id in range(1, 51):
@@ -1429,6 +1435,17 @@ func _test_library_bounds() -> void:
 		_check("bolum %d engel iceriyor" % id, level.obstacles.is_empty(), false)
 		_check("bolum %d tugla iceriyor (final bandi engel+blok)" % id,
 			level.breakable_blocks.is_empty(), false)
+
+	# 126-150 LAZER BANDI: yanip sonen isin bandin kimligi. Tur kurallari
+	# check_obstacles.gd::_test_official_obstacle_levels icinde; burada
+	# kutuphanenin butunlugu dogrulanir.
+	for id in range(126, 151):
+		var level := LevelLibrary.load_level(id)
+		_check("bolum %d yukleniyor" % id, level.level_id, id)
+		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
+		_check("bolum %d engel iceriyor" % id, level.obstacles.is_empty(), false)
+		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
+			level.three_star_max_shots <= level.max_lives, true)
 		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
 			level.three_star_max_shots <= level.max_lives, true)
 		_check("bolum %d: 2-yildiz atis <= max_lives" % id,

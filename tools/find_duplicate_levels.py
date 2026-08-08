@@ -22,12 +22,28 @@ import re
 from collections import defaultdict
 
 LEVELS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "levels")
+LIBRARY_GD = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "scripts", "levels", "level_library.gd")
 PLAY_WIDTH = 720.0
 # Kayan nokta gurultusu tekrarlari gizlemesin diye kaba yuvarlama.
 NDIGITS = 1
 
 VECTOR_RE = re.compile(r"Vector2\(\s*([-\d.eE]+)\s*,\s*([-\d.eE]+)\s*\)")
 SUBRES_RE = re.compile(r'SubResource\("([^"]+)"\)')
+
+
+def level_count():
+    """Bolum sayisi LevelLibrary'den OKUNUR, buraya sabit yazilmaz.
+
+    Sabit yazildiginda kutuphane 125'ten 150'ye cikmisti ve bu arac yeni
+    bolumleri sessizce taramadan gecti - "tekrar yok" raporu yaniltiydi.
+    """
+    with open(LIBRARY_GD, encoding="utf-8") as handle:
+        match = re.search(r"^const LEVEL_COUNT := (\d+)$", handle.read(), re.M)
+    if not match:
+        raise SystemExit("LEVEL_COUNT okunamadi: " + LIBRARY_GD)
+    return int(match.group(1))
 
 
 def r(value):
@@ -175,7 +191,7 @@ def main():
     names = {}
     missing = []
 
-    for level_id in range(1, 126):
+    for level_id in range(1, level_count() + 1):
         path = os.path.join(LEVELS_DIR, "level_%d.tres" % level_id)
         if not os.path.exists(path):
             path = os.path.join(LEVELS_DIR, "level_%02d.tres" % level_id)

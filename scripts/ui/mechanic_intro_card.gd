@@ -179,6 +179,8 @@ func _obstacle_title(kind: ObstacleData.Kind) -> String:
 			return "Kayan Bariyer"
 		ObstacleData.Kind.SPEED_BOOST:
 			return "Hızlandırıcı"
+		ObstacleData.Kind.PULSE_LASER:
+			return "Lazer Bariyer"
 	return "Yeni Engel"
 
 
@@ -194,6 +196,8 @@ func _obstacle_description(kind: ObstacleData.Kind) -> String:
 			return "Bariyer ileri geri kayar. Açılan boşluğu doğru anda yakala."
 		ObstacleData.Kind.SPEED_BOOST:
 			return "İçinden geçen top hızlanır."
+		ObstacleData.Kind.PULSE_LASER:
+			return "Işın aralıklarla yanar. Yanmadan hemen önce parlar; sönük olduğu anda geç."
 	return ""
 
 
@@ -254,6 +258,13 @@ func _preview_data(kind: ObstacleData.Kind) -> ObstacleData:
 			data.motion_period = 2.6
 		ObstacleData.Kind.SPEED_BOOST:
 			data.size = Vector2(64.0, 64.0)
+		ObstacleData.Kind.PULSE_LASER:
+			# Gosterim dongusu gercek bolumlerden KISA tutulur: kart birkac
+			# saniye acik kalir, oyuncu bir tam yanip-sonme dongusunu ve
+			# uyari parlamasini o surede gorebilmeli.
+			data.size = Vector2(300.0, 14.0)
+			data.motion_period = 2.6
+			data.pulse_on_ratio = 0.55
 	return data
 
 
@@ -343,6 +354,8 @@ func _advance_obstacle_demo() -> void:
 			_demo_moving_bar()
 		ObstacleData.Kind.SPEED_BOOST:
 			_demo_speed_boost()
+		ObstacleData.Kind.PULSE_LASER:
+			_demo_laser()
 
 
 ## Halka: iki asamali dongu. Once ORTADAN gecer (acik), sonra KENARA carpip
@@ -404,6 +417,52 @@ func _demo_bomb() -> void:
 		_flash.position = Vector2(centre.x, impact_y)
 		_flash.show()
 		var fade := 1.0 - (t - 1.5) / 0.6
+		_flash.modulate.a = fade
+		_flash.scale = Vector2.ONE * lerpf(0.5, 1.25, 1.0 - fade)
+	else:
+		_flash.hide()
+
+
+## Lazer: iki atis, iki sonuc. Ogretilen sey ZAMANLAMA oldugu icin gosterim
+## isinin kendi dongusuyle SENKRON olmali - dongu suresi lazerin periyodunun
+## tam kati (2 x 2.6) secildi, boylece birinci atis her zaman isin sonukken,
+## ikincisi her zaman isin yanikken gerceklesir. Kayarlarsa kart bazen
+## "iki top da gecti" gosterirdi ve kural anlasilmazdi.
+##
+## Isinin kendisi ayrica animasyonlu: _mechanic.apply_motion_time(_time)
+## gercek LevelObstacle mantigini calistirir, yani karttaki yanip sonme
+## oyundakiyle ayni koddan gelir.
+func _demo_laser() -> void:
+	var centre := STAGE_SIZE * 0.5
+	var period := 5.2
+	var t := fmod(_time, period)
+
+	if t < 2.6:
+		# 1. atis: isin SONUKKEN gecer. Cizgiyi t~1.6'da kesecek sekilde
+		# baslatilir; lazer 1.43'te sondugu icin gecis guvenli.
+		var p := clampf((t - 0.75) / 1.7, 0.0, 1.0)
+		_ball.position = Vector2(
+			centre.x - 58.0, lerpf(STAGE_SIZE.y + 20.0, -20.0, p))
+		_ball.modulate.a = 1.0 if t > 0.6 else 0.0
+		_flash.hide()
+		return
+
+	# 2. atis: isin YANIYORKEN carpar - atis biter.
+	var t2 := t - 2.6
+	var hit_at := 1.15
+	var hit_x := centre.x + 58.0
+	if t2 < hit_at:
+		_ball.position = Vector2(
+			hit_x, lerpf(STAGE_SIZE.y + 20.0, centre.y, t2 / hit_at))
+		_ball.modulate.a = 1.0
+		_flash.hide()
+		return
+
+	_ball.modulate.a = 0.0
+	if t2 < hit_at + 0.6:
+		_flash.position = Vector2(hit_x, centre.y)
+		_flash.show()
+		var fade := 1.0 - (t2 - hit_at) / 0.6
 		_flash.modulate.a = fade
 		_flash.scale = Vector2.ONE * lerpf(0.5, 1.25, 1.0 - fade)
 	else:

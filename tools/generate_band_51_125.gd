@@ -24,6 +24,7 @@ const RING := ObstacleData.Kind.METAL_RING
 const BOMB := ObstacleData.Kind.BOMB
 const WHEEL := ObstacleData.Kind.ROTATING_WHEEL
 const BAR := ObstacleData.Kind.MOVING_BAR
+const LASER := ObstacleData.Kind.PULSE_LASER
 
 ## Kabul bandi. Alt sinir verifier'in MIN_ROBUST_CELLS'i (6) ile ayni; ustu
 ## "zaten bedava" bolumleri eler.
@@ -177,7 +178,8 @@ func _build_level(level_id: int) -> bool:
 		for attempt in 60:
 			var shaped := _jitter_skeleton(skeleton) if _distinct else skeleton
 			var level := _level_from_skeleton(shaped, level_id, relaxed)
-			_place_obstacles(level, relaxed, shaped)
+			if not _place_obstacles(level, relaxed, shaped):
+				continue
 			if int(relaxed["bricks"]) > 0:
 				_place_bricks(level, relaxed, shaped)
 			if not level.validate().is_empty():
@@ -306,21 +308,31 @@ func _level_from_skeleton(skeleton: Dictionary, level_id: int,
 	return level
 
 
+## Istenen TUM turler yerlestirilebildiyse true.
+##
+## Eskiden yer bulunamayan engel sessizce ATLANIYORDU ve cagiran bunu
+## ogrenemiyordu; sonuc, spec'i iki engel diyen ama tek engelle kaydedilen
+## bolumlerdi (or. 134 lazersiz kaldi ve bandin kimligini kirdi - test
+## yakaladi). Engel sayisini AZALTMAK kasitli bir karardir ve gevseme
+## merdiveninde yapilir (bkz. _build_level); tesadufen olmamali.
 func _place_obstacles(level: LevelData, spec: Dictionary,
-		skeleton: Dictionary) -> void:
+		skeleton: Dictionary) -> bool:
 	var kinds: Array = spec["kinds"]
 	var placed: Array[ObstacleData] = []
 	for kind in kinds:
 		var data := _make_obstacle(int(kind), float(spec["difficulty"]))
-		# Uygun bir bosluk bulunana kadar dene; bulunamazsa bu engeli atla
-		# (aday zaten elenir, sonraki denemede yeniden aranir).
+		var seated := false
 		for _try in 40:
 			data.position = Vector2(
 				_rng.randf_range(110.0, 610.0), _rng.randf_range(330.0, 960.0))
 			if _position_is_clear(data.position, _obstacle_radius(data), level, placed):
 				placed.append(data)
+				seated = true
 				break
+		if not seated:
+			return false
 	level.obstacles = placed
+	return true
 
 
 func _place_bricks(level: LevelData, spec: Dictionary,
@@ -346,6 +358,10 @@ func _place_bricks(level: LevelData, spec: Dictionary,
 func _obstacle_radius(data: ObstacleData) -> float:
 	if data.kind == BAR:
 		return data.size.length() * 0.5 + data.travel_distance
+	if data.kind == LASER:
+		# Isin uzun ve ince: yaricap olarak yarim boyu kullanmak onu bir daire
+		# gibi ele alir ve gereginden cok yer ayirir, ama guvenli taraftadir.
+		return data.size.x * 0.5
 	return data.outer_radius()
 
 
@@ -399,6 +415,17 @@ func _make_obstacle(kind: int, difficulty: float) -> ObstacleData:
 			data.motion_direction_degrees = 0.0
 			data.travel_distance = lerpf(70.0, 140.0, difficulty)
 			data.motion_period = lerpf(3.2, 1.9, difficulty)
+		LASER:
+			# Isin YATAY: dikey bir isin firlaticidan cikan yolu boydan boya
+			# kesmez, sadece bir seridi kapatir; zamanlama bulmacasi olmaz.
+			data.size = Vector2(lerpf(200.0, 330.0, difficulty), 14.0)
+			data.rotation_degrees = 0.0
+			# Zorluk arttikca dongu KISALIR (pencere daralir) ama acik orani
+			# 0.6'yi gecmez: surekli acik bir isin zamanlama degil duvardir.
+			data.motion_period = lerpf(3.4, 2.2, difficulty)
+			data.pulse_on_ratio = lerpf(0.45, 0.60, difficulty)
+			# Ayni bolumdeki iki lazer sirayla yansin.
+			data.phase_degrees = _rng.randf_range(0.0, 360.0)
 	return data
 
 
@@ -476,14 +503,14 @@ func _apply_identity(level: LevelData, level_id: int, spec: Dictionary) -> void:
 	level.max_lives = 5
 	level.two_star_max_shots = 3
 	level.three_star_max_shots = 2
-	var t := float(level_id - 51) / 74.0
+	var t := clampf(float(level_id - 51) / 99.0, 0.0, 1.0)
 	level.two_star_max_seconds = snappedf(lerpf(75.0, 160.0, t), 0.1)
 	level.three_star_max_seconds = snappedf(lerpf(40.0, 85.0, t), 0.1)
 
 
 ## Bolum basina icerik plani: engel karisimi, zorluk ve (101+) tugla sayisi.
 func _spec_for(level_id: int) -> Dictionary:
-	var difficulty := clampf(float(level_id - 51) / 74.0, 0.0, 1.0)
+	var difficulty := clampf(float(level_id - 51) / 99.0, 0.0, 1.0)
 	var name := "Faz %d" % level_id
 	var kinds: Array = []
 	var bricks := 0
@@ -498,6 +525,17 @@ func _spec_for(level_id: int) -> Dictionary:
 	elif level_id == 100:
 		name = "Son Faz"
 		kinds = [RING, BOMB, WHEEL, BAR]
+	elif level_id == 126:
+		# LAZERIN ILK GORULDUGU BOLUM: yalnizca lazer. Tanitim karti bir
+		# bolumdeki YENI turleri gosterir; burada baska engel olsaydi oyuncu
+		# ayni anda iki kural ogrenmek zorunda kalirdi.
+		name = "Lazer Hattı"
+		kinds = [LASER]
+	elif level_id == 150:
+		name = "Son Işık"
+		kinds = [LASER, RING, WHEEL, LASER]
+		bricks = 4
+		strong = 3
 	elif level_id == 125:
 		name = "Final"
 		kinds = [RING, BOMB, WHEEL, BAR]
@@ -513,6 +551,18 @@ func _spec_for(level_id: int) -> Dictionary:
 		var count := 2 if level_id < 72 else (3 if level_id < 90 else 4)
 		for i in count:
 			kinds.append(pool[(level_id + i) % 4])
+	elif level_id > 125:
+		# 126-150 LAZER BANDI: yanip sonen isin, once tek basina ogretilir
+		# (126), sonra diger turlerle birlikte kullanilir. Her bolumde EN AZ
+		# BIR lazer vardir - bandin kimligi odur.
+		var pool3 := [RING, WHEEL, BAR, BOMB]
+		kinds = [LASER]
+		if level_id >= 130:
+			kinds.append(pool3[level_id % 4])
+		if level_id >= 140:
+			kinds.append(LASER)
+		bricks = 0 if level_id < 135 else 2
+		strong = 0 if level_id < 145 else 1
 	else:
 		# 101-125 FINAL BANDI: engeller + kucuk bir tugla kumesi bir arada.
 		# Tugla sayisi bilerek dusuk (2-4): LevelWorld her cana bir durum yuvasi

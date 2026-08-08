@@ -35,7 +35,7 @@ phase_degrees = 48.2
 script = ExtResource("1")
 position = Vector2(332, 461)
 size = Vector2(81, 26)
-hit_points = 3
+hit_points = 2
 [sub_resource type="Resource" id="Blk_1"]
 script = ExtResource("1")
 position = Vector2(192, 532)

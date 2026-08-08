@@ -1,0 +1,59 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_1dbe6"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_ne83w"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_3lka6"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_w2d51"]
+
+[sub_resource type="Resource" id="Resource_ex2ru"]
+script = ExtResource("1_1dbe6")
+position = Vector2(235.61008, 562.22894)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_5t6jp"]
+script = ExtResource("1_1dbe6")
+position = Vector2(369.61008, 562.22894)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_68fkj"]
+script = ExtResource("2_ne83w")
+kind = 5
+position = Vector2(119.21791, 748.966)
+size = Vector2(318.18182, 14)
+motion_period = 2.3090909090909095
+phase_degrees = 246.42282
+pulse_on_ratio = 0.5863636363636363
+
+[sub_resource type="Resource" id="Resource_e0p85"]
+script = ExtResource("2_ne83w")
+kind = 2
+position = Vector2(511.46902, 544.93896)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -113.18181818181817
+
+[sub_resource type="Resource" id="Resource_defil"]
+script = ExtResource("3_3lka6")
+position = Vector2(532.6511, 735.168)
+rotation_degrees = -37.5689416885376
+length = 349.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_wkkdx"]
+script = ExtResource("3_3lka6")
+position = Vector2(328.1681, 637.57166)
+rotation_degrees = 43.67685337066651
+length = 339.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_w2d51")
+level_id = 141
+display_name = "Faz 141"
+target_position = Vector2(290.1964, 423.94522)
+panels = Array[ExtResource("3_3lka6")]([SubResource("Resource_defil"), SubResource("Resource_wkkdx")])
+breakable_blocks = Array[ExtResource("1_1dbe6")]([SubResource("Resource_ex2ru"), SubResource("Resource_5t6jp")])
+obstacles = Array[ExtResource("2_ne83w")]([SubResource("Resource_68fkj"), SubResource("Resource_e0p85")])
+two_star_max_seconds = 152.3
+two_star_max_shots = 3
+three_star_max_seconds = 80.9

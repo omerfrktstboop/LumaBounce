@@ -29,6 +29,34 @@ const WALL_OVERSHOOT := 320.0
 @export_range(0, 5, 1) var difficulty := 0
 ## Saniye cinsinden sure siniri; 0 = sinirsiz (bugunku davranis).
 @export var time_limit := 0.0
+## BONUS BOLUM MU. Bonus bolumler her dunyanin SONUNDA durur, numarasiz
+## gosterilir, sirali ilerlemeyle DEGIL kendi dunyalarindan toplanan yildizla
+## acilir (bkz. LevelWorlds.bonus_ids / ProgressStore.is_unlocked) ve
+## bitirilince yildizin TAMAMINI verir.
+##
+## Neden zaman/atis esigi yok: bu bolumler zaten ucundan gecilecek kadar zor.
+## Orada ayrica "45 saniyede bitir" demek, basarilmasi gereken seyi ikinci kez
+## cezalandirmak olurdu - bitirmek basarinin kendisidir.
+@export var is_bonus := false
+
+## --- IPUCU ---
+## Bolumu cozen ORNEK atisin acisi ve gucu. 0 guc = ipucu hesaplanmamis.
+##
+## Bu degerler CEVRIMDISI hesaplanir (tools/compute_hints.gd) ve dosyaya
+## yazilir. Calisma aninda hesaplamak izgara taramasi demektir - binlerce
+## simulasyon, telefonda saniyelerce donma. Buradan okununca ipucu paneli
+## tek bir atis simule eder ve yolunu cizer; bu ucuzdur.
+##
+## Ipucu bir "en iyi" cozum degil, GECERLI bir cozumdur: solver'in en saglam
+## hucresi secilir, yani en toleransli atis. Amac oyuncuya kesin sonucu
+## dayatmak degil, tikandigi yerde bir yon gostermek.
+@export var hint_angle_degrees := 0.0
+@export var hint_power := 0.0
+
+## Yildiz kapasitesi. Bonus bolumler daha fazla verir, cunku bir bonus bolum
+## bir dunyanin tamaminin uzerine kurulu tek bir sinavdir.
+const NORMAL_MAX_STARS := 3
+const BONUS_MAX_STARS := 5
 
 @export var level_id := 1
 @export var display_name := ""
@@ -138,7 +166,22 @@ func validate(play_rect := DEFAULT_PLAY_RECT) -> PackedStringArray:
 ## Bolum tamamlandiginda kazanilan yildiz. Sure VE atis kosulu BIRLIKTE
 ## saglanmali: 18 sn + 3 atis, sure 3 yildizlik olsa bile 2 yildiz verir.
 ## Basarisiz bolumde hic cagrilmaz (yildiz yalnizca tamamlamayla kazanilir).
+## Bu bolumden alinabilecek AZAMI yildiz. Normal bolumlerde 3, bonus
+## bolumlerde 5. Tek kaynak burasi: ProgressStore ve bolum secim ekrani
+## sabit bir "3" varsaymaz.
+## Bu bolum icin gosterilecek bir ipucu var mi.
+func has_hint() -> bool:
+	return hint_power > 0.0
+
+
+func max_stars() -> int:
+	return BONUS_MAX_STARS if is_bonus else NORMAL_MAX_STARS
+
+
 func calculate_stars(seconds: float, shots: int) -> int:
+	# Bonus bolumu BITIRMEK basarinin kendisidir; sure/atis esigi aranmaz.
+	if is_bonus:
+		return BONUS_MAX_STARS
 	if seconds <= three_star_max_seconds and shots <= three_star_max_shots:
 		return 3
 	if seconds <= two_star_max_seconds and shots <= two_star_max_shots:

@@ -1,0 +1,86 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_dcbuo"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_jprnw"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_fkmnq"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_8schq"]
+
+[sub_resource type="Resource" id="Resource_ffcc3"]
+script = ExtResource("1_dcbuo")
+position = Vector2(176.14687, 533.99457)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_2qvjy"]
+script = ExtResource("1_dcbuo")
+position = Vector2(310.14685, 533.99457)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_bo28m"]
+script = ExtResource("1_dcbuo")
+position = Vector2(444.14685, 533.99457)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_rnqy1"]
+script = ExtResource("1_dcbuo")
+position = Vector2(578.14685, 533.99457)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_6thch"]
+script = ExtResource("2_jprnw")
+kind = 5
+position = Vector2(115.60491, 657.14014)
+size = Vector2(330, 14)
+motion_period = 2.2
+phase_degrees = 190.87376
+pulse_on_ratio = 0.6
+
+[sub_resource type="Resource" id="Resource_u2qpx"]
+script = ExtResource("2_jprnw")
+position = Vector2(571.8061, 883.97156)
+rotation_degrees = 180.0
+size = Vector2(180, 28)
+inner_radius = 58.0
+
+[sub_resource type="Resource" id="Resource_otnkt"]
+script = ExtResource("2_jprnw")
+kind = 2
+position = Vector2(342.55188, 405.96362)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 120.0
+
+[sub_resource type="Resource" id="Resource_o0x23"]
+script = ExtResource("3_fkmnq")
+position = Vector2(401.74667, 565.7397)
+rotation_degrees = 32.72251663208008
+length = 304.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_3lvyf"]
+script = ExtResource("3_fkmnq")
+position = Vector2(502.30914, 589.78894)
+rotation_degrees = -28.719154644012452
+length = 250.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_8xujy"]
+script = ExtResource("3_fkmnq")
+position = Vector2(448.08548, 646.74567)
+rotation_degrees = -36.01697902679443
+length = 304.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_8schq")
+level_id = 150
+display_name = "Son Işık"
+target_position = Vector2(537.3973, 277.18326)
+panels = Array[ExtResource("3_fkmnq")]([SubResource("Resource_o0x23"), SubResource("Resource_3lvyf"), SubResource("Resource_8xujy")])
+breakable_blocks = Array[ExtResource("1_dcbuo")]([SubResource("Resource_ffcc3"), SubResource("Resource_2qvjy"), SubResource("Resource_bo28m"), SubResource("Resource_rnqy1")])
+obstacles = Array[ExtResource("2_jprnw")]([SubResource("Resource_6thch"), SubResource("Resource_u2qpx"), SubResource("Resource_otnkt")])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

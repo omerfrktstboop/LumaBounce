@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_0hbg1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_nxv2y"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_raupw"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_wod2f"]
+
+[sub_resource type="Resource" id="Resource_j5n75"]
+script = ExtResource("1_0hbg1")
+position = Vector2(365.20352, 682.69824)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_htqqu"]
+script = ExtResource("1_0hbg1")
+position = Vector2(499.20352, 682.69824)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_mhulk"]
+script = ExtResource("2_nxv2y")
+kind = 5
+position = Vector2(457.20163, 778.8747)
+size = Vector2(326.0606, 14)
+motion_period = 2.2363636363636363
+phase_degrees = 232.54211
+pulse_on_ratio = 0.5954545454545455
+
+[sub_resource type="Resource" id="Resource_ieyvh"]
+script = ExtResource("2_nxv2y")
+kind = 1
+position = Vector2(192.689, 936.09973)
+size = Vector2(87.15151, 87.15151)
+
+[sub_resource type="Resource" id="Resource_iaapo"]
+script = ExtResource("3_raupw")
+position = Vector2(292.991, 532.44543)
+rotation_degrees = -2.5951867
+length = 399.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_wod2f")
+level_id = 147
+display_name = "Faz 147"
+target_position = Vector2(490.05328, 266.95218)
+panels = Array[ExtResource("3_raupw")]([SubResource("Resource_iaapo")])
+breakable_blocks = Array[ExtResource("1_0hbg1")]([SubResource("Resource_j5n75"), SubResource("Resource_htqqu")])
+obstacles = Array[ExtResource("2_nxv2y")]([SubResource("Resource_mhulk"), SubResource("Resource_ieyvh")])
+two_star_max_seconds = 157.4
+two_star_max_shots = 3
+three_star_max_seconds = 83.60000000000001

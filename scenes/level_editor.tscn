@@ -262,6 +262,17 @@ script = ExtResource("5_button")
 corner_radius = 16
 content_margin = Vector2(4, 6)
 
+[node name="AddLaser" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ObstacleRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 18
+text = "+ LAZER"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
+
 [node name="TuneRow" type="HBoxContainer" parent="HUD/SafeArea/Root/BottomPanel/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 8

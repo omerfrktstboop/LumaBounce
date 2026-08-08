@@ -1,0 +1,58 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_k4aua"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_0gnpy"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_g23ks"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_kse8l"]
+
+[sub_resource type="Resource" id="Resource_gh5v1"]
+script = ExtResource("1_k4aua")
+position = Vector2(303.46582, 485.92627)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_5pmcl"]
+script = ExtResource("1_k4aua")
+position = Vector2(437.46582, 485.92627)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_4jm21"]
+script = ExtResource("2_0gnpy")
+kind = 5
+position = Vector2(139.31885, 364.30157)
+size = Vector2(311.61615, 14)
+motion_period = 2.36969696969697
+phase_degrees = 89.38617
+pulse_on_ratio = 0.5787878787878787
+
+[sub_resource type="Resource" id="Resource_ydqwj"]
+script = ExtResource("3_g23ks")
+position = Vector2(397.21106, 601.1887)
+rotation_degrees = -40.59080858230591
+length = 401.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_4u3rh"]
+script = ExtResource("3_g23ks")
+position = Vector2(393.94354, 728.3064)
+rotation_degrees = -27.502138
+length = 344.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_yoq41"]
+script = ExtResource("3_g23ks")
+position = Vector2(499.29938, 841.3285)
+rotation_degrees = 43.875624370574954
+length = 408.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_kse8l")
+level_id = 136
+display_name = "Faz 136"
+target_position = Vector2(516.95557, 417.86346)
+panels = Array[ExtResource("3_g23ks")]([SubResource("Resource_ydqwj"), SubResource("Resource_4u3rh"), SubResource("Resource_yoq41")])
+breakable_blocks = Array[ExtResource("1_k4aua")]([SubResource("Resource_gh5v1"), SubResource("Resource_5pmcl")])
+obstacles = Array[ExtResource("2_0gnpy")]([SubResource("Resource_4jm21")])
+two_star_max_seconds = 148.0
+two_star_max_shots = 3
+three_star_max_seconds = 78.60000000000001

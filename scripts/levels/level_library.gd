@@ -8,7 +8,10 @@ extends RefCounted
 ## bos/bozuk bir bolumle acilmaz.
 
 const FIRST_LEVEL_ID := 1
-const LEVEL_COUNT := 125
+## TOPLAM bolum dosyasi sayisi - BONUS bolumler dahil (150 normal + 6 bonus).
+## Normal bandin nerede bittigi LevelWorlds.FIRST_BONUS_ID ile belirlenir;
+## burasi yalnizca "kac dosya var" sorusunu yanitlar.
+const LEVEL_COUNT := 156
 const PATH_FORMAT := "res://levels/level_%02d.tres"
 
 ## Yildiz kapilari: bolum_id -> o bolumun acilmasi icin gereken yildiz sayisi.
@@ -19,9 +22,21 @@ const PATH_FORMAT := "res://levels/level_%02d.tres"
 ## saymaz. Bu kural kapiya ozel bir ayar degil, sistemin tanimidir - ileride
 ## eklenecek her kapi kendiliginden dogru araligi sayar ve bir bolum asla
 ## kendi kilidini acmaya katkida bulunamaz.
+##
+## Kapilar her DUNYA GECISINDE durur: 21 (ilk bandin ortasi - oyuncuyu geri
+## donup yildiz toplamaya alistiran giris kapisi), sonra 51 ve 101, yani yeni
+## bir dunyaya ve yeni bir mekanik grubuna gecerken.
+##
+## Esikler ayni ORANDADIR: onundeki bolumlerin toplam yildizinin ucte ikisi.
+##   21  -> 1-20'den   40 / 60
+##   51  -> 1-50'den  100 / 150
+##   101 -> 1-100'den 200 / 300
+## Oran sabit tutuldu ki bant uzadikca kapinin zorlugu kaymasin.
 const LEVEL_21_REQUIRED_STARS := 40
 const STAR_GATES := {
 	21: LEVEL_21_REQUIRED_STARS,
+	51: 100,
+	101: 200,
 }
 
 
@@ -42,8 +57,12 @@ static func clamp_id(level_id: int) -> int:
 	return clampi(level_id, FIRST_LEVEL_ID, last_level_id())
 
 
+## SIRADAKI bolum var mi. Bonus bolumler sirali akisin DISINDADIR: 150'yi
+## bitiren oyuncu "sonraki bolum" ile bir bonusa dusmemeli - bonuslar ancak
+## kendi yildiz esikleri saglandiginda ve bolum secim ekranindan acilir.
 static func has_next(level_id: int) -> bool:
-	return is_valid_id(level_id + 1)
+	var next_id := level_id + 1
+	return is_valid_id(next_id) and not LevelWorlds.is_bonus_id(next_id)
 
 
 static func level_path(level_id: int) -> String:

@@ -8,12 +8,19 @@ signal hazard_triggered(reason: String, at: Vector2)
 const OBSTACLE_LAYER := 1
 const BALL_LAYER := 2
 const HAZARD_LAYER := 8
+## Lazer isini SONUKKEN de gorunur kalir: oyuncu isinin nereden gececegini
+## her an bilmeli, yoksa yanan isin surprize donusur.
+const LASER_IDLE_SCALE := 0.22
+const LASER_IDLE_ALPHA := 0.34
 
 var data: ObstacleData
 var preview_only := false
 
 var _motion_root: Node2D
 var _visual: Node2D
+var _laser_beam: Node2D
+var _laser_core: Node2D
+var _laser_glow: Node2D
 var _path_visual: Node2D
 
 var _elapsed := 0.0
@@ -67,6 +74,9 @@ func reset_motion() -> void:
 func apply_motion_time(seconds: float) -> void:
 	if _motion_root == null or data == null:
 		return
+	if data.kind == ObstacleData.Kind.PULSE_LASER:
+		_apply_laser_state(seconds)
+		return
 	if seconds == 0.0 and _visual != null:
 		_visual.show()
 	_motion_root.position = data.motion_position(seconds) - data.position
@@ -102,21 +112,27 @@ func _build() -> void:
 			_build_moving_bar()
 		ObstacleData.Kind.SPEED_BOOST:
 			_build_speed_boost()
+		ObstacleData.Kind.PULSE_LASER:
+			_build_pulse_laser()
 
 
 func _make_motion_root() -> Node2D:
-	if preview_only and data.kind != ObstacleData.Kind.METAL_RING:
+	if preview_only and not data.kind in [ObstacleData.Kind.METAL_RING,
+			ObstacleData.Kind.PULSE_LASER]:
 		return Node2D.new()
 	match data.kind:
-		ObstacleData.Kind.BOMB, ObstacleData.Kind.SPEED_BOOST:
+		ObstacleData.Kind.BOMB, ObstacleData.Kind.SPEED_BOOST, ObstacleData.Kind.PULSE_LASER:
 			var area := Area2D.new()
 			area.collision_layer = HAZARD_LAYER
 			area.collision_mask = BALL_LAYER
 			area.monitoring = true
-			if data.kind == ObstacleData.Kind.BOMB:
-				area.body_entered.connect(_on_bomb_body_entered)
-			else:
-				area.body_entered.connect(_on_speed_boost_body_entered)
+			match data.kind:
+				ObstacleData.Kind.BOMB:
+					area.body_entered.connect(_on_bomb_body_entered)
+				ObstacleData.Kind.PULSE_LASER:
+					area.body_entered.connect(_on_laser_body_entered)
+				_:
+					area.body_entered.connect(_on_speed_boost_body_entered)
 			return area
 		ObstacleData.Kind.ROTATING_WHEEL, ObstacleData.Kind.MOVING_BAR:
 			var body := AnimatableBody2D.new()
@@ -325,6 +341,84 @@ func _build_speed_boost() -> void:
 	_visual.add_child(poly)
 	var core := ShapeBuilder.make_polygon(ShapeBuilder.circle(radius * 0.5, 6), Palette.ACCENT_ALT_CORE)
 	_visual.add_child(core)
+
+## LAZER: iki uc arasina gerilmis, yanip sonen olumcul isin.
+##
+## GORSEL SOZLESME - isin UC durumda gorunur:
+##   kapali  : ince, sonuk kilavuz cizgisi (yolun nerede oldugu her zaman belli)
+##   uyari   : yanmadan hemen once kalinlasip parlar
+##   acik    : tam kalinlik, parlak cekirdek + halo
+## Uyari fazi bilerek var: hicbir isaret vermeden yanan bir isin zamanlama
+## bulmacasi degil, sanstir. Oyuncu ne zaman atacagini GOREBILMELI.
+func _build_pulse_laser() -> void:
+	var half := data.size.x * 0.5
+	var thickness := data.size.y
+	# Carpisma sekli tam boy; isin kapaliyken Area2D'nin kendisi kapatilir
+	# (bkz. _apply_laser_state), sekli kucultmek yerine - boylece acilip
+	# kapanma tek bir yerden yonetilir.
+	_add_rect_shape(Vector2.ZERO, data.size, 0.0)
+
+	# Iki uctaki yayici basliklar: isin kapaliyken bile GORUNUR kalir, cunku
+	# tehlikenin nerede olduğu her an okunabilir olmali.
+	for side in [-1.0, 1.0]:
+		var head := ShapeBuilder.make_polygon(
+			ShapeBuilder.rounded_rect(Vector2(18.0, thickness + 16.0), 5.0),
+			Palette.SURFACE_EDGE)
+		head.position = Vector2(half * side, 0.0)
+		_visual.add_child(head)
+		var lens := ShapeBuilder.make_polygon(
+			ShapeBuilder.circle(thickness * 0.34, 12), Palette.HAZARD_DARK)
+		lens.position = Vector2((half - 4.0) * side, 0.0)
+		_visual.add_child(lens)
+
+	_laser_glow = ShapeBuilder.make_polygon(
+		ShapeBuilder.rounded_rect(Vector2(data.size.x, thickness * 2.1), thickness),
+		Color(Palette.HAZARD, 0.20))
+	_visual.add_child(_laser_glow)
+	_laser_beam = ShapeBuilder.make_polygon(
+		ShapeBuilder.rounded_rect(Vector2(data.size.x, thickness), thickness * 0.5),
+		Palette.HAZARD)
+	_visual.add_child(_laser_beam)
+	_laser_core = ShapeBuilder.make_polygon(
+		ShapeBuilder.rounded_rect(Vector2(data.size.x, thickness * 0.34), thickness * 0.17),
+		Palette.HAZARD_CORE)
+	_visual.add_child(_laser_core)
+	_apply_laser_state(0.0)
+
+
+## [param seconds] atis basindan itibaren gecen sure - solver ile AYNI sifir
+## noktasi (bkz. ObstacleData.laser_is_active).
+func _apply_laser_state(seconds: float) -> void:
+	if _laser_beam == null:
+		return
+	var active := data.laser_is_active(seconds)
+	var ratio := data.laser_phase_ratio(seconds)
+	# Yanmaya ne kadar kaldi (0 = tam simdi yanacak).
+	var to_ignition := 1.0 - ratio if ratio >= data.pulse_on_ratio else 0.0
+	var warning := 0.0
+	if not active:
+		var off_span := maxf(1.0 - data.pulse_on_ratio, 0.001)
+		# Kapali fazin SON ucte birinde uyari yukselir.
+		warning = clampf(1.0 - to_ignition / (off_span * 0.34), 0.0, 1.0)
+
+	var beam_scale := 1.0 if active else lerpf(LASER_IDLE_SCALE, 0.55, warning)
+	var beam_alpha := 1.0 if active else lerpf(LASER_IDLE_ALPHA, 0.62, warning)
+	_laser_beam.scale.y = beam_scale
+	_laser_beam.modulate.a = beam_alpha
+	_laser_core.visible = active
+	_laser_glow.modulate.a = 0.20 if active else 0.05 * warning
+
+	# Govde yalnizca ISIN ACIKKEN oldurur. monitoring kapatmak yerine
+	# process_mode: Area2D kapaliyken zaten body_entered gondermez ve
+	# yeniden acildiginda ICERIDE olan topu da yakalar.
+	if _motion_root is Area2D:
+		(_motion_root as Area2D).monitoring = active
+
+
+func _on_laser_body_entered(body: Node2D) -> void:
+	if body.is_in_group("ball"):
+		hazard_triggered.emit("laser", body.global_position)
+
 
 func _on_speed_boost_body_entered(body: Node2D) -> void:
 	if body.is_in_group("ball") and _visual.visible:

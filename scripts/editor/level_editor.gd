@@ -165,6 +165,8 @@ func _connect_buttons() -> void:
 		_on_add_obstacle.bind(ObstacleData.Kind.ROTATING_WHEEL))
 	get_node(rows + "ObstacleRow/AddMover").pressed.connect(
 		_on_add_obstacle.bind(ObstacleData.Kind.MOVING_BAR))
+	get_node(rows + "ObstacleRow/AddLaser").pressed.connect(
+		_on_add_obstacle.bind(ObstacleData.Kind.PULSE_LASER))
 
 	get_node(rows + "TuneRow/AMinus").pressed.connect(_on_tune.bind(0, -1))
 	get_node(rows + "TuneRow/APlus").pressed.connect(_on_tune.bind(0, 1))
@@ -247,6 +249,10 @@ func _selection_text() -> String:
 					return "Kayan %d - A: yon %.0f  B: mesafe %.0f" % [
 						_selected_index + 1, obstacle.motion_direction_degrees,
 						obstacle.travel_distance]
+				ObstacleData.Kind.PULSE_LASER:
+					return "Lazer %d - A: dongu %.1fsn  B: boy %.0f  (acik %%%.0f)" % [
+						_selected_index + 1, obstacle.motion_period, obstacle.size.x,
+						obstacle.pulse_on_ratio * 100.0]
 			return obstacle.display_name()
 		Selection.TARGET:
 			return "Hedef — sürükleyerek taşı (%.0f, %.0f)" % [
@@ -459,6 +465,10 @@ func _on_add_obstacle(kind: ObstacleData.Kind) -> void:
 			obstacle.motion_direction_degrees = 0.0
 			obstacle.travel_distance = 100.0
 			obstacle.motion_period = 2.8
+		ObstacleData.Kind.PULSE_LASER:
+			obstacle.size = Vector2(280.0, 14.0)
+			obstacle.motion_period = 3.0
+			obstacle.pulse_on_ratio = 0.667
 	level.obstacles.append(obstacle)
 	_selection = Selection.OBSTACLE
 	_selected_index = level.obstacles.size() - 1
@@ -565,6 +575,16 @@ func _tune_obstacle(obstacle: ObstacleData, axis: int, direction: int) -> void:
 			else:
 				obstacle.travel_distance = clampf(
 					obstacle.travel_distance + SIZE_STEP * direction, 20.0, 260.0)
+		ObstacleData.Kind.PULSE_LASER:
+			# A dongu suresini, B isinin boyunu ayarlar. Acik ORANI kasten
+			# ayar kollarinda degil: ondan once ayarlanmasi gereken sey ritim,
+			# ve iki kol var. Orani degistirmek gerekirse .tres'ten yapilir.
+			if axis == 0:
+				obstacle.motion_period = clampf(
+					obstacle.motion_period + 0.2 * direction, 1.2, 6.0)
+			else:
+				obstacle.size.x = clampf(
+					obstacle.size.x + SIZE_STEP * direction, 90.0, 460.0)
 
 
 func _tune_wall(axis: int, direction: int) -> void:

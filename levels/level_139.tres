@@ -1,0 +1,57 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_1ovi3"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_1nkc1"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_wlmvp"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_g1ppu"]
+
+[sub_resource type="Resource" id="Resource_dj7oc"]
+script = ExtResource("1_1ovi3")
+position = Vector2(247.57208, 695.3544)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_im2f1"]
+script = ExtResource("1_1ovi3")
+position = Vector2(381.57208, 695.3544)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_v1esm"]
+script = ExtResource("2_1nkc1")
+kind = 5
+position = Vector2(199.62122, 855.3599)
+size = Vector2(315.55554, 14)
+motion_period = 2.3333333333333335
+phase_degrees = 226.36295
+pulse_on_ratio = 0.5833333333333333
+
+[sub_resource type="Resource" id="Resource_ntktu"]
+script = ExtResource("2_1nkc1")
+kind = 1
+position = Vector2(484.3179, 786.28564)
+size = Vector2(84.888885, 84.888885)
+
+[sub_resource type="Resource" id="Resource_a1p6g"]
+script = ExtResource("3_wlmvp")
+position = Vector2(549.1743, 488.23184)
+rotation_degrees = 42.07236022949219
+length = 342.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_rk77f"]
+script = ExtResource("3_wlmvp")
+position = Vector2(379.42102, 494.46954)
+rotation_degrees = -52.68324146270752
+length = 318.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_g1ppu")
+level_id = 139
+display_name = "Faz 139"
+target_position = Vector2(120, 337.43866)
+panels = Array[ExtResource("3_wlmvp")]([SubResource("Resource_a1p6g"), SubResource("Resource_rk77f")])
+breakable_blocks = Array[ExtResource("1_1ovi3")]([SubResource("Resource_dj7oc"), SubResource("Resource_im2f1")])
+obstacles = Array[ExtResource("2_1nkc1")]([SubResource("Resource_v1esm"), SubResource("Resource_ntktu")])
+two_star_max_seconds = 150.6
+two_star_max_shots = 3
+three_star_max_seconds = 80.0

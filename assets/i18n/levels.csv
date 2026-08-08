@@ -3,8 +3,12 @@ Ayna Anahtar,Ayna Anahtar,Mirror Key
 Ayna Üçlü,Ayna Üçlü,Mirror Triple
 Açık Hat,Açık Hat,Open Line
 Açık Kenar,Açık Kenar,Open Edge
+Açıyı kur; duvarlar yolun devamı.,Açıyı kur; duvarlar yolun devamı.,Set the angle; the walls carry the rest.
+Bombaya temas atisi aninda bitirir.,Bombaya temas atisi aninda bitirir.,Touching a mine ends the shot instantly.
 Dar Geçit,Dar Geçit,Narrow Pass
+Dar pencere için güç ve açıyı birlikte ayarla.,Dar pencere için güç ve açıyı birlikte ayarla.,Tune power and angle together for the narrow window.
 Darboğaz,Darboğaz,Bottleneck
+Doğrudan yol kapalı. Kenarı kullan.,Doğrudan yol kapalı. Kenarı kullan.,The direct path is blocked. Use the edge.
 Duvar Yardımı,Duvar Yardımı,Wall Assist
 Dönen Çark,Dönen Çark,Spinning Wheel
 Faz 101,Faz 101,Phase 101
@@ -31,6 +35,29 @@ Faz 121,Faz 121,Phase 121
 Faz 122,Faz 122,Phase 122
 Faz 123,Faz 123,Phase 123
 Faz 124,Faz 124,Phase 124
+Faz 127,Faz 127,Phase 127
+Faz 128,Faz 128,Phase 128
+Faz 129,Faz 129,Phase 129
+Faz 130,Faz 130,Phase 130
+Faz 131,Faz 131,Phase 131
+Faz 132,Faz 132,Phase 132
+Faz 133,Faz 133,Phase 133
+Faz 134,Faz 134,Phase 134
+Faz 135,Faz 135,Phase 135
+Faz 136,Faz 136,Phase 136
+Faz 137,Faz 137,Phase 137
+Faz 138,Faz 138,Phase 138
+Faz 139,Faz 139,Phase 139
+Faz 140,Faz 140,Phase 140
+Faz 141,Faz 141,Phase 141
+Faz 142,Faz 142,Phase 142
+Faz 143,Faz 143,Phase 143
+Faz 144,Faz 144,Phase 144
+Faz 145,Faz 145,Phase 145
+Faz 146,Faz 146,Phase 146
+Faz 147,Faz 147,Phase 147
+Faz 148,Faz 148,Phase 148
+Faz 149,Faz 149,Phase 149
 Faz 52,Faz 52,Phase 52
 Faz 53,Faz 53,Phase 53
 Faz 54,Faz 54,Phase 54
@@ -85,6 +112,7 @@ Halka ve Fitil,Halka ve Fitil,Ring and Fuse
 Halka ve Mayın,Halka ve Mayın,Ring and Mine
 Halka ve Mayın Finali,Halka ve Mayın Finali,Ring and Mine Finale
 Halkalı Mayın,Halkalı Mayın,Ringed Mine
+"Hedefe değil, ilk güvenli temasa nişan al.","Hedefe değil, ilk güvenli temasa nişan al.","Aim at the first safe contact, not the target."
 Kayan Bariyer,Kayan Bariyer,Sliding Barrier
 Kenardan Sek,Kenardan Sek,Bounce Off the Edge
 Kontrollü Koridor,Kontrollü Koridor,Controlled Corridor
@@ -92,11 +120,16 @@ Kör Sekme,Kör Sekme,Blind Bounce
 Kör Zincir,Kör Zincir,Blind Chain
 Kırık Hat,Kırık Hat,Broken Line
 Kırık Kenar,Kırık Kenar,Broken Edge
+Lazer Hattı,Lazer Hattı,Laser Line
 Mayin Hatti,Mayin Hatti,Mine Line
+Ritmi bozma; son dönüş hedefi açar.,Ritmi bozma; son dönüş hedefi açar.,Keep the rhythm; the last turn opens the target.
 Sahte Geçit,Sahte Geçit,False Passage
 Sekme Ritmi,Sekme Ritmi,Bounce Rhythm
+Sol kenarda boşluk var. Zayıf atış topu kaçırır.,Sol kenarda boşluk var. Zayıf atış topu kaçırır.,There is a gap on the left edge. A weak shot misses it.
 Son Faz,Son Faz,Final Phase
+Son Işık,Son Işık,Last Light
 Son Kilit,Son Kilit,Final Lock
+"Sürükle, nişan al ve bırak","Sürükle, nişan al ve bırak","Drag, aim and release"
 Sıkı Geçit,Sıkı Geçit,Tight Pass
 Tam Temizlik,Tam Temizlik,Full Clear
 Ters Akış,Ters Akış,Reverse Flow
@@ -104,7 +137,17 @@ Ters Geçit,Ters Geçit,Reverse Pass
 Ters Rota,Ters Rota,Reverse Route
 Ustalık II,Ustalık II,Mastery II
 Uzun Yay,Uzun Yay,Long Arc
+"Yakın görünen yol, doğru yol olmayabilir.","Yakın görünen yol, doğru yol olmayabilir.",The path that looks closest may not be the right one.
+Yan duvar da bir sekme yüzeyidir.,Yan duvar da bir sekme yüzeyidir.,The side wall is a bounce surface too.
 Yedi Temas,Yedi Temas,Seven Contacts
+Yeniden Tasarlanan Faz 29,Yeniden Tasarlanan Faz 29,Rebuilt Phase 29
+Yeniden Tasarlanan Rastgele Faz 28,Yeniden Tasarlanan Rastgele Faz 28,Rebuilt Phase 28
+Yeniden Tasarlanan Rastgele Faz 30,Yeniden Tasarlanan Rastgele Faz 30,Rebuilt Phase 30
+Yeniden Tasarlanan Rastgele Faz 33,Yeniden Tasarlanan Rastgele Faz 33,Rebuilt Phase 33
+Yeniden Tasarlanan Rastgele Faz 34,Yeniden Tasarlanan Rastgele Faz 34,Rebuilt Phase 34
+Yeniden Tasarlanan Rastgele Faz 36,Yeniden Tasarlanan Rastgele Faz 36,Rebuilt Phase 36
+Yeniden Tasarlanan Rastgele Faz 37,Yeniden Tasarlanan Rastgele Faz 37,Rebuilt Phase 37
+Yeniden Tasarlanan Rastgele Faz 38,Yeniden Tasarlanan Rastgele Faz 38,Rebuilt Phase 38
 Zikzak,Zikzak,Zigzag
 Zincir,Zincir,Chain
 Zırhlı Hat,Zırhlı Hat,Armored Line
@@ -116,24 +159,14 @@ Zırhlı Hat,Zırhlı Hat,Armored Line
 Çifte Halka Düğümü,Çifte Halka Düğümü,Double Ring Knot
 Çifte Kilit,Çifte Kilit,Double Lock
 Çifte Çatlak,Çifte Çatlak,Double Crack
+"Önce sağ, sonra sol kenar.","Önce sağ, sonra sol kenar.","Right edge first, then the left."
 Üçgen,Üçgen,Triangle
 Üçlü Hat,Üçlü Hat,Triple Line
 Üçlü Mayın,Üçlü Mayın,Triple Mine
 İki Yol,İki Yol,Two Paths
+İki yüzeyi sırayla kullan.,İki yüzeyi sırayla kullan.,Use both surfaces in turn.
 İlk Atış,İlk Atış,First Shot
 İlk Kırılma,İlk Kırılma,First Break
 İlk Ustalık,İlk Ustalık,First Mastery
-İnce Ayar,İnce Ayar,Fine Tuning
-Açıyı kur; duvarlar yolun devamı.,Açıyı kur; duvarlar yolun devamı.,Set the angle; the walls carry the rest.
-Bombaya temas atisi aninda bitirir.,Bombaya temas atisi aninda bitirir.,Touching a mine ends the shot instantly.
-Dar pencere için güç ve açıyı birlikte ayarla.,Dar pencere için güç ve açıyı birlikte ayarla.,Tune power and angle together for the narrow window.
-Doğrudan yol kapalı. Kenarı kullan.,Doğrudan yol kapalı. Kenarı kullan.,The direct path is blocked. Use the edge.
-"Hedefe değil, ilk güvenli temasa nişan al.","Hedefe değil, ilk güvenli temasa nişan al.","Aim at the first safe contact, not the target."
-Ritmi bozma; son dönüş hedefi açar.,Ritmi bozma; son dönüş hedefi açar.,Keep the rhythm; the last turn opens the target.
-Sol kenarda boşluk var. Zayıf atış topu kaçırır.,Sol kenarda boşluk var. Zayıf atış topu kaçırır.,There is a gap on the left edge. A weak shot misses it.
-"Sürükle, nişan al ve bırak","Sürükle, nişan al ve bırak","Drag, aim and release"
-"Yakın görünen yol, doğru yol olmayabilir.","Yakın görünen yol, doğru yol olmayabilir.",The path that looks closest may not be the right one.
-Yan duvar da bir sekme yüzeyidir.,Yan duvar da bir sekme yüzeyidir.,The side wall is a bounce surface too.
-"Önce sağ, sonra sol kenar.","Önce sağ, sonra sol kenar.","Right edge first, then the left."
-İki yüzeyi sırayla kullan.,İki yüzeyi sırayla kullan.,Use both surfaces in turn.
 "İlk çizgiye değil, dönüş yoluna bak.","İlk çizgiye değil, dönüş yoluna bak.","Look at the return path, not the first line."
+İnce Ayar,İnce Ayar,Fine Tuning

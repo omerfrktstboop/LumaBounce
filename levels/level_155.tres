@@ -1,0 +1,67 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_qghix"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_7o61x"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_opj0f"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_48qp2"]
+
+[sub_resource type="Resource" id="Resource_mxotj"]
+script = ExtResource("1_qghix")
+position = Vector2(276.87918, 438.90045)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_g7lqr"]
+script = ExtResource("1_qghix")
+position = Vector2(410.87918, 438.90045)
+size = Vector2(104, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_gdbfp"]
+script = ExtResource("1_qghix")
+position = Vector2(544.87915, 438.90045)
+size = Vector2(104, 34)
+
+[sub_resource type="Resource" id="Resource_5qr21"]
+script = ExtResource("2_7o61x")
+kind = 5
+position = Vector2(139.84427, 433.55432)
+size = Vector2(340, 14)
+motion_period = 2.1
+phase_degrees = 178.36179
+pulse_on_ratio = 0.6
+
+[sub_resource type="Resource" id="Resource_fl6fv"]
+script = ExtResource("2_7o61x")
+kind = 2
+position = Vector2(252.69528, 764.0015)
+size = Vector2(130, 20)
+angular_speed_degrees = -130.0
+
+[sub_resource type="Resource" id="Resource_0hrwj"]
+script = ExtResource("3_opj0f")
+position = Vector2(490.3863, 651.2181)
+rotation_degrees = 39.381805
+length = 264.18927
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_6ru71"]
+script = ExtResource("3_opj0f")
+position = Vector2(416.881, 691.33685)
+rotation_degrees = 42.503555
+length = 327.931
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_48qp2")
+is_bonus = true
+level_id = 155
+display_name = "Son Sınav I"
+target_position = Vector2(410.87918, 244.80168)
+panels = Array[ExtResource("3_opj0f")]([SubResource("Resource_0hrwj"), SubResource("Resource_6ru71")])
+breakable_blocks = Array[ExtResource("1_qghix")]([SubResource("Resource_mxotj"), SubResource("Resource_g7lqr"), SubResource("Resource_gdbfp")])
+obstacles = Array[ExtResource("2_7o61x")]([SubResource("Resource_5qr21"), SubResource("Resource_fl6fv")])
+two_star_max_seconds = 999.0
+two_star_max_shots = 5
+three_star_max_seconds = 999.0
+three_star_max_shots = 5

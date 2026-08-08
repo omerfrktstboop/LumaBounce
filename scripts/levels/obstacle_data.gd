@@ -10,6 +10,7 @@ enum Kind {
 	ROTATING_WHEEL,
 	MOVING_BAR,
 	SPEED_BOOST,
+	PULSE_LASER,
 }
 
 const KIND_IDS := {
@@ -18,6 +19,7 @@ const KIND_IDS := {
 	Kind.ROTATING_WHEEL: "rotating_wheel",
 	Kind.MOVING_BAR: "moving_bar",
 	Kind.SPEED_BOOST: "speed_boost",
+	Kind.PULSE_LASER: "pulse_laser",
 }
 
 @export var kind: Kind = Kind.METAL_RING
@@ -40,7 +42,17 @@ const KIND_IDS := {
 ## Bir tam gidis-donus suresi.
 @export var motion_period := 2.8
 ## Ayni tur engellerin birlikte hareket etmemesi icin baslangic fazi.
+## Lazerde de ayni ise yarar: iki lazer sirayla yansin diye biri 180 alir.
 @export var phase_degrees := 0.0
+## LAZER: bir dongunun ne kadarinda ISIN ACIK olur (0..1).
+##
+## Dongu suresi motion_period'dir - kayan bariyerdeki "bir tam tur" ile ayni
+## kavram oldugu icin ayri bir alan acilmadi. Varsayilan 3 sn dongude 0.667
+## => 2 sn acik, 1 sn kapali.
+##
+## Ust sinir 0.85: surekli acik bir lazer zamanlama bulmacasi degil, gecilmez
+## bir duvardir - o zaten kayan bariyerin isi.
+@export_range(0.15, 0.85, 0.01) var pulse_on_ratio := 0.667
 
 
 func kind_id() -> String:
@@ -59,6 +71,8 @@ func display_name() -> String:
 			return "Kayan engel"
 		Kind.SPEED_BOOST:
 			return "Hızlandirici"
+		Kind.PULSE_LASER:
+			return "Lazer bariyer"
 	return "Engel"
 
 
@@ -137,4 +151,34 @@ func validate(index: int, play_rect := LevelData.DEFAULT_PLAY_RECT) -> PackedStr
 			var outer := outer_radius()
 			if outer < 15.0 or outer > 120.0:
 				problems.append("%s hizlandirici yaricapi 15-120 olmali (%.1f)" % [label, outer])
+		Kind.PULSE_LASER:
+			if size.x < 90.0 or size.x > 460.0:
+				problems.append("%s lazer uzunlugu 90-460 olmali (%.1f)" % [label, size.x])
+			if size.y < 8.0 or size.y > 30.0:
+				problems.append("%s lazer isin kalinligi 8-30 olmali (%.1f)" % [label, size.y])
+			if motion_period < 1.2 or motion_period > 6.0:
+				problems.append("%s lazer dongusu 1.2-6 sn olmali (%.1f)" % [label, motion_period])
+			if pulse_on_ratio < 0.15 or pulse_on_ratio > 0.85:
+				problems.append("%s lazer acik orani 0.15-0.85 olmali (%.2f)" % [label, pulse_on_ratio])
 	return problems
+
+
+## LAZER: verilen anda isin ACIK mi?
+##
+## Zaman ATIS BASINDAN olculur (solver ile oynanis ayni sifir noktasini
+## kullanir - bkz. ObstacleField.start_motion). Aksi halde "editorde gecti,
+## oyunda carpti" olurdu.
+func laser_is_active(seconds: float) -> bool:
+	if kind != Kind.PULSE_LASER:
+		return false
+	var period := maxf(motion_period, 0.1)
+	var phase := phase_degrees / 360.0 + seconds / period
+	return fposmod(phase, 1.0) < pulse_on_ratio
+
+
+## Isinin bir sonraki durum degisimine kalan sure - gorsel uyari icin
+## (bkz. LevelObstacle). Oyuncu isinin ne zaman yanacagini GOREBILMELI,
+## yoksa bulmaca zamanlama degil sans olur.
+func laser_phase_ratio(seconds: float) -> float:
+	var period := maxf(motion_period, 0.1)
+	return fposmod(phase_degrees / 360.0 + seconds / period, 1.0)

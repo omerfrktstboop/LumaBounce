@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_w0hk7"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_wpcqd"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_lohbo"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_owx4k"]
+
+[sub_resource type="Resource" id="Resource_g8eeb"]
+script = ExtResource("2_wpcqd")
+kind = 5
+position = Vector2(138.2028, 942.17316)
+size = Vector2(299.79797, 14)
+motion_period = 2.478787878787879
+phase_degrees = 45.89429
+pulse_on_ratio = 0.5651515151515152
+
+[sub_resource type="Resource" id="Resource_qo1or"]
+script = ExtResource("3_lohbo")
+position = Vector2(385.1213, 555.5207)
+rotation_degrees = -41.1955150604248
+length = 275.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_etpx7"]
+script = ExtResource("3_lohbo")
+position = Vector2(212.79962, 584.1633)
+rotation_degrees = 9.686145973205566
+length = 267.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_owx4k")
+level_id = 127
+display_name = "Faz 127"
+target_position = Vector2(445.81638, 359.32285)
+panels = Array[ExtResource("3_lohbo")]([SubResource("Resource_qo1or"), SubResource("Resource_etpx7")])
+obstacles = Array[ExtResource("2_wpcqd")]([SubResource("Resource_g8eeb")])
+two_star_max_seconds = 140.3
+two_star_max_shots = 3
+three_star_max_seconds = 74.5

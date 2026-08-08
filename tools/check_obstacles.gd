@@ -16,6 +16,8 @@ func _run() -> void:
 	_test_data_and_geometry()
 	await _test_world_and_solver()
 	await _test_gameplay_bomb()
+	_test_laser_pulse()
+	await _test_gameplay_laser()
 	await _test_real_obstacle_motion()
 	await _test_mechanic_intro_card()
 	_test_resource_roundtrip()
@@ -205,6 +207,94 @@ func _test_gameplay_bomb() -> void:
 	await process_frame
 
 
+## Lazerin ZAMANLAMA sozlesmesi. Bu testin asil isi, oyunun ve solver'in
+## isini AYNI anda acik saymasini korumak: kaysalar "editorde gecti, oyunda
+## carpti" olurdu ve bir daha kimse fark etmezdi.
+func _test_laser_pulse() -> void:
+	var laser := ObstacleData.new()
+	laser.kind = ObstacleData.Kind.PULSE_LASER
+	laser.position = Vector2(360.0, 620.0)
+	laser.size = Vector2(300.0, 16.0)
+	laser.motion_period = 3.0
+	laser.pulse_on_ratio = 0.667
+
+	_check("lazer dogrulamadan geciyor", laser.validate(0).size(), 0)
+	_check("t=0 isin acik", laser.laser_is_active(0.0), true)
+	_check("t=1.9 isin acik", laser.laser_is_active(1.9), true)
+	_check("t=2.1 isin kapali", laser.laser_is_active(2.1), false)
+	_check("t=2.9 isin kapali", laser.laser_is_active(2.9), false)
+	_check("t=3.1 dongu bastan basliyor", laser.laser_is_active(3.1), true)
+
+	# Faz kaydirmasi olmasa ayni bolumdeki iki lazer birlikte yanip sonerdi;
+	# o zaman ikisi tek bir kalin lazerden farksiz olurdu.
+	var shifted := ObstacleData.new()
+	shifted.kind = ObstacleData.Kind.PULSE_LASER
+	shifted.motion_period = 3.0
+	shifted.pulse_on_ratio = 0.667
+	shifted.phase_degrees = 180.0
+	_check("faz kaydirilmis lazer farkli durumda",
+		shifted.laser_is_active(2.1) != laser.laser_is_active(2.1), true)
+
+	# Tehlike sekli YALNIZCA acikken uretilmeli - solver bunu okuyor.
+	var arr: Array[ObstacleData] = [laser]
+	_check("acikken tehlike sekli var",
+		ObstacleGeometry.hazard_shapes(arr, 0.5).size(), 1)
+	_check("kapaliyken tehlike sekli yok",
+		ObstacleGeometry.hazard_shapes(arr, 2.5).size(), 0)
+	_check("tehlike sebebi laser", String(
+		ObstacleGeometry.hazard_shapes(arr, 0.5)[0]["hazard_reason"]), "laser")
+	# Isin bir DUVAR degil: cark/bariyer gibi kati sekiller listesine girmemeli,
+	# yoksa top sonuk isinden sekerdi.
+	_check("isin kati sekil uretmiyor",
+		ObstacleGeometry.dynamic_shapes(arr, 0.5).size(), 0)
+
+	# Surekli acik bir lazer zamanlama bulmacasi degil duvardir.
+	var always_on := ObstacleData.new()
+	always_on.kind = ObstacleData.Kind.PULSE_LASER
+	always_on.size = Vector2(300.0, 16.0)
+	always_on.pulse_on_ratio = 0.95
+	_check("surekli acik lazer dogrulamadan KALIYOR",
+		always_on.validate(0).size() > 0, true)
+
+
+## Gercek oynanista isin ACIKKEN oldurur, SONUKKEN oldurmez.
+##
+## Iki atis ayni geometride yapilir; tek fark isinin o andaki durumudur.
+func _test_gameplay_laser() -> void:
+	for expect_hit in [true, false]:
+		var level := LevelData.new()
+		level.level_id = 1
+		level.launcher_position = Vector2(360.0, 1120.0)
+		level.target_position = Vector2(120.0, 260.0)
+		level.max_lives = 5
+		var laser := ObstacleData.new()
+		laser.kind = ObstacleData.Kind.PULSE_LASER
+		laser.position = Vector2(360.0, 930.0)
+		laser.size = Vector2(420.0, 18.0)
+		laser.motion_period = 4.0
+		laser.pulse_on_ratio = 0.5
+		# phase 180 => atis basinda isin SONUK; 0 => acik.
+		laser.phase_degrees = 0.0 if expect_hit else 180.0
+		level.obstacles = [laser] as Array[ObstacleData]
+
+		var gameplay: Node = (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+		gameplay.level_data = level
+		get_root().add_child(gameplay)
+		await process_frame
+		gameplay.call("_on_shot_fired", Vector2.UP * 1100.0)
+		for _frame in 24:
+			await physics_frame
+			var snap: Dictionary = gameplay.call("get_debug_snapshot")
+			if String(snap["last_failure_reason"]) == "laser":
+				break
+		var snapshot: Dictionary = gameplay.call("get_debug_snapshot")
+		var label := "isin ACIKKEN" if expect_hit else "isin SONUKKEN"
+		_check("%s top vuruluyor mu" % label,
+			String(snapshot["last_failure_reason"]) == "laser", expect_hit)
+		gameplay.queue_free()
+		await process_frame
+
+
 func _register_audio_manager() -> void:
 	if Engine.has_singleton("AudioManager"):
 		return
@@ -242,6 +332,30 @@ func _test_resource_roundtrip() -> void:
 	var loaded := ResourceLoader.load(path, "LevelData", ResourceLoader.CACHE_MODE_IGNORE) as LevelData
 	_check("dort engel geri yuklendi", loaded.obstacles.size(), 4)
 	_check("hareket suresi korundu", loaded.obstacles[3].motion_period, 2.8)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+	# Lazerin zamanlama alanlari da diske gidip geri gelmeli: biri kaybolursa
+	# bolum kaydedildikten sonra baska bir ritimle oynanir ve dogrulama yalan
+	# soyler.
+	var laser_level := LevelData.new()
+	var laser := ObstacleData.new()
+	laser.kind = ObstacleData.Kind.PULSE_LASER
+	laser.position = Vector2(300.0, 600.0)
+	laser.size = Vector2(280.0, 15.0)
+	laser.motion_period = 2.4
+	laser.pulse_on_ratio = 0.42
+	laser.phase_degrees = 137.0
+	laser_level.obstacles = [laser] as Array[ObstacleData]
+	_check("lazer kaydi", ResourceSaver.save(laser_level, path), OK)
+	var laser_back := ResourceLoader.load(
+		path, "LevelData", ResourceLoader.CACHE_MODE_IGNORE) as LevelData
+	_check("lazer turu korundu", laser_back.obstacles[0].kind,
+		ObstacleData.Kind.PULSE_LASER)
+	_check("lazer dongusu korundu", laser_back.obstacles[0].motion_period, 2.4)
+	_check("lazer acik orani korundu", laser_back.obstacles[0].pulse_on_ratio, 0.42)
+	_check("lazer fazi korundu", laser_back.obstacles[0].phase_degrees, 137.0)
+	_check("geri yuklenen lazer ayni ritmi veriyor",
+		laser_back.obstacles[0].laser_is_active(1.1), laser.laser_is_active(1.1))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
@@ -332,6 +446,37 @@ func _test_official_obstacle_levels() -> void:
 	_check("51-100 bloksuz engel bandi", blocks_51_100, 0)
 	_check("51 donen carkin ilk-gorulme anidir",
 		LevelLibrary.load_level(51).obstacles[0].kind, ObstacleData.Kind.ROTATING_WHEEL)
+
+	# 126-150 LAZER BANDI: bandin kimligi yanip sonen isindir, dolayisiyla
+	# HER bolumde en az bir lazer olmali. 126 lazerin ilk-gorulme anidir ve
+	# YALNIZCA lazer icerir: tanitim karti bir bolumdeki yeni turleri gosterir,
+	# baska bir engel olsa oyuncu ayni anda iki kural ogrenmek zorunda kalirdi.
+	var laser_free: Array[int] = []
+	for level_id in range(126, LevelLibrary.last_level_id() + 1):
+		var level := LevelLibrary.load_level(level_id)
+		var has_laser := false
+		for obstacle in level.obstacles:
+			if obstacle.kind == ObstacleData.Kind.PULSE_LASER:
+				has_laser = true
+		if not has_laser:
+			laser_free.append(level_id)
+	_check("126+ her bolumde lazer var", laser_free, [] as Array[int])
+
+	var first := LevelLibrary.load_level(126)
+	var first_kinds := {}
+	for obstacle in first.obstacles:
+		first_kinds[obstacle.kind] = true
+	_check("126 yalnizca lazer icerir", first_kinds.size(), 1)
+	_check("126 lazerin ilk-gorulme anidir",
+		first_kinds.has(ObstacleData.Kind.PULSE_LASER), true)
+	# 125'e kadar lazer GORULMEMELI, yoksa 126'nin tanitim karti hic acilmaz.
+	var early_laser: Array[int] = []
+	for level_id in range(1, 126):
+		for obstacle in LevelLibrary.load_level(level_id).obstacles:
+			if obstacle.kind == ObstacleData.Kind.PULSE_LASER:
+				early_laser.append(level_id)
+				break
+	_check("1-125 lazer icermiyor", early_laser, [] as Array[int])
 
 
 func _ring(at: Vector2) -> ObstacleData:

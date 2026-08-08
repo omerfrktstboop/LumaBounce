@@ -1,0 +1,41 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_r2mpu"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_b4nau"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_nq6tj"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_4djq3"]
+
+[sub_resource type="Resource" id="Resource_8r1hy"]
+script = ExtResource("2_b4nau")
+kind = 5
+position = Vector2(326.79248, 635.51697)
+size = Vector2(303.73737, 14)
+motion_period = 2.4424242424242424
+phase_degrees = 244.43523
+pulse_on_ratio = 0.5696969696969697
+
+[sub_resource type="Resource" id="Resource_870gk"]
+script = ExtResource("2_b4nau")
+kind = 3
+position = Vector2(600.43396, 885.0953)
+size = Vector2(130, 26)
+travel_distance = 125.85858585858585
+motion_period = 2.1626262626262625
+
+[sub_resource type="Resource" id="Resource_4vl7v"]
+script = ExtResource("3_nq6tj")
+position = Vector2(188.14609, 814.0998)
+rotation_degrees = 15.761724376678467
+length = 357.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_4djq3")
+level_id = 130
+display_name = "Faz 130"
+target_position = Vector2(367.28818, 410.09976)
+panels = Array[ExtResource("3_nq6tj")]([SubResource("Resource_4vl7v")])
+obstacles = Array[ExtResource("2_b4nau")]([SubResource("Resource_8r1hy"), SubResource("Resource_870gk")])
+two_star_max_seconds = 142.8
+two_star_max_shots = 3
+three_star_max_seconds = 75.9

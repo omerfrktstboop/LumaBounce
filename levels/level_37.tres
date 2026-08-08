@@ -5,61 +5,51 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Obs_0"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(632, 399)
-rotation_degrees = 0.0
-size = Vector2(63, 24)
-inner_radius = 38.8
-spoke_count = 6
-angular_speed_degrees = 83.8
-motion_direction_degrees = 0.0
-travel_distance = 116.7
-motion_period = 2.1
-phase_degrees = 50.9
-[sub_resource type="Resource" id="Obs_1"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(483, 392)
-rotation_degrees = 0.0
-size = Vector2(118, 31)
-inner_radius = 35.3
-spoke_count = 7
-angular_speed_degrees = 57.9
-motion_direction_degrees = 0.0
-travel_distance = 109.9
-motion_period = 3.6
-phase_degrees = 42.3
-[sub_resource type="Resource" id="Obs_2"]
-script = ExtResource("2")
-kind = 2
-position = Vector2(291, 766)
-rotation_degrees = 0.0
-size = Vector2(146, 31)
-inner_radius = 28.4
-spoke_count = 5
-angular_speed_degrees = 72.0
-motion_direction_degrees = 90.0
-travel_distance = 100.2
-motion_period = 4.0
-phase_degrees = 54.5
+[sub_resource type="Resource" id="Resource_qstkr"]
+script = ExtResource("1")
+position = Vector2(116.25, 399.48422)
+size = Vector2(112.5, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_yceli"]
+script = ExtResource("1")
+position = Vector2(258.75, 399.48422)
+size = Vector2(112.5, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_vovru"]
+script = ExtResource("1")
+position = Vector2(401.25, 399.48422)
+size = Vector2(112.5, 34)
+
+[sub_resource type="Resource" id="Resource_yuv04"]
+script = ExtResource("1")
+position = Vector2(543.75, 399.48422)
+size = Vector2(112.5, 34)
+
+[sub_resource type="Resource" id="Resource_46r6s"]
+script = ExtResource("3")
+position = Vector2(477.0352, 778.34906)
+rotation_degrees = -31.387363
+length = 318.06833
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_n21lg"]
+script = ExtResource("3")
+position = Vector2(457.80853, 802.86224)
+rotation_degrees = -13.790081
+length = 351.75885
+thickness = 26.0
 
 [resource]
 script = ExtResource("4")
 level_id = 37
 display_name = "Yeniden Tasarlanan Rastgele Faz 37"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(152, 282)
+target_position = Vector2(258.9402, 267.26294)
 target_scale = 0.74
 ball_scale = 0.65
-panels = Array[PanelData]([])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Obs_0"), SubResource("Obs_1"), SubResource("Obs_2")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
+panels = Array[ExtResource("3")]([SubResource("Resource_46r6s"), SubResource("Resource_n21lg")])
+breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_qstkr"), SubResource("Resource_yceli"), SubResource("Resource_vovru"), SubResource("Resource_yuv04")])
 two_star_max_seconds = 37.9
 two_star_max_shots = 5
 three_star_max_seconds = 17.6
