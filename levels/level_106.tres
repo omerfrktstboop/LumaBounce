@@ -24,6 +24,15 @@ size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = -100.74324324324324
 
+[sub_resource type="Resource" id="Resource_rtyjr"]
+script = ExtResource("2_sntrn")
+kind = 3
+position = Vector2(252.53903, 587.44995)
+rotation_degrees = -7.7807884
+size = Vector2(127.752365, 28)
+travel_distance = 139.77704
+motion_period = 3.4174767
+
 [sub_resource type="Resource" id="Resource_7gd7o"]
 script = ExtResource("3_k24im")
 position = Vector2(447, 820)
@@ -38,7 +47,7 @@ display_name = "Faz 106"
 target_position = Vector2(393, 276)
 panels = Array[ExtResource("3_k24im")]([SubResource("Resource_7gd7o")])
 breakable_blocks = Array[ExtResource("1_rtyjr")]([SubResource("Resource_8rx5g"), SubResource("Resource_b6j2x")])
-obstacles = Array[ExtResource("2_sntrn")]([SubResource("Resource_rjp72")])
+obstacles = Array[ExtResource("2_sntrn")]([SubResource("Resource_rjp72"), SubResource("Resource_rtyjr")])
 two_star_max_seconds = 138.20000000000002
 two_star_max_shots = 3
 three_star_max_seconds = 73.4

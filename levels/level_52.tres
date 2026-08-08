@@ -5,49 +5,19 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_0bcqc"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_4iyuk"]
 
-[sub_resource type="Resource" id="Resource_4sxg7"]
+[sub_resource type="Resource" id="Resource_ea88g"]
 script = ExtResource("2_oqhmo")
-kind = 2
-position = Vector2(348.00687, 384.28574)
-size = Vector2(120, 20)
-spoke_count = 5
-angular_speed_degrees = -46.013513513513516
-
-[sub_resource type="Resource" id="Resource_w325l"]
-script = ExtResource("2_oqhmo")
-position = Vector2(146.93117, 330.4727)
-rotation_degrees = 180.0
-size = Vector2(180, 28)
-inner_radius = 75.75675675675676
-
-[sub_resource type="Resource" id="Resource_54ymm"]
-script = ExtResource("3_0bcqc")
-position = Vector2(476.3598, 596.0958)
-rotation_degrees = -37.21160335540772
-length = 401.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Resource_8xxda"]
-script = ExtResource("3_0bcqc")
-position = Vector2(478.14603, 724.6734)
-rotation_degrees = -36.63883
-length = 344.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Resource_r02gw"]
-script = ExtResource("3_0bcqc")
-position = Vector2(487.3632, 853.1732)
-rotation_degrees = 38.61764402389527
-length = 408.0
-thickness = 26.0
+position = Vector2(319.20575, 555.26764)
+rotation_degrees = 90.923996
+size = Vector2(80, 28)
+inner_radius = 48.86112
 
 [resource]
 script = ExtResource("4_4iyuk")
-level_id = 52
-display_name = "Faz 52"
-target_position = Vector2(549.48035, 393.04205)
-panels = Array[ExtResource("3_0bcqc")]([SubResource("Resource_54ymm"), SubResource("Resource_8xxda"), SubResource("Resource_r02gw")])
-obstacles = Array[ExtResource("2_oqhmo")]([SubResource("Resource_4sxg7"), SubResource("Resource_w325l")])
-two_star_max_seconds = 76.10000000000001
-two_star_max_shots = 3
-three_star_max_seconds = 40.6
+display_name = "İlk Atış"
+obstacles = Array[ExtResource("2_oqhmo")]([SubResource("Resource_ea88g")])
+tutorial_text = "Sürükle, nişan al ve bırak"
+two_star_max_seconds = 90.0
+two_star_max_shots = 2
+three_star_max_seconds = 45.0
+three_star_max_shots = 1

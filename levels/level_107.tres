@@ -21,8 +21,8 @@ script = ExtResource("2_4nqt7")
 kind = 3
 position = Vector2(193.29413, 344.0049)
 size = Vector2(130, 26)
-travel_distance = 122.97297297297297
-motion_period = 2.2162162162162162
+travel_distance = 122.97297297297295
+motion_period = 2.216216216216216
 
 [sub_resource type="Resource" id="Resource_pd8ro"]
 script = ExtResource("2_4nqt7")
@@ -30,6 +30,15 @@ position = Vector2(540.06726, 956.7862)
 rotation_degrees = 180.0
 size = Vector2(180, 28)
 inner_radius = 62.37837837837838
+
+[sub_resource type="Resource" id="Resource_l12k4"]
+script = ExtResource("2_4nqt7")
+kind = 2
+position = Vector2(117.82269, 338.8226)
+size = Vector2(100, 20)
+inner_radius = 40.0
+spoke_count = 5
+angular_speed_degrees = 48.04738
 
 [sub_resource type="Resource" id="Resource_dxsc1"]
 script = ExtResource("3_hb6g6")
@@ -52,7 +61,7 @@ display_name = "Faz 107"
 target_position = Vector2(576, 432)
 panels = Array[ExtResource("3_hb6g6")]([SubResource("Resource_dxsc1"), SubResource("Resource_4gmpe")])
 breakable_blocks = Array[ExtResource("1_l12k4")]([SubResource("Resource_388pr"), SubResource("Resource_36as0")])
-obstacles = Array[ExtResource("2_4nqt7")]([SubResource("Resource_0nfcj"), SubResource("Resource_pd8ro")])
+obstacles = Array[ExtResource("2_4nqt7")]([SubResource("Resource_0nfcj"), SubResource("Resource_pd8ro"), SubResource("Resource_l12k4")])
 two_star_max_seconds = 139.3
 two_star_max_shots = 3
 three_star_max_seconds = 74.10000000000001

@@ -20,6 +20,12 @@ rotation_degrees = 180.0
 size = Vector2(180, 28)
 inner_radius = 73.08108108108108
 
+[sub_resource type="Resource" id="Resource_y7g3t"]
+script = ExtResource("2_56iey")
+kind = 1
+position = Vector2(260.62878, 788.9795)
+size = Vector2(70, 70)
+
 [sub_resource type="Resource" id="Resource_x4syy"]
 script = ExtResource("3_chj31")
 position = Vector2(255, 483)
@@ -33,7 +39,7 @@ level_id = 63
 display_name = "Faz 63"
 target_position = Vector2(469, 276)
 panels = Array[ExtResource("3_chj31")]([SubResource("Resource_x4syy")])
-obstacles = Array[ExtResource("2_56iey")]([SubResource("Resource_ekk7p"), SubResource("Resource_isqwo")])
+obstacles = Array[ExtResource("2_56iey")]([SubResource("Resource_ekk7p"), SubResource("Resource_isqwo"), SubResource("Resource_y7g3t")])
 two_star_max_seconds = 88.80000000000001
 two_star_max_shots = 3
-three_star_max_seconds = 47.300000000000004
+three_star_max_seconds = 47.3

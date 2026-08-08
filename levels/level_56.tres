@@ -5,28 +5,19 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_7cyf4"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_gptdw"]
 
-[sub_resource type="Resource" id="Resource_37l4r"]
+[sub_resource type="Resource" id="Resource_kjudv"]
 script = ExtResource("2_fm8eo")
-kind = 3
-position = Vector2(535.3263, 595.9431)
-size = Vector2(130, 26)
-travel_distance = 74.72972972972973
-motion_period = 3.1121621621621625
-
-[sub_resource type="Resource" id="Resource_qix0u"]
-script = ExtResource("3_7cyf4")
-position = Vector2(438, 810)
-rotation_degrees = 2.8
-length = 376.0
-thickness = 26.0
+position = Vector2(447.97006, 855.08295)
+rotation_degrees = 101.21395
+size = Vector2(80, 28)
+inner_radius = 46.224747
 
 [resource]
 script = ExtResource("4_gptdw")
-level_id = 56
-display_name = "Kayan Bariyer"
-target_position = Vector2(203, 376)
-panels = Array[ExtResource("3_7cyf4")]([SubResource("Resource_qix0u")])
-obstacles = Array[ExtResource("2_fm8eo")]([SubResource("Resource_37l4r")])
-two_star_max_seconds = 80.7
-two_star_max_shots = 3
-three_star_max_seconds = 43.0
+display_name = "İlk Atış"
+obstacles = Array[ExtResource("2_fm8eo")]([SubResource("Resource_kjudv")])
+tutorial_text = "Sürükle, nişan al ve bırak"
+two_star_max_seconds = 90.0
+two_star_max_shots = 2
+three_star_max_seconds = 45.0
+three_star_max_shots = 1

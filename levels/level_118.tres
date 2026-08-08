@@ -37,6 +37,15 @@ rotation_degrees = 180.0
 size = Vector2(180, 28)
 inner_radius = 59.7027027027027
 
+[sub_resource type="Resource" id="Resource_qqjw2"]
+script = ExtResource("2_56sxy")
+kind = 2
+position = Vector2(397.728, 615.78986)
+size = Vector2(100, 20)
+inner_radius = 40.0
+spoke_count = 5
+angular_speed_degrees = 69.070435
+
 [sub_resource type="Resource" id="Resource_ytjw7"]
 script = ExtResource("3_44ey1")
 position = Vector2(379.82236, 759.9321)
@@ -58,7 +67,7 @@ display_name = "Faz 118"
 target_position = Vector2(422.9203, 250.0367)
 panels = Array[ExtResource("3_44ey1")]([SubResource("Resource_ytjw7"), SubResource("Resource_rcuik")])
 breakable_blocks = Array[ExtResource("1_qqjw2")]([SubResource("Resource_mcrmg"), SubResource("Resource_syp3s"), SubResource("Resource_ixtt0")])
-obstacles = Array[ExtResource("2_56sxy")]([SubResource("Resource_1tbpg"), SubResource("Resource_7pbtn")])
+obstacles = Array[ExtResource("2_56sxy")]([SubResource("Resource_1tbpg"), SubResource("Resource_7pbtn"), SubResource("Resource_qqjw2")])
 two_star_max_seconds = 121.6
 two_star_max_shots = 2
 three_star_max_seconds = 80.7

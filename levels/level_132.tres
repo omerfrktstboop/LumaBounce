@@ -21,6 +21,15 @@ rotation_degrees = 180.0
 size = Vector2(180, 28)
 inner_radius = 61.27272727272727
 
+[sub_resource type="Resource" id="Resource_7qivt"]
+script = ExtResource("2_orneo")
+kind = 2
+position = Vector2(404.40005, 507.90173)
+size = Vector2(100, 20)
+inner_radius = 40.0
+spoke_count = 4
+angular_speed_degrees = 119.65094
+
 [sub_resource type="Resource" id="Resource_wilbx"]
 script = ExtResource("3_k3fdc")
 position = Vector2(363.82727, 651.7699)
@@ -34,7 +43,7 @@ level_id = 132
 display_name = "Faz 132"
 target_position = Vector2(549.1727, 237.6741)
 panels = Array[ExtResource("3_k3fdc")]([SubResource("Resource_wilbx")])
-obstacles = Array[ExtResource("2_orneo")]([SubResource("Resource_3txa5"), SubResource("Resource_8fbvq")])
+obstacles = Array[ExtResource("2_orneo")]([SubResource("Resource_3txa5"), SubResource("Resource_8fbvq"), SubResource("Resource_7qivt")])
 two_star_max_seconds = 144.5
 two_star_max_shots = 3
 three_star_max_seconds = 76.80000000000001

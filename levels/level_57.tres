@@ -13,6 +13,24 @@ size = Vector2(130, 26)
 travel_distance = 75.67567567567568
 motion_period = 3.0945945945945947
 
+[sub_resource type="Resource" id="Resource_gsrjh"]
+script = ExtResource("2_onx43")
+kind = 2
+position = Vector2(513.1231, 777.3901)
+size = Vector2(100, 20)
+inner_radius = 40.0
+spoke_count = 3
+angular_speed_degrees = 48.484924
+
+[sub_resource type="Resource" id="Resource_onx43"]
+script = ExtResource("2_onx43")
+kind = 3
+position = Vector2(307.2681, 547.8942)
+rotation_degrees = 43.0325
+size = Vector2(168.49873, 28)
+travel_distance = 131.18108
+motion_period = 2.0006993
+
 [sub_resource type="Resource" id="Resource_oykko"]
 script = ExtResource("3_6xo7j")
 position = Vector2(470, 576)
@@ -26,7 +44,7 @@ level_id = 57
 display_name = "Faz 57"
 target_position = Vector2(421, 269)
 panels = Array[ExtResource("3_6xo7j")]([SubResource("Resource_oykko")])
-obstacles = Array[ExtResource("2_onx43")]([SubResource("Resource_xtsro")])
+obstacles = Array[ExtResource("2_onx43")]([SubResource("Resource_xtsro"), SubResource("Resource_gsrjh"), SubResource("Resource_onx43")])
 two_star_max_seconds = 81.9
 two_star_max_shots = 3
 three_star_max_seconds = 43.6

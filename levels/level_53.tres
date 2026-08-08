@@ -5,34 +5,12 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_6t6pj"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_grypp"]
 
-[sub_resource type="Resource" id="Resource_j7rq8"]
-script = ExtResource("2_oxn5e")
-kind = 2
-position = Vector2(362.20346, 456.79807)
-size = Vector2(120, 20)
-spoke_count = 5
-angular_speed_degrees = -47.027027027027025
-
-[sub_resource type="Resource" id="Resource_iw4lt"]
+[sub_resource type="Resource" id="Resource_825bb"]
 script = ExtResource("2_oxn5e")
 kind = 1
-position = Vector2(438.35928, 580.9448)
-size = Vector2(60.756756, 60.756756)
-
-[sub_resource type="Resource" id="Resource_jkant"]
-script = ExtResource("3_6t6pj")
-position = Vector2(250, 576)
-rotation_degrees = 41.6
-length = 360.0
-thickness = 26.0
+position = Vector2(553.5014, 845.47284)
+size = Vector2(70, 70)
 
 [resource]
 script = ExtResource("4_grypp")
-level_id = 53
-display_name = "Faz 53"
-target_position = Vector2(299, 269)
-panels = Array[ExtResource("3_6t6pj")]([SubResource("Resource_jkant")])
-obstacles = Array[ExtResource("2_oxn5e")]([SubResource("Resource_j7rq8"), SubResource("Resource_iw4lt")])
-two_star_max_seconds = 77.30000000000001
-two_star_max_shots = 3
-three_star_max_seconds = 41.2
+obstacles = Array[ExtResource("2_oxn5e")]([SubResource("Resource_825bb")])

@@ -35,6 +35,12 @@ kind = 1
 position = Vector2(163.36008, 932.5262)
 size = Vector2(85.72973, 85.72973)
 
+[sub_resource type="Resource" id="Resource_qpm2a"]
+script = ExtResource("2_evtph")
+kind = 1
+position = Vector2(514.20764, 499.49756)
+size = Vector2(70, 70)
+
 [sub_resource type="Resource" id="Resource_1sjud"]
 script = ExtResource("3_ne06o")
 position = Vector2(420, 662)
@@ -49,7 +55,7 @@ display_name = "Faz 119"
 target_position = Vector2(288, 394)
 panels = Array[ExtResource("3_ne06o")]([SubResource("Resource_1sjud")])
 breakable_blocks = Array[ExtResource("1_qpm2a")]([SubResource("Resource_7pkec"), SubResource("Resource_wo4qc"), SubResource("Resource_ehrm4")])
-obstacles = Array[ExtResource("2_evtph")]([SubResource("Resource_pipia"), SubResource("Resource_555hl")])
+obstacles = Array[ExtResource("2_evtph")]([SubResource("Resource_pipia"), SubResource("Resource_555hl"), SubResource("Resource_qpm2a")])
 two_star_max_seconds = 153.1
 two_star_max_shots = 3
 three_star_max_seconds = 81.4

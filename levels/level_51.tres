@@ -13,6 +13,22 @@ size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = -45.0
 
+[sub_resource type="Resource" id="Resource_n4qit"]
+script = ExtResource("2_a8nkr")
+kind = 2
+position = Vector2(196.69083, 362.277)
+size = Vector2(100, 20)
+inner_radius = 40.0
+spoke_count = 3
+angular_speed_degrees = 68.889854
+
+[sub_resource type="Resource" id="Resource_a8nkr"]
+script = ExtResource("2_a8nkr")
+position = Vector2(312.81763, 550.81696)
+rotation_degrees = 281.41513
+size = Vector2(80, 28)
+inner_radius = 39.237854
+
 [sub_resource type="Resource" id="Resource_lnj4g"]
 script = ExtResource("3_e1kms")
 position = Vector2(476, 855)
@@ -26,7 +42,7 @@ level_id = 51
 display_name = "Dönen Çark"
 target_position = Vector2(576, 419)
 panels = Array[ExtResource("3_e1kms")]([SubResource("Resource_lnj4g")])
-obstacles = Array[ExtResource("2_a8nkr")]([SubResource("Resource_w4hxv")])
+obstacles = Array[ExtResource("2_a8nkr")]([SubResource("Resource_w4hxv"), SubResource("Resource_n4qit"), SubResource("Resource_a8nkr")])
 two_star_max_seconds = 75.0
 two_star_max_shots = 3
 three_star_max_seconds = 40.0

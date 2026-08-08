@@ -10,7 +10,7 @@ script = ExtResource("2_uaf2y")
 kind = 5
 position = Vector2(499.98492, 737.24243)
 size = Vector2(305.0505, 14)
-motion_period = 2.4303030303030306
+motion_period = 2.43030303030303
 phase_degrees = 243.93431
 pulse_on_ratio = 0.5712121212121212
 
@@ -19,6 +19,13 @@ script = ExtResource("2_uaf2y")
 kind = 1
 position = Vector2(180.89365, 884.3915)
 size = Vector2(82.62626, 82.62626)
+
+[sub_resource type="Resource" id="Resource_hfnre"]
+script = ExtResource("2_uaf2y")
+position = Vector2(231.4314, 855.2449)
+rotation_degrees = 67.34226
+size = Vector2(80, 28)
+inner_radius = 49.00634
 
 [sub_resource type="Resource" id="Resource_a6hy6"]
 script = ExtResource("3_wm6e0")
@@ -33,7 +40,7 @@ level_id = 131
 display_name = "Faz 131"
 target_position = Vector2(193.6553, 431.4804)
 panels = Array[ExtResource("3_wm6e0")]([SubResource("Resource_a6hy6")])
-obstacles = Array[ExtResource("2_uaf2y")]([SubResource("Resource_c1jtj"), SubResource("Resource_fivf1")])
+obstacles = Array[ExtResource("2_uaf2y")]([SubResource("Resource_c1jtj"), SubResource("Resource_fivf1"), SubResource("Resource_hfnre")])
 two_star_max_seconds = 143.70000000000002
 two_star_max_shots = 3
 three_star_max_seconds = 76.4

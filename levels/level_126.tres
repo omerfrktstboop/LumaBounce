@@ -14,6 +14,15 @@ motion_period = 2.490909090909091
 phase_degrees = 37.975258
 pulse_on_ratio = 0.5636363636363636
 
+[sub_resource type="Resource" id="Resource_w7adl"]
+script = ExtResource("2_pj0bf")
+kind = 3
+position = Vector2(233.80544, 588.09424)
+rotation_degrees = -16.722326
+size = Vector2(115.46628, 28)
+travel_distance = 102.46448
+motion_period = 3.0637116
+
 [sub_resource type="Resource" id="Resource_m6327"]
 script = ExtResource("3_53wiq")
 position = Vector2(370.6626, 686.5951)
@@ -34,7 +43,7 @@ level_id = 126
 display_name = "Lazer Hattı"
 target_position = Vector2(517.62006, 288.35602)
 panels = Array[ExtResource("3_53wiq")]([SubResource("Resource_m6327"), SubResource("Resource_8sciu")])
-obstacles = Array[ExtResource("2_pj0bf")]([SubResource("Resource_4gqsl")])
+obstacles = Array[ExtResource("2_pj0bf")]([SubResource("Resource_4gqsl"), SubResource("Resource_w7adl")])
 two_star_max_seconds = 139.4
 two_star_max_shots = 3
 three_star_max_seconds = 74.10000000000001

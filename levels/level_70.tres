@@ -13,6 +13,15 @@ size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = 64.25675675675676
 
+[sub_resource type="Resource" id="Resource_80bln"]
+script = ExtResource("2_bgfpp")
+kind = 3
+position = Vector2(186.15642, 828.449)
+rotation_degrees = 13.453548
+size = Vector2(130.55112, 28)
+travel_distance = 115.1364
+motion_period = 3.0499105
+
 [sub_resource type="Resource" id="Resource_xy8m8"]
 script = ExtResource("3_ugq72")
 position = Vector2(369, 736)
@@ -26,7 +35,7 @@ level_id = 70
 display_name = "Faz 70"
 target_position = Vector2(567, 393)
 panels = Array[ExtResource("3_ugq72")]([SubResource("Resource_xy8m8")])
-obstacles = Array[ExtResource("2_bgfpp")]([SubResource("Resource_a3jkg")])
-two_star_max_seconds = 96.80000000000001
+obstacles = Array[ExtResource("2_bgfpp")]([SubResource("Resource_a3jkg"), SubResource("Resource_80bln")])
+two_star_max_seconds = 96.8
 two_star_max_shots = 3
 three_star_max_seconds = 51.6

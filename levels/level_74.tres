@@ -20,6 +20,15 @@ rotation_degrees = 180.0
 size = Vector2(180, 28)
 inner_radius = 70.4054054054054
 
+[sub_resource type="Resource" id="Resource_5x2eg"]
+script = ExtResource("2_s0274")
+kind = 2
+position = Vector2(164.80328, 633.23126)
+size = Vector2(100, 20)
+inner_radius = 40.0
+spoke_count = 4
+angular_speed_degrees = 77.79071
+
 [sub_resource type="Resource" id="Resource_tqlpc"]
 script = ExtResource("3_0tf25")
 position = Vector2(390.92255, 760.682)
@@ -40,7 +49,7 @@ level_id = 74
 display_name = "Faz 74"
 target_position = Vector2(543.00964, 368.01166)
 panels = Array[ExtResource("3_0tf25")]([SubResource("Resource_tqlpc"), SubResource("Resource_alpl0")])
-obstacles = Array[ExtResource("2_s0274")]([SubResource("Resource_240x7"), SubResource("Resource_m444l")])
+obstacles = Array[ExtResource("2_s0274")]([SubResource("Resource_240x7"), SubResource("Resource_m444l"), SubResource("Resource_5x2eg")])
 two_star_max_seconds = 101.4
 two_star_max_shots = 3
 three_star_max_seconds = 54.0

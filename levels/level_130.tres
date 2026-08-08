@@ -19,8 +19,14 @@ script = ExtResource("2_b4nau")
 kind = 3
 position = Vector2(600.43396, 885.0953)
 size = Vector2(130, 26)
-travel_distance = 125.85858585858585
+travel_distance = 125.85858585858584
 motion_period = 2.1626262626262625
+
+[sub_resource type="Resource" id="Resource_r2mpu"]
+script = ExtResource("2_b4nau")
+kind = 1
+position = Vector2(262.0773, 910.5894)
+size = Vector2(70, 70)
 
 [sub_resource type="Resource" id="Resource_4vl7v"]
 script = ExtResource("3_nq6tj")
@@ -35,7 +41,7 @@ level_id = 130
 display_name = "Faz 130"
 target_position = Vector2(367.28818, 410.09976)
 panels = Array[ExtResource("3_nq6tj")]([SubResource("Resource_4vl7v")])
-obstacles = Array[ExtResource("2_b4nau")]([SubResource("Resource_8r1hy"), SubResource("Resource_870gk")])
+obstacles = Array[ExtResource("2_b4nau")]([SubResource("Resource_8r1hy"), SubResource("Resource_870gk"), SubResource("Resource_r2mpu")])
 two_star_max_seconds = 142.8
 two_star_max_shots = 3
 three_star_max_seconds = 75.9

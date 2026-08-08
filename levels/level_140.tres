@@ -31,6 +31,12 @@ rotation_degrees = 180.0
 size = Vector2(180, 28)
 inner_radius = 59.81818181818181
 
+[sub_resource type="Resource" id="Resource_avbew"]
+script = ExtResource("2_vgblw")
+kind = 1
+position = Vector2(381.8727, 698.6948)
+size = Vector2(70, 70)
+
 [sub_resource type="Resource" id="Resource_glgsw"]
 script = ExtResource("3_yp3wg")
 position = Vector2(470.96454, 847.35876)
@@ -45,7 +51,7 @@ display_name = "Faz 140"
 target_position = Vector2(225.809, 408.30576)
 panels = Array[ExtResource("3_yp3wg")]([SubResource("Resource_glgsw")])
 breakable_blocks = Array[ExtResource("1_avbew")]([SubResource("Resource_petxs"), SubResource("Resource_3o071")])
-obstacles = Array[ExtResource("2_vgblw")]([SubResource("Resource_jxdie"), SubResource("Resource_e8s1e")])
+obstacles = Array[ExtResource("2_vgblw")]([SubResource("Resource_jxdie"), SubResource("Resource_e8s1e"), SubResource("Resource_avbew")])
 two_star_max_seconds = 151.4
 two_star_max_shots = 3
 three_star_max_seconds = 80.5

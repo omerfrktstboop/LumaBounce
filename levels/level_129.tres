@@ -14,6 +14,13 @@ motion_period = 2.4545454545454546
 phase_degrees = 240.93494
 pulse_on_ratio = 0.5681818181818181
 
+[sub_resource type="Resource" id="Resource_7ly3m"]
+script = ExtResource("2_se3hl")
+position = Vector2(455.05002, 666.70984)
+rotation_degrees = 126.67136
+size = Vector2(80, 28)
+inner_radius = 38.784527
+
 [sub_resource type="Resource" id="Resource_cadkb"]
 script = ExtResource("3_0m1w4")
 position = Vector2(357.42438, 631.55756)
@@ -34,7 +41,7 @@ level_id = 129
 display_name = "Faz 129"
 target_position = Vector2(353.67987, 334.6888)
 panels = Array[ExtResource("3_0m1w4")]([SubResource("Resource_cadkb"), SubResource("Resource_u63e6")])
-obstacles = Array[ExtResource("2_se3hl")]([SubResource("Resource_oxqkt")])
+obstacles = Array[ExtResource("2_se3hl")]([SubResource("Resource_oxqkt"), SubResource("Resource_7ly3m")])
 two_star_max_seconds = 142.0
 two_star_max_shots = 3
 three_star_max_seconds = 75.5

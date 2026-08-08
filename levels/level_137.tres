@@ -32,6 +32,15 @@ size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = 110.15151515151516
 
+[sub_resource type="Resource" id="Resource_4avgx"]
+script = ExtResource("2_4k3kf")
+kind = 2
+position = Vector2(529.15155, 523.7893)
+size = Vector2(100, 20)
+inner_radius = 40.0
+spoke_count = 3
+angular_speed_degrees = 88.80185
+
 [sub_resource type="Resource" id="Resource_0crr5"]
 script = ExtResource("3_hae0r")
 position = Vector2(277.5368, 627.6273)
@@ -46,7 +55,7 @@ display_name = "Faz 137"
 target_position = Vector2(308.37405, 281.534)
 panels = Array[ExtResource("3_hae0r")]([SubResource("Resource_0crr5")])
 breakable_blocks = Array[ExtResource("1_4avgx")]([SubResource("Resource_dpjfc"), SubResource("Resource_5mfqo")])
-obstacles = Array[ExtResource("2_4k3kf")]([SubResource("Resource_ymath"), SubResource("Resource_1xtsj")])
+obstacles = Array[ExtResource("2_4k3kf")]([SubResource("Resource_ymath"), SubResource("Resource_1xtsj"), SubResource("Resource_4avgx")])
 two_star_max_seconds = 148.8
 two_star_max_shots = 3
 three_star_max_seconds = 79.10000000000001

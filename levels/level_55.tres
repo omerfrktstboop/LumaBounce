@@ -19,6 +19,12 @@ kind = 1
 position = Vector2(110.53945, 920.97986)
 size = Vector2(61.51351, 61.51351)
 
+[sub_resource type="Resource" id="Resource_nr8ds"]
+script = ExtResource("2_fmbfd")
+kind = 1
+position = Vector2(386.06708, 713.64594)
+size = Vector2(70, 70)
+
 [sub_resource type="Resource" id="Resource_7ikjx"]
 script = ExtResource("3_gbgo2")
 position = Vector2(507, 542)
@@ -39,7 +45,7 @@ level_id = 55
 display_name = "Faz 55"
 target_position = Vector2(146, 325)
 panels = Array[ExtResource("3_gbgo2")]([SubResource("Resource_7ikjx"), SubResource("Resource_ciahh")])
-obstacles = Array[ExtResource("2_fmbfd")]([SubResource("Resource_getty"), SubResource("Resource_xqn82")])
+obstacles = Array[ExtResource("2_fmbfd")]([SubResource("Resource_getty"), SubResource("Resource_xqn82"), SubResource("Resource_nr8ds")])
 two_star_max_seconds = 79.60000000000001
 two_star_max_shots = 3
 three_star_max_seconds = 42.400000000000006
