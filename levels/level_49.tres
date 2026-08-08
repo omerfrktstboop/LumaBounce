@@ -1,50 +1,85 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_qjowv"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_w687u"]
-script = ExtResource("3")
-position = Vector2(528.2182, 587.89984)
-size = Vector2(190, 28)
-inner_radius = 78.0
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(180, 830)
+rotation_degrees = -30
+length = 190
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_xcw0a"]
-script = ExtResource("3")
-position = Vector2(610, 343.3203)
-size = Vector2(150, 24)
-inner_radius = 60.0
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(520, 690)
+rotation_degrees = 28
+length = 200
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_eccsw"]
-script = ExtResource("3")
-kind = 1
-position = Vector2(370.63983, 667.88763)
-rotation_degrees = 12.0
-size = Vector2(68, 68)
+[sub_resource type="Resource" id="Panel_3"]
+script = ExtResource("3_panel")
+position = Vector2(300, 520)
+rotation_degrees = -20
+length = 180
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_rufno"]
-script = ExtResource("2")
-position = Vector2(440.03525, 788.5872)
-rotation_degrees = -28.358935356140137
-length = 320.0
-thickness = 26.0
+[sub_resource type="Resource" id="Block_1"]
+script = ExtResource("1_block")
+position = Vector2(130, 330)
+rotation_degrees = 0
+size = Vector2(110, 32)
+hit_points = 2
 
-[sub_resource type="Resource" id="Resource_1mtys"]
-script = ExtResource("2")
-position = Vector2(268.23553, 477.9422)
-rotation_degrees = -25.82799
-length = 340.0
-thickness = 26.0
+[sub_resource type="Resource" id="Block_2"]
+script = ExtResource("1_block")
+position = Vector2(485, 330)
+rotation_degrees = 0
+size = Vector2(96, 32)
+hit_points = 1
+
+[sub_resource type="Resource" id="Block_3"]
+script = ExtResource("1_block")
+position = Vector2(130, 430)
+rotation_degrees = 0
+size = Vector2(110, 32)
+hit_points = 1
+
+[sub_resource type="Resource" id="Block_4"]
+script = ExtResource("1_block")
+position = Vector2(130, 530)
+rotation_degrees = 0
+size = Vector2(96, 32)
+hit_points = 1
+
+[sub_resource type="Resource" id="Block_5"]
+script = ExtResource("1_block")
+position = Vector2(360, 390)
+rotation_degrees = 0
+size = Vector2(110, 32)
+hit_points = 1
 
 [resource]
-script = ExtResource("1")
+script = ExtResource("4_level")
+level_uid = "level_049"
+display_order = 49
+difficulty = 2
 level_id = 49
-display_name = "Çifte Halka Düğümü"
-target_position = Vector2(129.47168, 277.72238)
-panels = Array[ExtResource("2")]([SubResource("Resource_rufno"), SubResource("Resource_1mtys")])
-obstacles = Array[ExtResource("3")]([SubResource("Resource_w687u"), SubResource("Resource_xcw0a"), SubResource("Resource_eccsw")])
-two_star_max_seconds = 125.0
-two_star_max_shots = 3
-three_star_max_seconds = 68.0
+display_name = "Blok Finali"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(260, 200)
+target_scale = 0.904
+ball_scale = 0.74
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2"), SubResource("Panel_3")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1"), SubResource("Block_2"), SubResource("Block_3"), SubResource("Block_4"), SubResource("Block_5")])
+obstacles = Array[ObstacleData]([])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 78.0
+two_star_max_shots = 4
+three_star_max_seconds = 47.0
+three_star_max_shots = 2

@@ -1,45 +1,43 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_05gsv"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_7tunt"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_f5fwa"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_x10c8"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_pah1q"]
-script = ExtResource("2_7tunt")
-kind = 3
-position = Vector2(295.65204, 777.6466)
-size = Vector2(130, 26)
-travel_distance = 96.48648648648648
-motion_period = 2.708108108108108
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(220, 760)
+rotation_degrees = -24
+length = 220
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_qhxfu"]
-script = ExtResource("2_7tunt")
-position = Vector2(512.90393, 433.86212)
-rotation_degrees = 180.0
-size = Vector2(180, 28)
-inner_radius = 69.1891891891892
-
-[sub_resource type="Resource" id="Resource_a0s5n"]
-script = ExtResource("2_7tunt")
+[sub_resource type="Resource" id="Obstacle_1"]
+script = ExtResource("2_obstacle")
 kind = 1
-position = Vector2(567.0137, 683.2401)
-size = Vector2(70.5946, 70.5946)
-
-[sub_resource type="Resource" id="Resource_11a0i"]
-script = ExtResource("3_f5fwa")
-position = Vector2(487.021, 564.22626)
-rotation_degrees = 17.91384153366089
-length = 404.0
-thickness = 26.0
+position = Vector2(220, 390)
+rotation_degrees = 0
+size = Vector2(72, 28)
 
 [resource]
-script = ExtResource("4_x10c8")
+script = ExtResource("4_level")
+level_uid = "level_079"
+display_order = 79
+difficulty = 3
 level_id = 79
-display_name = "Faz 79"
-target_position = Vector2(322.50055, 359.05905)
-panels = Array[ExtResource("3_f5fwa")]([SubResource("Resource_11a0i")])
-obstacles = Array[ExtResource("2_7tunt")]([SubResource("Resource_pah1q"), SubResource("Resource_qhxfu"), SubResource("Resource_a0s5n")])
-two_star_max_seconds = 107.2
-two_star_max_shots = 3
-three_star_max_seconds = 57.0
+display_name = "Mayın Girişi"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(260, 220)
+target_scale = 0.844
+ball_scale = 0.72
+panels = Array[PanelData]([SubResource("Panel_1")])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([SubResource("Obstacle_1")])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 88.0
+two_star_max_shots = 5
+three_star_max_seconds = 53.0
+three_star_max_shots = 3

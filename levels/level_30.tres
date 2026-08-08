@@ -1,50 +1,50 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Obs_0"]
-script = ExtResource("2")
-kind = 0
-position = Vector2(282, 689)
-rotation_degrees = 0.0
-size = Vector2(149, 41)
-inner_radius = 40.7
-spoke_count = 6
-angular_speed_degrees = 33.7
-motion_direction_degrees = 0.0
-travel_distance = 185.1
-motion_period = 2.1
-phase_degrees = 80.4
-[sub_resource type="Resource" id="Blk_0"]
-script = ExtResource("1")
-position = Vector2(550, 442)
-size = Vector2(52, 34)
-hit_points = 2
-[sub_resource type="Resource" id="Blk_1"]
-script = ExtResource("1")
-position = Vector2(453, 541)
-size = Vector2(43, 35)
-hit_points = 2
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(210, 760)
+rotation_degrees = -18
+length = 240
+thickness = 26
+
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(505, 600)
+rotation_degrees = 18
+length = 230
+thickness = 26
+
+[sub_resource type="Resource" id="Block_1"]
+script = ExtResource("1_block")
+position = Vector2(485, 330)
+rotation_degrees = 0
+size = Vector2(110, 32)
+hit_points = 1
 
 [resource]
-script = ExtResource("4")
+script = ExtResource("4_level")
+level_uid = "level_030"
+display_order = 30
+difficulty = 1
 level_id = 30
-display_name = "Yeniden Tasarlanan Rastgele Faz 30"
+display_name = "Kırılabilir Hat"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(302, 265)
-target_scale = 0.78
-ball_scale = 0.65
-panels = Array[PanelData]([])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Blk_0"), SubResource("Blk_1")])
-obstacles = Array[ObstacleData]([SubResource("Obs_0")])
+target_position = Vector2(460, 220)
+target_scale = 0.942
+ball_scale = 0.74
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1")])
+obstacles = Array[ObstacleData]([])
 left_wall_segments = Array[Vector2]([])
 right_wall_segments = Array[Vector2]([])
 max_lives = 5
 tutorial_text = ""
-two_star_max_seconds = 48.2
-two_star_max_shots = 5
-three_star_max_seconds = 21.4
-three_star_max_shots = 1
+two_star_max_seconds = 66.0
+two_star_max_shots = 4
+three_star_max_seconds = 39.0
+three_star_max_shots = 2

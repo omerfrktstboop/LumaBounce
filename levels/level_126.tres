@@ -1,49 +1,46 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_w7adl"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_pj0bf"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_53wiq"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_x1mxu"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_4gqsl"]
-script = ExtResource("2_pj0bf")
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(360, 780)
+rotation_degrees = -12
+length = 260
+thickness = 26
+
+[sub_resource type="Resource" id="Obstacle_1"]
+script = ExtResource("2_obstacle")
 kind = 5
-position = Vector2(146.17773, 489.35315)
-size = Vector2(298.48486, 14)
-motion_period = 2.490909090909091
-phase_degrees = 37.975258
-pulse_on_ratio = 0.5636363636363636
-
-[sub_resource type="Resource" id="Resource_w7adl"]
-script = ExtResource("2_pj0bf")
-kind = 3
-position = Vector2(233.80544, 588.09424)
-rotation_degrees = -16.722326
-size = Vector2(115.46628, 28)
-travel_distance = 102.46448
-motion_period = 3.0637116
-
-[sub_resource type="Resource" id="Resource_m6327"]
-script = ExtResource("3_53wiq")
-position = Vector2(370.6626, 686.5951)
-rotation_degrees = -33.2279860496521
-length = 313.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Resource_8sciu"]
-script = ExtResource("3_53wiq")
-position = Vector2(247.32643, 690.7644)
-rotation_degrees = 3.4613447
-length = 370.0
-thickness = 26.0
+position = Vector2(180, 620)
+rotation_degrees = 90
+size = Vector2(240, 14)
+motion_period = 3.8
+phase_degrees = 0
+pulse_on_ratio = 0.5
 
 [resource]
-script = ExtResource("4_x1mxu")
+script = ExtResource("4_level")
+level_uid = "level_126"
+display_order = 126
+difficulty = 5
 level_id = 126
-display_name = "Lazer Hattı"
-target_position = Vector2(517.62006, 288.35602)
-panels = Array[ExtResource("3_53wiq")]([SubResource("Resource_m6327"), SubResource("Resource_8sciu")])
-obstacles = Array[ExtResource("2_pj0bf")]([SubResource("Resource_4gqsl"), SubResource("Resource_w7adl")])
-two_star_max_seconds = 139.4
-two_star_max_shots = 3
-three_star_max_seconds = 74.10000000000001
+display_name = "Lazer Girişi"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(500, 220)
+target_scale = 0.75
+ball_scale = 0.72
+panels = Array[PanelData]([SubResource("Panel_1")])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([SubResource("Obstacle_1")])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = "Lazer kapandığında geçiş penceresini kullan."
+two_star_max_seconds = 110.0
+two_star_max_shots = 5
+three_star_max_seconds = 67.0
+three_star_max_shots = 3

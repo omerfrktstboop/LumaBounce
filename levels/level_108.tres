@@ -1,72 +1,60 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_p2hnk"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_nhf41"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_glfqw"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_7bfym"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_q16qj"]
-script = ExtResource("1_p2hnk")
-position = Vector2(301.454, 609.32556)
-size = Vector2(104, 34)
-hit_points = 2
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(210, 760)
+rotation_degrees = -18
+length = 240
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_6mdwk"]
-script = ExtResource("1_p2hnk")
-position = Vector2(435.454, 609.32556)
-size = Vector2(104, 34)
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(505, 600)
+rotation_degrees = 18
+length = 230
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_4nmsn"]
-script = ExtResource("2_nhf41")
-position = Vector2(344.31223, 358.13568)
-rotation_degrees = 180.0
-size = Vector2(180, 28)
-inner_radius = 62.13513513513514
-
-[sub_resource type="Resource" id="Resource_3kbqi"]
-script = ExtResource("2_nhf41")
-kind = 1
-position = Vector2(524.0024, 940.2883)
-size = Vector2(81.567566, 81.567566)
-
-[sub_resource type="Resource" id="Resource_p2hnk"]
-script = ExtResource("2_nhf41")
+[sub_resource type="Resource" id="Obstacle_1"]
+script = ExtResource("2_obstacle")
 kind = 2
-position = Vector2(460.1927, 510.92926)
-size = Vector2(100, 20)
-inner_radius = 40.0
+position = Vector2(140, 360)
+rotation_degrees = 0
+size = Vector2(100, 22)
 spoke_count = 5
-angular_speed_degrees = 57.77311
+angular_speed_degrees = 65
 
-[sub_resource type="Resource" id="Resource_2qweq"]
-script = ExtResource("3_glfqw")
-position = Vector2(356, 610)
-rotation_degrees = -29.1
-length = 304.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Resource_maidy"]
-script = ExtResource("3_glfqw")
-position = Vector2(172, 621)
-rotation_degrees = 28.8
-length = 250.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Resource_wbyfh"]
-script = ExtResource("3_glfqw")
-position = Vector2(302, 606)
-rotation_degrees = 39.3
-length = 304.0
-thickness = 26.0
+[sub_resource type="Resource" id="Obstacle_2"]
+script = ExtResource("2_obstacle")
+kind = 0
+position = Vector2(140, 480)
+rotation_degrees = 0
+size = Vector2(118, 28)
+inner_radius = 42
 
 [resource]
-script = ExtResource("4_7bfym")
+script = ExtResource("4_level")
+level_uid = "level_108"
+display_order = 108
+difficulty = 4
 level_id = 108
-display_name = "Faz 108"
-target_position = Vector2(210, 256)
-panels = Array[ExtResource("3_glfqw")]([SubResource("Resource_2qweq"), SubResource("Resource_maidy"), SubResource("Resource_wbyfh")])
-breakable_blocks = Array[ExtResource("1_p2hnk")]([SubResource("Resource_q16qj"), SubResource("Resource_6mdwk")])
-obstacles = Array[ExtResource("2_nhf41")]([SubResource("Resource_4nmsn"), SubResource("Resource_3kbqi"), SubResource("Resource_p2hnk")])
-two_star_max_seconds = 140.5
-two_star_max_shots = 3
-three_star_max_seconds = 74.7
+display_name = "Çark Rotası"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(540, 220)
+target_scale = 0.786
+ball_scale = 0.72
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([SubResource("Obstacle_1"), SubResource("Obstacle_2")])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 102.0
+two_star_max_shots = 5
+three_star_max_seconds = 62.0
+three_star_max_shots = 3

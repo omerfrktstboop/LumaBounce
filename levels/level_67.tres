@@ -1,55 +1,65 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_d6mly"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_t31k8"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_0vw57"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_bl64w"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_2a8ay"]
-script = ExtResource("2_t31k8")
-kind = 3
-position = Vector2(162.92465, 930.02795)
-size = Vector2(130, 26)
-travel_distance = 85.13513513513513
-motion_period = 2.918918918918919
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(180, 830)
+rotation_degrees = -30
+length = 190
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_2eclh"]
-script = ExtResource("2_t31k8")
-position = Vector2(465.13153, 952.5687)
-rotation_degrees = 180.0
-size = Vector2(180, 28)
-inner_radius = 72.10810810810811
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(520, 690)
+rotation_degrees = 28
+length = 200
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_d6mly"]
-script = ExtResource("2_t31k8")
-kind = 3
-position = Vector2(604.24243, 459.0572)
-rotation_degrees = -31.1466
-size = Vector2(156.30392, 28)
-travel_distance = 107.983
-motion_period = 3.0000868
+[sub_resource type="Resource" id="Block_1"]
+script = ExtResource("1_block")
+position = Vector2(160, 620)
+rotation_degrees = 0
+size = Vector2(94, 30)
+hit_points = 1
 
-[sub_resource type="Resource" id="Resource_5dnvh"]
-script = ExtResource("3_0vw57")
-position = Vector2(489, 689)
-rotation_degrees = -17.7
-length = 259.0
-thickness = 26.0
+[sub_resource type="Resource" id="Block_2"]
+script = ExtResource("1_block")
+position = Vector2(130, 330)
+rotation_degrees = 0
+size = Vector2(94, 30)
+hit_points = 1
 
-[sub_resource type="Resource" id="Resource_hxwfl"]
-script = ExtResource("3_0vw57")
-position = Vector2(462, 492)
-rotation_degrees = 6.4
-length = 413.0
-thickness = 26.0
+[sub_resource type="Resource" id="Obstacle_1"]
+script = ExtResource("2_obstacle")
+kind = 0
+position = Vector2(555, 470)
+rotation_degrees = 0
+size = Vector2(136, 28)
+inner_radius = 48
 
 [resource]
-script = ExtResource("4_bl64w")
+script = ExtResource("4_level")
+level_uid = "level_067"
+display_order = 67
+difficulty = 3
 level_id = 67
-display_name = "Faz 67"
-target_position = Vector2(370, 238)
-panels = Array[ExtResource("3_0vw57")]([SubResource("Resource_5dnvh"), SubResource("Resource_hxwfl")])
-obstacles = Array[ExtResource("2_t31k8")]([SubResource("Resource_2a8ay"), SubResource("Resource_2eclh"), SubResource("Resource_d6mly")])
-two_star_max_seconds = 93.4
-two_star_max_shots = 3
-three_star_max_seconds = 49.7
+display_name = "Halka Kilidi"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(180, 200)
+target_scale = 0.868
+ball_scale = 0.74
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1"), SubResource("Block_2")])
+obstacles = Array[ObstacleData]([SubResource("Obstacle_1")])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 86.0
+two_star_max_shots = 5
+three_star_max_seconds = 52.0
+three_star_max_shots = 3

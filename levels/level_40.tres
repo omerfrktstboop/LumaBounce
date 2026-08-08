@@ -1,57 +1,64 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=10 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel"]
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="3_block"]
-
-[sub_resource type="Resource" id="Panel_0"]
-script = ExtResource("2_panel")
-position = Vector2(304, 701)
-rotation_degrees = -26.0
-length = 400.0
-thickness = 26.0
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
 [sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("2_panel")
-position = Vector2(170, 941)
-rotation_degrees = 21.3
-length = 327.0
-thickness = 26.0
+script = ExtResource("3_panel")
+position = Vector2(200, 820)
+rotation_degrees = 28
+length = 200
+thickness = 26
 
-[sub_resource type="Resource" id="Brick_0"]
-script = ExtResource("3_block")
-position = Vector2(83, 392)
-size = Vector2(112, 34)
-hit_points = 2
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(520, 650)
+rotation_degrees = -24
+length = 220
+thickness = 26
 
-[sub_resource type="Resource" id="Brick_1"]
-script = ExtResource("3_block")
-position = Vector2(225, 392)
-size = Vector2(112, 34)
+[sub_resource type="Resource" id="Block_1"]
+script = ExtResource("1_block")
+position = Vector2(485, 330)
+rotation_degrees = 0
+size = Vector2(110, 32)
 hit_points = 1
 
-[sub_resource type="Resource" id="Brick_2"]
-script = ExtResource("3_block")
-position = Vector2(367, 392)
-size = Vector2(112, 34)
+[sub_resource type="Resource" id="Block_2"]
+script = ExtResource("1_block")
+position = Vector2(130, 330)
+rotation_degrees = 0
+size = Vector2(96, 32)
 hit_points = 1
 
-[sub_resource type="Resource" id="Brick_3"]
-script = ExtResource("3_block")
-position = Vector2(509, 392)
-size = Vector2(112, 34)
-hit_points = 2
+[sub_resource type="Resource" id="Block_3"]
+script = ExtResource("1_block")
+position = Vector2(150, 430)
+rotation_degrees = 0
+size = Vector2(110, 32)
+hit_points = 1
 
 [resource]
-script = ExtResource("1_level_data")
+script = ExtResource("4_level")
+level_uid = "level_040"
+display_order = 40
+difficulty = 2
 level_id = 40
-display_name = "Son Kilit"
+display_name = "Çifte Kilit"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(296, 255)
-panels = Array[PanelData]([SubResource("Panel_0"), SubResource("Panel_1")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Brick_0"), SubResource("Brick_1"), SubResource("Brick_2"), SubResource("Brick_3")])
+target_position = Vector2(460, 220)
+target_scale = 0.922
+ball_scale = 0.74
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1"), SubResource("Block_2"), SubResource("Block_3")])
+obstacles = Array[ObstacleData]([])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
 max_lives = 5
-two_star_max_seconds = 130.0
-two_star_max_shots = 3
-three_star_max_seconds = 70.0
+tutorial_text = ""
+two_star_max_seconds = 72.0
+two_star_max_shots = 4
+three_star_max_seconds = 43.0
 three_star_max_shots = 2

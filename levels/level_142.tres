@@ -1,52 +1,76 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_k0st3"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_8ydct"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_iqehx"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_5iys8"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_70g8o"]
-script = ExtResource("1_k0st3")
-position = Vector2(185.72565, 590.8734)
-size = Vector2(104, 34)
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(180, 830)
+rotation_degrees = -30
+length = 190
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_bfjdw"]
-script = ExtResource("1_k0st3")
-position = Vector2(319.72565, 590.8734)
-size = Vector2(104, 34)
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(520, 690)
+rotation_degrees = 28
+length = 200
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_i1llq"]
-script = ExtResource("2_8ydct")
+[sub_resource type="Resource" id="Block_1"]
+script = ExtResource("1_block")
+position = Vector2(280, 340)
+rotation_degrees = 0
+size = Vector2(88, 28)
+hit_points = 1
+
+[sub_resource type="Resource" id="Block_2"]
+script = ExtResource("1_block")
+position = Vector2(440, 340)
+rotation_degrees = 0
+size = Vector2(88, 28)
+hit_points = 1
+
+[sub_resource type="Resource" id="Obstacle_1"]
+script = ExtResource("2_obstacle")
 kind = 5
-position = Vector2(174.92654, 873.475)
-size = Vector2(319.49496, 14)
-motion_period = 2.296969696969697
-phase_degrees = 219.88786
-pulse_on_ratio = 0.5878787878787879
+position = Vector2(140, 480)
+rotation_degrees = 90
+size = Vector2(240, 14)
+motion_period = 3.15
+phase_degrees = 72
+pulse_on_ratio = 0.59
 
-[sub_resource type="Resource" id="Resource_f8cvu"]
-script = ExtResource("2_8ydct")
-kind = 3
-position = Vector2(531.3308, 556.2678)
-size = Vector2(130, 26)
-travel_distance = 134.34343434343435
-motion_period = 2.005050505050505
-
-[sub_resource type="Resource" id="Resource_2ihis"]
-script = ExtResource("3_iqehx")
-position = Vector2(248.28006, 478.97577)
-rotation_degrees = -47.78953514099121
-length = 255.0
-thickness = 26.0
+[sub_resource type="Resource" id="Obstacle_2"]
+script = ExtResource("2_obstacle")
+kind = 2
+position = Vector2(580, 360)
+rotation_degrees = 0
+size = Vector2(96, 22)
+spoke_count = 5
+angular_speed_degrees = 94
 
 [resource]
-script = ExtResource("4_5iys8")
+script = ExtResource("4_level")
+level_uid = "level_142"
+display_order = 142
+difficulty = 5
 level_id = 142
-display_name = "Faz 142"
-target_position = Vector2(176.56802, 313.96436)
-panels = Array[ExtResource("3_iqehx")]([SubResource("Resource_2ihis")])
-breakable_blocks = Array[ExtResource("1_k0st3")]([SubResource("Resource_70g8o"), SubResource("Resource_bfjdw")])
-obstacles = Array[ExtResource("2_8ydct")]([SubResource("Resource_i1llq"), SubResource("Resource_f8cvu")])
-two_star_max_seconds = 153.1
-two_star_max_shots = 3
-three_star_max_seconds = 81.4
+display_name = "Lazer ve Çark"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(180, 200)
+target_scale = 0.718
+ball_scale = 0.72
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1"), SubResource("Block_2")])
+obstacles = Array[ObstacleData]([SubResource("Obstacle_1"), SubResource("Obstacle_2")])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 119.0
+two_star_max_shots = 5
+three_star_max_seconds = 73.0
+three_star_max_shots = 3

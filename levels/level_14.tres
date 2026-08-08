@@ -1,32 +1,43 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_0ktog"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_xfjkv"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_e5vkd"]
-script = ExtResource("2_panel_data")
-position = Vector2(173.95253, 878.35583)
-rotation_degrees = 36.862314224243164
-length = 320.0
-thickness = 26.0
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(210, 760)
+rotation_degrees = 18
+length = 240
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_570x6"]
-script = ExtResource("2_panel_data")
-position = Vector2(465.59933, 469.50818)
-rotation_degrees = 24.345371
-length = 340.0
-thickness = 26.0
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(505, 600)
+rotation_degrees = -18
+length = 230
+thickness = 26
 
 [resource]
-script = ExtResource("1_level_data")
+script = ExtResource("4_level")
+level_uid = "level_014"
+display_order = 14
+difficulty = 1
 level_id = 14
-display_name = "Çapraz Geçiş"
-target_position = Vector2(528.27124, 306.62457)
-panels = Array[ExtResource("2_panel_data")]([SubResource("Resource_e5vkd"), SubResource("Resource_570x6")])
-tutorial_text = "İki yüzeyi sırayla kullan."
-two_star_max_seconds = 100.0
-two_star_max_shots = 2
-three_star_max_seconds = 52.0
-three_star_max_shots = 1
+display_name = "Dar Geçit"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(260, 220)
+target_scale = 0.974
+ball_scale = 0.78
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([Vector2(-320, 540), Vector2(780, 1600)])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 61.0
+two_star_max_shots = 4
+three_star_max_seconds = 36.0
+three_star_max_shots = 2

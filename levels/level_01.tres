@@ -1,16 +1,30 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+
 
 [resource]
-script = ExtResource("1_level_data")
+script = ExtResource("4_level")
+level_uid = "level_001"
+display_order = 1
+difficulty = 1
 level_id = 1
 display_name = "İlk Atış"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(360, 300)
+target_position = Vector2(360, 220)
+target_scale = 1.0
+ball_scale = 0.78
+panels = Array[PanelData]([])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
 max_lives = 5
-tutorial_text = "Sürükle, nişan al ve bırak"
-two_star_max_seconds = 90.0
+tutorial_text = "Sürükle, nişan al ve bırak."
+two_star_max_seconds = 35.0
 two_star_max_shots = 2
-three_star_max_seconds = 45.0
+three_star_max_seconds = 20.0
 three_star_max_shots = 1

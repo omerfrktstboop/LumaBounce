@@ -1,47 +1,43 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_xtys4"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_yiprv"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_apq5m"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_kaknt"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_gcwlp"]
-script = ExtResource("2_yiprv")
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(220, 760)
+rotation_degrees = -24
+length = 220
+thickness = 26
+
+[sub_resource type="Resource" id="Obstacle_1"]
+script = ExtResource("2_obstacle")
 kind = 1
-position = Vector2(363.0766, 564.4856)
-size = Vector2(69.83784, 69.83784)
-
-[sub_resource type="Resource" id="Resource_dmjoi"]
-script = ExtResource("2_yiprv")
-kind = 2
-position = Vector2(327.13116, 802.01337)
-size = Vector2(120, 20)
-spoke_count = 5
-angular_speed_degrees = -71.35135135135135
-
-[sub_resource type="Resource" id="Resource_xtys4"]
-script = ExtResource("2_yiprv")
-kind = 3
-position = Vector2(151.50021, 598.37305)
-rotation_degrees = 25.318588
-size = Vector2(118.155685, 28)
-travel_distance = 92.938385
-motion_period = 2.9330754
-
-[sub_resource type="Resource" id="Resource_n6afe"]
-script = ExtResource("3_apq5m")
-position = Vector2(300, 662)
-rotation_degrees = 24.7
-length = 403.0
-thickness = 26.0
+position = Vector2(540, 560)
+rotation_degrees = 0
+size = Vector2(72, 28)
 
 [resource]
-script = ExtResource("4_kaknt")
+script = ExtResource("4_level")
+level_uid = "level_077"
+display_order = 77
+difficulty = 3
 level_id = 77
-display_name = "Faz 77"
-target_position = Vector2(432, 394)
-panels = Array[ExtResource("3_apq5m")]([SubResource("Resource_n6afe")])
-obstacles = Array[ExtResource("2_yiprv")]([SubResource("Resource_gcwlp"), SubResource("Resource_dmjoi"), SubResource("Resource_xtys4")])
-two_star_max_seconds = 104.9
-two_star_max_shots = 3
-three_star_max_seconds = 55.8
+display_name = "Mayın Girişi"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(180, 220)
+target_scale = 0.848
+ball_scale = 0.72
+panels = Array[PanelData]([SubResource("Panel_1")])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([SubResource("Obstacle_1")])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 88.0
+two_star_max_shots = 5
+three_star_max_seconds = 53.0
+three_star_max_shots = 3

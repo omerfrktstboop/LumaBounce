@@ -1,42 +1,46 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_5iuu8"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_wsphi"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_55fmg"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_pqao2"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_l6aom"]
-script = ExtResource("2_wsphi")
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(220, 760)
+rotation_degrees = 24
+length = 220
+thickness = 26
+
+[sub_resource type="Resource" id="Obstacle_1"]
+script = ExtResource("2_obstacle")
 kind = 5
-position = Vector2(288.05768, 843.4772)
-size = Vector2(301.1111, 14)
-motion_period = 2.466666666666667
-phase_degrees = 49.96252
-pulse_on_ratio = 0.5666666666666667
-
-[sub_resource type="Resource" id="Resource_5iuu8"]
-script = ExtResource("2_wsphi")
-kind = 2
-position = Vector2(412.94412, 770.23193)
-size = Vector2(100, 20)
-inner_radius = 40.0
-spoke_count = 5
-angular_speed_degrees = 90.92296
-
-[sub_resource type="Resource" id="Resource_lofht"]
-script = ExtResource("3_55fmg")
-position = Vector2(245.24687, 648.3631)
-rotation_degrees = -18.240046
-length = 403.0
-thickness = 26.0
+position = Vector2(360, 620)
+rotation_degrees = 0
+size = Vector2(300, 14)
+motion_period = 3.6
+phase_degrees = 144
+pulse_on_ratio = 0.5
 
 [resource]
-script = ExtResource("4_pqao2")
+script = ExtResource("4_level")
+level_uid = "level_128"
+display_order = 128
+difficulty = 5
 level_id = 128
-display_name = "Faz 128"
-target_position = Vector2(342.10406, 339.58554)
-panels = Array[ExtResource("3_55fmg")]([SubResource("Resource_lofht")])
-obstacles = Array[ExtResource("2_wsphi")]([SubResource("Resource_l6aom"), SubResource("Resource_5iuu8")])
-two_star_max_seconds = 141.1
-two_star_max_shots = 3
-three_star_max_seconds = 75.0
+display_name = "Lazer Girişi"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(540, 220)
+target_scale = 0.746
+ball_scale = 0.72
+panels = Array[PanelData]([SubResource("Panel_1")])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([SubResource("Obstacle_1")])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 110.0
+two_star_max_shots = 5
+three_star_max_seconds = 67.0
+three_star_max_shots = 3

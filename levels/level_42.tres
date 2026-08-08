@@ -1,46 +1,78 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_y1e0r"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_t6n5l"]
-script = ExtResource("3")
-kind = 1
-position = Vector2(351.76804, 711.75903)
-rotation_degrees = -20.0
-size = Vector2(72, 72)
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(200, 820)
+rotation_degrees = -28
+length = 200
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_v2r67"]
-script = ExtResource("3")
-kind = 1
-position = Vector2(591.3034, 715.7526)
-rotation_degrees = 25.0
-size = Vector2(72, 72)
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(520, 650)
+rotation_degrees = 24
+length = 220
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_n3c3b"]
-script = ExtResource("2")
-position = Vector2(279.95276, 859.7046)
-rotation_degrees = 28.983389
-length = 320.0
-thickness = 26.0
+[sub_resource type="Resource" id="Panel_3"]
+script = ExtResource("3_panel")
+position = Vector2(335, 465)
+rotation_degrees = -8
+length = 190
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_opbqw"]
-script = ExtResource("2")
-position = Vector2(547.3772, 571.51666)
-rotation_degrees = 27.428335666656494
-length = 340.0
-thickness = 26.0
+[sub_resource type="Resource" id="Block_1"]
+script = ExtResource("1_block")
+position = Vector2(360, 390)
+rotation_degrees = 0
+size = Vector2(110, 32)
+hit_points = 1
+
+[sub_resource type="Resource" id="Block_2"]
+script = ExtResource("1_block")
+position = Vector2(570, 450)
+rotation_degrees = 0
+size = Vector2(96, 32)
+hit_points = 1
+
+[sub_resource type="Resource" id="Block_3"]
+script = ExtResource("1_block")
+position = Vector2(240, 570)
+rotation_degrees = 0
+size = Vector2(110, 32)
+hit_points = 1
+
+[sub_resource type="Resource" id="Block_4"]
+script = ExtResource("1_block")
+position = Vector2(485, 330)
+rotation_degrees = 0
+size = Vector2(96, 32)
+hit_points = 1
 
 [resource]
-script = ExtResource("1")
+script = ExtResource("4_level")
+level_uid = "level_042"
+display_order = 42
+difficulty = 2
 level_id = 42
-display_name = "Mayin Hatti"
-target_position = Vector2(532.261, 295.64594)
-panels = Array[ExtResource("2")]([SubResource("Resource_n3c3b"), SubResource("Resource_opbqw")])
-obstacles = Array[ExtResource("3")]([SubResource("Resource_t6n5l"), SubResource("Resource_v2r67")])
-tutorial_text = "Bombaya temas atisi aninda bitirir."
-two_star_max_seconds = 105.0
-two_star_max_shots = 3
-three_star_max_seconds = 55.0
+display_name = "Parçalı Yol"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(180, 200)
+target_scale = 0.918
+ball_scale = 0.74
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2"), SubResource("Panel_3")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1"), SubResource("Block_2"), SubResource("Block_3"), SubResource("Block_4")])
+obstacles = Array[ObstacleData]([])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 75.0
+two_star_max_shots = 4
+three_star_max_seconds = 45.0
+three_star_max_shots = 2

@@ -1,63 +1,64 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Obs_0"]
-script = ExtResource("2")
-kind = 4
-position = Vector2(606, 568)
-rotation_degrees = 0.0
-size = Vector2(102, 35)
-inner_radius = 38.3
-spoke_count = 4
-angular_speed_degrees = 91.6
-motion_direction_degrees = 90.0
-travel_distance = 191.2
-motion_period = 3.1
-phase_degrees = 38.3
-[sub_resource type="Resource" id="Obs_1"]
-script = ExtResource("2")
-kind = 3
-position = Vector2(336, 722)
-rotation_degrees = 0.0
-size = Vector2(85, 38)
-inner_radius = 33.7
-spoke_count = 5
-angular_speed_degrees = 117.3
-motion_direction_degrees = 90.0
-travel_distance = 122.4
-motion_period = 2.8
-phase_degrees = 48.2
-[sub_resource type="Resource" id="Blk_0"]
-script = ExtResource("1")
-position = Vector2(332, 461)
-size = Vector2(81, 26)
-hit_points = 2
-[sub_resource type="Resource" id="Blk_1"]
-script = ExtResource("1")
-position = Vector2(192, 532)
-size = Vector2(41, 23)
-hit_points = 2
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(200, 820)
+rotation_degrees = 28
+length = 200
+thickness = 26
+
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(520, 650)
+rotation_degrees = -24
+length = 220
+thickness = 26
+
+[sub_resource type="Resource" id="Block_1"]
+script = ExtResource("1_block")
+position = Vector2(150, 430)
+rotation_degrees = 0
+size = Vector2(110, 32)
+hit_points = 1
+
+[sub_resource type="Resource" id="Block_2"]
+script = ExtResource("1_block")
+position = Vector2(360, 390)
+rotation_degrees = 0
+size = Vector2(96, 32)
+hit_points = 1
+
+[sub_resource type="Resource" id="Block_3"]
+script = ExtResource("1_block")
+position = Vector2(570, 450)
+rotation_degrees = 0
+size = Vector2(110, 32)
+hit_points = 1
 
 [resource]
-script = ExtResource("4")
+script = ExtResource("4_level")
+level_uid = "level_036"
+display_order = 36
+difficulty = 2
 level_id = 36
-display_name = "Yeniden Tasarlanan Rastgele Faz 36"
+display_name = "Çifte Kilit"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(591, 392)
-target_scale = 0.72
-ball_scale = 0.65
-panels = Array[PanelData]([])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Blk_0"), SubResource("Blk_1")])
-obstacles = Array[ObstacleData]([SubResource("Obs_0"), SubResource("Obs_1")])
+target_position = Vector2(360, 220)
+target_scale = 0.93
+ball_scale = 0.74
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
+breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1"), SubResource("Block_2"), SubResource("Block_3")])
+obstacles = Array[ObstacleData]([])
 left_wall_segments = Array[Vector2]([])
 right_wall_segments = Array[Vector2]([])
 max_lives = 5
 tutorial_text = ""
-two_star_max_seconds = 58.0
-two_star_max_shots = 5
-three_star_max_seconds = 23.8
+two_star_max_seconds = 72.0
+two_star_max_shots = 4
+three_star_max_seconds = 43.0
 three_star_max_shots = 2

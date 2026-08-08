@@ -1,25 +1,43 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_l12_deflector"]
-script = ExtResource("2_panel_data")
-position = Vector2(480, 760)
-rotation_degrees = -20.0
-length = 360.0
-thickness = 26.0
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(220, 760)
+rotation_degrees = -24
+length = 220
+thickness = 26
+
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(500, 510)
+rotation_degrees = 22
+length = 210
+thickness = 26
 
 [resource]
-script = ExtResource("1_level_data")
+script = ExtResource("4_level")
+level_uid = "level_004"
+display_order = 4
+difficulty = 1
 level_id = 4
-display_name = "Açık Hat"
+display_name = "Açı ve Sekme"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(560, 280)
-panels = Array[PanelData]([SubResource("Resource_l12_deflector")])
-right_wall_segments = Array[Vector2]([Vector2(-320, 200), Vector2(560, 1440)])
+target_position = Vector2(260, 220)
+target_scale = 0.994
+ball_scale = 0.78
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
 max_lives = 5
-two_star_max_seconds = 100.0
-two_star_max_shots = 2
-three_star_max_seconds = 52.0
+tutorial_text = ""
+two_star_max_seconds = 55.0
+two_star_max_shots = 3
+three_star_max_seconds = 32.0
 three_star_max_shots = 1

@@ -1,38 +1,57 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_i3jxk"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_e3rq5"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_uog5f"]
-script = ExtResource("2_panel_data")
-position = Vector2(580, 772.2757)
-rotation_degrees = -33.9123477935791
-length = 400.0
-thickness = 26.0
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(200, 820)
+rotation_degrees = -28
+length = 200
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_78vf0"]
-script = ExtResource("2_panel_data")
-position = Vector2(317.14557, 430)
-rotation_degrees = 17.444193
-length = 380.0
-thickness = 26.0
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(520, 650)
+rotation_degrees = 24
+length = 220
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_hu5ch"]
-script = ExtResource("2_panel_data")
-position = Vector2(473.91193, 430)
-rotation_degrees = -18.377213
-thickness = 26.0
+[sub_resource type="Resource" id="Panel_3"]
+script = ExtResource("3_panel")
+position = Vector2(335, 465)
+rotation_degrees = -8
+length = 190
+thickness = 26
+
+[sub_resource type="Resource" id="Panel_4"]
+script = ExtResource("3_panel")
+position = Vector2(520, 360)
+rotation_degrees = 18
+length = 150
+thickness = 26
 
 [resource]
-script = ExtResource("1_level_data")
+script = ExtResource("4_level")
+level_uid = "level_019"
+display_order = 19
+difficulty = 1
 level_id = 19
-display_name = "Kör Sekme"
-target_position = Vector2(418.66977, 223.91019)
-panels = Array[ExtResource("2_panel_data")]([SubResource("Resource_uog5f"), SubResource("Resource_78vf0"), SubResource("Resource_hu5ch")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 271.4933), Vector2(571.4933, 1440)])
-two_star_max_seconds = 105.0
-two_star_max_shots = 2
-three_star_max_seconds = 56.0
-three_star_max_shots = 1
+display_name = "Çift Sekme"
+launcher_position = Vector2(360, 1120)
+target_position = Vector2(260, 200)
+target_scale = 0.964
+ball_scale = 0.78
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2"), SubResource("Panel_3"), SubResource("Panel_4")])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([])
+left_wall_segments = Array[Vector2]([Vector2(-320, 520), Vector2(760, 1600)])
+right_wall_segments = Array[Vector2]([])
+max_lives = 5
+tutorial_text = ""
+two_star_max_seconds = 64.0
+two_star_max_shots = 4
+three_star_max_seconds = 38.0
+three_star_max_shots = 2

@@ -1,39 +1,43 @@
-[gd_resource type="Resource" script_class="LevelData" load_steps=6 format=3]
+[gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="1_level_data"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="2_panel_data"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Resource_l5_roof"]
-script = ExtResource("2_panel_data")
-position = Vector2(300, 480)
-rotation_degrees = 0.0
-length = 360.0
-thickness = 26.0
+[sub_resource type="Resource" id="Panel_1"]
+script = ExtResource("3_panel")
+position = Vector2(210, 760)
+rotation_degrees = 18
+length = 240
+thickness = 26
 
-[sub_resource type="Resource" id="Resource_l5_kick_left"]
-script = ExtResource("2_panel_data")
-position = Vector2(170, 820)
-rotation_degrees = 25.0
-length = 300.0
-thickness = 26.0
-
-[sub_resource type="Resource" id="Resource_l5_kick_right"]
-script = ExtResource("2_panel_data")
-position = Vector2(570, 880)
-rotation_degrees = -25.0
-length = 300.0
-thickness = 26.0
+[sub_resource type="Resource" id="Panel_2"]
+script = ExtResource("3_panel")
+position = Vector2(505, 600)
+rotation_degrees = -18
+length = 230
+thickness = 26
 
 [resource]
-script = ExtResource("1_level_data")
+script = ExtResource("4_level")
+level_uid = "level_012"
+display_order = 12
+difficulty = 1
 level_id = 12
-display_name = "İlk Ustalık"
+display_name = "Dar Geçit"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(470, 260)
-panels = Array[PanelData]([SubResource("Resource_l5_roof"), SubResource("Resource_l5_kick_left"), SubResource("Resource_l5_kick_right")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 400), Vector2(640, 1440)])
+target_position = Vector2(180, 220)
+target_scale = 0.978
+ball_scale = 0.78
+panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
+breakable_blocks = Array[BreakableBlockData]([])
+obstacles = Array[ObstacleData]([])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([Vector2(-320, 540), Vector2(780, 1600)])
 max_lives = 5
-two_star_max_seconds = 95.0
-two_star_max_shots = 2
-three_star_max_seconds = 48.0
-three_star_max_shots = 1
+tutorial_text = ""
+two_star_max_seconds = 61.0
+two_star_max_shots = 4
+three_star_max_seconds = 36.0
+three_star_max_shots = 2
