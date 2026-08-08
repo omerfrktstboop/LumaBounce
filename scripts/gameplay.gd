@@ -242,7 +242,7 @@ func _apply_level() -> void:
 
 	_build_panels()
 	_obstacles.build(level_data.obstacles)
-	_obstacles.start_motion()
+	_obstacles.reset_motion()
 	_apply_level_header()
 	_pending_obstacle_intro_kinds = _newly_seen_obstacle_kinds()
 	_pending_block_intro = (not level_data.breakable_blocks.is_empty()
@@ -424,6 +424,7 @@ func _respawn_ball() -> void:
 	_launcher.cancel_aim()
 	_ball.reset_to(_launcher.get_spawn_position())
 	_target.reset()
+	_obstacles.reset_motion()
 	_clear_effects()
 	_hide_message()
 	_launcher.enabled = true
@@ -482,6 +483,7 @@ func _cancel_active_shot_for_reaim() -> void:
 	_ball.set_launcher_tension(
 		_launcher.get_power_ratio(), _launcher.get_aim_direction(),
 		_launcher.loaded_ball_pullback_distance)
+	_obstacles.reset_motion()
 	_clear_effects()
 	_hide_message()
 

@@ -63,12 +63,20 @@ func _run() -> void:
 func _score_level(level_id: int) -> bool:
 	var level := LevelLibrary.load_level(level_id)
 
+	var _log = FileAccess.open("res://scratchpad/scores.log", FileAccess.READ_WRITE)
+	if _log == null: _log = FileAccess.open("res://scratchpad/scores.log", FileAccess.WRITE)
+	if _log != null: _log.seek_end()
+
 	if level.level_id != level_id:
-		print("LEVEL %d ERROR load_mismatch_got=%d" % [level_id, level.level_id])
+		var msg = "LEVEL %d ERROR load_mismatch_got=%d" % [level_id, level.level_id]
+		print(msg)
+		if _log != null: _log.store_line(msg)
 		return false
 	var problems := level.validate()
 	if not problems.is_empty():
-		print("LEVEL %d ERROR validate_failed=%s" % [level_id, "|".join(problems)])
+		var msg = "LEVEL %d ERROR validate_failed=%s" % [level_id, "|".join(problems)]
+		print(msg)
+		if _log != null: _log.store_line(msg)
 		return false
 
 	_world = LevelWorld.new()
@@ -95,7 +103,7 @@ func _score_level(level_id: int) -> bool:
 			kinds.append(kind_id)
 
 	var solvable := int(scan["hit_count"]) > 0
-	print("LEVEL %d robust=%d bounces=%d panels=%d blocks=%d obstacles=%d kinds=%s solvable=%s" % [
+	var msg = "LEVEL %d robust=%d bounces=%d panels=%d blocks=%d obstacles=%d kinds=%s solvable=%s" % [
 		level_id,
 		int(analysis["robust"]),
 		int(analysis["bounces"]) if solvable else -1,
@@ -104,7 +112,9 @@ func _score_level(level_id: int) -> bool:
 		level.obstacles.size(),
 		(",".join(kinds) if not kinds.is_empty() else "-"),
 		"true" if solvable else "false",
-	])
+	]
+	print(msg)
+	if _log != null: _log.store_line(msg)
 	return true
 
 
