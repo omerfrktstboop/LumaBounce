@@ -1,45 +1,38 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_swv52"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_wbxd4"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_143gu"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_5ihlf"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(350, 760)
-rotation_degrees = -12
-length = 280
-thickness = 26
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_caapr"]
+script = ExtResource("2_wbxd4")
 kind = 2
-position = Vector2(180, 520)
-rotation_degrees = 0
-size = Vector2(96, 22)
-spoke_count = 4
-angular_speed_degrees = 55
+position = Vector2(560.0917, 520.1022)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -88.5
+
+[sub_resource type="Resource" id="Resource_o5s2g"]
+script = ExtResource("3_143gu")
+position = Vector2(257.15076, 831.0896)
+rotation_degrees = 38.1032112121582
+length = 354.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_5ihlf")
 level_uid = "level_101"
 display_order = 101
-difficulty = 4
+difficulty = 3
+hint_angle_degrees = -6.0
+hint_power = 2100.0
 level_id = 101
 display_name = "Çark Girişi"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(500, 220)
-target_scale = 0.8
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = "Dönen çarkın kollarını zamanlayarak geç."
-two_star_max_seconds = 99.0
-two_star_max_shots = 5
-three_star_max_seconds = 60.0
-three_star_max_shots = 3
+target_position = Vector2(148.75069, 377.16425)
+panels = Array[ExtResource("3_143gu")]([SubResource("Resource_o5s2g")])
+obstacles = Array[ExtResource("2_wbxd4")]([SubResource("Resource_caapr")])
+tutorial_text = "Dönen çarkın kolları arasındaki boşluğu zamanla."
+two_star_max_seconds = 117.9
+two_star_max_shots = 3
+three_star_max_seconds = 62.7

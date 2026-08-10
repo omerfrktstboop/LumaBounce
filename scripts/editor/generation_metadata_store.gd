@@ -25,6 +25,7 @@ const ALLOWED_FIELDS := [
 	"most_similar_level", "similarity_reasons", "design_intent", "usage",
 	# Kayitlar kovasi icin:
 	"source_level_id", "saved_at",
+	"difficulty_score", "difficulty_label", "difficulty_breakdown", "solution_count",
 ]
 
 var _path: String

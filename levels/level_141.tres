@@ -1,83 +1,38 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_1dbe6"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_ne83w"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_3lka6"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_w2d51"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(180, 830)
-rotation_degrees = 30
-length = 190
-thickness = 26
-
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(520, 690)
-rotation_degrees = -28
-length = 200
-thickness = 26
-
-[sub_resource type="Resource" id="Block_1"]
-script = ExtResource("1_block")
-position = Vector2(280, 340)
-rotation_degrees = 0
-size = Vector2(88, 28)
-hit_points = 1
-
-[sub_resource type="Resource" id="Block_2"]
-script = ExtResource("1_block")
-position = Vector2(130, 530)
-rotation_degrees = 0
-size = Vector2(88, 28)
-hit_points = 1
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_ex2ru"]
+script = ExtResource("2_ne83w")
 kind = 5
-position = Vector2(140, 360)
-rotation_degrees = 90
-size = Vector2(240, 14)
-motion_period = 3.15
-phase_degrees = 0
-pulse_on_ratio = 0.59
+position = Vector2(575.1921, 918.9123)
+size = Vector2(312.45, 14)
+motion_period = 2.362
+phase_degrees = 311.1379
+pulse_on_ratio = 0.57975
 
-[sub_resource type="Resource" id="Obstacle_2"]
-script = ExtResource("2_obstacle")
-kind = 2
-position = Vector2(540, 390)
-rotation_degrees = 0
-size = Vector2(96, 22)
-spoke_count = 5
-angular_speed_degrees = 94
-
-[sub_resource type="Resource" id="Obstacle_3"]
-script = ExtResource("2_obstacle")
-kind = 1
-position = Vector2(140, 600)
-rotation_degrees = 0
-size = Vector2(72, 28)
+[sub_resource type="Resource" id="Resource_5t6jp"]
+script = ExtResource("3_3lka6")
+position = Vector2(510.92288, 522.6224)
+rotation_degrees = -39.61599884033203
+length = 360.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_w2d51")
 level_uid = "level_141"
 display_order = 141
-difficulty = 5
+difficulty = 4
+hint_angle_degrees = -38.0
+hint_power = 2050.0
 level_id = 141
-display_name = "Lazer ve Çark"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(360, 200)
-target_scale = 0.72
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1"), SubResource("Block_2")])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1"), SubResource("Obstacle_2"), SubResource("Obstacle_3")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 119.0
-two_star_max_shots = 5
-three_star_max_seconds = 73.0
-three_star_max_shots = 3
+display_name = "Kesik Darbe"
+target_position = Vector2(433.8195, 239.31221)
+panels = Array[ExtResource("3_3lka6")]([SubResource("Resource_5t6jp")])
+obstacles = Array[ExtResource("2_ne83w")]([SubResource("Resource_ex2ru")])
+two_star_max_seconds = 152.3
+two_star_max_shots = 3
+three_star_max_seconds = 80.9

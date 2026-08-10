@@ -410,57 +410,156 @@ func _test_generation_contract() -> void:
 	_check("yerel engelli profil engel uretiyor", profile.obstacle_count.y > 0, true)
 
 
-## 41-50 bilerek yalnizca halka + bomba kullanir: cark ve kayan bariyer
-## tanitimi 51-100 bandina yayildi (51=cark ilk-gorulme, 56=kayan bariyer
-## ilk-gorulme, sonra tum turlerin kombinasyonlari 100'e kadar zorlasir).
-## Hizlandirici (SPEED_BOOST) 51-100'e BILEREK dahil edilmedi: gercek
-## mekanigi (yakindaki bloklari kirma, gameplay.gd _on_hazard_triggered)
-## LevelSolver'da hic simule edilmiyor, yani onu rota acan bir eleman olarak
-## kullanan bir bolum offline dogrulanamaz - bloksuz engel bandi olarak
-## kalmasi bu korlugu bastan onler. Ileride bloklu bir bantla eslenirse
-## buraya eklenebilir.
+## Resmi kampanya mekanik kapilari docs/LEVEL_PHASES.md ile ayni kalmali:
+## 51 halkayi, 76 bombayi, 101 carki ve 126 lazeri tanitir. Onceki blok ve
+## duvar-boslugu bilgisi yeni bantlarda tekrar kullanilir; her yeni mekanik
+## kendi tanitimindan once gorunmez.
 func _test_official_obstacle_levels() -> void:
-	var kinds_41_50 := {}
-	for level_id in range(41, 51):
+	var early_obstacles: Array[int] = []
+	for level_id in range(1, 51):
 		var level := LevelLibrary.load_level(level_id)
-		for obstacle in level.obstacles:
-			kinds_41_50[obstacle.kind] = true
-	_check("41-50 halka kullaniyor", kinds_41_50.has(ObstacleData.Kind.METAL_RING), true)
-	_check("41-50 bomba kullaniyor", kinds_41_50.has(ObstacleData.Kind.BOMB), true)
-	_check("41-50 sadece halka+bomba kullaniyor (cark/kayan bariyer 51-100'e ertelendi)",
-		kinds_41_50.size(), 2)
+		if not level.obstacles.is_empty():
+			early_obstacles.append(level_id)
+	_check("1-50 ozel engel icermiyor", early_obstacles, [] as Array[int])
 
-	var kinds_51_100 := {}
-	var blocks_51_100 := 0
-	for level_id in range(51, 101):
+	var ring_band_wrong: Array[int] = []
+	var ring_band_blocks := 0
+	var ring_band_gaps := 0
+	for level_id in range(51, 76):
 		var level := LevelLibrary.load_level(level_id)
-		blocks_51_100 += level.breakable_blocks.size()
+		ring_band_blocks += level.breakable_blocks.size()
+		if not level.left_wall_segments.is_empty() or not level.right_wall_segments.is_empty():
+			ring_band_gaps += 1
+		if level.obstacles.is_empty():
+			ring_band_wrong.append(level_id)
 		for obstacle in level.obstacles:
-			kinds_51_100[obstacle.kind] = true
-	_check("51-100 halka kullaniyor", kinds_51_100.has(ObstacleData.Kind.METAL_RING), true)
-	_check("51-100 bomba kullaniyor", kinds_51_100.has(ObstacleData.Kind.BOMB), true)
-	_check("51-100 cark kullaniyor", kinds_51_100.has(ObstacleData.Kind.ROTATING_WHEEL), true)
-	_check("51-100 kayan bariyer kullaniyor", kinds_51_100.has(ObstacleData.Kind.MOVING_BAR), true)
-	_check("51-100 hizlandirici kullanmiyor (solver korlugu, bkz. yukaridaki not)",
-		kinds_51_100.has(ObstacleData.Kind.SPEED_BOOST), false)
-	_check("51-100 bloksuz engel bandi", blocks_51_100, 0)
-	_check("51 donen carkin ilk-gorulme anidir",
-		LevelLibrary.load_level(51).obstacles[0].kind, ObstacleData.Kind.ROTATING_WHEEL)
+			if obstacle.kind != ObstacleData.Kind.METAL_RING:
+				ring_band_wrong.append(level_id)
+	_check("51-75 yalnizca halka kullaniyor", ring_band_wrong, [] as Array[int])
+	_check("51-75 onceki blok mekanigini geri getiriyor", ring_band_blocks > 0, true)
+	_check("51-75 duvar bosluklarini geri getiriyor", ring_band_gaps > 0, true)
+	_check("51 halka tanitimi tek engelli", LevelLibrary.load_level(51).obstacles.size(), 1)
+	_check("51 halka tanitimi bloksuz", LevelLibrary.load_level(51).breakable_blocks.is_empty(), true)
+
+	var bomb_band_wrong: Array[int] = []
+	var bomb_band_blocks := 0
+	var bomb_band_gaps := 0
+	var bomb_band_ring_levels := 0
+	for level_id in range(76, 101):
+		var level := LevelLibrary.load_level(level_id)
+		bomb_band_blocks += level.breakable_blocks.size()
+		if not level.left_wall_segments.is_empty() or not level.right_wall_segments.is_empty():
+			bomb_band_gaps += 1
+		var has_bomb := false
+		var has_ring := false
+		for obstacle in level.obstacles:
+			has_bomb = has_bomb or obstacle.kind == ObstacleData.Kind.BOMB
+			has_ring = has_ring or obstacle.kind == ObstacleData.Kind.METAL_RING
+			if not obstacle.kind in [ObstacleData.Kind.METAL_RING, ObstacleData.Kind.BOMB]:
+				bomb_band_wrong.append(level_id)
+		if not has_bomb:
+			bomb_band_wrong.append(level_id)
+		if has_ring:
+			bomb_band_ring_levels += 1
+	_check("76-100 her bolum bombali ve yalnizca halka+bomba kullaniyor",
+		bomb_band_wrong, [] as Array[int])
+	_check("76-100 onceki halka mekanigini yaygin kullaniyor", bomb_band_ring_levels >= 15, true)
+	_check("76-100 onceki blok mekanigini geri getiriyor", bomb_band_blocks > 0, true)
+	_check("76-100 duvar bosluklarini geri getiriyor", bomb_band_gaps > 0, true)
+	_check("76 bomba tanitimi tek engelli", LevelLibrary.load_level(76).obstacles.size(), 1)
+	_check("76 bomba tanitimi bloksuz", LevelLibrary.load_level(76).breakable_blocks.is_empty(), true)
+
+	var wheel_band_wrong: Array[int] = []
+	var wheel_band_blocks := 0
+	var wheel_band_gaps := 0
+	var wheel_band_ring_levels := 0
+	var wheel_band_bomb_levels := 0
+	for level_id in range(101, 126):
+		var level := LevelLibrary.load_level(level_id)
+		wheel_band_blocks += level.breakable_blocks.size()
+		if not level.left_wall_segments.is_empty() or not level.right_wall_segments.is_empty():
+			wheel_band_gaps += 1
+		var has_wheel := false
+		var has_ring := false
+		var has_bomb := false
+		for obstacle in level.obstacles:
+			has_wheel = has_wheel or obstacle.kind == ObstacleData.Kind.ROTATING_WHEEL
+			has_ring = has_ring or obstacle.kind == ObstacleData.Kind.METAL_RING
+			has_bomb = has_bomb or obstacle.kind == ObstacleData.Kind.BOMB
+			if not obstacle.kind in [ObstacleData.Kind.METAL_RING,
+					ObstacleData.Kind.BOMB, ObstacleData.Kind.ROTATING_WHEEL]:
+				wheel_band_wrong.append(level_id)
+		if not has_wheel:
+			wheel_band_wrong.append(level_id)
+		wheel_band_ring_levels += 1 if has_ring else 0
+		wheel_band_bomb_levels += 1 if has_bomb else 0
+	_check("101-125 her bolum carkli ve yalnizca onceki turleri kullaniyor",
+		wheel_band_wrong, [] as Array[int])
+	_check("101-125 halkayi duzenli geri getiriyor", wheel_band_ring_levels >= 7, true)
+	_check("101-125 mayini geri getiriyor", wheel_band_bomb_levels >= 3, true)
+	_check("101-125 blok kapilarini geri getiriyor", wheel_band_blocks > 0, true)
+	_check("101-125 duvar bosluklarini geri getiriyor", wheel_band_gaps >= 15, true)
+	_check("101 cark tanitimi tek engelli", LevelLibrary.load_level(101).obstacles.size(), 1)
+	_check("101 cark tanitimi bloksuz", LevelLibrary.load_level(101).breakable_blocks.is_empty(), true)
+
+	var visual_clutter: Array[int] = []
+	for level_id in range(51, 151):
+		var level := LevelLibrary.load_level(level_id)
+		for panel in level.panels:
+			for endpoint in _panel_endpoints(panel):
+				if (endpoint.x < 24.0 or endpoint.x > 696.0
+						or endpoint.y < 165.0 or endpoint.y > 1060.0):
+					visual_clutter.append(level_id)
+		for i in level.panels.size():
+			for j in range(i + 1, level.panels.size()):
+				var aa := _panel_endpoints(level.panels[i])
+				var bb := _panel_endpoints(level.panels[j])
+				if Geometry2D.segment_intersects_segment(
+						aa[0], aa[1], bb[0], bb[1]) != null:
+					visual_clutter.append(level_id)
+	_check("51-150 paneller kesismiyor ve ekran icinde", visual_clutter, [] as Array[int])
 
 	# 126-150 LAZER BANDI: bandin kimligi yanip sonen isindir, dolayisiyla
 	# HER bolumde en az bir lazer olmali. 126 lazerin ilk-gorulme anidir ve
 	# YALNIZCA lazer icerir: tanitim karti bir bolumdeki yeni turleri gosterir,
 	# baska bir engel olsa oyuncu ayni anda iki kural ogrenmek zorunda kalirdi.
-	var laser_free: Array[int] = []
-	for level_id in range(126, LevelLibrary.last_level_id() + 1):
+	var laser_band_wrong: Array[int] = []
+	var laser_band_blocks := 0
+	var laser_band_gaps := 0
+	var laser_band_wheel_levels := 0
+	var laser_band_ring_levels := 0
+	var laser_band_bomb_levels := 0
+	# Bonus 151-156 normal kampanya faz kapilarinin disindadir.
+	for level_id in range(126, 151):
 		var level := LevelLibrary.load_level(level_id)
+		laser_band_blocks += level.breakable_blocks.size()
+		if not level.left_wall_segments.is_empty() or not level.right_wall_segments.is_empty():
+			laser_band_gaps += 1
 		var has_laser := false
+		var has_wheel := false
+		var has_ring := false
+		var has_bomb := false
 		for obstacle in level.obstacles:
-			if obstacle.kind == ObstacleData.Kind.PULSE_LASER:
-				has_laser = true
+			has_laser = has_laser or obstacle.kind == ObstacleData.Kind.PULSE_LASER
+			has_wheel = has_wheel or obstacle.kind == ObstacleData.Kind.ROTATING_WHEEL
+			has_ring = has_ring or obstacle.kind == ObstacleData.Kind.METAL_RING
+			has_bomb = has_bomb or obstacle.kind == ObstacleData.Kind.BOMB
+			if not obstacle.kind in [ObstacleData.Kind.PULSE_LASER,
+					ObstacleData.Kind.ROTATING_WHEEL, ObstacleData.Kind.METAL_RING,
+					ObstacleData.Kind.BOMB]:
+				laser_band_wrong.append(level_id)
 		if not has_laser:
-			laser_free.append(level_id)
-	_check("126+ her bolumde lazer var", laser_free, [] as Array[int])
+			laser_band_wrong.append(level_id)
+		laser_band_wheel_levels += 1 if has_wheel else 0
+		laser_band_ring_levels += 1 if has_ring else 0
+		laser_band_bomb_levels += 1 if has_bomb else 0
+	_check("126-150 her bolum lazerli ve yalnizca acik turleri kullaniyor",
+		laser_band_wrong, [] as Array[int])
+	_check("126-150 carki geri getiriyor", laser_band_wheel_levels >= 4, true)
+	_check("126-150 halkayi geri getiriyor", laser_band_ring_levels >= 4, true)
+	_check("126-150 mayini geri getiriyor", laser_band_bomb_levels >= 4, true)
+	_check("126-150 blok kapilarini geri getiriyor", laser_band_blocks > 0, true)
+	_check("126-150 duvar bosluklarini geri getiriyor", laser_band_gaps >= 15, true)
 
 	var first := LevelLibrary.load_level(126)
 	var first_kinds := {}
@@ -469,6 +568,16 @@ func _test_official_obstacle_levels() -> void:
 	_check("126 yalnizca lazer icerir", first_kinds.size(), 1)
 	_check("126 lazerin ilk-gorulme anidir",
 		first_kinds.has(ObstacleData.Kind.PULSE_LASER), true)
+	_check("126 lazer tanitimi tek engelli", first.obstacles.size(), 1)
+	_check("126 lazer tanitimi bloksuz", first.breakable_blocks.is_empty(), true)
+
+	var early_wheel: Array[int] = []
+	for level_id in range(1, 101):
+		for obstacle in LevelLibrary.load_level(level_id).obstacles:
+			if obstacle.kind == ObstacleData.Kind.ROTATING_WHEEL:
+				early_wheel.append(level_id)
+				break
+	_check("1-100 cark icermiyor", early_wheel, [] as Array[int])
 	# 125'e kadar lazer GORULMEMELI, yoksa 126'nin tanitim karti hic acilmaz.
 	var early_laser: Array[int] = []
 	for level_id in range(1, 126):
@@ -477,6 +586,11 @@ func _test_official_obstacle_levels() -> void:
 				early_laser.append(level_id)
 				break
 	_check("1-125 lazer icermiyor", early_laser, [] as Array[int])
+
+
+func _panel_endpoints(panel: PanelData) -> Array[Vector2]:
+	var half := Vector2.RIGHT.rotated(deg_to_rad(panel.rotation_degrees)) * panel.length * 0.5
+	return [panel.position - half, panel.position + half] as Array[Vector2]
 
 
 func _ring(at: Vector2) -> ObstacleData:

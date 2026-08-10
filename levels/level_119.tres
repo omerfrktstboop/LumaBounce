@@ -1,74 +1,44 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_qpm2a"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_evtph"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_ne06o"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_t00vt"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(180, 830)
-rotation_degrees = -30
-length = 190
-thickness = 26
-
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(520, 690)
-rotation_degrees = 28
-length = 200
-thickness = 26
-
-[sub_resource type="Resource" id="Block_1"]
-script = ExtResource("1_block")
-position = Vector2(360, 330)
-rotation_degrees = 0
-size = Vector2(100, 30)
-hit_points = 1
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_7pkec"]
+script = ExtResource("2_evtph")
 kind = 2
-position = Vector2(210, 390)
-rotation_degrees = 0
-size = Vector2(108, 22)
-spoke_count = 4
-angular_speed_degrees = -85
+position = Vector2(395.6845, 806.7805)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -112.125
 
-[sub_resource type="Resource" id="Obstacle_2"]
-script = ExtResource("2_obstacle")
-kind = 0
-position = Vector2(140, 600)
-rotation_degrees = 0
-size = Vector2(118, 28)
-inner_radius = 42
+[sub_resource type="Resource" id="Resource_wo4qc"]
+script = ExtResource("2_evtph")
+position = Vector2(603.9275, 737.0061)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 57.68
 
-[sub_resource type="Resource" id="Obstacle_3"]
-script = ExtResource("2_obstacle")
-kind = 1
-position = Vector2(540, 560)
-rotation_degrees = 0
-size = Vector2(72, 28)
+[sub_resource type="Resource" id="Resource_ehrm4"]
+script = ExtResource("3_ne06o")
+position = Vector2(393.06586, 630.88806)
+rotation_degrees = -29.975945663452148
+length = 403.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_t00vt")
 level_uid = "level_119"
 display_order = 119
 difficulty = 4
+hint_angle_degrees = -38.0
+hint_power = 2000.0
 level_id = 119
-display_name = "Dönen Koridor"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(260, 200)
-target_scale = 0.764
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1")])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1"), SubResource("Obstacle_2"), SubResource("Obstacle_3")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 108.0
-two_star_max_shots = 5
-three_star_max_seconds = 66.0
-three_star_max_shots = 3
+display_name = "Halka Deviri"
+target_position = Vector2(282.88452, 378.55438)
+panels = Array[ExtResource("3_ne06o")]([SubResource("Resource_ehrm4")])
+obstacles = Array[ExtResource("2_evtph")]([SubResource("Resource_7pkec"), SubResource("Resource_wo4qc")])
+two_star_max_seconds = 133.4
+two_star_max_shots = 3
+three_star_max_seconds = 70.9

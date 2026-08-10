@@ -5,53 +5,43 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(210, 760)
-rotation_degrees = 18
-length = 240
-thickness = 26
-
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(505, 600)
-rotation_degrees = -18
-length = 230
-thickness = 26
-
-[sub_resource type="Resource" id="Block_1"]
+[sub_resource type="Resource" id="Resource_406x8"]
 script = ExtResource("1_block")
-position = Vector2(240, 570)
-rotation_degrees = 0
-size = Vector2(110, 32)
-hit_points = 1
+position = Vector2(116.25, 411.48053)
+size = Vector2(112.5, 34)
+hit_points = 2
 
-[sub_resource type="Resource" id="Block_2"]
+[sub_resource type="Resource" id="Resource_ufruu"]
 script = ExtResource("1_block")
-position = Vector2(485, 330)
-rotation_degrees = 0
-size = Vector2(96, 32)
-hit_points = 1
+position = Vector2(258.75, 411.48053)
+size = Vector2(112.5, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_5ahdg"]
+script = ExtResource("1_block")
+position = Vector2(401.25, 411.48053)
+size = Vector2(112.5, 34)
+
+[sub_resource type="Resource" id="Resource_whde1"]
+script = ExtResource("3_panel")
+position = Vector2(457.40982, 725.81824)
+rotation_degrees = 6.4594154
+length = 349.42923
+thickness = 26.0
 
 [resource]
 script = ExtResource("4_level")
 level_uid = "level_034"
 display_order = 34
-difficulty = 2
+difficulty = 4
+hint_angle_degrees = -34.0
+hint_power = 2000.0
 level_id = 34
 display_name = "Blok Kapısı"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(260, 220)
+target_position = Vector2(167.57274, 287.68338)
 target_scale = 0.934
 ball_scale = 0.74
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1"), SubResource("Block_2")])
-obstacles = Array[ObstacleData]([])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
+panels = Array[ExtResource("3_panel")]([SubResource("Resource_whde1")])
+breakable_blocks = Array[ExtResource("1_block")]([SubResource("Resource_406x8"), SubResource("Resource_ufruu"), SubResource("Resource_5ahdg")])
 two_star_max_seconds = 69.0
-two_star_max_shots = 4
 three_star_max_seconds = 41.0
-three_star_max_shots = 2

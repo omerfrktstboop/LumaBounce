@@ -51,9 +51,11 @@ func _ready() -> void:
 ## Bolum tamamlandi: yildizlar, sure/atis bilgisi ve tam navigasyon.
 ## [param new_record] true ise yildizlar kisa bir pop ile belirir.
 func show_success(title_text: String, next_text: String, retry_text: String,
-		stars: int, seconds: float, shots: int, new_record: bool) -> void:
+		stars: int, seconds: float, shots: int, new_record: bool,
+		reward_text := "") -> void:
 	_title.text = title_text
-	_subtitle.hide()
+	_subtitle.text = reward_text
+	_subtitle.visible = not reward_text.is_empty()
 
 	_stars.show()
 	if new_record:

@@ -44,6 +44,8 @@ thickness = 26.0
 [resource]
 script = ExtResource("4_f2swb")
 is_bonus = true
+hint_angle_degrees = -4.0
+hint_power = 1800.0
 level_id = 154
 display_name = "Kinetik Sınav II"
 target_position = Vector2(408.46152, 250.41792)

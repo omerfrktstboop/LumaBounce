@@ -1,38 +1,50 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(220, 760)
-rotation_degrees = 24
-length = 220
-thickness = 26
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("3")
+position = Vector2(234.9414, 623.65234)
+rotation_degrees = 24.0
+length = 280.0
+thickness = 26.0
 
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(500, 510)
-rotation_degrees = -22
-length = 210
-thickness = 26
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("3")
+position = Vector2(562.9297, 575.5078)
+rotation_degrees = -22.0
+length = 290.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("3")
+position = Vector2(467.28516, 416.41602)
+rotation_degrees = 0.0
+length = 280.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4")
 level_uid = "level_006"
 display_order = 6
+theme_id = ""
 difficulty = 1
+time_limit = 0.0
+is_bonus = false
+hint_angle_degrees = 0.0
+hint_power = 1850.0
 level_id = 6
 display_name = "Duvar Rotası"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(360, 220)
+target_position = Vector2(393.04688, 166.29883)
 target_scale = 0.99
 ball_scale = 0.78
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([])
+panels = Array[ExtResource("3")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
+breakable_blocks = Array[ExtResource("1")]([])
+obstacles = Array[ExtResource("2")]([])
 left_wall_segments = Array[Vector2]([])
 right_wall_segments = Array[Vector2]([])
 max_lives = 5

@@ -1,65 +1,78 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(200, 820)
-rotation_degrees = 28
-length = 200
-thickness = 26
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("1")
+position = Vector2(120.21846, 738.9563)
+rotation_degrees = 10.0
+size = Vector2(120, 35)
+hit_points = 2
 
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(520, 650)
-rotation_degrees = -24
-length = 220
-thickness = 26
-
-[sub_resource type="Resource" id="Block_1"]
-script = ExtResource("1_block")
-position = Vector2(130, 330)
-rotation_degrees = 0
-size = Vector2(100, 32)
-hit_points = 1
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("2")
 kind = 1
-position = Vector2(500, 390)
-rotation_degrees = 0
-size = Vector2(80, 28)
+position = Vector2(520.9617, 509.57278)
+rotation_degrees = 0.0
+size = Vector2(81.933334, 81.933334)
+inner_radius = 42.0
+spoke_count = 6
+angular_speed_degrees = 55.0
+motion_direction_degrees = 0.0
+travel_distance = 110.0
+motion_period = 2.8
+phase_degrees = 0.0
+pulse_on_ratio = 0.667
 
-[sub_resource type="Resource" id="Obstacle_2"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("2")
 kind = 0
-position = Vector2(180, 680)
-rotation_degrees = 0
-size = Vector2(120, 28)
-inner_radius = 42
+position = Vector2(327.0379, 745.16)
+rotation_degrees = 180.0
+size = Vector2(180, 28)
+inner_radius = 61.9
+spoke_count = 6
+angular_speed_degrees = 55.0
+motion_direction_degrees = 0.0
+travel_distance = 110.0
+motion_period = 2.8
+phase_degrees = 0.0
+pulse_on_ratio = 0.667
+
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("3")
+position = Vector2(504.5725, 692.70435)
+rotation_degrees = 55.0
+length = 367.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4")
 level_uid = "level_090"
 display_order = 90
-difficulty = 3
+theme_id = ""
+difficulty = 4
+time_limit = 0.0
+is_bonus = false
+hint_angle_degrees = 22.0
+hint_power = 1750.0
 level_id = 90
 display_name = "Dar Mayın"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(460, 220)
-target_scale = 0.822
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1")])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1"), SubResource("Obstacle_2")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
+target_position = Vector2(177.03821, 271.6989)
+target_scale = 1.0
+ball_scale = 1.0
+panels = Array[ExtResource("3")]([SubResource("Resource_m3uui")])
+breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 705.2001), Vector2(832.8638, 1600)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 644.93823), Vector2(814.27673, 1600)])
 max_lives = 5
 tutorial_text = ""
-two_star_max_seconds = 94.0
-two_star_max_shots = 5
-three_star_max_seconds = 57.0
-three_star_max_shots = 3
+two_star_max_seconds = 108.5
+two_star_max_shots = 3
+three_star_max_seconds = 57.7
+three_star_max_shots = 2

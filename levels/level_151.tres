@@ -51,6 +51,8 @@ thickness = 26.0
 [resource]
 script = ExtResource("4_3iyo1")
 is_bonus = true
+hint_angle_degrees = 52.0
+hint_power = 2000.0
 level_id = 151
 display_name = "Sınav I"
 target_position = Vector2(320.31226, 372.2472)

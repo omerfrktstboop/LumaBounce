@@ -1,46 +1,47 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_w0hk7"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_wpcqd"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_lohbo"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_owx4k"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(220, 760)
-rotation_degrees = -24
-length = 220
-thickness = 26
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_g8eeb"]
+script = ExtResource("2_wpcqd")
 kind = 5
-position = Vector2(540, 650)
-rotation_degrees = 90
-size = Vector2(240, 14)
-motion_period = 3.6
-phase_degrees = 72
-pulse_on_ratio = 0.5
+position = Vector2(602.8085, 905.902)
+size = Vector2(285.15, 14)
+motion_period = 2.614
+phase_degrees = 187.04863
+pulse_on_ratio = 0.54825
+
+[sub_resource type="Resource" id="Resource_qo1or"]
+script = ExtResource("2_wpcqd")
+kind = 2
+position = Vector2(354.2297, 563.7954)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 94.125
+
+[sub_resource type="Resource" id="Resource_etpx7"]
+script = ExtResource("3_lohbo")
+position = Vector2(403.9733, 700.6187)
+rotation_degrees = -38.723127365112305
+length = 327.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_owx4k")
 level_uid = "level_127"
 display_order = 127
-difficulty = 5
+difficulty = 4
+hint_angle_degrees = -32.0
+hint_power = 1900.0
 level_id = 127
-display_name = "Lazer Girişi"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(180, 220)
-target_scale = 0.748
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 110.0
-two_star_max_shots = 5
-three_star_max_seconds = 67.0
-three_star_max_shots = 3
+display_name = "Sönen Hat"
+target_position = Vector2(507.69482, 259.5606)
+panels = Array[ExtResource("3_lohbo")]([SubResource("Resource_etpx7")])
+obstacles = Array[ExtResource("2_wpcqd")]([SubResource("Resource_g8eeb"), SubResource("Resource_qo1or")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 611.3457), Vector2(787.8967, 1600)])
+two_star_max_seconds = 140.3
+two_star_max_shots = 3
+three_star_max_seconds = 74.5

@@ -31,12 +31,20 @@ const MAX_PANEL_LENGTH := 560.0
 const MIN_BLOCK_WIDTH := 80.0
 const MAX_BLOCK_WIDTH := 620.0
 const BLOCK_HEIGHT := 44.0
+const MIN_BLOCK_THICKNESS := 20.0
+const MAX_BLOCK_THICKNESS := 80.0
+const TARGET_SCALE_STEP := 0.1
+const MIN_TARGET_SCALE := 0.5
+const MAX_TARGET_SCALE := 1.5
+const MAX_SOLUTION_ROUTES := 10
 ## Duvar bosluklarinin editordeki varsayilan araligi.
 const DEFAULT_GAP := Vector2(420.0, 740.0)
 ## Alt serit sabit yukseklikte; parti gezinme satiri belirince tam o kadar
 ## buyur. Sabit en buyuk boyutta birakmak arenadan bosuna yer yerdi.
 const PANEL_HEIGHT := 354.0
 const PANEL_HEIGHT_WITH_BATCH := 418.0
+const PANEL_VIEW_TOP := 92.0
+const PANEL_VIEW_BOTTOM_MARGIN := 20.0
 
 ## AppRoot tarafindan add_child'dan ONCE atanabilir; bos birakilirsa bos bir
 ## bolumle baslanir.
@@ -56,6 +64,8 @@ var source_level_id := 0
 @onready var _bottom: PanelContainer = $HUD/SafeArea/Root/BottomPanel
 @onready var _batch_row: HBoxContainer = $HUD/SafeArea/Root/BottomPanel/Rows/BatchRow
 @onready var _batch_label: Label = $HUD/SafeArea/Root/BottomPanel/Rows/BatchRow/BatchLabel
+@onready var _previous_level_button: Button = $HUD/SafeArea/Root/BottomPanel/Rows/BatchRow/PrevLevel
+@onready var _next_level_button: Button = $HUD/SafeArea/Root/BottomPanel/Rows/BatchRow/NextLevel
 @onready var _modal: Control = $HUD/Modal
 @onready var _modal_title: Label = $HUD/Modal/Card/Rows/Title
 @onready var _modal_status: Label = $HUD/Modal/Card/Rows/Status
@@ -64,6 +74,12 @@ var source_level_id := 0
 @onready var _modal_list: VBoxContainer = $HUD/Modal/Card/Rows/Scroll/List
 @onready var _solution_overlay: LevelSolutionOverlay = $SolutionOverlay
 @onready var _solution_button: Button = $HUD/SafeArea/Root/BottomPanel/Rows/ActionRow/SolutionButton
+@onready var _analyse_button: Button = $HUD/SafeArea/Root/BottomPanel/Rows/ActionRow/AnalyseButton
+@onready var _rotate_90_button: Button = $HUD/SafeArea/Root/BottomPanel/Rows/TuneRow/Rotate90
+@onready var _thickness_button: Button = $HUD/SafeArea/Root/BottomPanel/Rows/TuneRow/ThicknessCycle
+@onready var _copy_button: Button = $HUD/SafeArea/Root/BottomPanel/Rows/AddRow/CopyItem
+@onready var _collapse_button: Button = $HUD/SafeArea/Root/TopBar/CollapseButton
+@onready var _quick_generate_button: Button = $HUD/SafeArea/Root/BottomPanel/Rows/ActionRow/QuickGenerateButton
 
 var _solver: LevelSolver
 var _generator: LevelGenerator
@@ -95,6 +111,8 @@ var _library_names := PackedStringArray()
 var _library_selected := {}
 var _status_text := ""
 var _solution_busy := false
+var _analysis_busy := false
+var _last_difficulty_result := {}
 
 
 func _ready() -> void:
@@ -127,6 +145,8 @@ func _ready() -> void:
 		_rebuild()
 	else:
 		_restore_batch_context(initial_batch_context)
+	_refresh_batch_row()
+	_set_panel_visible(_bottom.visible)
 
 
 ## Oynanisla AYNI cerceveleme: yatayda oyun alani ortali, dikeyde alt kenara
@@ -134,9 +154,21 @@ func _ready() -> void:
 func _position_camera() -> void:
 	var play_rect := _world.get_play_rect()
 	var visible_size := get_viewport_rect().size
+	var world_center := play_rect.position + play_rect.size * 0.5
+	if not _bottom.visible:
+		_camera.zoom = Vector2.ONE
+		_camera.position = Vector2(
+			world_center.x, play_rect.end.y - visible_size.y * 0.5)
+		return
+	var panel_height := PANEL_HEIGHT_WITH_BATCH if _batch_row.visible else PANEL_HEIGHT
+	var visible_bottom := visible_size.y - panel_height - PANEL_VIEW_BOTTOM_MARGIN
+	var available_height := maxf(visible_bottom - PANEL_VIEW_TOP, 120.0)
+	var zoom_factor := clampf(available_height / play_rect.size.y, 0.35, 1.0)
+	var desired_screen_center := (PANEL_VIEW_TOP + visible_bottom) * 0.5
+	_camera.zoom = Vector2.ONE * zoom_factor
 	_camera.position = Vector2(
-		play_rect.position.x + play_rect.size.x * 0.5,
-		play_rect.position.y + play_rect.size.y - visible_size.y * 0.5)
+		world_center.x,
+		world_center.y + (visible_size.y * 0.5 - desired_screen_center) / zoom_factor)
 
 
 func _build_previews() -> void:
@@ -155,6 +187,8 @@ func _connect_buttons() -> void:
 	var rows := "HUD/SafeArea/Root/BottomPanel/Rows/"
 	get_node(rows + "AddRow/AddPanel").pressed.connect(_on_add_panel)
 	get_node(rows + "AddRow/AddBlock").pressed.connect(_on_add_block)
+	get_node(rows + "AddRow/AddStrongBlock").pressed.connect(_on_add_block.bind(2))
+	_copy_button.pressed.connect(_on_copy_selected)
 	get_node(rows + "AddRow/DeleteItem").pressed.connect(_on_delete)
 	get_node(rows + "AddRow/CycleWall").pressed.connect(_on_cycle_wall)
 	get_node(rows + "ObstacleRow/AddRing").pressed.connect(
@@ -172,10 +206,13 @@ func _connect_buttons() -> void:
 	get_node(rows + "TuneRow/APlus").pressed.connect(_on_tune.bind(0, 1))
 	get_node(rows + "TuneRow/BMinus").pressed.connect(_on_tune.bind(1, -1))
 	get_node(rows + "TuneRow/BPlus").pressed.connect(_on_tune.bind(1, 1))
+	_rotate_90_button.pressed.connect(_on_rotate_90)
+	_thickness_button.pressed.connect(_on_cycle_thickness)
 
 	get_node(rows + "ActionRow/TestButton").pressed.connect(_on_test)
 	get_node(rows + "ActionRow/AnalyseButton").pressed.connect(_on_analyse)
 	get_node(rows + "ActionRow/GenerateButton").pressed.connect(_on_open_generator)
+	_quick_generate_button.pressed.connect(_on_quick_generate)
 	get_node(rows + "ActionRow/SolutionButton").pressed.connect(_on_solution_pressed)
 	get_node(rows + "ActionRow/SaveButton").pressed.connect(_on_save)
 
@@ -202,15 +239,20 @@ func _connect_buttons() -> void:
 ## Yapisal her degisiklikten sonra cagrilir (ekleme, silme, bolum yukleme).
 ## Surukleme sirasinda cagrilmaz - orada yalnizca ilgili dugum oynatilir.
 func _rebuild() -> void:
+	_last_difficulty_result.clear()
 	_clear_solution()
 	_world.build(level)
 	_target_preview.position = level.target_position
+	_target_preview.scale = Vector2.ONE * level.target_scale
 	_launcher_preview.position = level.launcher_position
 	_refresh_info()
 	queue_redraw()
 
 
 func _refresh_info() -> void:
+	_rotate_90_button.disabled = not _selection_can_rotate()
+	_thickness_button.disabled = not _selection_supports_thickness()
+	_copy_button.disabled = not _selection_can_copy()
 	var lines := PackedStringArray()
 	lines.append("%d panel  %d blok  %d engel  |  %d can" % [
 		level.panels.size(), level.breakable_blocks.size(),
@@ -231,31 +273,35 @@ func _selection_text() -> String:
 				_selected_index + 1, panel.rotation_degrees, panel.length]
 		Selection.BLOCK:
 			var block := level.breakable_blocks[_selected_index]
-			return "Blok %d — A: açı %.0f°   B: genişlik %.0f" % [
-				_selected_index + 1, block.rotation_degrees, block.size.x]
+			return "Blok %d — A: açı %.0f°  B: genişlik %.0f  kalınlık %.0f  can %d" % [
+				_selected_index + 1, block.rotation_degrees, block.size.x,
+				block.size.y, block.hit_points]
 		Selection.OBSTACLE:
 			var obstacle := level.obstacles[_selected_index]
 			match obstacle.kind:
 				ObstacleData.Kind.METAL_RING:
-					return "Halka %d - A: dis cap %.0f  B: delik cap %.0f" % [
-						_selected_index + 1, obstacle.size.x, obstacle.inner_radius * 2.0]
+					return "Halka %d - A: dis cap %.0f  B: delik cap %.0f  kalinlik %.0f" % [
+						_selected_index + 1, obstacle.size.x, obstacle.inner_radius * 2.0,
+						obstacle.outer_radius() - obstacle.inner_radius]
 				ObstacleData.Kind.BOMB:
 					return "Bomba %d - A: cap %.0f  B: yon %.0f" % [
 						_selected_index + 1, obstacle.size.x, obstacle.rotation_degrees]
 				ObstacleData.Kind.ROTATING_WHEEL:
-					return "Cark %d - A: hiz %.0f  B: cap %.0f" % [
-						_selected_index + 1, obstacle.angular_speed_degrees, obstacle.size.x]
+					return "Cark %d - A: hiz %.0f  B: cap %.0f  kalinlik %.0f" % [
+						_selected_index + 1, obstacle.angular_speed_degrees,
+						obstacle.size.x, obstacle.size.y]
 				ObstacleData.Kind.MOVING_BAR:
-					return "Kayan %d - A: yon %.0f  B: mesafe %.0f" % [
+					return "Kayan %d - A: yon %.0f  B: mesafe %.0f  kalinlik %.0f" % [
 						_selected_index + 1, obstacle.motion_direction_degrees,
-						obstacle.travel_distance]
+						obstacle.travel_distance, obstacle.size.y]
 				ObstacleData.Kind.PULSE_LASER:
-					return "Lazer %d - A: dongu %.1fsn  B: boy %.0f  (acik %%%.0f)" % [
+					return "Lazer %d - A: dongu %.1fsn  B: boy %.0f  kalinlik %.0f" % [
 						_selected_index + 1, obstacle.motion_period, obstacle.size.x,
-						obstacle.pulse_on_ratio * 100.0]
+						obstacle.size.y]
 			return obstacle.display_name()
 		Selection.TARGET:
-			return "Hedef — sürükleyerek taşı (%.0f, %.0f)" % [
+			return "Hedef — A: boyut %.0f%%  sürükle: (%.0f, %.0f)" % [
+				level.target_scale * 100.0,
 				level.target_position.x, level.target_position.y]
 		Selection.LAUNCHER:
 			return "Fırlatıcı — sürükleyerek taşı (%.0f, %.0f)" % [
@@ -399,6 +445,7 @@ func _selected_position() -> Vector2:
 
 
 func _set_selected_position(value: Vector2) -> void:
+	_last_difficulty_result.clear()
 	match _selection:
 		Selection.PANEL:
 			level.panels[_selected_index].position = value
@@ -434,15 +481,16 @@ func _on_add_panel() -> void:
 	_rebuild()
 
 
-func _on_add_block() -> void:
+func _on_add_block(hit_points: int = 1) -> void:
 	var block := BreakableBlockData.new()
 	block.position = _free_spot()
 	block.rotation_degrees = 0.0
 	block.size = Vector2(220.0, BLOCK_HEIGHT)
+	block.hit_points = hit_points
 	level.breakable_blocks.append(block)
 	_selection = Selection.BLOCK
 	_selected_index = level.breakable_blocks.size() - 1
-	_status_text = ""
+	_status_text = "Güçlendirilmiş blok eklendi." if hit_points == 2 else ""
 	_rebuild()
 
 
@@ -532,12 +580,146 @@ func _on_tune(axis: int, direction: int) -> void:
 					block.size.x + SIZE_STEP * direction, MIN_BLOCK_WIDTH, MAX_BLOCK_WIDTH)
 		Selection.OBSTACLE:
 			_tune_obstacle(level.obstacles[_selected_index], axis, direction)
+		Selection.TARGET:
+			if axis != 0:
+				return
+			level.target_scale = clampf(
+				level.target_scale + TARGET_SCALE_STEP * direction,
+				MIN_TARGET_SCALE, MAX_TARGET_SCALE)
 		Selection.LEFT_WALL, Selection.RIGHT_WALL:
 			_tune_wall(axis, direction)
 		_:
 			return
 	_status_text = ""
 	_rebuild()
+
+
+func _selection_can_copy() -> bool:
+	match _selection:
+		Selection.PANEL:
+			return _selected_index >= 0 and _selected_index < level.panels.size()
+		Selection.BLOCK:
+			return _selected_index >= 0 and _selected_index < level.breakable_blocks.size()
+		Selection.OBSTACLE:
+			return _selected_index >= 0 and _selected_index < level.obstacles.size()
+	return false
+
+
+func _on_copy_selected() -> void:
+	if not _selection_can_copy():
+		return
+	match _selection:
+		Selection.PANEL:
+			var panel := level.panels[_selected_index].duplicate(true) as PanelData
+			panel.position = _copied_position(panel.position)
+			level.panels.append(panel)
+			_selected_index = level.panels.size() - 1
+		Selection.BLOCK:
+			var block := (
+				level.breakable_blocks[_selected_index].duplicate(true) as BreakableBlockData)
+			block.position = _copied_position(block.position)
+			level.breakable_blocks.append(block)
+			_selected_index = level.breakable_blocks.size() - 1
+		Selection.OBSTACLE:
+			var obstacle := level.obstacles[_selected_index].duplicate(true) as ObstacleData
+			obstacle.position = _copied_position(obstacle.position)
+			level.obstacles.append(obstacle)
+			_selected_index = level.obstacles.size() - 1
+	_status_text = "Seçili parça kopyalandı."
+	_rebuild()
+
+
+func _copied_position(source: Vector2) -> Vector2:
+	var offset := Vector2(32.0, 32.0)
+	var copied := source + offset
+	if copied.x > 660.0 or copied.y > 1040.0:
+		copied = source - offset
+	return Vector2(
+		clampf(copied.x, 60.0, 660.0),
+		clampf(copied.y, 180.0, 1040.0))
+
+
+func _selection_can_rotate() -> bool:
+	match _selection:
+		Selection.PANEL:
+			return _selected_index >= 0 and _selected_index < level.panels.size()
+		Selection.BLOCK:
+			return _selected_index >= 0 and _selected_index < level.breakable_blocks.size()
+		Selection.OBSTACLE:
+			return _selected_index >= 0 and _selected_index < level.obstacles.size()
+	return false
+
+
+func _on_rotate_90() -> void:
+	if not _selection_can_rotate():
+		return
+	match _selection:
+		Selection.PANEL:
+			var panel := level.panels[_selected_index]
+			panel.rotation_degrees = wrapf(panel.rotation_degrees + 90.0, -90.0, 90.0)
+		Selection.BLOCK:
+			var block := level.breakable_blocks[_selected_index]
+			block.rotation_degrees = wrapf(block.rotation_degrees + 90.0, -90.0, 90.0)
+		Selection.OBSTACLE:
+			var obstacle := level.obstacles[_selected_index]
+			obstacle.rotation_degrees = wrapf(
+				obstacle.rotation_degrees + 90.0, -180.0, 180.0)
+	_status_text = "Seçili parça 90° döndürüldü."
+	_rebuild()
+
+
+func _selection_supports_thickness() -> bool:
+	if _selection == Selection.BLOCK:
+		return _selected_index >= 0 and _selected_index < level.breakable_blocks.size()
+	if _selection != Selection.OBSTACLE or _selected_index < 0 \
+			or _selected_index >= level.obstacles.size():
+		return false
+	return level.obstacles[_selected_index].kind in [
+		ObstacleData.Kind.METAL_RING,
+		ObstacleData.Kind.ROTATING_WHEEL,
+		ObstacleData.Kind.MOVING_BAR,
+		ObstacleData.Kind.PULSE_LASER,
+	]
+
+
+func _on_cycle_thickness() -> void:
+	if not _selection_supports_thickness():
+		return
+	if _selection == Selection.BLOCK:
+		var block := level.breakable_blocks[_selected_index]
+		block.size.y = _next_thickness(
+			block.size.y, MIN_BLOCK_THICKNESS, MAX_BLOCK_THICKNESS)
+		_status_text = "Blok kalınlığı: %.0f px (5 kademe)" % block.size.y
+		_rebuild()
+		return
+	var obstacle := level.obstacles[_selected_index]
+	var thickness := obstacle.size.y
+	match obstacle.kind:
+		ObstacleData.Kind.METAL_RING:
+			var outer := obstacle.outer_radius()
+			var current := outer - obstacle.inner_radius
+			thickness = _next_thickness(current, 12.0, maxf(outer - 28.0, 12.0))
+			obstacle.inner_radius = outer - thickness
+		ObstacleData.Kind.ROTATING_WHEEL:
+			thickness = _next_thickness(obstacle.size.y, 14.0, 40.0)
+			obstacle.size.y = thickness
+		ObstacleData.Kind.MOVING_BAR:
+			thickness = _next_thickness(obstacle.size.y, 20.0, 72.0)
+			obstacle.size.y = thickness
+		ObstacleData.Kind.PULSE_LASER:
+			thickness = _next_thickness(obstacle.size.y, 8.0, 30.0)
+			obstacle.size.y = thickness
+	_status_text = "Engel kalınlığı: %.0f px (5 kademe)" % thickness
+	_rebuild()
+
+
+func _next_thickness(current: float, minimum: float, maximum: float) -> float:
+	var step := (maximum - minimum) / 4.0
+	for index in range(5):
+		var candidate := snappedf(minimum + step * index, 1.0)
+		if current < candidate - 0.5:
+			return candidate
+	return minimum
 
 
 func _tune_obstacle(obstacle: ObstacleData, axis: int, direction: int) -> void:
@@ -623,13 +805,19 @@ func _set_wall_gap(side: int, gap: Vector2) -> void:
 # --- Eylemler -----------------------------------------------------------------
 
 func _on_test() -> void:
+	_set_panel_visible(false)
 	test_requested.emit(level)
 
 
 ## Oynanisin fizigiyle olcum. Kisa bir donma olur (birkac bin simulasyon),
 ## bu yuzden once "olculuyor" yazilir ve bir kare beklenir.
 func _on_analyse() -> void:
-	_status_text = "Ölçülüyor..."
+	if _analysis_busy or _solution_busy:
+		return
+	_analysis_busy = true
+	_analyse_button.disabled = true
+	_refresh_batch_row()
+	_status_text = "Zorluk skoru hesaplaniyor..."
 	_refresh_info()
 	await get_tree().process_frame
 	await get_tree().physics_frame
@@ -639,33 +827,43 @@ func _on_analyse() -> void:
 	var spawn := _solver.spawn_position(level.launcher_position)
 	var play_rect := _world.get_play_rect()
 	var none: Array[RID] = []
-
-	var free_scan := await _solver.scan_async(spawn, level.target_position, play_rect,
-		none, LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
-		LevelGenerator.SIMS_PER_FRAME)
-	var free_robust := int(LevelSolver.analyse_robust(free_scan)["robust"])
-	var free_bounces := int(LevelSolver.analyse_robust(free_scan)["bounces"])
-
+	var free_scan: Dictionary
 	if level.breakable_blocks.is_empty():
-		_status_text = "Bloksuz: %d isabet, %d sağlam hücre, %d sekme" % [
-			int(free_scan["hit_count"]), free_robust, free_bounces]
-		_refresh_info()
-		return
+		free_scan = await _solver.scan_for_solution_async(
+			spawn, level.target_position, play_rect, none,
+			LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
+			LevelGenerator.SIMS_PER_FRAME)
+	else:
+		# Bloklu tasarimlarda ilk durumun kapali olmasi normaldir. Pahali
+		# hassas arama, hedef rotasinin acildigi kirik durumda yapilir.
+		free_scan = await _solver.scan_async(
+			spawn, level.target_position, play_rect, none,
+			LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
+			LevelGenerator.SIMS_PER_FRAME)
+	var free_analysis := LevelSolver.analyse_robust(free_scan)
 
-	var all_broken := _world.get_all_broken_state()
-	var open_scan := await _solver.scan_async(spawn, level.target_position, play_rect,
-		_world.rids_for_state(all_broken),
-		LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
-		LevelGenerator.SIMS_PER_FRAME)
-	var open_robust := int(LevelSolver.analyse_robust(open_scan)["robust"])
-	_status_text = "Bloksuz %d sağlam | Bloklar kırık %d sağlam%s" % [
-		free_robust, open_robust,
-		"" if open_robust > free_robust else "  (blok kolaylaştırmıyor!)"]
+	var opened_scan := {}
+	var opened_analysis := {}
+	if not level.breakable_blocks.is_empty():
+		var all_broken := _world.get_all_broken_state()
+		opened_scan = await _solver.scan_for_solution_async(
+			spawn, level.target_position, play_rect,
+			_world.rids_for_state(all_broken),
+			LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
+			LevelGenerator.SIMS_PER_FRAME)
+		opened_analysis = LevelSolver.analyse_robust(opened_scan)
+
+	_last_difficulty_result = LevelDifficultyScorer.evaluate(
+		level, free_scan, free_analysis, opened_scan, opened_analysis)
+	_status_text = LevelDifficultyScorer.summary(_last_difficulty_result)
+	_analysis_busy = false
+	_analyse_button.disabled = false
+	_refresh_batch_row()
 	_refresh_info()
 
 
 func _on_solution_pressed() -> void:
-	if _solution_busy:
+	if _solution_busy or _analysis_busy:
 		return
 	if _solution_overlay.has_routes():
 		_solution_overlay.cycle()
@@ -673,6 +871,7 @@ func _on_solution_pressed() -> void:
 		return
 	_solution_busy = true
 	_solution_button.disabled = true
+	_refresh_batch_row()
 	_status_text = "Cozum taraniyor..."
 	_refresh_info()
 	await get_tree().physics_frame
@@ -682,51 +881,109 @@ func _on_solution_pressed() -> void:
 	var spawn := _solver.spawn_position(level.launcher_position)
 	var play_rect := _world.get_play_rect()
 	var none: Array[RID] = []
-	var free_scan := await _solver.scan_async(
-		spawn, level.target_position, play_rect, none,
-		LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
-		LevelGenerator.SIMS_PER_FRAME)
-	var routes: Array[Dictionary] = []
-	var free_route := _route_from_scan(free_scan, none, "ANA ROTA", 0)
-	if not free_route.is_empty():
-		routes.append(free_route)
-
+	var free_scan: Dictionary
 	if level.breakable_blocks.is_empty():
-		var alternative := _route_from_scan(free_scan, none, "ALTERNATIF ROTA", 0, 1)
-		if not alternative.is_empty():
-			routes.append(alternative)
+		free_scan = await _solver.scan_for_solution_async(
+			spawn, level.target_position, play_rect, none,
+			LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
+			LevelGenerator.SIMS_PER_FRAME)
 	else:
+		# Bloklu bantta kirilmamis durumun cozum vermemesi tasarimin parcasi;
+		# burada pahali hassas taramayi bloklar acildiktan sonraya sakla.
+		free_scan = await _solver.scan_async(
+			spawn, level.target_position, play_rect, none,
+			LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
+			LevelGenerator.SIMS_PER_FRAME)
+	var free_analysis := LevelSolver.analyse_robust(free_scan)
+	var opened_scan := {}
+	var opened_analysis := {}
+	var routes: Array[Dictionary] = []
+	if level.breakable_blocks.is_empty():
+		routes.append_array(_routes_from_scan(
+			free_scan, none, "SERBEST", 0, MAX_SOLUTION_ROUTES))
+	else:
+		# Kapali durumdan en fazla bir rota goster; kalan yerleri bloklar kirik
+		# durumdaki farkli cozumlere ayir. Boylece ikinci rota her zaman blok
+		# kapisinin ardindaki alternatifi temsil etmeye devam eder.
+		routes.append_array(_routes_from_scan(free_scan, none, "BLOKLAR SAGLAM", 0, 1))
 		var all_broken := _world.get_all_broken_state()
 		var opened_rids := _world.rids_for_state(all_broken)
-		var opened_scan := await _solver.scan_async(
+		opened_scan = await _solver.scan_for_solution_async(
 			spawn, level.target_position, play_rect, opened_rids,
 			LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
 			LevelGenerator.SIMS_PER_FRAME)
-		var opened := _route_from_scan(
-			opened_scan, opened_rids, "BLOKLAR KIRIK ROTA", level.breakable_blocks.size())
-		if not opened.is_empty():
-			routes.append(opened)
+		opened_analysis = LevelSolver.analyse_robust(opened_scan)
+		routes.append_array(_routes_from_scan(
+			opened_scan, opened_rids, "BLOKLAR KIRIK",
+			level.breakable_blocks.size(), MAX_SOLUTION_ROUTES - routes.size()))
+
+	_last_difficulty_result = LevelDifficultyScorer.evaluate(
+		level, free_scan, free_analysis, opened_scan, opened_analysis)
+	for index in routes.size():
+		var route := routes[index]
+		var state_label := String(route.get("label", "ROTA"))
+		route["label"] = "ROTA %d/%d - %s" % [index + 1, routes.size(), state_label]
+		route["difficulty_score"] = int(_last_difficulty_result.get("score", 0))
+		route["difficulty_label"] = String(_last_difficulty_result.get("label", ""))
+		route["solution_count"] = int(_last_difficulty_result.get("solution_count", 0))
 
 	_solution_overlay.set_routes(routes)
 	if not routes.is_empty():
 		_solution_overlay.show_main()
 	_solution_busy = false
 	_solution_button.disabled = false
+	_refresh_batch_row()
 	if routes.is_empty():
 		_status_text = "Saglam veya basarili cozum rotasi bulunamadi."
 	_refresh_solution_state()
 
 
-func _route_from_scan(scan_result: Dictionary, excluded: Array[RID], label: String,
-		prebroken_count: int, cluster_index := 0) -> Dictionary:
+func _routes_from_scan(scan_result: Dictionary, excluded: Array[RID], label: String,
+		prebroken_count: int, max_routes: int) -> Array[Dictionary]:
+	var routes: Array[Dictionary] = []
+	if max_routes <= 0:
+		return routes
 	var candidates := LevelSolver.analyse_solution_clusters(scan_result)
 	if candidates.is_empty():
-		var fallback := _first_hit_candidate(scan_result)
+		var fallback := _best_hit_candidate(scan_result)
+		if not fallback.is_empty():
+			candidates.append(fallback)
+	var diverse := LevelSolver.solution_candidates(scan_result, max_routes)
+	for candidate in diverse:
+		var duplicate := false
+		for existing in candidates:
+			if (is_equal_approx(float(existing["angle"]), float(candidate["angle"]))
+					and is_equal_approx(float(existing["power"]), float(candidate["power"]))):
+				duplicate = true
+				break
+		if not duplicate:
+			candidates.append(candidate)
+	for candidate in candidates:
+		if routes.size() >= max_routes:
+			break
+		var route := _route_from_candidate(
+			candidate, scan_result, excluded, label, prebroken_count)
+		if not route.is_empty():
+			routes.append(route)
+	return routes
+
+
+func _route_from_scan(scan_result: Dictionary, excluded: Array[RID], label: String,
+		prebroken_count: int, cluster_index := 0) -> Dictionary:
+	var candidates := LevelSolver.solution_candidates(scan_result, cluster_index + 1)
+	if candidates.is_empty():
+		var fallback := _best_hit_candidate(scan_result)
 		if not fallback.is_empty():
 			candidates.append(fallback)
 	if cluster_index >= candidates.size():
 		return {}
-	var route: Dictionary = candidates[cluster_index].duplicate(true)
+	return _route_from_candidate(
+		candidates[cluster_index], scan_result, excluded, label, prebroken_count)
+
+
+func _route_from_candidate(candidate: Dictionary, scan_result: Dictionary,
+		excluded: Array[RID], label: String, prebroken_count: int) -> Dictionary:
+	var route: Dictionary = candidate.duplicate(true)
 	var direction := Vector2.UP.rotated(deg_to_rad(float(route["angle"])))
 	var trace := _solver.simulate(
 		_solver.spawn_position(level.launcher_position), direction * float(route["power"]),
@@ -740,25 +997,61 @@ func _route_from_scan(scan_result: Dictionary, excluded: Array[RID], label: Stri
 	route["broken_order"] = trace.get("broken_order", PackedInt32Array())
 	route["target_hit_position"] = trace.get("target_hit_position", Vector2.ZERO)
 	route["bounces"] = int(trace.get("bounces", route.get("bounces", 0)))
+	route["solution_search_passes"] = int(scan_result.get("solution_search_passes", 1))
+	route["solution_angle_step"] = float(scan_result.get(
+		"solution_angle_step", LevelGenerator.FINE_ANGLE_STEP))
+	route["solution_power_step"] = float(scan_result.get(
+		"solution_power_step", LevelGenerator.FINE_POWER_STEP))
 	return route
 
 
-func _first_hit_candidate(scan_result: Dictionary) -> Dictionary:
+## Dort-komsulu "saglam" hucre yoksa ilk isabete atlamak rotanin tolerans
+## adasinin kenarini secebilir. Sekiz komsuda en cok isabetle cevrili hucre,
+## ozellikle aci/guc dengesi capraz ilerleyen panel-ucu rotalarinda daha iyi
+## bir merkezdir.
+func _best_hit_candidate(scan_result: Dictionary) -> Dictionary:
 	var angles: Array[float] = scan_result["angles"]
 	var powers: Array[float] = scan_result["powers"]
 	var hits: Array = scan_result["hits"]
 	var bounces: Array = scan_result["bounces"]
 	var best := {}
+	var best_neighbours := -1
 	var best_bounces := 999
+	var best_edge_distance := -1
 	for ai in angles.size():
 		for pi in powers.size():
-			if hits[ai][pi] and int(bounces[ai][pi]) < best_bounces:
-				best_bounces = int(bounces[ai][pi])
-				best = {
-					"robust": 0, "angle": angles[ai], "power": powers[pi],
-					"bounces": best_bounces, "angle_lo": angles[ai],
-					"angle_hi": angles[ai], "power_lo": powers[pi], "power_hi": powers[pi],
-				}
+			if not bool(hits[ai][pi]):
+				continue
+			var neighbours := 0
+			for da in range(-1, 2):
+				for dp in range(-1, 2):
+					if da == 0 and dp == 0:
+						continue
+					var neighbour_ai := ai + da
+					var neighbour_pi := pi + dp
+					if (neighbour_ai >= 0 and neighbour_ai < angles.size()
+							and neighbour_pi >= 0 and neighbour_pi < powers.size()
+							and bool(hits[neighbour_ai][neighbour_pi])):
+						neighbours += 1
+			var cell_bounces := int(bounces[ai][pi])
+			var edge_distance := mini(
+				mini(ai, angles.size() - 1 - ai), mini(pi, powers.size() - 1 - pi))
+			if neighbours < best_neighbours:
+				continue
+			if neighbours == best_neighbours and cell_bounces > best_bounces:
+				continue
+			if (neighbours == best_neighbours and cell_bounces == best_bounces
+					and edge_distance <= best_edge_distance):
+				continue
+			best_neighbours = neighbours
+			best_bounces = cell_bounces
+			best_edge_distance = edge_distance
+			best = {
+				"robust": 0, "angle": angles[ai], "power": powers[pi],
+				"bounces": best_bounces, "angle_lo": angles[ai],
+				"angle_hi": angles[ai], "power_lo": powers[pi], "power_hi": powers[pi],
+				"fallback_neighbours": neighbours,
+			}
 	return best
 
 
@@ -771,11 +1064,9 @@ func _clear_solution() -> void:
 
 func _refresh_solution_state() -> void:
 	match _solution_overlay.get_mode():
-		LevelSolutionOverlay.Mode.MAIN:
-			_solution_button.text = "ANA ROTA"
-			_status_text = _solution_overlay.current_info()
-		LevelSolutionOverlay.Mode.ALTERNATIVE:
-			_solution_button.text = "ALT ROTA"
+		LevelSolutionOverlay.Mode.MAIN, LevelSolutionOverlay.Mode.ALTERNATIVE:
+			_solution_button.text = "ROTA %d/%d" % [
+				_solution_overlay.current_index() + 1, _solution_overlay.route_count()]
 			_status_text = _solution_overlay.current_info()
 		_:
 			_solution_button.text = "COZUM"
@@ -801,6 +1092,11 @@ func _on_save() -> void:
 	var entry := {"saved_at": Time.get_datetime_string_from_system()}
 	if source_level_id > 0:
 		entry["source_level_id"] = source_level_id
+	if not _last_difficulty_result.is_empty():
+		entry["difficulty_score"] = int(_last_difficulty_result.get("score", 0))
+		entry["difficulty_label"] = String(_last_difficulty_result.get("label", ""))
+		entry["solution_count"] = int(_last_difficulty_result.get("solution_count", 0))
+		entry["difficulty_breakdown"] = _last_difficulty_result.get("breakdown", {}).duplicate(true)
 	_saved_metadata_store.upsert(CustomLevelStore.entry_name_for(level_name), entry)
 
 	var origin := " (bölüm %d)" % source_level_id if source_level_id > 0 else ""
@@ -842,18 +1138,20 @@ func _set_batch(levels: Array[LevelData], names: PackedStringArray,
 
 
 func get_batch_context() -> Dictionary:
-	if _batch.is_empty():
-		return {}
-	return {
+	var context := {
+		"level": level,
+		"panel_visible": _bottom.visible,
 		"levels": _batch.duplicate(),
 		"names": _batch_names.duplicate(),
 		"index": _batch_index,
 		"bucket": int(_batch_bucket),
 		"metadata": _batch_metadata.duplicate(true),
 	}
+	return context
 
 
 func _restore_batch_context(context: Dictionary) -> void:
+	var panel_visible := bool(context.get("panel_visible", true))
 	var restored_levels: Array[LevelData] = []
 	var raw_levels = context.get("levels", [])
 	if raw_levels is Array:
@@ -861,7 +1159,11 @@ func _restore_batch_context(context: Dictionary) -> void:
 			if candidate is LevelData:
 				restored_levels.append(candidate)
 	if restored_levels.is_empty():
+		var restored_level = context.get("level", null)
+		if restored_level is LevelData:
+			level = restored_level
 		_rebuild()
+		_set_panel_visible(panel_visible)
 		return
 
 	var restored_names := PackedStringArray(context.get("names", PackedStringArray()))
@@ -876,13 +1178,33 @@ func _restore_batch_context(context: Dictionary) -> void:
 		restored_levels, restored_names,
 		int(context.get("bucket", CustomLevelStore.Bucket.GENERATED)),
 		restored_metadata, int(context.get("index", 0)))
+	_set_panel_visible(panel_visible)
 
 
 func _on_batch_step(direction: int) -> void:
-	if _batch.size() <= 1:
+	if _analysis_busy or _solution_busy:
 		return
-	_batch_index = wrapi(_batch_index + direction, 0, _batch.size())
-	_load_batch_entry()
+	if _batch.size() > 1:
+		_batch_index = wrapi(_batch_index + direction, 0, _batch.size())
+		_load_batch_entry()
+		return
+	if source_level_id <= 0:
+		return
+	var wanted := source_level_id + direction
+	if not LevelLibrary.is_valid_id(wanted):
+		return
+	var official := LevelLibrary.load_level(wanted)
+	if official == null or official.level_id != wanted:
+		_status_text = "Bolum %d yuklenemedi." % wanted
+		_refresh_info()
+		return
+	source_level_id = wanted
+	level = official.duplicate(true) as LevelData
+	_selection = Selection.NONE
+	_selected_index = -1
+	_status_text = "Bolum %d acildi." % wanted
+	_refresh_batch_row()
+	_rebuild()
 
 
 func _load_batch_entry() -> void:
@@ -898,20 +1220,48 @@ func _load_batch_entry() -> void:
 
 
 func _refresh_batch_row() -> void:
-	_batch_row.visible = _batch.size() > 1
+	var shows_batch := _batch.size() > 1
+	var shows_official := not shows_batch and source_level_id > 0
+	_batch_row.visible = shows_batch or shows_official
 	_bottom.offset_top = -(PANEL_HEIGHT_WITH_BATCH if _batch_row.visible else PANEL_HEIGHT)
-	if _batch_row.visible:
+	_previous_level_button.disabled = _analysis_busy or _solution_busy
+	_next_level_button.disabled = _analysis_busy or _solution_busy
+	if shows_batch:
 		_batch_label.text = "%d / %d — %s" % [
 			_batch_index + 1, _batch.size(), level.display_name]
 		if _batch_index < _batch_metadata.size():
 			var meta := _batch_metadata[_batch_index]
-			_batch_label.text += "\nPuan %d  Yenilik %d  Saglam %d  Sekme %d" % [
-				int(meta.get("quality_score", 0)), int(meta.get("novelty_score", 0)),
-				int(meta.get("robust_cells", 0)), int(meta.get("bounce_count", 0))]
+			if meta.has("difficulty_score"):
+				_batch_label.text += "\nZorluk %d/100  Cozum %d  Sekme %d" % [
+					int(meta.get("difficulty_score", 0)),
+					int(meta.get("solution_count", 0)),
+					int(meta.get("bounce_count", 0))]
+			else:
+				_batch_label.text += "\nPuan %d  Yenilik %d  Saglam %d  Sekme %d" % [
+					int(meta.get("quality_score", 0)), int(meta.get("novelty_score", 0)),
+					int(meta.get("robust_cells", 0)), int(meta.get("bounce_count", 0))]
+	elif shows_official:
+		_batch_label.text = "BOLUM %d / %d - %s" % [
+			source_level_id, LevelLibrary.last_level_id(), level.display_name]
+		_previous_level_button.disabled = (
+			_previous_level_button.disabled
+			or source_level_id <= LevelLibrary.FIRST_LEVEL_ID)
+		_next_level_button.disabled = (
+			_next_level_button.disabled
+			or source_level_id >= LevelLibrary.last_level_id())
+	_position_camera()
 
 
 func _on_toggle_panel() -> void:
-	_bottom.visible = not _bottom.visible
+	_set_panel_visible(not _bottom.visible)
+
+
+func _set_panel_visible(value: bool) -> void:
+	_bottom.visible = value
+	_collapse_button.text = "▾" if value else "▴"
+	_collapse_button.tooltip_text = (
+		"Editör panelini kapat" if value else "Editör panelini aç")
+	_position_camera()
 
 
 # --- Kitaplik ve uretec (modal) -----------------------------------------------
@@ -1006,6 +1356,9 @@ func _refresh_library_rows() -> void:
 		var generation = button.get_meta("generation", {})
 		if generation is Dictionary and generation.has("quality_score"):
 			button.text += " - %d/100" % int(generation["quality_score"])
+		if generation is Dictionary and generation.has("difficulty_score"):
+			button.text += " - Zorluk %d/100 · Çözüm %d" % [
+				int(generation["difficulty_score"]), int(generation.get("solution_count", 0))]
 		# Resmi bir bolumden turetilmis kayitlar kaynagini gosterir; boylece
 		# listede "hangi bolumun varyantiydi bu" sorusu cevapsiz kalmaz.
 		if generation is Dictionary and generation.has("source_level_id"):
@@ -1116,6 +1469,7 @@ func _on_open_generator() -> void:
 	_generation_form = AIGenerationForm.new()
 	_generation_form.name = "GenerationForm"
 	_generation_form.local_generation_requested.connect(_start_generation)
+	_generation_form.local_settings_saved.connect(_on_local_settings_saved)
 	_generation_form.ai_generation_requested.connect(_start_ai_generation)
 	_generation_form.cancel_requested.connect(_cancel_generation)
 	_generation_form.validation_failed.connect(_on_ai_generation_failed)
@@ -1141,6 +1495,31 @@ func _start_generation(profile_name: String) -> void:
 		_generation_form.set_busy(true)
 	_modal_status.text = "Aranıyor..."
 	_generator.generate(profile, 10)
+
+
+func _on_local_settings_saved(settings: Dictionary) -> void:
+	var mechanics: PackedStringArray = settings.get(
+		"local_mechanics", PackedStringArray(["panel"]))
+	_status_text = "Hızlı üretim ayarı: %d-%d skor, %d mekanik" % [
+		int(settings.get("local_score_min", 0)),
+		int(settings.get("local_score_max", 100)), mechanics.size()]
+	_refresh_info()
+
+
+func _on_quick_generate() -> void:
+	if _generator.is_running() or _ai_coordinator.is_running():
+		_status_text = "Üretim zaten devam ediyor."
+		_refresh_info()
+		return
+	var settings := AIGeneratorSettings.new().load_values()
+	var profile := LevelGenerator.Profile.custom(settings)
+	_quick_generate_button.disabled = true
+	_status_text = "%d-%d zorluk skorunda bölüm aranıyor..." % [
+		profile.min_difficulty_score, profile.max_difficulty_score]
+	_refresh_info()
+	# Dar skor bantlari daha fazla eleme yapar; tek bir dogrulanmis aday icin
+	# standart parti aramasindan genis ama sonlu bir deneme bütçesi kullanilir.
+	_generator.generate(profile, 1, 900)
 
 
 func _start_ai_generation(request: Dictionary) -> void:
@@ -1199,20 +1578,33 @@ func _on_candidate_evaluated(tried: int, accepted: int) -> void:
 ## duruyordu ve listeden birini secmek digerlerini yok ediyordu.
 func _on_generation_finished(levels: Array[LevelData]) -> void:
 	var rejections := _generator.describe_rejections()
+	_quick_generate_button.disabled = false
 	if _generation_form != null:
 		_generation_form.set_busy(false)
 	if levels.is_empty():
+		var failure_text := ("Uretim iptal edildi; onceki parti korundu."
+			if _generator.was_cancelled()
+			else "Uygun aday çıkmadı. Eleme: %s" % rejections)
 		if _modal.visible:
-			_modal_status.text = ("Uretim iptal edildi; onceki parti korundu."
-				if _generator.was_cancelled() else "Uygun aday çıkmadı.\nEleme: %s" % rejections)
+			_modal_status.text = failure_text
+		else:
+			_status_text = failure_text
+			_refresh_info()
 		return
 
 	var names := CustomLevelStore.replace_generated(levels)
+	var metadata := _generator.get_last_generation_records()
+	_metadata_store.replace(names, metadata)
 	_modal.hide()
-	_set_batch(levels, names, CustomLevelStore.Bucket.GENERATED)
-	_status_text = "%d bölüm üretildi ve kaydedildi — ‹ › ile gez, beğendiğine KAYDET
-Eleme: %s" % [
-		levels.size(), rejections]
+	_set_batch(levels, names, CustomLevelStore.Bucket.GENERATED, metadata)
+	if levels.size() == 1 and not metadata.is_empty() and metadata[0].has("difficulty_score"):
+		_status_text = "Bölüm üretildi: ZORLUK %d/100 - %s | çözüm %d" % [
+			int(metadata[0].get("difficulty_score", 0)),
+			String(metadata[0].get("difficulty_label", "")),
+			int(metadata[0].get("solution_count", 0))]
+	else:
+		_status_text = "%d bölüm üretildi ve kaydedildi — ‹ › ile gez, beğendiğine KAYDET
+Eleme: %s" % [levels.size(), rejections]
 	_refresh_info()
 
 

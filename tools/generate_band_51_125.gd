@@ -2,7 +2,7 @@ extends SceneTree
 
 ## GELISTIRME ARACI - oyuna dahil degildir.
 ##
-## 51-125 bandini YENIDEN URETIR ve her bolumu yazmadan once gercek
+## 51-150 bandini YENIDEN URETIR ve her bolumu yazmadan once gercek
 ## LevelSolver ile dogrular.
 ##
 ## NEDEN VAR: bu bant daha once iki panel sablonunun (ve aynasinin) tekrariyla
@@ -34,6 +34,8 @@ const ANGLE_STEP := 3.0
 const POWER_STEP := 100.0
 ## Engelin hedefe/firlaticiya/panele en yakin durabilecegi mesafe payi.
 const CLEARANCE := 26.0
+const SIMS_PER_FRAME := 240
+const MAX_SIMILARITY := 82.0
 
 ## eval_skeletons.gd ile ARANMIS ve her biri gercek LevelSolver ile dogrulanmis
 ## panel iskeletleri (hepsi >=1 sekme gerektirir, saglam hucre 16-88 bandinda).
@@ -84,6 +86,46 @@ const SKELETONS := [
 	{"target": Vector2(347, 394), "panels": [[Vector2(494, 782), -15.9, 357]]},
 ]
 
+## Ekranda tekrar eden "Faz N" etiketleri yerine her rotanin ayirt edici bir
+## adi vardir. 51, 76, 101 ve 126 okunakli tanitim bolumleridir; diger adlar rota
+## fikrini anlatir, yeni mekanik gelince zorlugun sifirlandigini ima etmez.
+const BAND_NAMES := {
+	51: "Halka Girişi", 52: "Açık Halka", 53: "Eğik Geçiş",
+	54: "Kenar Halkası", 55: "Bloklu Halka", 56: "Ters Halka",
+	57: "Çifte Sekme", 58: "Çatlak Çember", 59: "Dar Yörünge",
+	60: "Halka Koridoru", 61: "Kırık Yörünge", 62: "Kenar Düğümü",
+	63: "Çapraz Halka", 64: "Zırhlı Çember", 65: "İki Geçit",
+	66: "Ters Koridor", 67: "Halka Anahtarı", 68: "Kırık Yay",
+	69: "Duvar Dönüşü", 70: "Dar Çember", 71: "Kilitli Halka",
+	72: "Çifte Yörünge", 73: "Zırhlı Geçit", 74: "Son Düğüm",
+	75: "Halka Ustalığı", 76: "Mayın Girişi", 77: "Güvenli Açı",
+	78: "Mayın Çemberi", 79: "Ters Fitil", 80: "Kenar Mayını",
+	81: "Halka ve Fitil", 82: "Dar Güvenlik", 83: "Çifte Tehdit",
+	84: "Kırık Rota", 85: "Mayın Yörüngesi", 86: "Zırhlı Mayın",
+	87: "Halka Sığınağı", 88: "Çapraz Fitil", 89: "Sessiz Koridor",
+	90: "Dar Mayın", 91: "Çifte Mayın", 92: "Kırık Güvenlik",
+	93: "Duvar Tuzağı", 94: "Halka Tuzağı", 95: "Üçlü Tehdit",
+	96: "Zırhlı Fitil", 97: "Son Güvenli Açı", 98: "Halka ve Mayın",
+	99: "Mayın Kilidi", 100: "Mayın Ustalığı",
+	101: "Çark Girişi", 102: "Dönen Geçit", 103: "Ters Devir",
+	104: "Kenar Çarkı", 105: "Çatlak Rotor", 106: "Mayın Dişlisi",
+	107: "Dar Pervane", 108: "Zırhlı Devir", 109: "Mayınlı Çark",
+	110: "Çapraz Rotor", 111: "Duvar Dişlisi", 112: "İkili Devir",
+	113: "Sıkışık Pervane", 114: "Kırık Rotor", 115: "Derin Devir",
+	116: "Sessiz Devir", 117: "Zırhlı Rotor", 118: "Ters Pervane",
+	119: "Halka Deviri", 120: "Kilitli Devir", 121: "Dar Rotor",
+	122: "Duvar Pervanesi", 123: "Üçlü Dönüş", 124: "Son Devir",
+	125: "Çark Ustalığı", 126: "Lazer Girişi", 127: "Sönen Hat",
+	128: "Işık Aralığı", 129: "Kesik Işın", 130: "Zırhlı Lazer",
+	131: "Çember Işığı", 132: "Mayın ve Işık", 133: "Çatlak Hat",
+	134: "Halka Lazer", 135: "Ters Darbe", 136: "Kırık Işın",
+	137: "Duvar Işığı", 138: "Çifte Atım", 139: "Dar Zamanlama",
+	140: "Dönen Işık", 141: "Kesik Darbe", 142: "Zırhlı Atım",
+	143: "Kesişen Işın", 144: "Sessiz Aralık", 145: "Işık Kapanı",
+	146: "Keskin Atım", 147: "Sönük Koridor", 148: "Son Işık Kilidi",
+	149: "Işın Düğümü", 150: "Lazer Ustalığı",
+}
+
 ## Iskelet cesitlemesi. Bkz. _jitter_skeleton: yalnizca --distinct modunda
 ## uygulanir, cunku normal uretim BIRE BIR atamayla zaten farkli iskelet verir.
 const JITTER_PANEL_MIN := 26.0
@@ -93,15 +135,18 @@ const JITTER_TARGET := 34.0
 
 var _skeletons: Array[Dictionary] = []
 var _from := 51
-var _to := 125
+var _to := 150
 ## Yalnizca bu bolumler uretilir (--only). Bos ise _from.._to araligi kullanilir.
 var _only: Array[int] = []
 ## --distinct: iskelet her denemede kucuk bir sapmayla kullanilir, boylece
 ## uretilen bolum kutuphanedeki HICBIR bolumle ayni iskeleti paylasmaz.
 var _distinct := false
+var _identity_only := false
 var _solver: LevelSolver
 var _world: LevelWorld
 var _rng := RandomNumberGenerator.new()
+var _novelty := LevelNoveltyScorer.new()
+var _references: Array[Dictionary] = []
 
 
 func _initialize() -> void:
@@ -118,6 +163,8 @@ func _initialize() -> void:
 					_only.append(int(clean))
 		elif args[i] == "--distinct":
 			_distinct = true
+		elif args[i] == "--identity-only":
+			_identity_only = true
 	_run.call_deferred()
 
 
@@ -132,8 +179,21 @@ func _run() -> void:
 	if wanted.is_empty():
 		for level_id in range(_from, _to + 1):
 			wanted.append(level_id)
+	if _identity_only:
+		for level_id in wanted:
+			var level := LevelLibrary.load_level(level_id)
+			_apply_identity(level, level_id, _spec_for(level_id))
+			var error := ResourceSaver.save(level, "res://levels/level_%d.tres" % level_id)
+			if error != OK:
+				push_error("kimlik kayit hatasi level %d: %d" % [level_id, error])
+				quit(1)
+				return
+		print("Kimlik/zorluk alanlari yenilendi: %d bolum" % wanted.size())
+		quit(0)
+		return
 	if _distinct:
 		print("--distinct: iskeletler sapmayla kullanilacak (tekrar kirma modu)")
+	_index_references(wanted)
 
 	var ok := 0
 	var failed: Array[int] = []
@@ -148,6 +208,20 @@ func _run() -> void:
 	if not failed.is_empty():
 		print("basarisiz bolumler: %s" % str(failed))
 	quit(0 if failed.is_empty() else 1)
+
+
+func _index_references(rebuilt_ids: Array[int]) -> void:
+	# Yeniden yazilan eski dosyalar kendi adaylarini haksiz yere reddetmesin.
+	# 1-50 ile bant tanitimlari (51/76/101/126 parca parca calistirmada) ve ayni
+	# calismada kabul edilen yeni bolumler yine referans olarak kalir.
+	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, 151):
+		if rebuilt_ids.has(level_id):
+			continue
+		_references.append({
+			"name": "Resmi %03d" % level_id,
+			"level": LevelLibrary.load_level(level_id),
+			"metrics": {},
+		})
 
 
 ## Bir bolumu uretir. Atanan iskelet tutmazsa SIRAYLA BASKA ISKELETLERE gecer.
@@ -166,27 +240,38 @@ func _build_level(level_id: int) -> bool:
 	# sigdirmak cogu zaman imkansiz ve arama bunu ancak yuzlerce denemeden
 	# sonra "anliyor". Bir engel eksiltmek bolumu kurtarir; bos birakmaktan
 	# ya da dakikalarca aramaktan iyidir. En az bir engel her zaman kalir.
-	for choice in 6:
+	for choice in 12:
 		var skeleton := _skeleton_for(level_id, choice)
 		var relaxed := spec.duplicate(true)
-		var drop := choice / 2
+		# Blok durum aramasi pahali oldugu icin kapili bolumler tutmayan ek
+		# engelleri daha erken birakir; bandin kimlik engeli listenin basinda
+		# oldugundan cark/lazer her durumda korunur.
+		var has_bricks := int(spec["bricks"]) > 0
+		var drop := choice
 		var kinds: Array = (spec["kinds"] as Array).duplicate()
-		while drop > 0 and kinds.size() > 1:
+		var min_kinds := int(spec.get("min_kinds", 1))
+		while drop > 0 and kinds.size() > min_kinds:
 			kinds.pop_back()
 			drop -= 1
 		relaxed["kinds"] = kinds
-		for attempt in 60:
+		var attempt_count := 8
+		for attempt in attempt_count:
 			var shaped := _jitter_skeleton(skeleton) if _distinct else skeleton
 			var level := _level_from_skeleton(shaped, level_id, relaxed)
+			if not _layout_is_clear(level):
+				continue
+			if int(relaxed["bricks"]) > 0 and not _place_bricks(level, relaxed, shaped):
+				continue
 			if not _place_obstacles(level, relaxed, shaped):
 				continue
-			if int(relaxed["bricks"]) > 0:
-				_place_bricks(level, relaxed, shaped)
 			if not level.validate().is_empty():
 				continue
 
 			var verdict := await _evaluate(level)
 			if not bool(verdict["ok"]):
+				continue
+			var novelty := _novelty.score(level, verdict, _references)
+			if float(novelty["similarity"]) > MAX_SIMILARITY:
 				continue
 
 			_apply_identity(level, level_id, relaxed)
@@ -194,14 +279,20 @@ func _build_level(level_id: int) -> bool:
 			if error != OK:
 				push_error("kayit hatasi level %d: %d" % [level_id, error])
 				return false
-			print("LEVEL %3d ok  iskelet=%-2d%s engel=%d tugla=%d saglam=%d sekme=%d" % [
+			_references.append({
+				"name": "Yeni %03d" % level_id,
+				"level": level.duplicate(true),
+				"metrics": verdict.duplicate(true),
+			})
+			print("LEVEL %3d ok  iskelet=%-2d%s engel=%d tugla=%d saglam=%d sekme=%d benzerlik=%d" % [
 				level_id, int(skeleton["index"]),
 				"A" if bool(skeleton["mirrored"]) else " ",
 				level.obstacles.size(), level.breakable_blocks.size(),
-				int(verdict["robust"]), int(verdict["bounces"])])
+				int(verdict["robust"]), int(verdict["bounces"]),
+				int(novelty["similarity"])])
 			return true
 
-	print("LEVEL %3d BASARISIZ - 6 iskelet x 60 deneme yetmedi" % level_id)
+	print("LEVEL %3d BASARISIZ - arama basamaklari yetmedi" % level_id)
 	return false
 
 
@@ -303,9 +394,78 @@ func _level_from_skeleton(skeleton: Dictionary, level_id: int,
 		panel.length = float(panel_spec[2])
 		panel.thickness = 26.0
 		panels.append(panel)
+	if level_id in [51, 76, 101, 126] and panels.size() > 1:
+		panels.resize(1)
 	level.panels = panels
 	level.max_lives = 5
+	_apply_wall_gaps(level, int(spec.get("wall_mode", 0)), level_id)
 	return level
+
+
+func _layout_is_clear(level: LevelData) -> bool:
+	var spawn := _solver.spawn_position(level.launcher_position)
+	for panel in level.panels:
+		var ends := _panel_endpoints(panel)
+		for endpoint in ends:
+			if (endpoint.x < 24.0 or endpoint.x > 696.0
+					or endpoint.y < 165.0 or endpoint.y > 1060.0):
+				return false
+		if _circle_hits_panel(level.target_position,
+				_solver.target_size * 0.5 + 24.0, panel):
+			return false
+		if _circle_hits_panel(level.launcher_position, 92.0, panel):
+			return false
+		if _circle_hits_panel(spawn, _solver.radius + 26.0, panel):
+			return false
+	for i in level.panels.size():
+		for j in range(i + 1, level.panels.size()):
+			if _panels_too_close(level.panels[i], level.panels[j]):
+				return false
+	return true
+
+
+func _panel_endpoints(panel: PanelData) -> Array[Vector2]:
+	var half := Vector2.RIGHT.rotated(deg_to_rad(panel.rotation_degrees)) * panel.length * 0.5
+	return [panel.position - half, panel.position + half] as Array[Vector2]
+
+
+func _panels_too_close(a: PanelData, b: PanelData) -> bool:
+	var aa := _panel_endpoints(a)
+	var bb := _panel_endpoints(b)
+	if Geometry2D.segment_intersects_segment(aa[0], aa[1], bb[0], bb[1]) != null:
+		return true
+	var clearance := (a.thickness + b.thickness) * 0.5 + 22.0
+	for point in aa:
+		if point.distance_to(Geometry2D.get_closest_point_to_segment(
+				point, bb[0], bb[1])) < clearance:
+			return true
+	for point in bb:
+		if point.distance_to(Geometry2D.get_closest_point_to_segment(
+				point, aa[0], aa[1])) < clearance:
+			return true
+	return false
+
+
+func _apply_wall_gaps(level: LevelData, mode: int, level_id: int) -> void:
+	level.left_wall_segments = [] as Array[Vector2]
+	level.right_wall_segments = [] as Array[Vector2]
+	if mode == 0:
+		return
+	var center := _rng.randf_range(560.0, 820.0)
+	var half := _rng.randf_range(58.0, 92.0)
+	var gap: Array[Vector2] = [
+		Vector2(-LevelData.WALL_OVERSHOOT, center - half),
+		Vector2(center + half, 1280.0 + LevelData.WALL_OVERSHOOT),
+	]
+	if mode in [1, 3]:
+		level.left_wall_segments = gap.duplicate()
+	if mode in [2, 3]:
+		var other_center := clampf(center + _rng.randf_range(-145.0, 145.0), 500.0, 860.0)
+		var other_half := _rng.randf_range(55.0, 88.0)
+		level.right_wall_segments = [
+			Vector2(-LevelData.WALL_OVERSHOOT, other_center - other_half),
+			Vector2(other_center + other_half, 1280.0 + LevelData.WALL_OVERSHOOT),
+		] as Array[Vector2]
 
 
 ## Istenen TUM turler yerlestirilebildiyse true.
@@ -336,23 +496,75 @@ func _place_obstacles(level: LevelData, spec: Dictionary,
 
 
 func _place_bricks(level: LevelData, spec: Dictionary,
-		skeleton: Dictionary) -> void:
+		skeleton: Dictionary) -> bool:
 	var count := int(spec["bricks"])
 	var strong := int(spec["strong_bricks"])
-	var bricks: Array[BreakableBlockData] = []
-	# Tuglalar tek bir sirada: dagitilmis tek tuglalar "kume" hissi vermiyor.
-	var row_y := _rng.randf_range(430.0, 700.0)
-	var brick_width := 104.0
-	var gap := 30.0
-	var total := count * brick_width + float(count - 1) * gap
-	var left := _rng.randf_range(120.0, maxf(600.0 - total, 130.0))
-	for i in count:
-		var brick := BreakableBlockData.new()
-		brick.position = Vector2(left + brick_width * 0.5 + float(i) * (brick_width + gap), row_y)
-		brick.size = Vector2(brick_width, 34.0)
-		brick.hit_points = 2 if i < strong else 1
-		bricks.append(brick)
-	level.breakable_blocks = bricks
+	# Tam genislikteki kapinin iki yanindan bedava gecilemez. Satir yuksekligi
+	# her adayda degisir ve panel/hedef boslugu fizik kurulmadan once elenir.
+	var gap := _rng.randf_range(12.0, 22.0)
+	var left := 34.0
+	var total_width := 652.0
+	var brick_width := (total_width - gap * float(count - 1)) / float(count)
+	for _try in 24:
+		var row_y := _rng.randf_range(390.0, 720.0)
+		var bricks: Array[BreakableBlockData] = []
+		var clear := true
+		for i in count:
+			var brick := BreakableBlockData.new()
+			brick.position = Vector2(
+				left + brick_width * 0.5 + float(i) * (brick_width + gap),
+				row_y + (16.0 if (i + level.level_id) % 2 == 0 else -16.0))
+			brick.rotation_degrees = _rng.randf_range(-5.0, 5.0)
+			brick.size = Vector2(brick_width, 34.0)
+			brick.hit_points = 2 if i < strong else 1
+			if not _block_position_is_clear(brick, level):
+				clear = false
+				break
+			bricks.append(brick)
+		if clear:
+			level.breakable_blocks = bricks
+			return true
+	return false
+
+
+func _block_position_is_clear(block: BreakableBlockData, level: LevelData) -> bool:
+	if _circle_hits_block(level.target_position, _solver.target_size * 0.5 + 10.0, block):
+		return false
+	if _circle_hits_block(level.launcher_position, 85.0, block):
+		return false
+	for panel in level.panels:
+		if _oriented_rects_overlap(block.position, block.size * 0.5,
+				deg_to_rad(block.rotation_degrees), panel.position,
+				Vector2(panel.length, panel.thickness) * 0.5,
+				deg_to_rad(panel.rotation_degrees), 10.0):
+			return false
+	return true
+
+
+func _circle_hits_block(circle: Vector2, radius: float,
+		block: BreakableBlockData) -> bool:
+	var local := (circle - block.position).rotated(-deg_to_rad(block.rotation_degrees))
+	var half := block.size * 0.5
+	var nearest := Vector2(clampf(local.x, -half.x, half.x),
+		clampf(local.y, -half.y, half.y))
+	return local.distance_squared_to(nearest) < radius * radius
+
+
+func _oriented_rects_overlap(a_center: Vector2, a_half: Vector2, a_angle: float,
+		b_center: Vector2, b_half: Vector2, b_angle: float, padding: float) -> bool:
+	var a_x := Vector2.RIGHT.rotated(a_angle)
+	var a_y := Vector2.DOWN.rotated(a_angle)
+	var b_x := Vector2.RIGHT.rotated(b_angle)
+	var b_y := Vector2.DOWN.rotated(b_angle)
+	var delta := b_center - a_center
+	for axis in [a_x, a_y, b_x, b_y]:
+		var a_projection := absf(a_x.dot(axis)) * (a_half.x + padding) \
+			+ absf(a_y.dot(axis)) * (a_half.y + padding)
+		var b_projection := absf(b_x.dot(axis)) * b_half.x \
+			+ absf(b_y.dot(axis)) * b_half.y
+		if absf(delta.dot(axis)) >= a_projection + b_projection:
+			return false
+	return true
 
 
 func _obstacle_radius(data: ObstacleData) -> float:
@@ -370,6 +582,10 @@ func _obstacle_radius(data: ObstacleData) -> float:
 func _position_is_clear(position: Vector2, radius: float, level: LevelData,
 		placed: Array[ObstacleData]) -> bool:
 	var spawn := _solver.spawn_position(level.launcher_position)
+	if level.level_id in [51, 76, 101, 126] and position.y > 820.0:
+		# Tanitim metni ekranin alt-orta bandinda, dunya koordinatinda yaklasik
+		# y=930'da cizilir; yeni engeli bu satirin ustunde tut.
+		return false
 	if position.distance_to(level.target_position) < radius + _solver.target_size * 0.5 + CLEARANCE:
 		return false
 	if position.distance_to(level.launcher_position) < radius + 70.0 + CLEARANCE:
@@ -378,6 +594,11 @@ func _position_is_clear(position: Vector2, radius: float, level: LevelData,
 		return false
 	for panel in level.panels:
 		if _circle_hits_panel(position, radius + CLEARANCE, panel):
+			return false
+	for block in level.breakable_blocks:
+		var half := block.size * 0.5 + Vector2.ONE * (radius + CLEARANCE)
+		var local := (position - block.position).rotated(-deg_to_rad(block.rotation_degrees))
+		if absf(local.x) < half.x and absf(local.y) < half.y:
 			return false
 	for other in placed:
 		if position.distance_to(other.position) < radius + _obstacle_radius(other) + 24.0:
@@ -398,8 +619,8 @@ func _make_obstacle(kind: int, difficulty: float) -> ObstacleData:
 	data.rotation_degrees = 0.0
 	match kind:
 		RING:
-			data.size = Vector2(180.0, 28.0)
-			data.inner_radius = lerpf(76.0, 58.0, difficulty)
+			data.size = Vector2(170.0, 28.0)
+			data.inner_radius = lerpf(72.0, 56.0, difficulty)
 			# Halkanin gecirgen deligi topun geldigi yone (asagi) baksin.
 			data.rotation_degrees = 180.0
 		BOMB:
@@ -468,6 +689,18 @@ func _evaluate(level: LevelData) -> Dictionary:
 		await process_frame
 		return result
 
+	var band_start := 51
+	if level.level_id >= 126:
+		band_start = 126
+	elif level.level_id >= 101:
+		band_start = 101
+	elif level.level_id >= 76:
+		band_start = 76
+	var band_progress := float(level.level_id - band_start) / 24.0
+	var intro_levels := [51, 76, 101, 126]
+	var max_robust := 64 if level.level_id in intro_levels else roundi(
+		lerpf(34.0, 18.0, clampf(band_progress, 0.0, 1.0)))
+	var min_robust := 14 if level.level_id in intro_levels else MIN_ROBUST
 	if level.breakable_blocks.is_empty():
 		var scan := _solver.scan(spawn, level.target_position, play_rect,
 			[], ANGLE_STEP, POWER_STEP)
@@ -476,21 +709,48 @@ func _evaluate(level: LevelData) -> Dictionary:
 		var bounces := int(analysis["bounces"]) if int(scan["hit_count"]) > 0 else -1
 		result["robust"] = robust
 		result["bounces"] = bounces
-		result["ok"] = robust >= MIN_ROBUST and robust <= MAX_ROBUST and bounces >= 1
+		var hit_rate := float(scan["hit_count"]) / float(maxi(int(scan["total"]), 1))
+		result["hit_rate"] = hit_rate
+		result["ok"] = (robust >= min_robust and robust <= max_robust
+			and bounces >= 1 and (level.level_id in intro_levels or hit_rate <= 0.075))
 	else:
-		# Bloklu bolumde "kirmadan saglam kestirme" olmamali; kirilmis durumda
-		# ise rahat bir rota bulunmali (26-40 bandiyla ayni sozlesme).
-		var free_scan := _solver.scan(spawn, level.target_position, play_rect,
-			[], ANGLE_STEP, POWER_STEP)
+		# Bloklu bolumde yalnizca "hepsi kirilmis" hayali geometriyi olcmek
+		# yetmez. Oyuncunun gercek atislarla ulasabildigi blok durumlarini ara;
+		# aksi halde kagit ustunde acilan ama oynanista acilamayan kapi uretilir.
+		var coarse := await _solver.search_block_states_async(
+			spawn, level.target_position, play_rect, 5,
+			9.0, 300.0, 32, SIMS_PER_FRAME * 2)
+		var free_scan := await _solver.scan_block_state_async(
+			spawn, level.target_position, play_rect, 0,
+			ANGLE_STEP, POWER_STEP, SIMS_PER_FRAME)
 		var free_robust := int(LevelSolver.analyse_robust(free_scan)["robust"])
-		var opened := _solver.scan(spawn, level.target_position, play_rect,
-			_world.rids_for_state(_world.get_all_broken_state()), ANGLE_STEP, POWER_STEP)
-		var opened_analysis := LevelSolver.analyse_robust(opened)
-		var opened_robust := int(opened_analysis["robust"])
-		result["robust"] = opened_robust
-		result["bounces"] = int(opened_analysis["bounces"]) if int(opened["hit_count"]) > 0 else -1
-		result["ok"] = (free_robust < MIN_ROBUST
-			and opened_robust >= MIN_ROBUST and opened_robust <= MAX_ROBUST)
+		if free_robust < MIN_ROBUST:
+			var checked := 0
+			for solution in coarse["solutions"]:
+				var state := int(solution["state"])
+				if state == 0:
+					continue
+				checked += 1
+				if checked > 6:
+					break
+				var opened := await _solver.scan_block_state_async(
+					spawn, level.target_position, play_rect, state,
+					ANGLE_STEP, POWER_STEP, SIMS_PER_FRAME)
+				var opened_analysis := LevelSolver.analyse_robust(opened)
+				var opened_robust := int(opened_analysis["robust"])
+				var opened_hit_rate := (float(opened["hit_count"])
+					/ float(maxi(int(opened["total"]), 1)))
+				var opened_bounces := (int(opened_analysis["bounces"])
+					if int(opened["hit_count"]) > 0 else -1)
+				if (opened_robust >= MIN_ROBUST and opened_robust <= max_robust
+						and opened_hit_rate <= 0.08
+						and opened_bounces >= 1):
+					result["robust"] = opened_robust
+					result["bounces"] = opened_bounces
+					result["hit_rate"] = opened_hit_rate
+					result["shots"] = int(solution["shots"])
+					result["ok"] = true
+					break
 
 	_world.queue_free()
 	_world = null
@@ -499,80 +759,101 @@ func _evaluate(level: LevelData) -> Dictionary:
 
 
 func _apply_identity(level: LevelData, level_id: int, spec: Dictionary) -> void:
+	level.level_uid = LevelData.uid_for(level_id)
+	level.display_order = level_id
+	level.difficulty = (3 if level_id in [51, 76, 101, 126] else
+		(5 if level_id in [75, 95, 96, 97, 98, 99, 100, 120, 121, 122,
+			123, 124, 125, 145, 146, 147, 148, 149, 150] else 4))
 	level.display_name = String(spec["name"])
+	level.tutorial_text = ("Metal halkanın açıklığını sekme rotasında kullan."
+		if level_id == 51 else ("Mayına değmeden güvenli sekme açısını bul."
+		if level_id == 76 else ("Dönen çarkın kolları arasındaki boşluğu zamanla."
+		if level_id == 101 else ("Lazer sönükken atışını çizginin ötesine geçir."
+		if level_id == 126 else ""))))
 	level.max_lives = 5
-	level.two_star_max_shots = 3
-	level.three_star_max_shots = 2
+	level.two_star_max_shots = 5 if int(spec["bricks"]) > 0 else 3
+	level.three_star_max_shots = 4 if int(spec["bricks"]) > 0 else 2
 	var t := clampf(float(level_id - 51) / 99.0, 0.0, 1.0)
 	level.two_star_max_seconds = snappedf(lerpf(75.0, 160.0, t), 0.1)
 	level.three_star_max_seconds = snappedf(lerpf(40.0, 85.0, t), 0.1)
 
 
-## Bolum basina icerik plani: engel karisimi, zorluk ve (101+) tugla sayisi.
+## Bolum basina icerik plani: engel karisimi, zorluk ve aralikli tugla kapilari.
 func _spec_for(level_id: int) -> Dictionary:
 	var difficulty := clampf(float(level_id - 51) / 99.0, 0.0, 1.0)
-	var name := "Faz %d" % level_id
+	var name := String(BAND_NAMES.get(level_id, "Faz %d" % level_id))
 	var kinds: Array = []
 	var bricks := 0
 	var strong := 0
+	var wall_mode := 0
+	var min_kinds := 1
 
-	if level_id == 51:
-		name = "Dönen Çark"
-		kinds = [WHEEL]
-	elif level_id == 56:
-		name = "Kayan Bariyer"
-		kinds = [BAR]
-	elif level_id == 100:
-		name = "Son Faz"
-		kinds = [RING, BOMB, WHEEL, BAR]
-	elif level_id == 126:
-		# LAZERIN ILK GORULDUGU BOLUM: yalnizca lazer. Tanitim karti bir
-		# bolumdeki YENI turleri gosterir; burada baska engel olsaydi oyuncu
-		# ayni anda iki kural ogrenmek zorunda kalirdi.
-		name = "Lazer Hattı"
-		kinds = [LASER]
-	elif level_id == 150:
-		name = "Son Işık"
-		kinds = [LASER, RING, WHEEL, LASER]
-		bricks = 4
-		strong = 3
-	elif level_id == 125:
-		name = "Final"
-		kinds = [RING, BOMB, WHEEL, BAR]
-		bricks = 4
-		strong = 3
-	elif level_id < 56:
-		kinds = [WHEEL, [RING, BOMB][level_id % 2]]
-	elif level_id < 60:
-		kinds = [BAR, [RING, BOMB, WHEEL][level_id % 3]]
+	if level_id <= 75:
+		# 51-75: halka bandi. Yalnizca 51 tanitim kolayligindadir; 52'den
+		# itibaren onceki panel, duvar boslugu ve blok dili geri gelir.
+		var stage := level_id - 51
+		difficulty = lerpf(0.18, 0.92, float(stage) / 24.0)
+		kinds = [RING]
+		if stage >= 10 and (stage % 2 == 0 or stage >= 20):
+			kinds.append(RING)
+		if level_id in [55, 58, 61, 64, 67, 70, 73, 75]:
+			bricks = 4
+			strong = 1 if level_id >= 64 else 0
+		if stage > 0:
+			wall_mode = 3 if stage in [14, 19, 24] else (stage % 3)
 	elif level_id <= 100:
-		# 60-100: tum turler, sayi kademeli artar.
-		var pool := [RING, BOMB, WHEEL, BAR]
-		var count := 2 if level_id < 72 else (3 if level_id < 90 else 4)
-		for i in count:
-			kinds.append(pool[(level_id + i) % 4])
-	elif level_id > 125:
-		# 126-150 LAZER BANDI: yanip sonen isin, once tek basina ogretilir
-		# (126), sonra diger turlerle birlikte kullanilir. Her bolumde EN AZ
-		# BIR lazer vardir - bandin kimligi odur.
-		var pool3 := [RING, WHEEL, BAR, BOMB]
-		kinds = [LASER]
-		if level_id >= 130:
-			kinds.append(pool3[level_id % 4])
-		if level_id >= 140:
-			kinds.append(LASER)
-		bricks = 0 if level_id < 135 else 2
-		strong = 0 if level_id < 145 else 1
+		# 76-100: bomba bandi. 76 bombayi tek basina ve okunakli tanitir;
+		# 77'den sonra halka hemen geri doner, blok/duvarlar da aralikli olarak
+		# kullanilir. Boylece yeni engel butun oyunu yeniden kolaylastirmaz.
+		var stage := level_id - 76
+		difficulty = lerpf(0.48, 1.0, float(stage) / 24.0)
+		kinds = [BOMB]
+		if stage > 0:
+			kinds.append(RING)
+		if stage >= 15 and (stage % 2 == 1 or stage >= 22):
+			kinds.append(BOMB)
+		if level_id in [80, 83, 86, 89, 92, 95, 98, 100]:
+			bricks = 4
+			strong = 1 if level_id >= 86 else 0
+		if stage > 0:
+			wall_mode = 3 if stage in [14, 19, 24] else (stage % 3)
+	elif level_id <= 125:
+		# 101-125: donen cark bandi. Yalnizca 101 tek mekanikli tanitimdir;
+		# 102'den itibaren halka/mayin, aralikli blok kapilari ve duvar bosluklari
+		# geri gelir. Cark ilk tur olarak kalir, gevseme onu asla dusurmez.
+		var stage := level_id - 101
+		difficulty = lerpf(0.58, 1.0, float(stage) / 24.0)
+		kinds = [WHEEL]
+		if stage > 0:
+			kinds.append(RING if stage % 3 != 2 else BOMB)
+		if level_id in [124, 125]:
+			kinds.append(BOMB if kinds[1] == RING else RING)
+		if level_id in [105, 108, 111, 114, 117, 120, 123, 125]:
+			bricks = 1
+			strong = 0 if level_id < 114 else 1
+		if stage > 0:
+			wall_mode = 3 if stage in [14, 19, 24] else (stage % 3)
+		if level_id in [102, 104, 105, 106, 107, 109, 110, 111, 112, 119]:
+			min_kinds = 2
 	else:
-		# 101-125 FINAL BANDI: engeller + kucuk bir tugla kumesi bir arada.
-		# Tugla sayisi bilerek dusuk (2-4): LevelWorld her cana bir durum yuvasi
-		# ayirdigi icin kalabalik kumeler dogrulamayi dakikalara cikariyor.
-		var pool2 := [RING, BOMB, WHEEL, BAR]
-		var count2 := 2 if level_id < 113 else 3
-		for i in count2:
-			kinds.append(pool2[(level_id + i) % 4])
-		bricks = 2 if level_id < 110 else (3 if level_id < 120 else 4)
-		strong = 1 if level_id < 115 else 2
+		# 126-150: lazer bandi. 126 yalnizca lazeri ogretir; sonrasinda cark,
+		# halka ve mayin duzenli doner. Lazer ilk turdur ve her bolumde korunur.
+		var stage := level_id - 126
+		difficulty = lerpf(0.64, 1.0, float(stage) / 24.0)
+		kinds = [LASER]
+		var previous := [WHEEL, RING, BOMB]
+		if stage > 0:
+			kinds.append(previous[(stage - 1) % previous.size()])
+		if level_id in [149, 150]:
+			kinds.append(LASER)
+		if level_id in [130, 133, 136, 139, 142, 145, 148, 150]:
+			bricks = 1
+			strong = 0 if level_id < 139 else 1
+		if stage > 0:
+			wall_mode = 3 if stage in [14, 19, 24] else (stage % 3)
+		if level_id in [127, 128, 129, 130, 131, 132, 134, 135, 136, 137, 140,
+				143, 144, 148]:
+			min_kinds = 2
 
 	return {
 		"name": name,
@@ -580,4 +861,6 @@ func _spec_for(level_id: int) -> Dictionary:
 		"difficulty": difficulty,
 		"bricks": bricks,
 		"strong_bricks": strong,
+		"wall_mode": wall_mode,
+		"min_kinds": min_kinds,
 	}

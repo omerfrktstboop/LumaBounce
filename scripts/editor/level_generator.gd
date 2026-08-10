@@ -61,10 +61,15 @@ class Profile extends RefCounted:
 	var max_bounces := 3
 	var panel_count := Vector2i(1, 2)
 	var block_count := Vector2i(0, 1)
+	var wall_gap_count := Vector2i(0, 0)
 	var obstacle_count := Vector2i(0, 0)
 	var obstacle_kinds: Array[int] = []
+	var include_each_obstacle_kind := false
 	var max_lives := 4
 	var target_y_range := Vector2(235.0, 345.0)
+	var enforce_difficulty_score := false
+	var min_difficulty_score := 0
+	var max_difficulty_score := 100
 	## Blok varsa bloksuz rota da bulunmali (bkz. verifier tasarim sozlesmesi).
 	var require_block_free_route := true
 	var min_solution_shots := 1
@@ -192,6 +197,50 @@ class Profile extends RefCounted:
 		p.target_y_range = Vector2(225.0, 390.0)
 		return p
 
+	## Editordeki kayitli hizli uretim ayarini fizik profilinde somutlastirir.
+	## Secilen engel turleri yalnizca izin listesi degil, adayda en az birer
+	## kez bulunmasi gereken mekaniklerdir. Son kabulü 0-100 zorluk skoru yapar.
+	static func custom(settings: Dictionary) -> Profile:
+		var p := Profile.new()
+		var mechanics := PackedStringArray(
+			settings.get("local_mechanics", PackedStringArray(["panel"])))
+		if mechanics.is_empty():
+			mechanics.append("panel")
+		p.min_difficulty_score = clampi(int(settings.get("local_score_min", 20)), 0, 100)
+		p.max_difficulty_score = clampi(int(settings.get("local_score_max", 60)), 0, 100)
+		if p.min_difficulty_score > p.max_difficulty_score:
+			var swap := p.min_difficulty_score
+			p.min_difficulty_score = p.max_difficulty_score
+			p.max_difficulty_score = swap
+		p.display_name = "Özel %d-%d" % [
+			p.min_difficulty_score, p.max_difficulty_score]
+		p.enforce_difficulty_score = true
+		p.min_robust = 1
+		p.max_robust = 10000
+		p.min_bounces = 0
+		p.max_bounces = 12
+		p.max_lives = 5
+		p.target_y_range = Vector2(220.0, 480.0)
+		p.panel_count = Vector2i(1, 3) if mechanics.has("panel") else Vector2i.ZERO
+		p.block_count = (
+			Vector2i(1, 3) if mechanics.has("breakable_block") else Vector2i.ZERO)
+		p.wall_gap_count = Vector2i(1, 2) if mechanics.has("wall_gap") else Vector2i.ZERO
+		var obstacle_ids := [
+			["metal_ring", ObstacleData.Kind.METAL_RING],
+			["bomb", ObstacleData.Kind.BOMB],
+			["rotating_wheel", ObstacleData.Kind.ROTATING_WHEEL],
+			["moving_bar", ObstacleData.Kind.MOVING_BAR],
+			["pulse_laser", ObstacleData.Kind.PULSE_LASER],
+		]
+		for definition in obstacle_ids:
+			if mechanics.has(definition[0]):
+				p.obstacle_kinds.append(int(definition[1]))
+		if not p.obstacle_kinds.is_empty():
+			p.include_each_obstacle_kind = true
+			p.obstacle_count = Vector2i(
+				p.obstacle_kinds.size(), mini(p.obstacle_kinds.size() + 1, 6))
+		return p
+
 var _solver: LevelSolver
 var _world: LevelWorld
 var _rng := RandomNumberGenerator.new()
@@ -201,6 +250,7 @@ var _running := false
 ## oldugunu soyler - "hicbir sey bulunamadi" tek basina yol gostermez.
 var _rejections := {}
 var _last_blueprint_records: Array[Dictionary] = []
+var _last_generation_records: Array[Dictionary] = []
 
 
 ## Son uretimin eleme dokumu: sebep -> adet.
@@ -247,6 +297,10 @@ func get_last_blueprint_records() -> Array[Dictionary]:
 	return _last_blueprint_records.duplicate(true)
 
 
+func get_last_generation_records() -> Array[Dictionary]:
+	return _last_generation_records.duplicate(true)
+
+
 ## [param wanted] kadar bolum bulana ya da [param max_tries] adayi
 ## tuketene kadar arar.
 func generate(profile: Profile, wanted: int, max_tries := 400, seed_value := 0) -> void:
@@ -261,6 +315,7 @@ func generate(profile: Profile, wanted: int, max_tries := 400, seed_value := 0) 
 
 	var accepted: Array[LevelData] = []
 	_last_blueprint_records.clear()
+	_last_generation_records.clear()
 	_rejections.clear()
 	var tried := 0
 	var budget := 0
@@ -280,6 +335,7 @@ func generate(profile: Profile, wanted: int, max_tries := 400, seed_value := 0) 
 		if bool(verdict["ok"]):
 			candidate.display_name = "%s %d" % [profile.display_name, accepted.size() + 1]
 			accepted.append(candidate)
+			_last_generation_records.append(_metadata_from_verdict(verdict))
 
 		candidate_evaluated.emit(tried, accepted.size())
 		if budget > SIMS_PER_FRAME:
@@ -290,6 +346,7 @@ func generate(profile: Profile, wanted: int, max_tries := 400, seed_value := 0) 
 	_running = false
 	if _cancelled:
 		accepted.clear()
+		_last_generation_records.clear()
 	finished.emit(accepted)
 
 
@@ -305,6 +362,7 @@ func generate_from_blueprints(profile: Profile, blueprints: Array, wanted: int,
 	_cancelled = false
 	_rejections.clear()
 	_last_blueprint_records.clear()
+	_last_generation_records.clear()
 	var effective_seed := seed_value
 	if effective_seed == 0:
 		_rng.randomize()
@@ -863,11 +921,15 @@ func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
 	# 3) Blok varsa: kirmak rotayi GERCEKTEN kolaylastirmali. Kolaylastirmayan
 	#    blok bulmacaya hicbir sey katmaz, sadece ekrani doldurur.
 	if level.breakable_blocks.is_empty():
-		return {
+		var difficulty := LevelDifficultyScorer.evaluate(level, fine, analysis)
+		if not _difficulty_score_matches(profile, difficulty):
+			return _reject("skor-araligi", sims)
+		return _standard_verdict(
+			{
 			"ok": true, "sims": sims, "robust": robust, "bounces": bounces,
 			"opened_robust": robust, "block_free": true,
 			"route_clusters": route_clusters,
-		}
+			}, difficulty)
 
 	var all_broken := _world.get_all_broken_state()
 	var opened := await _solver.scan_async(spawn, level.target_position, play_rect,
@@ -876,15 +938,50 @@ func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
 	sims += int(opened["total"])
 	if bool(opened.get("cancelled", false)):
 		return _reject("iptal", sims)
-	var opened_robust := int(LevelSolver.analyse_robust(opened)["robust"])
+	var opened_analysis := LevelSolver.analyse_robust(opened)
+	var opened_robust := int(opened_analysis["robust"])
 	if opened_robust <= robust:
 		return _reject("blok-katkisiz", sims)
+	var difficulty := LevelDifficultyScorer.evaluate(
+		level, fine, analysis, opened, opened_analysis)
+	if not _difficulty_score_matches(profile, difficulty):
+		return _reject("skor-araligi", sims)
 
-	return {
+	return _standard_verdict({
 		"ok": true, "sims": sims, "robust": robust, "bounces": bounces,
 		"opened_robust": opened_robust, "block_free": robust > 0,
 		"route_clusters": route_clusters,
+	}, difficulty)
+
+
+func _difficulty_score_matches(profile: Profile, difficulty: Dictionary) -> bool:
+	if not profile.enforce_difficulty_score:
+		return true
+	var score := int(difficulty.get("score", 100))
+	return score >= profile.min_difficulty_score and score <= profile.max_difficulty_score
+
+
+func _standard_verdict(verdict: Dictionary, difficulty: Dictionary) -> Dictionary:
+	verdict["difficulty_score"] = int(difficulty.get("score", 100))
+	verdict["difficulty_label"] = String(difficulty.get("label", "COZUMSUZ"))
+	verdict["difficulty_breakdown"] = difficulty.get("breakdown", {}).duplicate(true)
+	verdict["solution_count"] = int(difficulty.get("solution_count", 0))
+	return verdict
+
+
+func _metadata_from_verdict(verdict: Dictionary) -> Dictionary:
+	var metadata := {
+		"robust_cells": int(verdict.get("robust", 0)),
+		"bounce_count": int(verdict.get("bounces", 0)),
+		"opened_robust": int(verdict.get("opened_robust", 0)),
 	}
+	if verdict.has("difficulty_score"):
+		metadata["difficulty_score"] = int(verdict["difficulty_score"])
+		metadata["difficulty_label"] = String(verdict.get("difficulty_label", ""))
+		metadata["difficulty_breakdown"] = (
+			verdict.get("difficulty_breakdown", {}).duplicate(true))
+		metadata["solution_count"] = int(verdict.get("solution_count", 0))
+	return metadata
 
 
 func _evaluate_ricochet(_level: LevelData, profile: Profile,
@@ -988,7 +1085,8 @@ func _random_level(profile: Profile) -> LevelData:
 	level.launcher_position = Vector2(360.0, 1120.0)
 	# Hedef ust yariya, HUD seridinin altina kalacak sekilde.
 	level.target_position = Vector2(
-		_rng.randf_range(140.0, 580.0), _rng.randf_range(230.0, 480.0))
+		_rng.randf_range(140.0, 580.0),
+		_rng.randf_range(profile.target_y_range.x, profile.target_y_range.y))
 
 	var panels: Array[PanelData] = []
 	for i in _rng.randi_range(profile.panel_count.x, profile.panel_count.y):
@@ -1000,9 +1098,28 @@ func _random_level(profile: Profile) -> LevelData:
 		blocks.append(_random_block())
 	level.breakable_blocks = blocks
 
+	var wall_count := _rng.randi_range(profile.wall_gap_count.x, profile.wall_gap_count.y)
+	if wall_count > 0:
+		var first_on_left := _rng.randf() < 0.5
+		if first_on_left:
+			level.left_wall_segments = _random_wall_gap()
+		else:
+			level.right_wall_segments = _random_wall_gap()
+		if wall_count > 1:
+			if first_on_left:
+				level.right_wall_segments = _random_wall_gap()
+			else:
+				level.left_wall_segments = _random_wall_gap()
+
 	var obstacles: Array[ObstacleData] = []
 	if not profile.obstacle_kinds.is_empty():
-		for i in _rng.randi_range(profile.obstacle_count.x, profile.obstacle_count.y):
+		var wanted_obstacles := _rng.randi_range(
+			profile.obstacle_count.x, profile.obstacle_count.y)
+		if profile.include_each_obstacle_kind:
+			for kind in profile.obstacle_kinds:
+				var single_kind: Array[int] = [kind]
+				obstacles.append(_random_obstacle(single_kind))
+		while obstacles.size() < wanted_obstacles:
 			obstacles.append(_random_obstacle(profile.obstacle_kinds))
 	level.obstacles = obstacles
 
@@ -1033,6 +1150,12 @@ func _random_block() -> BreakableBlockData:
 	return block
 
 
+func _random_wall_gap() -> Array[Vector2]:
+	var top := _rng.randf_range(360.0, 700.0)
+	var bottom := _rng.randf_range(top + 180.0, minf(top + 420.0, 1080.0))
+	return [Vector2(-320.0, top), Vector2(bottom, 1440.0)]
+
+
 func _random_obstacle(kinds: Array[int]) -> ObstacleData:
 	var obstacle := ObstacleData.new()
 	obstacle.kind = kinds[_rng.randi_range(0, kinds.size() - 1)] as ObstacleData.Kind
@@ -1057,4 +1180,10 @@ func _random_obstacle(kinds: Array[int]) -> ObstacleData:
 			obstacle.travel_distance = _rng.randf_range(60.0, 150.0)
 			obstacle.motion_period = _rng.randf_range(2.2, 4.2)
 			obstacle.phase_degrees = _rng.randf_range(-90.0, 90.0)
+		ObstacleData.Kind.PULSE_LASER:
+			obstacle.size = Vector2(
+				_rng.randf_range(140.0, 300.0), _rng.randf_range(10.0, 22.0))
+			obstacle.motion_period = _rng.randf_range(1.8, 4.2)
+			obstacle.phase_degrees = _rng.randf_range(-180.0, 180.0)
+			obstacle.pulse_on_ratio = _rng.randf_range(0.35, 0.72)
 	return obstacle

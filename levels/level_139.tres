@@ -1,62 +1,55 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_1ovi3"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_1nkc1"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_wlmvp"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_g1ppu"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(200, 820)
-rotation_degrees = -28
-length = 200
-thickness = 26
+[sub_resource type="Resource" id="Resource_dj7oc"]
+script = ExtResource("1_1ovi3")
+position = Vector2(360, 504.22742)
+rotation_degrees = -0.83601856
+size = Vector2(652, 34)
+hit_points = 2
 
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(520, 650)
-rotation_degrees = 24
-length = 220
-thickness = 26
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_im2f1"]
+script = ExtResource("2_1nkc1")
 kind = 5
-position = Vector2(210, 560)
-rotation_degrees = 25
-size = Vector2(240, 14)
-motion_period = 3.3
-phase_degrees = 216
-pulse_on_ratio = 0.56
+position = Vector2(120.40555, 909.58344)
+size = Vector2(308.55, 14)
+motion_period = 2.398
+phase_degrees = 297.03152
+pulse_on_ratio = 0.57525
 
-[sub_resource type="Resource" id="Obstacle_2"]
-script = ExtResource("2_obstacle")
-kind = 2
-position = Vector2(540, 390)
-rotation_degrees = 0
-size = Vector2(96, 22)
-spoke_count = 4
-angular_speed_degrees = 86
+[sub_resource type="Resource" id="Resource_v1esm"]
+script = ExtResource("3_wlmvp")
+position = Vector2(317.4702, 756.6816)
+rotation_degrees = 39.97080783843994
+length = 354.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_ntktu"]
+script = ExtResource("3_wlmvp")
+position = Vector2(518.65845, 960)
+rotation_degrees = 12.35428466796875
+length = 352.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_g1ppu")
 level_uid = "level_139"
 display_order = 139
-difficulty = 5
+difficulty = 4
+hint_angle_degrees = -32.0
+hint_power = 2000.0
 level_id = 139
-display_name = "Zamanlama"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(260, 220)
-target_scale = 0.724
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1"), SubResource("Obstacle_2")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 116.0
+display_name = "Dar Zamanlama"
+target_position = Vector2(120, 382.53674)
+panels = Array[ExtResource("3_wlmvp")]([SubResource("Resource_v1esm"), SubResource("Resource_ntktu")])
+breakable_blocks = Array[ExtResource("1_1ovi3")]([SubResource("Resource_dj7oc")])
+obstacles = Array[ExtResource("2_1nkc1")]([SubResource("Resource_im2f1")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 732.86206), Vector2(858.13184, 1600)])
+two_star_max_seconds = 150.6
 two_star_max_shots = 5
-three_star_max_seconds = 71.0
-three_star_max_shots = 3
+three_star_max_seconds = 80.0
+three_star_max_shots = 4

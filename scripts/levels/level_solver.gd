@@ -33,6 +33,14 @@ const CONTACT_EPSILON := 0.05
 ## Bir hucrenin "saglam" sayilmasi icin 4 komsusunun da isabet etmesi gerekir.
 ## Bu, "piksel hassasiyeti gerektirmesin" kuralinin olculebilir karsiligi.
 const ROBUST_NEIGHBOURS := 4
+## Editorun COZUM dugmesi kaba izgarada hic isabet bulamazsa sirayla bu
+## araliklara iner. Panel kapsullerinin yuvarlak ucundan seken rotalar 3
+## derecelik orneklerin arasinda kalabildigi icin yalnizca basarisiz durumda
+## daha pahali tarama yapilir.
+const SOLUTION_SEARCH_REFINEMENTS: Array[Vector2] = [
+	Vector2(1.0, 50.0),
+	Vector2(0.5, 25.0),
+]
 
 # Gercek sahnelerden okunan fizik sabitleri.
 var radius := 24.0
@@ -163,6 +171,48 @@ func scan_async(spawn: Vector2, target_position: Vector2, play_rect: Rect2,
 					await tree.process_frame
 	state["cancelled"] = false
 	return state
+
+
+## Kalici blok durumunu, disaridaki araclari RID ayrintisina baglamadan tarar.
+## Durum maskesi [method search_block_states_async] sonuclarindan gelir.
+func scan_block_state_async(spawn: Vector2, target_position: Vector2,
+		play_rect: Rect2, state: int, angle_step: float, power_step: float,
+		sims_per_frame := 120, cancel_check := Callable()) -> Dictionary:
+	return await scan_async(
+		spawn, target_position, play_rect, _rids_for_state(state),
+		angle_step, power_step, sims_per_frame, cancel_check)
+
+
+## Editor icin kademeli cozum aramasi. Normal izgara bir rota bulursa aynen
+## doner; bulamazsa panel ucu ve dar teget rotalarini yakalamak icin daha
+## hassas iki izgara dener. Boylece genis cozumlu bolumlerin maliyeti artmaz.
+func scan_for_solution_async(spawn: Vector2, target_position: Vector2,
+		play_rect: Rect2, excluded: Array[RID], angle_step: float,
+		power_step: float, sims_per_frame := 120,
+		cancel_check := Callable()) -> Dictionary:
+	var steps: Array[Vector2] = [Vector2(
+		maxf(angle_step, 0.25), maxf(power_step, 5.0))]
+	for refinement in SOLUTION_SEARCH_REFINEMENTS:
+		var previous := steps[-1]
+		if refinement.x < previous.x and refinement.y < previous.y:
+			steps.append(refinement)
+
+	var simulations := 0
+	var last_scan := {}
+	for pass_index in steps.size():
+		var spacing := steps[pass_index]
+		last_scan = await scan_async(
+			spawn, target_position, play_rect, excluded, spacing.x, spacing.y,
+			sims_per_frame, cancel_check)
+		simulations += int(last_scan.get("total", 0))
+		last_scan["solution_search_passes"] = pass_index + 1
+		last_scan["solution_search_simulations"] = simulations
+		last_scan["solution_angle_step"] = spacing.x
+		last_scan["solution_power_step"] = spacing.y
+		if bool(last_scan.get("cancelled", false)) \
+				or int(last_scan.get("hit_count", 0)) > 0:
+			return last_scan
+	return last_scan
 
 
 ## Kirilabilir bloklarin hasarinin atislar arasinda kaldigi durum uzayini tarar.
@@ -379,6 +429,87 @@ static func analyse_solution_clusters(scan_result: Dictionary) -> Array[Dictiona
 			return int(a["robust"]) > int(b["robust"])
 		return int(a["bounces"]) < int(b["bounces"]))
 	return clusters
+
+
+## Editordeki rota goruntuleyici icin birbirinden farkli aci/guc cozumleri.
+## Once baglantili saglam kumelerin merkezleri alinir. Kalan yerler, tarama
+## izgara uzayinda secilmis rotalara en uzak isabetlerden doldurulur; boylece
+## on kez ayni dar koridorun yan yana hucrelerini gostermek yerine gercekten
+## farkli atislar arasinda gecis yapilir.
+static func solution_candidates(scan_result: Dictionary,
+		max_count := 10) -> Array[Dictionary]:
+	var limit := maxi(max_count, 0)
+	if limit == 0 or int(scan_result.get("hit_count", 0)) <= 0:
+		return []
+	var angles: Array[float] = scan_result["angles"]
+	var powers: Array[float] = scan_result["powers"]
+	var hits: Array = scan_result["hits"]
+	var bounce_counts: Array = scan_result["bounces"]
+	var candidates := analyse_solution_clusters(scan_result)
+	if candidates.size() > limit:
+		candidates.resize(limit)
+
+	var used := {}
+	var selected_points: Array[Vector2] = []
+	for candidate in candidates:
+		used[_solution_key(float(candidate["angle"]), float(candidate["power"]))] = true
+		selected_points.append(Vector2(
+			float(angles.find(float(candidate["angle"]))) / maxf(angles.size() - 1, 1),
+			float(powers.find(float(candidate["power"]))) / maxf(powers.size() - 1, 1)))
+
+	var hit_cells: Array[Vector2i] = []
+	for ai in angles.size():
+		for pi in powers.size():
+			if bool(hits[ai][pi]):
+				hit_cells.append(Vector2i(ai, pi))
+	while candidates.size() < limit and candidates.size() < hit_cells.size():
+		var best := Vector2i(-1, -1)
+		var best_distance := -1.0
+		var best_bounces := 9999
+		for cell in hit_cells:
+			var key := _solution_key(angles[cell.x], powers[cell.y])
+			if used.has(key):
+				continue
+			var point := Vector2(
+				float(cell.x) / maxf(angles.size() - 1, 1),
+				float(cell.y) / maxf(powers.size() - 1, 1))
+			var nearest := INF
+			for selected in selected_points:
+				nearest = minf(nearest, point.distance_squared_to(selected))
+			var cell_bounces := int(bounce_counts[cell.x][cell.y])
+			if nearest < best_distance:
+				continue
+			if is_equal_approx(nearest, best_distance) and cell_bounces >= best_bounces:
+				continue
+			best = cell
+			best_distance = nearest
+			best_bounces = cell_bounces
+		if best.x < 0:
+			break
+		var robust := 0
+		if (best.x > 0 and best.x < angles.size() - 1
+				and best.y > 0 and best.y < powers.size() - 1
+				and _is_robust_cell(hits, best.x, best.y)):
+			robust = 1
+		candidates.append({
+			"robust": robust,
+			"angle": angles[best.x],
+			"power": powers[best.y],
+			"bounces": best_bounces,
+			"angle_lo": angles[best.x],
+			"angle_hi": angles[best.x],
+			"power_lo": powers[best.y],
+			"power_hi": powers[best.y],
+		})
+		used[_solution_key(angles[best.x], powers[best.y])] = true
+		selected_points.append(Vector2(
+			float(best.x) / maxf(angles.size() - 1, 1),
+			float(best.y) / maxf(powers.size() - 1, 1)))
+	return candidates
+
+
+static func _solution_key(angle: float, power: float) -> String:
+	return "%.4f:%.2f" % [angle, power]
 
 
 ## Uzun sekme zincirlerinde dort-komsunun TAMAMINI istemek, her sekmede

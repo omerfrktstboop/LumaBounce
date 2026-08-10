@@ -192,6 +192,18 @@ script = ExtResource("5_button")
 corner_radius = 16
 content_margin = Vector2(6, 6)
 
+[node name="AddStrongBlock" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/AddRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+tooltip_text = "İki darbe dayanımlı güçlendirilmiş blok ekle"
+theme_override_font_sizes/font_size = 16
+text = "+ GÜÇLÜ"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
+
 [node name="CycleWall" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/AddRow"]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
@@ -202,6 +214,19 @@ text = "KENAR"
 script = ExtResource("5_button")
 corner_radius = 16
 content_margin = Vector2(6, 6)
+
+[node name="CopyItem" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/AddRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+disabled = true
+tooltip_text = "Seçili panel, blok veya engeli özellikleriyle çoğalt"
+theme_override_font_sizes/font_size = 16
+text = "KOPYA"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
 
 [node name="DeleteItem" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/AddRow"]
 custom_minimum_size = Vector2(0, 60)
@@ -321,6 +346,32 @@ script = ExtResource("5_button")
 corner_radius = 16
 content_margin = Vector2(6, 6)
 
+[node name="Rotate90" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/TuneRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+disabled = true
+tooltip_text = "Seçili parçayı saat yönünde 90° döndür"
+theme_override_font_sizes/font_size = 20
+text = "90° ↻"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(4, 6)
+
+[node name="ThicknessCycle" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/TuneRow"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+disabled = true
+tooltip_text = "Seçili blok veya engelin kalınlığını beş kademe arasında değiştir"
+theme_override_font_sizes/font_size = 15
+text = "KALIN 1–5"
+script = ExtResource("5_button")
+corner_radius = 16
+content_margin = Vector2(3, 6)
+
 [node name="ActionRow" type="HBoxContainer" parent="HUD/SafeArea/Root/BottomPanel/Rows"]
 layout_mode = 2
 theme_override_constants/separation = 8
@@ -343,7 +394,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 focus_mode = 0
 theme_override_font_sizes/font_size = 21
-text = "ANALİZ"
+text = "SKOR"
 script = ExtResource("5_button")
 corner_radius = 16
 content_margin = Vector2(6, 6)
@@ -358,6 +409,19 @@ text = "ÜRET"
 script = ExtResource("5_button")
 corner_radius = 16
 content_margin = Vector2(6, 6)
+
+[node name="QuickGenerateButton" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ActionRow"]
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+tooltip_text = "Kaydedilmiş yerel mekanik ve zorluk skoru ayarıyla bir bölüm üret"
+theme_override_font_sizes/font_size = 16
+text = "HIZLI"
+script = ExtResource("5_button")
+emphasis = 0
+corner_radius = 16
+content_margin = Vector2(3, 6)
 
 [node name="SolutionButton" type="Button" parent="HUD/SafeArea/Root/BottomPanel/Rows/ActionRow"]
 custom_minimum_size = Vector2(0, 64)

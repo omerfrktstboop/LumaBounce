@@ -1,57 +1,90 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(210, 760)
-rotation_degrees = 18
-length = 240
-thickness = 26
-
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(505, 600)
-rotation_degrees = -18
-length = 230
-thickness = 26
-
-[sub_resource type="Resource" id="Block_1"]
-script = ExtResource("1_block")
-position = Vector2(360, 390)
-rotation_degrees = 0
-size = Vector2(110, 32)
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("1")
+position = Vector2(410, 860)
+rotation_degrees = 0.0
+size = Vector2(160, 34)
 hit_points = 1
 
-[sub_resource type="Resource" id="Block_2"]
-script = ExtResource("1_block")
-position = Vector2(570, 450)
-rotation_degrees = 0
-size = Vector2(96, 32)
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("1")
+position = Vector2(600, 860)
+rotation_degrees = 0.0
+size = Vector2(160, 34)
 hit_points = 1
+
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("1")
+position = Vector2(420.2256, 389.788)
+rotation_degrees = 0.0
+size = Vector2(160, 34)
+hit_points = 1
+
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("1")
+position = Vector2(605.1279, 386.36026)
+rotation_degrees = 0.0
+size = Vector2(160, 34)
+hit_points = 1
+
+[sub_resource type="Resource" id="Resource_krhwj"]
+script = ExtResource("1")
+position = Vector2(127.47502, 559.2337)
+rotation_degrees = 0.0
+size = Vector2(186.6667, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_lgnf6"]
+script = ExtResource("1")
+position = Vector2(313.8097, 563.0423)
+rotation_degrees = 0.0
+size = Vector2(146.6667, 34)
+hit_points = 1
+
+[sub_resource type="Resource" id="Resource_lglry"]
+script = ExtResource("1")
+position = Vector2(481.15997, 558.472)
+rotation_degrees = 0.0
+size = Vector2(146.6667, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_hp77n"]
+script = ExtResource("3")
+position = Vector2(308.77087, 745.9346)
+rotation_degrees = 18.336
+length = 298.717
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4")
 level_uid = "level_032"
 display_order = 32
-difficulty = 2
+theme_id = ""
+difficulty = 3
+time_limit = 0.0
+is_bonus = false
+hint_angle_degrees = -32.0
+hint_power = 2000.0
 level_id = 32
-display_name = "Blok Kapısı"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(180, 220)
-target_scale = 0.938
-ball_scale = 0.74
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1"), SubResource("Block_2")])
-obstacles = Array[ObstacleData]([])
+display_name = "Tam Temizlik"
+launcher_position = Vector2(360.554, 1120)
+target_position = Vector2(315.057, 229.45)
+target_scale = 1.0
+ball_scale = 1.0
+panels = Array[ExtResource("3")]([SubResource("Resource_hp77n")])
+breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj"), SubResource("Resource_lgnf6"), SubResource("Resource_lglry")])
+obstacles = Array[ExtResource("2")]([])
 left_wall_segments = Array[Vector2]([])
 right_wall_segments = Array[Vector2]([])
 max_lives = 5
 tutorial_text = ""
-two_star_max_seconds = 69.0
-two_star_max_shots = 4
-three_star_max_seconds = 41.0
+two_star_max_seconds = 112.0
+two_star_max_shots = 3
+three_star_max_seconds = 58.0
 three_star_max_shots = 2

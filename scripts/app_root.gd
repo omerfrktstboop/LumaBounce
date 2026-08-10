@@ -1,6 +1,8 @@
 class_name AppRoot
 extends Node
 
+const FIRST_CLEAR_LUMA_COIN_REWARD := 1
+
 ## Uygulamanin giris noktasi: splash -> ana menu -> bolum secimi -> oynanis.
 ##
 ## MIMARI KURAL: ekranlar birbirini asla instantiate etmez. Her ekran yalnizca
@@ -37,6 +39,7 @@ extends Node
 
 var _progress: ProgressStore
 var _playtest_stats: PlaytestStats
+var _wallet: WalletStore
 ## Debug paneli disinda hicbir yerde okunmaz; gercek save'e asla yazilmaz.
 var _debug_unlock_all := false
 var _current: Node
@@ -59,6 +62,7 @@ func _ready() -> void:
 	# kaybetse bile bu dugum calismaya devam etmeli ki duraklatma/devam
 	# bildirimlerini kacirmasin.
 	_progress = ProgressStore.load_from_disk()
+	_wallet = WalletStore.load_from_disk()
 	# Titresim tercihi tek okuma noktasina (Haptics) aktarilir; boylece
 	# cagiranlarin ProgressStore'a erisimi olmasi gerekmez (bkz. haptics.gd).
 	Haptics.enabled = _progress.haptics_enabled
@@ -267,6 +271,7 @@ func _configure_gameplay(screen: Node, level_id: int) -> void:
 		gameplay.level_data = LevelLibrary.load_level(level_id)
 		gameplay.playtest_stats = _playtest_stats
 		gameplay.progress = _progress
+		gameplay.wallet = _wallet
 		gameplay.aim_assist = _progress.aim_assist
 
 
@@ -293,8 +298,14 @@ func _on_level_completed(level_id: int, stars: int) -> void:
 	# bir parcasi degil ve kaydi kirletmesi anlamsiz olurdu.
 	if _editor_level != null:
 		return
+	var first_clear := not _progress.is_completed(level_id)
 	_progress.mark_completed(level_id)
 	_progress.set_level_stars_if_higher(level_id, stars)
+	if first_clear and _wallet != null:
+		_wallet.add(FIRST_CLEAR_LUMA_COIN_REWARD)
+		var gameplay := _current as Gameplay
+		if gameplay != null:
+			gameplay.notify_luma_coin_reward(FIRST_CLEAR_LUMA_COIN_REWARD)
 
 
 ## Editordeki bolum icin de _on_level_completed ile ayni kural: gercek
@@ -313,7 +324,7 @@ func _on_block_mechanic_seen() -> void:
 
 func _on_gameplay_menu_requested() -> void:
 	if _editor_level != null:
-		go_to_editor(_editor_level)
+		go_to_editor(_editor_level, _editor_source_level_id)
 		return
 	go_to_main_menu()
 
@@ -353,6 +364,7 @@ func _on_editor_test_requested(edit_level: LevelData) -> void:
 	var editor := _current as LevelEditor
 	if editor != null:
 		_editor_batch_context = editor.get_batch_context()
+		_editor_source_level_id = editor.source_level_id
 	_editor_level = edit_level
 	# Acik kalan debug paneli arenanin ustunu ortup test edilen bolumu
 	# gizlerdi. Kose dugmesi durdugu icin tek dokunusla geri acilir.
@@ -401,7 +413,7 @@ func _handle_go_back() -> void:
 	if gameplay != null:
 		# Editorden test ediliyorsa geri tusu de editore doner.
 		if _editor_level != null:
-			go_to_editor(_editor_level)
+			go_to_editor(_editor_level, _editor_source_level_id)
 		else:
 			go_to_level_select()
 		return

@@ -1,74 +1,45 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_pl457"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_nwvnt"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_xuogw"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_0st4u"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(180, 830)
-rotation_degrees = -30
-length = 190
-thickness = 26
-
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(520, 690)
-rotation_degrees = 28
-length = 200
-thickness = 26
-
-[sub_resource type="Resource" id="Block_1"]
-script = ExtResource("1_block")
-position = Vector2(360, 330)
-rotation_degrees = 0
-size = Vector2(100, 30)
-hit_points = 1
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_3xx7b"]
+script = ExtResource("2_nwvnt")
 kind = 2
-position = Vector2(210, 390)
-rotation_degrees = 0
-size = Vector2(112, 22)
+position = Vector2(591.733, 958.12213)
+size = Vector2(120, 20)
 spoke_count = 5
-angular_speed_degrees = -95
+angular_speed_degrees = -118.6875
 
-[sub_resource type="Resource" id="Obstacle_2"]
-script = ExtResource("2_obstacle")
-kind = 0
-position = Vector2(140, 600)
-rotation_degrees = 0
-size = Vector2(118, 28)
-inner_radius = 42
+[sub_resource type="Resource" id="Resource_fsh3o"]
+script = ExtResource("3_xuogw")
+position = Vector2(555.0123, 588.4474)
+rotation_degrees = 36.82540340423584
+length = 342.0
+thickness = 26.0
 
-[sub_resource type="Resource" id="Obstacle_3"]
-script = ExtResource("2_obstacle")
-kind = 1
-position = Vector2(540, 560)
-rotation_degrees = 0
-size = Vector2(72, 28)
+[sub_resource type="Resource" id="Resource_smxm0"]
+script = ExtResource("3_xuogw")
+position = Vector2(307.32022, 547.19305)
+rotation_degrees = -55.0
+length = 318.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_0st4u")
 level_uid = "level_124"
 display_order = 124
 difficulty = 5
+hint_angle_degrees = -34.0
+hint_power = 2150.0
 level_id = 124
-display_name = "Çark Finali"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(260, 200)
-target_scale = 0.754
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1")])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1"), SubResource("Obstacle_2"), SubResource("Obstacle_3")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 111.0
-two_star_max_shots = 5
-three_star_max_seconds = 68.0
-three_star_max_shots = 3
+display_name = "Son Devir"
+target_position = Vector2(179.92566, 346.48193)
+panels = Array[ExtResource("3_xuogw")]([SubResource("Resource_fsh3o"), SubResource("Resource_smxm0")])
+obstacles = Array[ExtResource("2_nwvnt")]([SubResource("Resource_3xx7b")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 486.34036), Vector2(629.3989, 1600)])
+two_star_max_seconds = 137.70000000000002
+two_star_max_shots = 3
+three_star_max_seconds = 73.2

@@ -1,45 +1,44 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_sdcck"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_123fj"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_oygva"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_w4o0r"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(220, 760)
-rotation_degrees = -24
-length = 220
-thickness = 26
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_1bsgs"]
+script = ExtResource("2_123fj")
 kind = 2
-position = Vector2(210, 390)
-rotation_degrees = 0
-size = Vector2(96, 22)
-spoke_count = 4
-angular_speed_degrees = -55
+position = Vector2(345.7383, 904.1832)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -92.4375
+
+[sub_resource type="Resource" id="Resource_e3pct"]
+script = ExtResource("2_123fj")
+position = Vector2(207.7714, 401.7694)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 61.88
+
+[sub_resource type="Resource" id="Resource_mnmln"]
+script = ExtResource("3_oygva")
+position = Vector2(401.58197, 708.2235)
+rotation_degrees = -45.066826820373535
+length = 327.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_w4o0r")
 level_uid = "level_104"
 display_order = 104
 difficulty = 4
+hint_angle_degrees = 24.0
+hint_power = 2000.0
 level_id = 104
-display_name = "Çark Girişi"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(260, 220)
-target_scale = 0.794
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 99.0
-two_star_max_shots = 5
-three_star_max_seconds = 60.0
-three_star_max_shots = 3
+display_name = "Kenar Çarkı"
+target_position = Vector2(520.4062, 238.34462)
+panels = Array[ExtResource("3_oygva")]([SubResource("Resource_mnmln")])
+obstacles = Array[ExtResource("2_123fj")]([SubResource("Resource_1bsgs"), SubResource("Resource_e3pct")])
+two_star_max_seconds = 120.5
+two_star_max_shots = 3
+three_star_max_seconds = 64.10000000000001

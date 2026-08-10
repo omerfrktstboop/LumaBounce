@@ -5,6 +5,7 @@ extends VBoxContainer
 ## yalnizca dogrulanmis kullanici secimlerini sinyal olarak coordinator'a verir.
 
 signal local_generation_requested(profile_name: String)
+signal local_settings_saved(settings: Dictionary)
 signal ai_generation_requested(request: Dictionary)
 signal cancel_requested
 signal validation_failed(message: String)
@@ -44,6 +45,9 @@ var _variation_count: SpinBox
 var _generate_button: LumaButton
 var _cancel_button: LumaButton
 var _local_cancel_button: LumaButton
+var _local_mechanics := {}
+var _local_score_min: SpinBox
+var _local_score_max: SpinBox
 var _interactive: Array[Control] = []
 var _busy := false
 
@@ -106,12 +110,51 @@ func _build_local_page() -> void:
 	var hint := _label("Mevcut fizik filtreli yerel uretim")
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_local_page.add_child(hint)
+	var preset_grid := GridContainer.new()
+	preset_grid.name = "PresetGrid"
+	preset_grid.columns = 2
+	preset_grid.add_theme_constant_override("h_separation", 8)
+	preset_grid.add_theme_constant_override("v_separation", 8)
+	_local_page.add_child(preset_grid)
 	for option in [
 			["Kolay", "easy"], ["Orta", "medium"], ["Zor", "hard"],
 			["Bloklu", "blocks"], ["Engelli", "obstacles"]]:
-		var button := _button(option[0], local_generation_requested.emit.bind(option[1]))
-		_local_page.add_child(button)
+		var button := _button(option[0], local_generation_requested.emit.bind(option[1]), true)
+		preset_grid.add_child(button)
 		_interactive.append(button)
+
+	_local_page.add_child(_field_label("KAYITLI HIZLI ÜRET AYARI"))
+	var mechanics_grid := GridContainer.new()
+	mechanics_grid.name = "LocalMechanics"
+	mechanics_grid.columns = 2
+	mechanics_grid.add_theme_constant_override("h_separation", 8)
+	mechanics_grid.add_theme_constant_override("v_separation", 4)
+	_local_page.add_child(mechanics_grid)
+	for definition in [
+			["Panel", "panel"], ["Duvar boşluğu", "wall_gap"],
+			["Kırılabilir blok", "breakable_block"], ["Metal halka", "metal_ring"],
+			["Bomba", "bomb"], ["Dönen çark", "rotating_wheel"],
+			["Kayan engel", "moving_bar"], ["Lazer", "pulse_laser"]]:
+		var check := CheckBox.new()
+		check.name = "Local_%s" % definition[1]
+		check.text = definition[0]
+		check.custom_minimum_size = Vector2(0, 52)
+		check.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		mechanics_grid.add_child(check)
+		_local_mechanics[definition[1]] = check
+		_interactive.append(check)
+
+	_local_score_min = _spin_field_on(
+		_local_page, "MİNİMUM ZORLUK SKORU", 0, 100, 20)
+	_local_score_min.name = "LocalScoreMin"
+	_local_score_max = _spin_field_on(
+		_local_page, "MAKSİMUM ZORLUK SKORU", 0, 100, 60)
+	_local_score_max.name = "LocalScoreMax"
+	var save_local := _button("AYARI KAYDET", _on_save_local_settings)
+	save_local.name = "SaveLocalSettings"
+	save_local.emphasis = LumaButton.Emphasis.PRIMARY
+	_local_page.add_child(save_local)
+	_interactive.append(save_local)
 	_local_cancel_button = _button("IPTAL", cancel_requested.emit)
 	_local_cancel_button.name = "CancelLocal"
 	_local_cancel_button.visible = false
@@ -243,9 +286,14 @@ func _option_field(title: String, options: Array) -> OptionButton:
 
 
 func _spin_field(title: String, minimum: float, maximum: float, initial: float) -> SpinBox:
+	return _spin_field_on(_ai_page, title, minimum, maximum, initial)
+
+
+func _spin_field_on(parent: Control, title: String, minimum: float,
+		maximum: float, initial: float) -> SpinBox:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	_ai_page.add_child(row)
+	parent.add_child(row)
 	var title_label := _field_label(title)
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(title_label)
@@ -310,6 +358,11 @@ func _show_ai(enabled: bool) -> void:
 
 func _load_settings() -> void:
 	var values := _settings.load_values()
+	for mechanic_id in _local_mechanics:
+		(_local_mechanics[mechanic_id] as CheckBox).button_pressed = (
+			values["local_mechanics"].has(mechanic_id))
+	_local_score_min.value = int(values["local_score_min"])
+	_local_score_max.value = int(values["local_score_max"])
 	_model.text = String(values["model_slug"])
 	_remember.button_pressed = bool(values["remember_api_key"])
 	_api_key.text = String(values["api_key"]) if _remember.button_pressed else ""
@@ -334,6 +387,41 @@ func _on_generate_ai() -> void:
 		return
 	_settings.save_values(request, String(request["api_key"]))
 	ai_generation_requested.emit(request)
+
+
+func get_local_settings() -> Dictionary:
+	var mechanics := PackedStringArray()
+	for mechanic_id in _local_mechanics:
+		if (_local_mechanics[mechanic_id] as CheckBox).button_pressed:
+			mechanics.append(mechanic_id)
+	if mechanics.is_empty():
+		mechanics.append("panel")
+	var score_min := roundi(_local_score_min.value)
+	var score_max := roundi(_local_score_max.value)
+	if score_min > score_max:
+		var swap := score_min
+		score_min = score_max
+		score_max = swap
+		_local_score_min.value = score_min
+		_local_score_max.value = score_max
+	return {
+		"local_mechanics": mechanics,
+		"local_score_min": score_min,
+		"local_score_max": score_max,
+	}
+
+
+func _on_save_local_settings() -> void:
+	var local_settings := get_local_settings()
+	var values := _settings.load_values()
+	for key in local_settings:
+		values[key] = local_settings[key]
+	var error := _settings.save_values(values, String(values.get("api_key", "")))
+	if error != OK:
+		validation_failed.emit("Yerel üretim ayarı kaydedilemedi: %s" % error_string(error))
+		return
+	local_settings_saved.emit(local_settings)
+	status_message.emit("Hızlı üretim ayarı kaydedildi.")
 
 
 func _on_template_selected(_index: int) -> void:

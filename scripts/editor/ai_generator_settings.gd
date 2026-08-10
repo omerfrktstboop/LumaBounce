@@ -5,6 +5,10 @@ extends RefCounted
 ## Bu gercek sifreleme degildir; varsayilan davranis anahtari diske yazmaz.
 
 const SETTINGS_PATH := "user://ai_settings.cfg"
+const LOCAL_MECHANIC_IDS := [
+	"panel", "wall_gap", "breakable_block", "metal_ring", "bomb",
+	"rotating_wheel", "moving_bar", "pulse_laser",
+]
 
 var _path: String
 
@@ -25,6 +29,9 @@ func defaults() -> Dictionary:
 		"blueprint_count": 5,
 		"variation_count": 12,
 		"candidate_count": 10,
+		"local_mechanics": PackedStringArray(["panel"]),
+		"local_score_min": 20,
+		"local_score_max": 60,
 	}
 
 
@@ -93,4 +100,20 @@ func _sanitize(source: Dictionary) -> Dictionary:
 	safe["blueprint_count"] = clampi(int(source.get("blueprint_count", 5)), 1, 10)
 	safe["variation_count"] = clampi(int(source.get("variation_count", 12)), 1, 30)
 	safe["candidate_count"] = clampi(int(source.get("candidate_count", 10)), 1, 20)
+	var local_mechanics := PackedStringArray()
+	for mechanic in source.get("local_mechanics", []):
+		var mechanic_id := String(mechanic)
+		if mechanic_id in LOCAL_MECHANIC_IDS and not local_mechanics.has(mechanic_id):
+			local_mechanics.append(mechanic_id)
+	if local_mechanics.is_empty():
+		local_mechanics.append("panel")
+	safe["local_mechanics"] = local_mechanics
+	var local_score_min := clampi(int(source.get("local_score_min", 20)), 0, 100)
+	var local_score_max := clampi(int(source.get("local_score_max", 60)), 0, 100)
+	if local_score_min > local_score_max:
+		var swap := local_score_min
+		local_score_min = local_score_max
+		local_score_max = swap
+	safe["local_score_min"] = local_score_min
+	safe["local_score_max"] = local_score_max
 	return safe

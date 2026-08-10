@@ -1,45 +1,38 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_6dc86"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_uanjt"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_sam3b"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_k0ue2"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(220, 760)
-rotation_degrees = 24
-length = 220
-thickness = 26
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_77jhw"]
+script = ExtResource("2_uanjt")
 kind = 2
-position = Vector2(360, 520)
-rotation_degrees = 0
-size = Vector2(96, 22)
-spoke_count = 4
-angular_speed_degrees = 55
+position = Vector2(194.94073, 885.228)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 91.125
+
+[sub_resource type="Resource" id="Resource_b66vd"]
+script = ExtResource("3_sam3b")
+position = Vector2(287.52417, 665.0718)
+rotation_degrees = -24.848003
+length = 404.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_k0ue2")
 level_uid = "level_103"
 display_order = 103
 difficulty = 4
+hint_angle_degrees = -36.0
+hint_power = 2100.0
 level_id = 103
-display_name = "Çark Girişi"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(540, 220)
-target_scale = 0.796
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 99.0
-two_star_max_shots = 5
-three_star_max_seconds = 60.0
-three_star_max_shots = 3
+display_name = "Ters Devir"
+target_position = Vector2(140.01666, 373.17993)
+panels = Array[ExtResource("3_sam3b")]([SubResource("Resource_b66vd")])
+obstacles = Array[ExtResource("2_uanjt")]([SubResource("Resource_77jhw")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 527.6885), Vector2(650.2082, 1600)])
+two_star_max_seconds = 119.60000000000001
+two_star_max_shots = 3
+three_star_max_seconds = 63.6

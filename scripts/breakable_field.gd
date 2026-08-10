@@ -89,6 +89,17 @@ func get_broken_count() -> int:
 	return _total - get_remaining_count()
 
 
+## Ipucu simulasyonu bloklari "kirik" kabul eder. Runtime fizik uzayindaki
+## govdeler yine var oldugu icin solver sorgusundan dislanacak RID listesi.
+func get_body_rids() -> Array[RID]:
+	var rids: Array[RID] = []
+	for child in get_children():
+		var block := child as BreakableBlock
+		if block != null:
+			rids.append(block.get_rid())
+	return rids
+
+
 func _on_block_broken(at: Vector2) -> void:
 	block_broken.emit(at)
 

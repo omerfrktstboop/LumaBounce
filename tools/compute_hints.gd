@@ -12,9 +12,9 @@ extends SceneTree
 ##
 ## HANGI ATIS SECILIR: LevelSolver.analyse_robust'in "best" hucresi, yani
 ## saglam (dort komsusu da isabet eden) hucreler arasinda EN AZ SEKMEYLE
-## gidenin acisi/gucu. En kisa rota degil, en TOLERANSLI rota - ipucunun isi
-## oyuncuyu piksel hassasiyetinde bir atisa mahkum etmek degil, tikandigi
-## yerde calisan bir yon gostermek.
+## gidenin acisi/gucu. Saglam hucre yok ama isabet varsa, cevresinde en cok
+## isabet olan gercek hucre yedek rota secilir. Ipucu ekranda tam yolu cizdigi
+## icin bu az sayidaki hassas bolumde de kullanilabilir kalir.
 ##
 ## Bloklu bolumlerde tarama bloklar KIRILMIS halde yapilir: kirilmamis halde
 ## zaten rota yoktur (bandin sozlesmesi bu), dolayisiyla ipucu "once bloklari
@@ -108,12 +108,13 @@ func _compute(level_id: int) -> bool:
 	_world = null
 	await process_frame
 
-	if int(analysis["robust"]) <= 0:
-		print("LEVEL %3d ipucu yok (saglam hucre bulunamadi)" % level_id)
+	var selected := _select_hint(scan, analysis)
+	if selected.is_empty():
+		print("LEVEL %3d ipucu yok (hedefe ulasan hucre bulunamadi)" % level_id)
 		return false
 
-	var angle := float(analysis["best_angle"])
-	var power := float(analysis["best_power"])
+	var angle := float(selected["angle"])
+	var power := float(selected["power"])
 	if is_equal_approx(level.hint_angle_degrees, angle) \
 			and is_equal_approx(level.hint_power, power):
 		print("LEVEL %3d ipucu zaten guncel (aci %.1f, guc %.0f)" % [level_id, angle, power])
@@ -125,6 +126,61 @@ func _compute(level_id: int) -> bool:
 	if error != OK:
 		push_error("compute_hints: %s yazilamadi (%d)" % [path, error])
 		return false
-	print("LEVEL %3d ipucu: aci %.1f deg, guc %.0f  (saglam %d, sekme %d)" % [
-		level_id, angle, power, int(analysis["robust"]), int(analysis["bounces"])])
+	print("LEVEL %3d ipucu: aci %.1f deg, guc %.0f  (saglam %d, komsu %d, sekme %d)" % [
+		level_id, angle, power, int(analysis["robust"]), int(selected["neighbours"]),
+		int(selected["bounces"])])
 	return true
+
+
+func _select_hint(scan: Dictionary, analysis: Dictionary) -> Dictionary:
+	if int(analysis["robust"]) > 0:
+		return {
+			"angle": float(analysis["angle"]),
+			"power": float(analysis["power"]),
+			"bounces": int(analysis["bounces"]),
+			"neighbours": 4,
+		}
+
+	var angles: Array[float] = scan["angles"]
+	var powers: Array[float] = scan["powers"]
+	var hits: Array = scan["hits"]
+	var bounces: Array = scan["bounces"]
+	var best := {}
+	var best_neighbours := -1
+	var best_bounces := 9999
+	var best_edge_distance := -1
+	for ai in angles.size():
+		for pi in powers.size():
+			if not bool(hits[ai][pi]):
+				continue
+			var neighbours := 0
+			for da in range(-1, 2):
+				for dp in range(-1, 2):
+					if da == 0 and dp == 0:
+						continue
+					var neighbour_ai := ai + da
+					var neighbour_pi := pi + dp
+					if neighbour_ai >= 0 and neighbour_ai < angles.size() \
+							and neighbour_pi >= 0 and neighbour_pi < powers.size() \
+							and bool(hits[neighbour_ai][neighbour_pi]):
+						neighbours += 1
+			var cell_bounces := int(bounces[ai][pi])
+			var edge_distance := mini(
+				mini(ai, angles.size() - 1 - ai), mini(pi, powers.size() - 1 - pi))
+			if neighbours < best_neighbours:
+				continue
+			if neighbours == best_neighbours and cell_bounces > best_bounces:
+				continue
+			if neighbours == best_neighbours and cell_bounces == best_bounces \
+					and edge_distance <= best_edge_distance:
+				continue
+			best_neighbours = neighbours
+			best_bounces = cell_bounces
+			best_edge_distance = edge_distance
+			best = {
+				"angle": angles[ai],
+				"power": powers[pi],
+				"bounces": cell_bounces,
+				"neighbours": neighbours,
+			}
+	return best

@@ -1,45 +1,45 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_02408"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_1e4hx"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_vunby"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_u13fd"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(220, 760)
-rotation_degrees = -24
-length = 220
-thickness = 26
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_h3swk"]
+script = ExtResource("2_1e4hx")
 kind = 2
-position = Vector2(550, 520)
-rotation_degrees = 0
-size = Vector2(96, 22)
-spoke_count = 4
-angular_speed_degrees = -55
+position = Vector2(375.01004, 417.47174)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -89.8125
+
+[sub_resource type="Resource" id="Resource_knwus"]
+script = ExtResource("2_1e4hx")
+position = Vector2(301.18024, 858.90466)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 62.44
+
+[sub_resource type="Resource" id="Resource_m3udm"]
+script = ExtResource("3_vunby")
+position = Vector2(329.37024, 593.31226)
+rotation_degrees = 13.29564447402954
+length = 322.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_u13fd")
 level_uid = "level_102"
 display_order = 102
 difficulty = 4
+hint_angle_degrees = 20.0
+hint_power = 1600.0
 level_id = 102
-display_name = "Çark Girişi"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(180, 220)
-target_scale = 0.798
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 99.0
-two_star_max_shots = 5
-three_star_max_seconds = 60.0
-three_star_max_shots = 3
+display_name = "Dönen Geçit"
+target_position = Vector2(538.08435, 294.1206)
+panels = Array[ExtResource("3_vunby")]([SubResource("Resource_m3udm")])
+obstacles = Array[ExtResource("2_1e4hx")]([SubResource("Resource_h3swk"), SubResource("Resource_knwus")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 531.7565), Vector2(664.3258, 1600)])
+two_star_max_seconds = 118.80000000000001
+two_star_max_shots = 3
+three_star_max_seconds = 63.2

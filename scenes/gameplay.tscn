@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay.gd" id="1_gameplay"]
 [ext_resource type="Script" path="res://scripts/arena.gd" id="2_arena"]
@@ -18,6 +18,8 @@
 [ext_resource type="PackedScene" path="res://scenes/breakable_block.tscn" id="17_block"]
 [ext_resource type="Script" path="res://scripts/obstacle_field.gd" id="18_obstacle_field"]
 [ext_resource type="PackedScene" path="res://scenes/mechanic_intro_card.tscn" id="19_intro_card"]
+[ext_resource type="Script" path="res://scripts/ui/hint_path.gd" id="20_hint_path"]
+[ext_resource type="PackedScene" path="res://scenes/hint_purchase_card.tscn" id="21_hint_card"]
 
 [node name="Gameplay" type="Node2D"]
 script = ExtResource("1_gameplay")
@@ -68,6 +70,10 @@ position = Vector2(360, 1050)
 
 [node name="Effects" type="Node2D" parent="."]
 z_index = 7
+
+[node name="HintPath" type="Node2D" parent="."]
+z_index = 3
+script = ExtResource("20_hint_path")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
@@ -190,6 +196,57 @@ script = ExtResource("9_icon_button")
 high_contrast = true
 glyph = 5
 idle_color = Color(0.913725, 0.94902, 1, 1)
+
+[node name="CoinBalance" type="Label" parent="HUD/SafeArea/Root"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 0.0
+offset_top = 70.0
+offset_right = 166.0
+offset_bottom = 112.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.831373, 0.956863, 1, 1)
+theme_override_colors/font_outline_color = Color(0.0392157, 0.0666667, 0.113725, 0.9)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 21
+text = "3 LUMA COIN"
+vertical_alignment = 1
+
+[node name="HintButton" type="Button" parent="HUD/SafeArea/Root"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -174.0
+offset_top = 70.0
+offset_right = 0.0
+offset_bottom = 124.0
+grow_horizontal = 0
+focus_mode = 0
+theme_override_font_sizes/font_size = 22
+text = "Ä°PUCU Â· 3"
+script = ExtResource("11_button")
+high_contrast = true
+content_margin = Vector2(16, 8)
+
+[node name="HintStatus" type="Label" parent="HUD/SafeArea/Root"]
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 150.0
+offset_top = 130.0
+offset_right = -150.0
+offset_bottom = 172.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.913725, 0.823529, 1, 1)
+theme_override_colors/font_outline_color = Color(0.0392157, 0.0666667, 0.113725, 0.95)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 23
+text = "ROTAYI TAKİP ET"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="ResultPanel" type="Control" parent="HUD"]
 visible = false
@@ -344,3 +401,5 @@ text = "ANA MENÜ"
 script = ExtResource("11_button")
 
 [node name="MechanicIntroCard" parent="HUD" instance=ExtResource("19_intro_card")]
+
+[node name="HintPurchaseCard" parent="HUD" instance=ExtResource("21_hint_card")]

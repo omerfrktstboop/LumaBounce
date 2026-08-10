@@ -1,67 +1,37 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_4q58k"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_pfrn2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_fn3ex"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_6eeev"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(180, 830)
-rotation_degrees = 30
-length = 190
-thickness = 26
-
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(520, 690)
-rotation_degrees = -28
-length = 200
-thickness = 26
-
-[sub_resource type="Resource" id="Block_1"]
-script = ExtResource("1_block")
-position = Vector2(360, 690)
-rotation_degrees = 0
-size = Vector2(100, 30)
-hit_points = 1
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_cfig5"]
+script = ExtResource("2_pfrn2")
 kind = 2
-position = Vector2(170, 520)
-rotation_degrees = 0
-size = Vector2(108, 22)
-spoke_count = 4
-angular_speed_degrees = 85
+position = Vector2(165.24597, 901.9476)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -108.1875
 
-[sub_resource type="Resource" id="Obstacle_2"]
-script = ExtResource("2_obstacle")
-kind = 0
-position = Vector2(545, 380)
-rotation_degrees = 0
-size = Vector2(118, 28)
-inner_radius = 42
+[sub_resource type="Resource" id="Resource_43vbi"]
+script = ExtResource("3_fn3ex")
+position = Vector2(478.32715, 475.78394)
+rotation_degrees = 50.519425010681154
+length = 255.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_6eeev")
 level_uid = "level_116"
 display_order = 116
 difficulty = 4
+hint_angle_degrees = -48.0
+hint_power = 2150.0
 level_id = 116
-display_name = "Dönen Koridor"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(360, 200)
-target_scale = 0.77
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1")])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1"), SubResource("Obstacle_2")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 108.0
-two_star_max_shots = 5
-three_star_max_seconds = 66.0
-three_star_max_shots = 3
+display_name = "Sessiz Devir"
+target_position = Vector2(574.9557, 296.62457)
+panels = Array[ExtResource("3_fn3ex")]([SubResource("Resource_43vbi")])
+obstacles = Array[ExtResource("2_pfrn2")]([SubResource("Resource_cfig5")])
+two_star_max_seconds = 130.8
+two_star_max_shots = 3
+three_star_max_seconds = 69.5

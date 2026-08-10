@@ -20,6 +20,8 @@ run/main_scene="res://scenes/app_root.tscn"
 config/quit_on_go_back=false
 config/features=PackedStringArray("4.7", "GL Compatibility")
 run/max_fps=60
+boot_splash/show_image=false
+config/icon="res://assets/icons/luma_bounce_icon.png"
 
 [autoload]
 

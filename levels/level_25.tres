@@ -1,50 +1,62 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(180, 830)
-rotation_degrees = 30
-length = 190
-thickness = 26
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("3")
+position = Vector2(516.6982, 879.3774)
+rotation_degrees = 8.506
+length = 255.86
+thickness = 26.0
 
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(520, 690)
-rotation_degrees = -28
-length = 200
-thickness = 26
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("3")
+position = Vector2(132.63, 685.799)
+rotation_degrees = -3.286
+length = 253.377
+thickness = 26.0
 
-[sub_resource type="Resource" id="Panel_3"]
-script = ExtResource("3_panel")
-position = Vector2(300, 520)
-rotation_degrees = 20
-length = 180
-thickness = 26
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("3")
+position = Vector2(288.16406, 375.66406)
+rotation_degrees = 0.0
+length = 280.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("3")
+position = Vector2(575.09766, 498.75977)
+rotation_degrees = 0.0
+length = 280.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4")
 level_uid = "level_025"
 display_order = 25
-difficulty = 1
+theme_id = ""
+difficulty = 3
+time_limit = 0.0
+is_bonus = false
+hint_angle_degrees = -10.0
+hint_power = 2150.0
 level_id = 25
-display_name = "Ritim Finali"
+display_name = "Yedi Temas"
 launcher_position = Vector2(360, 1120)
-target_position = Vector2(460, 200)
-target_scale = 0.952
-ball_scale = 0.78
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2"), SubResource("Panel_3")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([])
-left_wall_segments = Array[Vector2]([Vector2(-320, 500), Vector2(700, 1600)])
-right_wall_segments = Array[Vector2]([Vector2(-320, 660), Vector2(860, 1600)])
+target_position = Vector2(481.93326, 112.21445)
+target_scale = 1.0
+ball_scale = 1.0
+panels = Array[ExtResource("3")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui")])
+breakable_blocks = Array[ExtResource("1")]([])
+obstacles = Array[ExtResource("2")]([])
+left_wall_segments = Array[Vector2]([])
+right_wall_segments = Array[Vector2]([])
 max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 67.0
-two_star_max_shots = 4
-three_star_max_seconds = 40.0
-three_star_max_shots = 2
+tutorial_text = "Ritmi bozma; son dönüş hedefi açar."
+two_star_max_seconds = 110.0
+two_star_max_shots = 2
+three_star_max_seconds = 55.0
+three_star_max_shots = 1

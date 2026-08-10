@@ -1,46 +1,46 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_5iuu8"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_wsphi"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_55fmg"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_pqao2"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(220, 760)
-rotation_degrees = 24
-length = 220
-thickness = 26
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_l6aom"]
+script = ExtResource("2_wsphi")
 kind = 5
-position = Vector2(360, 620)
-rotation_degrees = 0
-size = Vector2(300, 14)
-motion_period = 3.6
-phase_degrees = 144
-pulse_on_ratio = 0.5
+position = Vector2(603.9295, 403.39606)
+size = Vector2(287.1, 14)
+motion_period = 2.596
+phase_degrees = 163.10892
+pulse_on_ratio = 0.5505
+
+[sub_resource type="Resource" id="Resource_lofht"]
+script = ExtResource("2_wsphi")
+position = Vector2(171.99442, 411.9394)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 61.28
+
+[sub_resource type="Resource" id="Resource_d1ga4"]
+script = ExtResource("3_55fmg")
+position = Vector2(244.2055, 642.7886)
+rotation_degrees = -13.301659
+length = 403.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_pqao2")
 level_uid = "level_128"
 display_order = 128
-difficulty = 5
+difficulty = 4
+hint_angle_degrees = 14.0
+hint_power = 1750.0
 level_id = 128
-display_name = "Lazer Girişi"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(540, 220)
-target_scale = 0.746
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 110.0
-two_star_max_shots = 5
-three_star_max_seconds = 67.0
-three_star_max_shots = 3
+display_name = "Işık Aralığı"
+target_position = Vector2(346.8465, 291.38538)
+panels = Array[ExtResource("3_55fmg")]([SubResource("Resource_d1ga4")])
+obstacles = Array[ExtResource("2_wsphi")]([SubResource("Resource_l6aom"), SubResource("Resource_lofht")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 585.046), Vector2(710.0901, 1600)])
+two_star_max_seconds = 141.1
+two_star_max_shots = 3
+three_star_max_seconds = 75.0

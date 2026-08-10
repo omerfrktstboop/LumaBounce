@@ -5,24 +5,16 @@
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
 
-
 [resource]
 script = ExtResource("4_level")
 level_uid = "level_001"
 display_order = 1
 difficulty = 1
-level_id = 1
+hint_angle_degrees = -2.0
+hint_power = 1950.0
 display_name = "İlk Atış"
-launcher_position = Vector2(360, 1120)
 target_position = Vector2(360, 220)
-target_scale = 1.0
 ball_scale = 0.78
-panels = Array[PanelData]([])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
 tutorial_text = "Sürükle, nişan al ve bırak."
 two_star_max_seconds = 35.0
 two_star_max_shots = 2

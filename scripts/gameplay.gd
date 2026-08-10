@@ -42,6 +42,10 @@ signal block_mechanic_seen()
 ## Oyuncu ilk gecerli nisan hareketini yapinca ipucu bu surede solar.
 @export var tutorial_fade_time := 0.25
 
+@export_group("Luma Coin Ipucu")
+## Bir bolumun ornek rotasini kalici acma maliyeti.
+@export var hint_cost := 3
+
 @export_group("Hizli Yeniden Nisan")
 ## Ucan bir top varken yalnizca firlaticinin bu yaricapindaki dokunuslar
 ## yeni bir nisan suruklemesi baslatabilir.
@@ -92,6 +96,9 @@ var playtest_stats: PlaytestStats
 ## AppRoot tarafindan add_child'dan ONCE atanir. Buradan YALNIZCA onceki
 ## yildiz OKUNUR (yeni rekor tespiti icin); yazma islemi AppRoot'a aittir.
 var progress: ProgressStore
+## AppRoot tarafindan add_child'dan ONCE atanir. Harcama ve kalici ipucu
+## kilitleri bu nesnenin tek sorumlulugudur.
+var wallet: WalletStore
 ## TEST MODU - bolum editorunden "TEST" ile acildiginda AppRoot tarafindan
 ## acilir. Bolum BITMEZ: hedefe isabet geri bildirimi oynar ama sonuc karti
 ## acilmaz, haklar tukenmez, ilerleme yazilmaz. Amac bolumu degerlendirmek
@@ -109,6 +116,7 @@ var aim_assist := false
 @onready var _ball: Ball = $Ball
 @onready var _target: Target = $Target
 @onready var _effects: Node2D = $Effects
+@onready var _hint_path: HintPath = $HintPath
 @onready var _shake: ScreenShake = $ShakeCamera
 @onready var _message: Label = $HUD/SafeArea/Root/Message
 @onready var _tutorial: Label = $HUD/SafeArea/Root/TutorialLabel
@@ -117,11 +125,16 @@ var aim_assist := false
 @onready var _level_subtitle: Label = $HUD/SafeArea/Root/LevelHeader/LevelSubtitle
 @onready var _retry_button: Button = $HUD/SafeArea/Root/RetryButton
 @onready var _home_button: Button = $HUD/SafeArea/Root/HomeButton
+@onready var _hint_button: LumaButton = $HUD/SafeArea/Root/HintButton
+@onready var _coin_balance: Label = $HUD/SafeArea/Root/CoinBalance
+@onready var _hint_status: Label = $HUD/SafeArea/Root/HintStatus
 @onready var _lives_display: LivesDisplay = $HUD/SafeArea/Root/LivesDisplay
 @onready var _result_panel: ResultPanel = $HUD/ResultPanel
+@onready var _hint_card: HintPurchaseCard = $HUD/HintPurchaseCard
 
 var _message_tween: Tween
 var _tutorial_tween: Tween
+var _hint_status_tween: Tween
 ## Ipucu bu denemede zaten solduysa tekrar tetiklenmesin.
 var _tutorial_dismissed := false
 ## Bu bolume GIRISTE (restart'ta degil) gosterilecek, oyuncunun daha once
@@ -135,6 +148,10 @@ var _pending_block_intro := false
 var _showing_block_intro := false
 ## Kart acilmadan onceki firlatici durumu; kapaninca aynen geri verilir.
 var _launcher_enabled_before_intro := true
+var _launcher_enabled_before_hint := true
+var _hint_trace := PackedVector2Array()
+var _hint_waiting_for_blocks := false
+var _pending_luma_coin_reward := 0
 var _max_lives := 5
 var _lives_remaining := 0
 ## Her "gecerli atis denemesi" basladiginda artar (bkz. _respawn_ball).
@@ -190,6 +207,9 @@ func _ready() -> void:
 	_position_shake_camera()
 	_input_blockers.append(_retry_button)
 	_input_blockers.append(_home_button)
+	_input_blockers.append(_hint_button)
+	_input_blockers.append(_hint_card)
+	_refresh_hint_hud()
 	_start_playtest_timing()
 	if playtest_stats != null:
 		playtest_stats.record_entry(level_data.level_id)
@@ -359,6 +379,9 @@ func _connect_signals() -> void:
 	# Tiklama sesini LumaButton'un kendisi calar (HUD butonlari da LumaIconButton).
 	_retry_button.pressed.connect(reset_shot)
 	_home_button.pressed.connect(menu_requested.emit)
+	_hint_button.pressed.connect(_on_hint_pressed)
+	_hint_card.purchase_requested.connect(_on_hint_purchase_requested)
+	_hint_card.dismissed.connect(_on_hint_card_dismissed)
 	_intro_card.dismissed.connect(_on_intro_card_dismissed)
 	_result_panel.next_pressed.connect(_on_result_next)
 	_result_panel.retry_pressed.connect(_on_result_retry)
@@ -384,6 +407,10 @@ func reset_shot() -> void:
 	_has_started = true
 	_shots_this_attempt = 0
 	_reset_attempt_timer()
+	_hint_path.hide_path()
+	_hint_waiting_for_blocks = false
+	_pending_luma_coin_reward = 0
+	_hide_hint_status()
 	# Ipucu yalnizca bolum bastan baslarken geri gelir; basarisiz atistan
 	# sonraki otomatik top respawn'inda gelmez.
 	_show_tutorial()
@@ -435,6 +462,7 @@ func _on_shot_fired(impulse: Vector2) -> void:
 	if not _ball.is_ready_to_launch():
 		return
 	_reaim_pending = false
+	_hint_path.hide_path()
 
 	_shots_this_attempt += 1
 	_last_shot_power = impulse.length()
@@ -591,7 +619,9 @@ func _open_success_panel(stars: int, new_record: bool) -> void:
 	var next_text := next_level_label if _can_advance_to_next() else level_select_label
 	_result_panel.show_success(
 		completed_title, next_text, retry_label,
-		stars, _final_attempt_seconds, _final_attempt_shots, new_record)
+		stars, _final_attempt_seconds, _final_attempt_shots, new_record,
+		tr("+%d LUMA COIN") % _pending_luma_coin_reward \
+			if _pending_luma_coin_reward > 0 else "")
 	# target_hit'ten result_delay kadar sonra geldigi icin ust uste binmez.
 	AudioManager.play_level_complete()
 
@@ -704,6 +734,9 @@ func _on_block_broken(_at: Vector2) -> void:
 	# ama sekmenin kivilcimi ve titresimi aynen kalir.
 	AudioManager.play_block_break()
 	_shake.add_trauma(block_break_shake_trauma)
+	if _hint_waiting_for_blocks and _blocks.get_remaining_count() == 0:
+		_hint_waiting_for_blocks = false
+		_show_unlocked_hint.call_deferred()
 
 
 func _on_ball_bounced(at: Vector2, normal: Vector2, impact_speed: float) -> void:
@@ -831,6 +864,131 @@ func _to_world(viewport_position: Vector2) -> Vector2:
 
 # --- HUD ---------------------------------------------------------------------
 
+func _refresh_hint_hud() -> void:
+	var available := (
+		wallet != null and level_data != null and level_data.has_hint() and not practice_mode)
+	_coin_balance.visible = wallet != null and not practice_mode
+	_hint_button.visible = available
+	if wallet == null:
+		return
+	_coin_balance.text = tr("%d LUMA COIN") % wallet.balance
+	if not available:
+		return
+	var unlocked := wallet.is_hint_unlocked(level_data.uid())
+	_hint_button.text = tr("İPUCU") if unlocked else tr("İPUCU · %d") % hint_cost
+	_hint_button.disabled = false
+
+
+func _on_hint_pressed() -> void:
+	if wallet == null or level_data == null or not level_data.has_hint() or practice_mode:
+		return
+	if wallet.is_hint_unlocked(level_data.uid()):
+		_show_unlocked_hint()
+		return
+	# Satin alma kartini acmadan once kayitli aci/gucun bu geometride gercekten
+	# hedefe gittigini dogrula. Bozuk/eski ipucu verisi icin Coin kesilmez.
+	if _hint_trace.is_empty():
+		_hint_trace = _build_hint_trace()
+	if _hint_trace.is_empty():
+		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
+		return
+	_open_hint_card()
+	if wallet.can_afford(hint_cost):
+		_hint_card.show_purchase(hint_cost, wallet.balance)
+	else:
+		_hint_card.show_insufficient(wallet.balance)
+
+
+func _on_hint_purchase_requested() -> void:
+	if wallet == null or level_data == null:
+		return
+	if not wallet.unlock_hint(level_data.uid(), hint_cost):
+		_hint_card.show_insufficient(wallet.balance)
+		return
+	_refresh_hint_hud()
+	_hint_card.close()
+	_show_unlocked_hint()
+
+
+func _open_hint_card() -> void:
+	if not _hint_card.is_open():
+		_launcher_enabled_before_hint = _launcher.enabled
+	_launcher.cancel_aim()
+	_launcher.enabled = false
+
+
+func _on_hint_card_dismissed() -> void:
+	if not _intro_card.is_open() and not _attempt_finished:
+		_launcher.enabled = _launcher_enabled_before_hint
+
+
+func _show_unlocked_hint() -> void:
+	if wallet == null or not wallet.is_hint_unlocked(level_data.uid()):
+		return
+	if _blocks.get_remaining_count() > 0:
+		_hint_waiting_for_blocks = true
+		_show_hint_status(tr("ÖNCE BLOKLARI KIR"), 2.8)
+		return
+	if _hint_trace.is_empty():
+		_hint_trace = _build_hint_trace()
+	if _hint_trace.is_empty():
+		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
+		return
+	_hint_waiting_for_blocks = false
+	_hint_path.show_path(_hint_trace)
+	_show_hint_status(tr("ROTAYI TAKİP ET"), 2.2)
+
+
+## Offline taramada bulunan tek atisi runtime fizik dunyasinda bir kez oynatir.
+## Runtime blok/engel govdeleri sorgudan dislanir: bloklar ipucu sozlesmesine
+## gore kirik, hareketli engeller ise LevelSolver'in zaman cizelgesindedir.
+func _build_hint_trace() -> PackedVector2Array:
+	var empty := PackedVector2Array()
+	if level_data == null or not level_data.has_hint():
+		return empty
+	var solver := LevelSolver.from_scenes()
+	var excluded := _blocks.get_body_rids()
+	excluded.append_array(_obstacles.get_solver_excluded_rids())
+	solver.bind_space(get_world_2d().direct_space_state, {}, level_data.obstacles)
+	var direction := Vector2.UP.rotated(deg_to_rad(level_data.hint_angle_degrees))
+	var result := solver.simulate(
+		_launcher.get_spawn_position(), direction * level_data.hint_power,
+		level_data.target_position, _arena.get_play_rect(), excluded, true)
+	if not bool(result.get("hit", false)):
+		push_warning("Gameplay: %s icin kayitli ipucu hedefe ulasmiyor." % level_data.uid())
+		return empty
+	return result.get("trace_points", empty) as PackedVector2Array
+
+
+## AppRoot ilk tamamlama odulunu ayni WalletStore'a yazdiktan sonra cagirir.
+func notify_luma_coin_reward(amount: int) -> void:
+	if amount <= 0:
+		return
+	_pending_luma_coin_reward += amount
+	_refresh_hint_hud()
+	_show_hint_status(tr("+%d LUMA COIN") % amount, 2.4)
+
+
+func _show_hint_status(text: String, hold_time := 2.0) -> void:
+	if _hint_status_tween != null and _hint_status_tween.is_valid():
+		_hint_status_tween.kill()
+	_hint_status.text = text
+	_hint_status.modulate.a = 0.0
+	_hint_status.show()
+	_hint_status_tween = create_tween()
+	_hint_status_tween.tween_property(_hint_status, "modulate:a", 1.0, 0.16)
+	_hint_status_tween.tween_interval(hold_time)
+	_hint_status_tween.tween_property(_hint_status, "modulate:a", 0.0, 0.28)
+	_hint_status_tween.tween_callback(_hint_status.hide)
+
+
+func _hide_hint_status() -> void:
+	if _hint_status_tween != null and _hint_status_tween.is_valid():
+		_hint_status_tween.kill()
+	_hint_status.hide()
+	_hint_status.modulate.a = 1.0
+
+
 func _show_message(text: String) -> void:
 	if _message_tween != null and _message_tween.is_valid():
 		_message_tween.kill()
@@ -870,6 +1028,9 @@ func _on_aim_updated(power_ratio: float, direction: Vector2) -> void:
 		_ball.set_launcher_tension(
 			power_ratio, direction, _launcher.loaded_ball_pullback_distance)
 	if _launcher.has_valid_aim():
+		_hint_path.hide_path()
+		_hint_waiting_for_blocks = false
+		_hide_hint_status()
 		_start_attempt_timer()
 		_dismiss_tutorial()
 
@@ -992,6 +1153,12 @@ func get_debug_snapshot() -> Dictionary:
 		"saved_stars": saved_stars,
 		"total_stars": total_stars,
 		"max_total_stars": progress.get_max_available_stars() if progress != null else 0,
+		"luma_coins": wallet.balance if wallet != null else -1,
+		"hint_available": level_data.has_hint() if level_data != null else false,
+		"hint_unlocked": (
+			wallet.is_hint_unlocked(level_data.uid()) if wallet != null and level_data != null
+			else false),
+		"hint_visible": _hint_path.is_showing(),
 		"stats": stats,
 	}
 

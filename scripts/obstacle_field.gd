@@ -65,3 +65,19 @@ func set_obstacle_position(index: int, value: Vector2) -> void:
 	var obstacle := get_obstacle_node(index)
 	if obstacle != null:
 		obstacle.set_data_position(value)
+
+
+## LevelSolver hareketli/tehlikeli engelleri ObstacleData'dan kendi zaman
+## cizelgesiyle simule eder. Runtime govdeleri de ayni fizik uzayinda kaldigi
+## icin cift carpisma olmamasi adina katman-1 govdeleri sorgudan dislanir.
+func get_solver_excluded_rids() -> Array[RID]:
+	var rids: Array[RID] = []
+	for obstacle in _nodes:
+		if not is_instance_valid(obstacle):
+			continue
+		for raw in obstacle.find_children("*", "CollisionObject2D", true, false):
+			var body := raw as CollisionObject2D
+			if body != null \
+					and (body.collision_layer & LevelObstacle.OBSTACLE_LAYER) != 0:
+				rids.append(body.get_rid())
+	return rids

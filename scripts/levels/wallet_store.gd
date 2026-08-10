@@ -1,22 +1,22 @@
 class_name WalletStore
 extends RefCounted
 
-## Oyuncunun ALTIN bakiyesi: user://wallet.cfg.
+## Oyuncunun LUMA COIN bakiyesi ve kalici ipucu kilitleri: user://wallet.cfg.
 ##
-## NEDEN AYRI DOSYA: altin ileride SATIN ALINABILIR olacak. Gercek parayla
+## NEDEN AYRI DOSYA: Luma Coin ileride SATIN ALINABILIR olacak. Gercek parayla
 ## alinmis bir bakiyenin, "ilerlemeyi sifirla" ya da bir kayit bozulmasi
 ## yuzunden silinmesi kabul edilemez. ProgressStore'dan ayri tutmak bu iki
 ## riski birden kaldirir: reset() bu dosyaya dokunmaz ve ilerleme dosyasi
 ## bozulsa bile bakiye yerinde kalir.
 ##
-## SU AN SATIN ALMA YOK. Burada yalnizca bakiye, harcama ve kazanma vardir;
+## SU AN SATIN ALMA YOK. Burada bakiye, harcama, kazanma ve acilan ipuclari vardir;
 ## magaza/faturalandirma eklendiginde tek yapilacak sey [method add] cagiran
 ## bir odeme dogrulayicisi yazmaktir. Bakiyeyi degistiren baska hicbir yol
 ## olmamali - tek giris noktasi bu sinif.
 ##
 ## GUVENLIK NOTU: bu dosya CIHAZDA duruyor ve kurcalanabilir. Sunucu tarafli
-## dogrulama olmadan altin "guvenli" degildir; bu kabul edilmis bir tercih,
-## cunku altin yalnizca IPUCU aciyor - rekabetci bir sey degil. Gercek para
+## dogrulama olmadan Luma Coin "guvenli" degildir; bu kabul edilmis bir tercih,
+## cunku Luma Coin yalnizca IPUCU aciyor - rekabetci bir sey degil. Gercek para
 ## akisi eklendiginde bakiyenin sunucuda tutulmasi gerekir.
 
 const SAVE_PATH := "user://wallet.cfg"
@@ -24,28 +24,40 @@ const SECTION := "wallet"
 const KEY_BALANCE := "gold"
 const KEY_SPENT := "gold_spent_total"
 const KEY_EARNED := "gold_earned_total"
+const KEY_HINT_UNLOCKS := "hint_unlocks"
 
-## Yeni oyuncuya verilen baslangic altini. Ipucu sistemini bir kez BEDAVA
+## Yeni oyuncuya verilen baslangic bakiyesi. Ipucu sistemini bir kez BEDAVA
 ## denemesi icin: hic denemeden "para ister" diyen bir ozellik reddedilir.
-const STARTING_GOLD := 3
+const STARTING_LUMA_COINS := 3
 
-var balance := STARTING_GOLD
+var balance := STARTING_LUMA_COINS
 ## Toplamlar yalnizca raporlama/analiz icin tutulur; oynanisi etkilemez.
 var spent_total := 0
 var earned_total := 0
+## Anahtar LevelData.uid() degeridir. Dictionary kullanimi tekrar acmayi
+## idempotent yapar; diske sirali PackedStringArray olarak yazilir.
+var _hint_unlocks: Dictionary = {}
+var _save_path := SAVE_PATH
 
 
 static func load_from_disk() -> WalletStore:
+	return load_from_path(SAVE_PATH)
+
+
+## Testler gercek oyuncu cuzdanina dokunmadan ayni kod yolunu kullanabilsin.
+static func load_from_path(path: String) -> WalletStore:
 	var store := WalletStore.new()
+	store._save_path = path
 	var config := ConfigFile.new()
-	if config.load(SAVE_PATH) != OK:
-		# Dosya yok: ilk calistirma. Baslangic altini verilir ve HEMEN yazilir,
-		# yoksa oyuncu her acilista yeniden 3 altin alirdi.
+	if config.load(path) != OK:
+		# Dosya yok: ilk calistirma. Baslangic bakiyesi verilir ve HEMEN yazilir,
+		# yoksa oyuncu her acilista yeniden 3 Coin alirdi.
 		store.save()
 		return store
-	store.balance = _read_int(config, KEY_BALANCE, STARTING_GOLD)
+	store.balance = _read_int(config, KEY_BALANCE, STARTING_LUMA_COINS)
 	store.spent_total = _read_int(config, KEY_SPENT, 0)
 	store.earned_total = _read_int(config, KEY_EARNED, 0)
+	store._load_hint_unlocks(config)
 	return store
 
 
@@ -56,14 +68,18 @@ static func _read_int(config: ConfigFile, key: String, fallback: int) -> int:
 	return fallback
 
 
-func save() -> void:
+func save() -> Error:
 	var config := ConfigFile.new()
 	config.set_value(SECTION, KEY_BALANCE, balance)
 	config.set_value(SECTION, KEY_SPENT, spent_total)
 	config.set_value(SECTION, KEY_EARNED, earned_total)
-	var error := config.save(SAVE_PATH)
+	var unlocks := PackedStringArray(_hint_unlocks.keys())
+	unlocks.sort()
+	config.set_value(SECTION, KEY_HINT_UNLOCKS, unlocks)
+	var error := config.save(_save_path)
 	if error != OK:
 		push_warning("WalletStore: bakiye yazilamadi (hata %d)." % error)
+	return error
 
 
 func can_afford(amount: int) -> bool:
@@ -81,10 +97,52 @@ func spend(amount: int) -> bool:
 	return true
 
 
-## Altin ekler (odul, satin alma, telafi). Tek giris noktasi burasi.
+func is_hint_unlocked(level_uid: String) -> bool:
+	return _hint_unlocks.has(level_uid.strip_edges())
+
+
+## Harcama ve kilit acma TEK save icinde yapilir. Ayni bolum ikinci kez
+## acilirsa true doner ama bakiyeye dokunmaz; boylece cift dokunus ucret kesmez.
+func unlock_hint(level_uid: String, cost: int) -> bool:
+	var clean_uid := level_uid.strip_edges()
+	if clean_uid.is_empty():
+		return false
+	if is_hint_unlocked(clean_uid):
+		return true
+	if cost <= 0 or not can_afford(cost):
+		return false
+
+	var previous_balance := balance
+	var previous_spent := spent_total
+	balance -= cost
+	spent_total += cost
+	_hint_unlocks[clean_uid] = true
+	if save() == OK:
+		return true
+
+	# Yazma basarisizsa calisan oturum da diskte olmayan bir satin almayi
+	# basarili sanmasin; bellek durumunu geri al.
+	balance = previous_balance
+	spent_total = previous_spent
+	_hint_unlocks.erase(clean_uid)
+	return false
+
+
+## Luma Coin ekler (odul, satin alma, telafi). Tek giris noktasi burasi.
 func add(amount: int) -> void:
 	if amount <= 0:
 		return
 	balance += amount
 	earned_total += amount
 	save()
+
+
+func _load_hint_unlocks(config: ConfigFile) -> void:
+	_hint_unlocks.clear()
+	var raw: Variant = config.get_value(SECTION, KEY_HINT_UNLOCKS, PackedStringArray())
+	if not (raw is PackedStringArray or raw is Array):
+		return
+	for value in raw:
+		var clean := String(value).strip_edges()
+		if not clean.is_empty():
+			_hint_unlocks[clean] = true

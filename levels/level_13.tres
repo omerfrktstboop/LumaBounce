@@ -1,38 +1,50 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(210, 760)
-rotation_degrees = -18
-length = 240
-thickness = 26
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("3")
+position = Vector2(392.63672, 721.91406)
+rotation_degrees = -18.0
+length = 240.0
+thickness = 26.0
 
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(505, 600)
-rotation_degrees = 18
-length = 230
-thickness = 26
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("3")
+position = Vector2(594.1211, 518.87695)
+rotation_degrees = 20.0
+length = 230.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("3")
+position = Vector2(190.42969, 508.20313)
+rotation_degrees = -12.0
+length = 360.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4")
 level_uid = "level_013"
 display_order = 13
+theme_id = ""
 difficulty = 1
+time_limit = 0.0
+is_bonus = false
+hint_angle_degrees = 34.0
+hint_power = 2050.0
 level_id = 13
 display_name = "Dar Geçit"
 launcher_position = Vector2(360, 1120)
 target_position = Vector2(540, 220)
 target_scale = 0.976
 ball_scale = 0.78
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([])
+panels = Array[ExtResource("3")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
+breakable_blocks = Array[ExtResource("1")]([])
+obstacles = Array[ExtResource("2")]([])
 left_wall_segments = Array[Vector2]([Vector2(-320, 520), Vector2(760, 1600)])
 right_wall_segments = Array[Vector2]([])
 max_lives = 5

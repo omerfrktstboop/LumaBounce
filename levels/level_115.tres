@@ -1,67 +1,39 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_lnplv"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_42ga0"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_3jjti"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_raxrx"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(200, 820)
-rotation_degrees = 28
-length = 200
-thickness = 26
-
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(520, 650)
-rotation_degrees = -24
-length = 220
-thickness = 26
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_1ak4b"]
+script = ExtResource("2_42ga0")
 kind = 2
-position = Vector2(510, 390)
-rotation_degrees = 0
-size = Vector2(104, 22)
-spoke_count = 6
-angular_speed_degrees = 75
+position = Vector2(286.512, 472.56506)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 106.875
 
-[sub_resource type="Resource" id="Obstacle_2"]
-script = ExtResource("2_obstacle")
-kind = 0
-position = Vector2(140, 360)
-rotation_degrees = 0
-size = Vector2(118, 28)
-inner_radius = 42
-
-[sub_resource type="Resource" id="Obstacle_3"]
-script = ExtResource("2_obstacle")
-kind = 1
-position = Vector2(180, 560)
-rotation_degrees = 0
-size = Vector2(72, 28)
+[sub_resource type="Resource" id="Resource_ntdkt"]
+script = ExtResource("3_3jjti")
+position = Vector2(477.47632, 883.75226)
+rotation_degrees = 13.361960792541504
+length = 311.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_raxrx")
 level_uid = "level_115"
 display_order = 115
 difficulty = 4
+hint_angle_degrees = -26.0
+hint_power = 1650.0
 level_id = 115
-display_name = "Çark ve Mayın"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(460, 220)
-target_scale = 0.772
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1"), SubResource("Obstacle_2"), SubResource("Obstacle_3")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 105.0
-two_star_max_shots = 5
-three_star_max_seconds = 64.0
-three_star_max_shots = 3
+display_name = "Derin Devir"
+target_position = Vector2(501.8753, 403.8185)
+panels = Array[ExtResource("3_3jjti")]([SubResource("Resource_ntdkt")])
+obstacles = Array[ExtResource("2_42ga0")]([SubResource("Resource_1ak4b")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 730.539), Vector2(874.87604, 1600)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 754.89856), Vector2(892.8511, 1600)])
+two_star_max_seconds = 129.9
+two_star_max_shots = 3
+three_star_max_seconds = 69.10000000000001

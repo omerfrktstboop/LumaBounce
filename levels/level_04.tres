@@ -8,35 +8,29 @@
 [sub_resource type="Resource" id="Panel_1"]
 script = ExtResource("3_panel")
 position = Vector2(220, 760)
-rotation_degrees = -24
-length = 220
-thickness = 26
+rotation_degrees = -24.0
+thickness = 26.0
 
 [sub_resource type="Resource" id="Panel_2"]
 script = ExtResource("3_panel")
 position = Vector2(500, 510)
-rotation_degrees = 22
-length = 210
-thickness = 26
+rotation_degrees = 22.0
+length = 210.0
+thickness = 26.0
 
 [resource]
 script = ExtResource("4_level")
 level_uid = "level_004"
 display_order = 4
 difficulty = 1
+hint_angle_degrees = 26.0
+hint_power = 1800.0
 level_id = 4
 display_name = "Açı ve Sekme"
-launcher_position = Vector2(360, 1120)
 target_position = Vector2(260, 220)
 target_scale = 0.994
 ball_scale = 0.78
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([])
-obstacles = Array[ObstacleData]([])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
+panels = Array[ExtResource("3_panel")]([SubResource("Panel_1"), SubResource("Panel_2")])
 two_star_max_seconds = 55.0
 two_star_max_shots = 3
 three_star_max_seconds = 32.0

@@ -1,74 +1,55 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_block"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obstacle"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_panel"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_level"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_ptxn7"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_ssjtb"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_d62wb"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_yhnpn"]
 
-[sub_resource type="Resource" id="Panel_1"]
-script = ExtResource("3_panel")
-position = Vector2(180, 830)
-rotation_degrees = 30
-length = 190
-thickness = 26
+[sub_resource type="Resource" id="Resource_g4f8v"]
+script = ExtResource("1_ptxn7")
+position = Vector2(360, 376.5896)
+rotation_degrees = 1.6788015
+size = Vector2(652, 34)
+hit_points = 2
 
-[sub_resource type="Resource" id="Panel_2"]
-script = ExtResource("3_panel")
-position = Vector2(520, 690)
-rotation_degrees = -28
-length = 200
-thickness = 26
-
-[sub_resource type="Resource" id="Block_1"]
-script = ExtResource("1_block")
-position = Vector2(360, 330)
-rotation_degrees = 0
-size = Vector2(100, 30)
-hit_points = 1
-
-[sub_resource type="Resource" id="Obstacle_1"]
-script = ExtResource("2_obstacle")
+[sub_resource type="Resource" id="Resource_q7xjd"]
+script = ExtResource("2_ssjtb")
 kind = 2
-position = Vector2(510, 390)
-rotation_degrees = 0
-size = Vector2(112, 22)
+position = Vector2(125.52224, 911.0741)
+size = Vector2(120, 20)
 spoke_count = 5
-angular_speed_degrees = 95
+angular_speed_degrees = 120.0
 
-[sub_resource type="Resource" id="Obstacle_2"]
-script = ExtResource("2_obstacle")
-kind = 0
-position = Vector2(175, 700)
-rotation_degrees = 0
-size = Vector2(118, 28)
-inner_radius = 42
+[sub_resource type="Resource" id="Resource_xys6y"]
+script = ExtResource("2_ssjtb")
+position = Vector2(568.143, 745.2438)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 56.0
 
-[sub_resource type="Resource" id="Obstacle_3"]
-script = ExtResource("2_obstacle")
-kind = 1
-position = Vector2(180, 560)
-rotation_degrees = 0
-size = Vector2(72, 28)
+[sub_resource type="Resource" id="Resource_yq4ye"]
+script = ExtResource("3_d62wb")
+position = Vector2(415.31415, 514.748)
+rotation_degrees = 15.461833190917968
+length = 322.0
+thickness = 26.0
 
 [resource]
-script = ExtResource("4_level")
+script = ExtResource("4_yhnpn")
 level_uid = "level_125"
 display_order = 125
 difficulty = 5
+hint_angle_degrees = -36.0
+hint_power = 2100.0
 level_id = 125
-display_name = "Çark Finali"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(460, 200)
-target_scale = 0.752
-ball_scale = 0.72
-panels = Array[PanelData]([SubResource("Panel_1"), SubResource("Panel_2")])
-breakable_blocks = Array[BreakableBlockData]([SubResource("Block_1")])
-obstacles = Array[ObstacleData]([SubResource("Obstacle_1"), SubResource("Obstacle_2"), SubResource("Obstacle_3")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
-two_star_max_seconds = 111.0
+display_name = "Çark Ustalığı"
+target_position = Vector2(586.8525, 289.13858)
+panels = Array[ExtResource("3_d62wb")]([SubResource("Resource_yq4ye")])
+breakable_blocks = Array[ExtResource("1_ptxn7")]([SubResource("Resource_g4f8v")])
+obstacles = Array[ExtResource("2_ssjtb")]([SubResource("Resource_q7xjd"), SubResource("Resource_xys6y")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 623.9572), Vector2(755.2608, 1600)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 765.7568), Vector2(885.8702, 1600)])
+two_star_max_seconds = 138.5
 two_star_max_shots = 5
-three_star_max_seconds = 68.0
-three_star_max_shots = 3
+three_star_max_seconds = 73.60000000000001
+three_star_max_shots = 4

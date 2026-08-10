@@ -1387,65 +1387,93 @@ func _test_library_bounds() -> void:
 	_check("has_next(150)", LevelLibrary.has_next(150), false)
 	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 450)
 
-	# 1-50: hand-authored kutuphane, mevcut yay kurallarina tam uymali.
+	# 1-50: elle tasarlanmis kutuphane. 26 tek kolay blok tanitimidir; 27-50
+	# onceki panel/duvar bilgisini bloklarla birlikte kullanir.
 	for id in range(1, 51):
 		var level := LevelLibrary.load_level(id)
 		_check("bolum %d yukleniyor" % id, level.level_id, id)
 		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
 		_check("bolum %d blok donemi dogru" % id,
-			level.breakable_blocks.is_empty(), id <= 25 or id >= 41)
-		if id in range(30, 41):
+			level.breakable_blocks.is_empty(), id <= 25)
+		if id in range(30, 41) or id in range(44, 51):
 			var durable_count := 0
 			for block_data in level.breakable_blocks:
 				if block_data.hit_points >= 2:
 					durable_count += 1
 			_check("bolum %d dayanikli kilit iceriyor" % id, durable_count > 0, true)
-		if id >= 41:
-			_check("bolum %d yeni engel iceriyor" % id, level.obstacles.is_empty(), false)
+		_check("bolum %d hareketli engel oncesi temiz" % id,
+			level.obstacles.is_empty(), true)
 		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
 			level.three_star_max_shots <= level.max_lives, true)
 		_check("bolum %d: 2-yildiz atis <= max_lives" % id,
 			level.two_star_max_shots <= level.max_lives, true)
 
-	# 51-100: 41-50'nin devami olarak yeniden tasarlandi - donen cark (51) ve
-	# kayan bariyer (56) icin ayri ilk-gorulme anlari, sonra tum turlerin
-	# kombinasyonlari 100'e (boss) kadar kademeli zorlasir. 41-50 gibi bloksuz
-	# engel bandidir.
+	# 51-75 halkayi, 76-100 bombayi tanitir. Yalnizca 51 ve 76 okunakli
+	# tanitimdir; sonraki bolumlerde daha once ogrenilen blok ve duvar boslugu
+	# mekanikleri yeniden kullanilir. Blok kapilari kasitli olarak aralikir:
+	# her bolumde ayni kapiyi gostermek de tekrar olurdu.
+	var expected_block_levels := [
+		53, 54, 55, 57, 58, 59, 61, 64, 67, 70, 73, 75,
+		80, 83, 86, 89, 92, 95, 98, 100,
+	]
 	for id in range(51, 101):
 		var level := LevelLibrary.load_level(id)
 		_check("bolum %d yukleniyor" % id, level.level_id, id)
 		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
-		_check("bolum %d blok icermiyor (bloksuz engel bandi)" % id,
-			level.breakable_blocks.is_empty(), true)
+		_check("bolum %d blok plani" % id, level.breakable_blocks.is_empty(),
+			not expected_block_levels.has(id))
 		_check("bolum %d engel iceriyor" % id, level.obstacles.is_empty(), false)
+		for obstacle in level.obstacles:
+			var allowed := (obstacle.kind == ObstacleData.Kind.METAL_RING
+				if id <= 75 else obstacle.kind in [
+					ObstacleData.Kind.METAL_RING, ObstacleData.Kind.BOMB])
+			_check("bolum %d engel fazi dogru" % id, allowed, true)
 		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
 			level.three_star_max_shots <= level.max_lives, true)
 		_check("bolum %d: 2-yildiz atis <= max_lives" % id,
 			level.two_star_max_shots <= level.max_lives, true)
 
-	# 101-125 FINAL BANDI: generate_band_51_125.gd tarafindan gercek LevelSolver
-	# taramasiyla uretildi. 51-100'den farki, oyunun iki mekanigini BIR ARADA
-	# kullanmasi: her bolumde hem engel hem kirilabilir tugla vardir. (41-100
-	# bilerek tuglasizdir; 26-40 bilerek engelsizdir. Bu bant ikisinin bulustugu
-	# yerdir ve kutuphanenin finalidir.)
+	# 101-125 CARK BANDI: yalnizca 101 okunakli tanitimdir; sonraki bolumler
+	# carki onceki halka/mayin, panel, duvar boslugu ve aralikli blok kapilariyla
+	# birlestirir. Her bolumde cark kalir, hareketli bar kampanyaya girmez.
+	var wheel_block_levels := [105, 108, 111, 114, 117, 120, 123, 125]
 	for id in range(101, 126):
 		var level := LevelLibrary.load_level(id)
 		_check("bolum %d yukleniyor" % id, level.level_id, id)
 		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
 		_check("bolum %d engel iceriyor" % id, level.obstacles.is_empty(), false)
-		_check("bolum %d tugla iceriyor (final bandi engel+blok)" % id,
-			level.breakable_blocks.is_empty(), false)
+		_check("bolum %d blok plani" % id, level.breakable_blocks.is_empty(),
+			not wheel_block_levels.has(id))
+		var has_wheel := false
+		for obstacle in level.obstacles:
+			has_wheel = has_wheel or obstacle.kind == ObstacleData.Kind.ROTATING_WHEEL
+			_check("bolum %d cark fazi dogru" % id, obstacle.kind in [
+				ObstacleData.Kind.METAL_RING, ObstacleData.Kind.BOMB,
+				ObstacleData.Kind.ROTATING_WHEEL], true)
+		_check("bolum %d cark iceriyor" % id, has_wheel, true)
+		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
+			level.three_star_max_shots <= level.max_lives, true)
+		_check("bolum %d: 2-yildiz atis <= max_lives" % id,
+			level.two_star_max_shots <= level.max_lives, true)
 
-	# 126-150 LAZER BANDI: yanip sonen isin bandin kimligi. Tur kurallari
-	# check_obstacles.gd::_test_official_obstacle_levels icinde; burada
-	# kutuphanenin butunlugu dogrulanir.
+	# 126-150 LAZER BANDI: yalnizca 126 okunakli tanitimdir. Lazer her bolumde
+	# kalir; cark, halka, mayin, duvar boslugu ve bloklar yeniden kullanilir.
+	var laser_block_levels := [130, 133, 136, 139, 142, 145, 148, 150]
 	for id in range(126, 151):
 		var level := LevelLibrary.load_level(id)
 		_check("bolum %d yukleniyor" % id, level.level_id, id)
 		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
 		_check("bolum %d engel iceriyor" % id, level.obstacles.is_empty(), false)
-		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
-			level.three_star_max_shots <= level.max_lives, true)
+		_check("bolum %d blok plani" % id, level.breakable_blocks.is_empty(),
+			not laser_block_levels.has(id))
+		var has_laser := false
+		for obstacle in level.obstacles:
+			has_laser = has_laser or obstacle.kind == ObstacleData.Kind.PULSE_LASER
+			_check("bolum %d lazer fazi dogru" % id, obstacle.kind in [
+				ObstacleData.Kind.METAL_RING, ObstacleData.Kind.BOMB,
+				ObstacleData.Kind.ROTATING_WHEEL,
+				ObstacleData.Kind.PULSE_LASER], true)
+		_check("bolum %d lazer iceriyor" % id, has_laser, true)
 		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
 			level.three_star_max_shots <= level.max_lives, true)
 		_check("bolum %d: 2-yildiz atis <= max_lives" % id,
