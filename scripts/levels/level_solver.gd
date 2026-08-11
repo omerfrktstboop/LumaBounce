@@ -235,23 +235,23 @@ func search_block_states_async(spawn: Vector2, target_position: Vector2,
 			if states_visited >= maxi(max_states, 1):
 				break
 			states_visited += 1
-			var scan := await scan_async(
+			var scan_result := await scan_async(
 				spawn, target_position, play_rect, _rids_for_state(state),
 				angle_step, power_step, sims_per_frame, cancel_check)
-			simulations += int(scan["total"])
-			if bool(scan.get("cancelled", false)):
+			simulations += int(scan_result["total"])
+			if bool(scan_result.get("cancelled", false)):
 				return {
 					"cancelled": true, "solutions": solutions,
 					"states_visited": states_visited, "sims": simulations,
 				}
-			if int(scan["hit_count"]) > 0:
+			if int(scan_result["hit_count"]) > 0:
 				solutions.append({
 					"shots": depth + 1,
 					"state": state,
-					"scan": scan,
-					"analysis": analyse_robust(scan),
+					"scan": scan_result,
+					"analysis": analyse_robust(scan_result),
 				})
-			var reached: Dictionary = scan["reached"]
+			var reached: Dictionary = scan_result["reached"]
 			for raw_mask in reached:
 				var mask := state | int(raw_mask)
 				if mask == state or seen.has(mask):

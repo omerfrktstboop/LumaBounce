@@ -4,8 +4,11 @@ extends Node
 ## Billing SDK'sindan bagimsiz provider yuzeyi. Gameplay ve magazaya yalnizca
 ## PurchaseService ulasir; native siniflar bu katmanin disina cikmaz.
 
+@warning_ignore("unused_signal")
 signal availability_changed()
+@warning_ignore("unused_signal")
 signal catalog_changed(product_id: StringName)
+@warning_ignore("unused_signal")
 signal unsolicited_purchases(records: Array)
 
 

@@ -47,7 +47,7 @@ func _run() -> void:
 	_test_haptics_setting()
 	await _test_ball_trail_speed_response()
 	await _test_practice_mode()
-	await _test_custom_level_store()
+	_test_custom_level_store()
 	await _test_generator()
 	await _test_editor()
 	await _test_edit_official_level()
@@ -413,9 +413,9 @@ func _direct_vibrate_call_count() -> int:
 	return offenders
 
 
-func _gd_files_under(root: String) -> PackedStringArray:
+func _gd_files_under(root_path: String) -> PackedStringArray:
 	var found := PackedStringArray()
-	var directories: Array[String] = [root]
+	var directories: Array[String] = [root_path]
 	while not directories.is_empty():
 		var current: String = directories.pop_back()
 		var dir := DirAccess.open(current)

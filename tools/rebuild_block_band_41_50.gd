@@ -379,7 +379,7 @@ func _make_blocks(stage: int, family: int, target: Vector2) -> Array[BreakableBl
 			left + width * 0.5 + float(i) * (width + gap), row_y + wave)
 		block.rotation_degrees = _rng.randf_range(-7.0, 7.0) if family != 0 else 0.0
 		block.size = Vector2(width, 34.0)
-		var durable_target := stage / 3
+		var durable_target := int(float(stage) / 3.0)
 		block.hit_points = 2 if i <= durable_target and stage >= 3 else 1
 		blocks.append(block)
 

@@ -64,7 +64,6 @@ var progress: ProgressStore
 var debug_force_unlock := false
 
 @onready var _background: InkBackground = $Background
-@onready var _title: Label = $SafeArea/Content/Title
 @onready var _tabs: HBoxContainer = $SafeArea/Content/Tabs
 @onready var _world_stars: Label = $SafeArea/Content/WorldStars
 @onready var _page_clip: Control = $SafeArea/Content/PageClip
@@ -171,20 +170,20 @@ func _slide_page(direction: int) -> void:
 ## Sekmeler, zemin ve yildizlar disinda BUTONLARIN rengi _make_level_button
 ## icinde verilir; burada ekranin geri kalani boyanir.
 func _apply_world_colors() -> void:
-	var theme := LevelWorlds.theme_for_index(_world)
-	_world_stars.add_theme_color_override("font_color", theme.ACCENT)
+	var world_theme := LevelWorlds.theme_for_index(_world)
+	_world_stars.add_theme_color_override("font_color", world_theme.ACCENT)
 	# Zemin de dunyaya gore degisir, yalnizca vurgu degil: sadece vurgu
 	# degistiginde sayfalar neredeyse ayni gorunuyordu. Renkler temanin
 	# KENDI murekkep tonlaridir, uzerine atilmis bir tint degil - boylece
 	# liste, o dunyanin oynanisiyla ayni zemini gosterir.
-	_background.apply_ink(theme.INK_TOP, theme.INK_MID, theme.INK_BOTTOM)
+	_background.apply_ink(world_theme.INK_TOP, world_theme.INK_MID, world_theme.INK_BOTTOM)
 	# Solma serifleri zeminle AYNI tonu kullanmali, yoksa gecis bir bant
 	# gibi okunur.
 	# GERI dugmesi de sayfanin yuzeyini alir, yoksa yeni zeminin uzerinde
 	# eski dunyanin lacivert dolgusuyla yapistirilmis gorunur.
-	_back_button.surface_override = theme.SURFACE
-	_top_fade.set("color", theme.INK_TOP)
-	_bottom_fade.set("color", theme.INK_BOTTOM)
+	_back_button.surface_override = world_theme.SURFACE
+	_top_fade.set("color", world_theme.INK_TOP)
+	_bottom_fade.set("color", world_theme.INK_BOTTOM)
 
 
 func _refresh_world_stars() -> void:
@@ -212,7 +211,7 @@ func _scroll_to_current_level() -> void:
 		_scroll.scroll_vertical = 0
 		return
 	var offset := resume - LevelWorlds.first_level(_world)
-	var row := int(offset / maxi(columns, 1))
+	var row := int(float(offset) / float(maxi(columns, 1)))
 	var row_height := button_size.y + 20.0
 	# Bir satir yukarida birak: hedef satirin ustunde baglam kalsin, ekranin
 	# en ust kenarina yapismis bir buton "liste burada basliyor" gibi okunur.
@@ -283,16 +282,16 @@ func _input(event: InputEvent) -> void:
 		_update_drag(motion.position)
 
 
-func _begin_drag(position: Vector2) -> void:
-	_drag_active = _page_clip.get_global_rect().has_point(position)
-	_drag_start = position
+func _begin_drag(pointer_position: Vector2) -> void:
+	_drag_active = _page_clip.get_global_rect().has_point(pointer_position)
+	_drag_start = pointer_position
 	_drag_consumed = false
 
 
-func _update_drag(position: Vector2) -> void:
+func _update_drag(pointer_position: Vector2) -> void:
 	if not _drag_active or _drag_consumed:
 		return
-	var delta := position - _drag_start
+	var delta := pointer_position - _drag_start
 	if absf(delta.x) < swipe_threshold:
 		return
 	if absf(delta.x) < absf(delta.y) * swipe_dominance:

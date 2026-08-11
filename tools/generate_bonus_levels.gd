@@ -221,7 +221,7 @@ func _make_obstacle(kind: int) -> ObstacleData:
 	return data
 
 
-func _apply_identity(level: LevelData, level_id: int, spec: Dictionary) -> void:
+func _apply_identity(level: LevelData, _level_id: int, spec: Dictionary) -> void:
 	level.display_name = String(spec["name"])
 	level.is_bonus = true
 	# Bonus bolumde sure/atis esigi ANLAMSIZDIR: gecmek zaten yildizin

@@ -18,7 +18,7 @@ static func ring_rects(data: ObstacleData) -> Array[Dictionary]:
 	# Leave an opening at the top by skipping segments.
 	# For 24 segments, let's skip 4 segments (60 degrees).
 	var skip_count := 4
-	var start_idx := skip_count / 2
+	var start_idx := int(float(skip_count) / 2.0)
 	var end_idx := RING_SEGMENTS - (skip_count - start_idx)
 	for i in range(start_idx, end_idx):
 		var angle := TAU * float(i) / float(RING_SEGMENTS) - PI * 0.5 # Start from top

@@ -548,15 +548,15 @@ func _build_ricochet_rescue_level(source: LevelData,
 			],
 		},
 	]
-	var seed: Dictionary = seeds[rng.randi_range(0, seeds.size() - 1)]
+	var layout_seed: Dictionary = seeds[rng.randi_range(0, seeds.size() - 1)]
 	var level := LevelData.new()
 	level.launcher_position = Vector2(360.0, 1120.0)
-	var base_target: Vector2 = seed["target"]
+	var base_target: Vector2 = layout_seed["target"]
 	level.target_position = Vector2(
 		clampf(base_target.x + rng.randf_range(-24.0, 24.0), 90.0, 630.0),
 		clampf(base_target.y + rng.randf_range(-16.0, 16.0), 190.0, 520.0))
 	var panels: Array[PanelData] = []
-	for definition in seed["panels"]:
+	for definition in layout_seed["panels"]:
 		var panel := PanelData.new()
 		var base_position: Vector2 = definition[0]
 		panel.position = Vector2(
@@ -923,15 +923,15 @@ func _evaluate(level: LevelData, profile: Profile) -> Dictionary:
 	# 3) Blok varsa: kirmak rotayi GERCEKTEN kolaylastirmali. Kolaylastirmayan
 	#    blok bulmacaya hicbir sey katmaz, sadece ekrani doldurur.
 	if level.breakable_blocks.is_empty():
-		var difficulty := LevelDifficultyScorer.evaluate(level, fine, analysis)
-		if not _difficulty_score_matches(profile, difficulty):
+		var block_free_difficulty := LevelDifficultyScorer.evaluate(level, fine, analysis)
+		if not _difficulty_score_matches(profile, block_free_difficulty):
 			return _reject("skor-araligi", sims)
 		return _standard_verdict(
 			{
 			"ok": true, "sims": sims, "robust": robust, "bounces": bounces,
 			"opened_robust": robust, "block_free": true,
 			"route_clusters": route_clusters,
-			}, difficulty)
+			}, block_free_difficulty)
 
 	var all_broken := _world.get_all_broken_state()
 	var opened := await _solver.scan_async(spawn, level.target_position, play_rect,
@@ -1038,18 +1038,19 @@ func _evaluate_block_corridor(level: LevelData, profile: Profile,
 		return _reject("iptal", sims)
 	var best: Dictionary = {}
 	for solution in search["solutions"]:
-		var analysis: Dictionary = solution["analysis"]
-		var robust := int(analysis["robust"])
+		var solution_analysis: Dictionary = solution["analysis"]
+		var solution_robust := int(solution_analysis["robust"])
 		var shots := int(solution["shots"])
 		var state := int(solution["state"])
-		if state == 0 and robust >= profile.min_robust:
+		if state == 0 and solution_robust >= profile.min_robust:
 			return _reject("blok-kestirmesi", sims)
 		if (state == 0 or shots < profile.min_solution_shots
 				or shots > profile.max_solution_shots
-				or robust < profile.min_robust or robust > profile.max_robust):
+				or solution_robust < profile.min_robust
+				or solution_robust > profile.max_robust):
 			continue
-		if (best.is_empty() or robust > int(best["analysis"]["robust"])
-				or (robust == int(best["analysis"]["robust"])
+		if (best.is_empty() or solution_robust > int(best["analysis"]["robust"])
+				or (solution_robust == int(best["analysis"]["robust"])
 					and shots < int(best["shots"]))):
 			best = solution
 	if best.is_empty():

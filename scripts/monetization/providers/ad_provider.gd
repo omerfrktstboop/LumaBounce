@@ -5,7 +5,9 @@ extends Node
 ## Bu sinifin disina SDK nesnesi, reklam birimi kimligi veya plugin class'i
 ## cikmaz. Tum show metodlari tek bir AdResult.Code ile tamamlanir.
 
+@warning_ignore("unused_signal")
 signal availability_changed()
+@warning_ignore("unused_signal")
 signal privacy_options_availability_changed(available: bool)
 
 

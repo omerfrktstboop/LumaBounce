@@ -129,14 +129,14 @@ func _make_card(item: CosmeticData) -> Button:
 
 func _make_remove_ads_card() -> Button:
 	var active := purchase_service.is_remove_ads_active()
-	var ready := purchase_service.is_product_ready(MonetizationConfig.PRODUCT_REMOVE_ADS)
+	var is_ready := purchase_service.is_product_ready(MonetizationConfig.PRODUCT_REMOVE_ADS)
 	var busy := purchase_service.is_busy()
 
 	var card := Button.new()
 	card.name = "RemoveAdsCard"
 	card.custom_minimum_size = Vector2(0.0, 112.0)
 	card.focus_mode = Control.FOCUS_NONE
-	card.disabled = active or busy or not ready
+	card.disabled = active or busy or not is_ready
 	card.add_theme_stylebox_override("normal", _card_style(Palette.ACCENT, active, 2))
 	card.add_theme_stylebox_override("hover", _card_style(Palette.ACCENT, true, 2))
 	card.add_theme_stylebox_override("pressed", _card_style(Palette.ACCENT, true, 3))
@@ -188,7 +188,7 @@ func _make_remove_ads_card() -> Button:
 	texts.add_child(description)
 
 	var status := Label.new()
-	status.text = _remove_ads_status(active, ready, busy)
+	status.text = _remove_ads_status(active, is_ready, busy)
 	status.add_theme_font_size_override("font_size", 19)
 	status.add_theme_color_override(
 		"font_color", Palette.ACCENT if active else Palette.COIN)
@@ -201,14 +201,14 @@ func _make_remove_ads_card() -> Button:
 	return card
 
 
-func _remove_ads_status(active: bool, ready: bool, busy: bool) -> String:
+func _remove_ads_status(active: bool, is_ready: bool, busy: bool) -> String:
 	if active:
 		return tr("AKTİF")
 	if busy:
 		return tr("İŞLENİYOR...")
 	if not _iap_message.is_empty():
 		return tr(_iap_message)
-	if ready:
+	if is_ready:
 		var price := purchase_service.formatted_price(MonetizationConfig.PRODUCT_REMOVE_ADS)
 		return price if not price.is_empty() else tr("SATIN AL")
 	return tr("PLAY STORE'A BAĞLANILIYOR")

@@ -49,7 +49,6 @@ const BLUE_RESPAWN_AT := 2.2
 @export var card_corner_radius := 30
 @export var pop_time := 0.26
 
-@onready var _scrim: ColorRect = $Scrim
 @onready var _card: PanelContainer = $CardCenter/Card
 @onready var _kicker: Label = $CardCenter/Card/Margin/Rows/Kicker
 @onready var _title: Label = $CardCenter/Card/Margin/Rows/Title

@@ -38,16 +38,18 @@ func score(level: LevelData, metrics: Dictionary, references: Array) -> Dictiona
 	var best_reasons := PackedStringArray()
 	var mirrored := false
 	for i in references.size():
-		var reference := _normalize_reference(references[i], i)
-		if reference.is_empty():
+		var comparison_reference := _normalize_reference(references[i], i)
+		if comparison_reference.is_empty():
 			continue
-		var direct := _similarity(level, metrics, reference["level"], reference["metrics"], false)
-		var mirror := _similarity(level, metrics, reference["level"], reference["metrics"], true)
+		var direct := _similarity(
+			level, metrics, comparison_reference["level"], comparison_reference["metrics"], false)
+		var mirror := _similarity(
+			level, metrics, comparison_reference["level"], comparison_reference["metrics"], true)
 		var use_mirror := float(mirror["score"]) > float(direct["score"])
 		var result: Dictionary = mirror if use_mirror else direct
 		if float(result["score"]) > best_similarity:
 			best_similarity = float(result["score"])
-			best_name = String(reference["name"])
+			best_name = String(comparison_reference["name"])
 			best_reasons = result["reasons"]
 			mirrored = use_mirror
 	var novelty := clampf(100.0 - best_similarity, 0.0, 100.0)
@@ -63,33 +65,38 @@ func score(level: LevelData, metrics: Dictionary, references: Array) -> Dictiona
 
 
 func _similarity(candidate: LevelData, candidate_metrics: Dictionary,
-		reference: LevelData, reference_metrics: Dictionary, mirror_reference: bool) -> Dictionary:
+		reference_level: LevelData, reference_metrics: Dictionary,
+		mirror_reference: bool) -> Dictionary:
 	var weighted := 0.0
 	var total_weight := 0.0
 	var reasons := PackedStringArray()
-	var count_score := _count_similarity(candidate.panels.size(), reference.panels.size())
+	var count_score := _count_similarity(candidate.panels.size(), reference_level.panels.size())
 	weighted += count_score * 8.0
 	total_weight += 8.0
 	if count_score >= 0.9:
 		reasons.append("panel sayisi")
 	var block_count_score := _count_similarity(
-		candidate.breakable_blocks.size(), reference.breakable_blocks.size())
+		candidate.breakable_blocks.size(), reference_level.breakable_blocks.size())
 	weighted += block_count_score * 6.0
 	total_weight += 6.0
 	if block_count_score >= 0.9:
 		reasons.append("blok sayisi")
 	var compare_obstacles := (
-		not candidate.obstacles.is_empty() or not reference.obstacles.is_empty())
+		not candidate.obstacles.is_empty() or not reference_level.obstacles.is_empty())
 	if compare_obstacles:
 		var obstacle_count_score := _count_similarity(
-			candidate.obstacles.size(), reference.obstacles.size())
+			candidate.obstacles.size(), reference_level.obstacles.size())
 		weighted += obstacle_count_score * 6.0
 		total_weight += 6.0
 		if obstacle_count_score >= 0.9:
 			reasons.append("engel sayisi")
 
-	var launcher_ref := _mirror_point(reference.launcher_position) if mirror_reference else reference.launcher_position
-	var target_ref := _mirror_point(reference.target_position) if mirror_reference else reference.target_position
+	var launcher_ref := (
+		_mirror_point(reference_level.launcher_position)
+		if mirror_reference else reference_level.launcher_position)
+	var target_ref := (
+		_mirror_point(reference_level.target_position)
+		if mirror_reference else reference_level.target_position)
 	var launcher_score := _point_similarity(candidate.launcher_position, launcher_ref)
 	var target_score := _point_similarity(candidate.target_position, target_ref)
 	weighted += launcher_score * 5.0 + target_score * 10.0
@@ -99,10 +106,11 @@ func _similarity(candidate: LevelData, candidate_metrics: Dictionary,
 	if target_score >= 0.9:
 		reasons.append("hedef konumu")
 
-	var panel_score := _panel_similarity(candidate.panels, reference.panels, mirror_reference)
+	var panel_score := _panel_similarity(
+		candidate.panels, reference_level.panels, mirror_reference)
 	var block_score := _block_similarity(
-		candidate.breakable_blocks, reference.breakable_blocks, mirror_reference)
-	var wall_score := _wall_similarity(candidate, reference, mirror_reference)
+		candidate.breakable_blocks, reference_level.breakable_blocks, mirror_reference)
+	var wall_score := _wall_similarity(candidate, reference_level, mirror_reference)
 	weighted += panel_score * 35.0 + block_score * 15.0 + wall_score * 8.0
 	total_weight += 58.0
 	if panel_score >= 0.86:
@@ -113,7 +121,7 @@ func _similarity(candidate: LevelData, candidate_metrics: Dictionary,
 		reasons.append("duvar bosluklari")
 	if compare_obstacles:
 		var obstacle_score := _obstacle_similarity(
-			candidate.obstacles, reference.obstacles, mirror_reference)
+			candidate.obstacles, reference_level.obstacles, mirror_reference)
 		weighted += obstacle_score * 20.0
 		total_weight += 20.0
 		if obstacle_score >= 0.86:

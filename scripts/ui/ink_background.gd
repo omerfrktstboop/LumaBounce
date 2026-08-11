@@ -62,10 +62,10 @@ func _build_texture() -> GradientTexture2D:
 	gradient.add_point(mid_offset, ink_mid)
 
 	# Dar ama uzun bir doku yeterli: dogrusal filtreleme ile puruzsuz gerilir.
-	var texture := GradientTexture2D.new()
-	texture.gradient = gradient
-	texture.width = 8
-	texture.height = 256
-	texture.fill_from = Vector2(0.0, 0.0)
-	texture.fill_to = Vector2(0.0, 1.0)
-	return texture
+	var gradient_texture := GradientTexture2D.new()
+	gradient_texture.gradient = gradient
+	gradient_texture.width = 8
+	gradient_texture.height = 256
+	gradient_texture.fill_from = Vector2(0.0, 0.0)
+	gradient_texture.fill_to = Vector2(0.0, 1.0)
+	return gradient_texture

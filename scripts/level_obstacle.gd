@@ -313,8 +313,8 @@ func _arc_line(radius: float, width: float, color: Color, segments: int) -> Line
 	var line := Line2D.new()
 	var pts := PackedVector2Array()
 	# Same logic as collision: skip top 60 degrees.
-	var skip_count := segments / 6
-	var start_idx := skip_count / 2
+	var skip_count := int(float(segments) / 6.0)
+	var start_idx := int(float(skip_count) / 2.0)
 	var end_idx := segments - (skip_count - start_idx)
 	for i in range(start_idx, end_idx + 1):
 		var angle := TAU * float(i) / float(segments) - PI * 0.5

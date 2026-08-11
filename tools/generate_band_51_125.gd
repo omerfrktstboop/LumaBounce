@@ -246,7 +246,6 @@ func _build_level(level_id: int) -> bool:
 		# Blok durum aramasi pahali oldugu icin kapili bolumler tutmayan ek
 		# engelleri daha erken birakir; bandin kimlik engeli listenin basinda
 		# oldugundan cark/lazer her durumda korunur.
-		var has_bricks := int(spec["bricks"]) > 0
 		var drop := choice
 		var kinds: Array = (spec["kinds"] as Array).duplicate()
 		var min_kinds := int(spec.get("min_kinds", 1))
@@ -446,7 +445,7 @@ func _panels_too_close(a: PanelData, b: PanelData) -> bool:
 	return false
 
 
-func _apply_wall_gaps(level: LevelData, mode: int, level_id: int) -> void:
+func _apply_wall_gaps(level: LevelData, mode: int, _level_id: int) -> void:
 	level.left_wall_segments = [] as Array[Vector2]
 	level.right_wall_segments = [] as Array[Vector2]
 	if mode == 0:
@@ -476,7 +475,7 @@ func _apply_wall_gaps(level: LevelData, mode: int, level_id: int) -> void:
 ## yakaladi). Engel sayisini AZALTMAK kasitli bir karardir ve gevseme
 ## merdiveninde yapilir (bkz. _build_level); tesadufen olmamali.
 func _place_obstacles(level: LevelData, spec: Dictionary,
-		skeleton: Dictionary) -> bool:
+		_skeleton: Dictionary) -> bool:
 	var kinds: Array = spec["kinds"]
 	var placed: Array[ObstacleData] = []
 	for kind in kinds:
@@ -496,7 +495,7 @@ func _place_obstacles(level: LevelData, spec: Dictionary,
 
 
 func _place_bricks(level: LevelData, spec: Dictionary,
-		skeleton: Dictionary) -> bool:
+		_skeleton: Dictionary) -> bool:
 	var count := int(spec["bricks"])
 	var strong := int(spec["strong_bricks"])
 	# Tam genislikteki kapinin iki yanindan bedava gecilemez. Satir yuksekligi

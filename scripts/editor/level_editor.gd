@@ -958,13 +958,13 @@ func _routes_from_scan(scan_result: Dictionary, excluded: Array[RID], label: Str
 			candidates.append(fallback)
 	var diverse := LevelSolver.solution_candidates(scan_result, max_routes)
 	for candidate in diverse:
-		var duplicate := false
+		var is_duplicate := false
 		for existing in candidates:
 			if (is_equal_approx(float(existing["angle"]), float(candidate["angle"]))
 					and is_equal_approx(float(existing["power"]), float(candidate["power"]))):
-				duplicate = true
+				is_duplicate = true
 				break
-		if not duplicate:
+		if not is_duplicate:
 			candidates.append(candidate)
 	for candidate in candidates:
 		if routes.size() >= max_routes:
@@ -1659,9 +1659,9 @@ func _draw() -> void:
 			_draw_wall_gap()
 
 
-func _draw_marker(at: Vector2, size: Vector2, rotation: float, color: Color) -> void:
+func _draw_marker(at: Vector2, size: Vector2, marker_rotation: float, color: Color) -> void:
 	var half := size * 0.5 + Vector2(10.0, 10.0)
-	draw_set_transform(at, rotation, Vector2.ONE)
+	draw_set_transform(at, marker_rotation, Vector2.ONE)
 	draw_rect(Rect2(-half, half * 2.0), Color(color, 0.85), false, 3.0)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 

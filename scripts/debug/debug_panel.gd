@@ -183,7 +183,7 @@ func _append_stats_lines(lines: PackedStringArray, raw_stats: Variant) -> void:
 
 func _format_seconds(seconds: float) -> String:
 	var total_seconds := maxi(roundi(seconds), 0)
-	var minutes := int(total_seconds / 60)
+	var minutes := int(float(total_seconds) / 60.0)
 	var remainder := total_seconds % 60
 	return "%02d:%02d" % [minutes, remainder]
 

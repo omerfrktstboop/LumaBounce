@@ -291,19 +291,20 @@ func _normalize_records(raw_records: Variant) -> Array:
 	for raw_record in raw_records as Array:
 		if raw_record is not Dictionary:
 			continue
-		var purchase := raw_record as Dictionary
+		var purchase_record := raw_record as Dictionary
 		var state := "unknown"
-		match int(purchase.get("purchase_state", BillingClient.PurchaseState.UNSPECIFIED_STATE)):
+		match int(purchase_record.get(
+				"purchase_state", BillingClient.PurchaseState.UNSPECIFIED_STATE)):
 			BillingClient.PurchaseState.PURCHASED:
 				state = "purchased"
 			BillingClient.PurchaseState.PENDING:
 				state = "pending"
-		for raw_product_id in purchase.get("product_ids", PackedStringArray()):
+		for raw_product_id in purchase_record.get("product_ids", PackedStringArray()):
 			normalized.append({
 				"product_id": StringName(String(raw_product_id)),
 				"state": state,
-				"acknowledged": bool(purchase.get("is_acknowledged", false)),
-				"purchase_token": String(purchase.get("purchase_token", "")),
+				"acknowledged": bool(purchase_record.get("is_acknowledged", false)),
+				"purchase_token": String(purchase_record.get("purchase_token", "")),
 			})
 	return normalized
 

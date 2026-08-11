@@ -24,8 +24,8 @@ func initialize() -> bool:
 	return initialize_result
 
 
-func set_rewarded_ready(placement: StringName, ready: bool) -> void:
-	_rewarded_ready[placement] = ready
+func set_rewarded_ready(placement: StringName, is_ready: bool) -> void:
+	_rewarded_ready[placement] = is_ready
 
 
 func queue_rewarded_result(result: int) -> void:
@@ -44,8 +44,8 @@ func show_rewarded(placement: StringName) -> int:
 	return _rewarded_results.pop_front()
 
 
-func set_interstitial_ready(ready: bool) -> void:
-	_interstitial_ready = ready
+func set_interstitial_ready(is_ready: bool) -> void:
+	_interstitial_ready = is_ready
 
 
 func queue_interstitial_result(result: int) -> void:

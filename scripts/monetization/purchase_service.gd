@@ -77,6 +77,7 @@ func purchase_remove_ads() -> int:
 
 	_purchase_busy = true
 	state_changed.emit()
+	@warning_ignore("redundant_await")
 	var response := await _provider.purchase(product_id)
 	var result := int(response.get("result", PurchaseResult.Code.FAILED))
 	var records: Array = response.get("records", [])
@@ -115,6 +116,7 @@ func _exit_tree() -> void:
 
 
 func _restore_internal() -> bool:
+	@warning_ignore("redundant_await")
 	var response := await _provider.restore_purchases()
 	if not bool(response.get("success", false)):
 		return false
@@ -157,6 +159,7 @@ func _acknowledge_records(records: Array) -> void:
 			continue
 		# Hak once verilir, ardindan Google bilgilendirilir. Basarisiz ack bir
 		# sonraki launch/resume restore sorgusunda yeniden denenir.
+		@warning_ignore("redundant_await")
 		await _provider.acknowledge_purchase(token)
 
 

@@ -68,15 +68,15 @@ func _score_level(level_id: int) -> bool:
 	if _log != null: _log.seek_end()
 
 	if level.level_id != level_id:
-		var msg = "LEVEL %d ERROR load_mismatch_got=%d" % [level_id, level.level_id]
-		print(msg)
-		if _log != null: _log.store_line(msg)
+		var load_msg = "LEVEL %d ERROR load_mismatch_got=%d" % [level_id, level.level_id]
+		print(load_msg)
+		if _log != null: _log.store_line(load_msg)
 		return false
 	var problems := level.validate()
 	if not problems.is_empty():
-		var msg = "LEVEL %d ERROR validate_failed=%s" % [level_id, "|".join(problems)]
-		print(msg)
-		if _log != null: _log.store_line(msg)
+		var validation_msg = "LEVEL %d ERROR validate_failed=%s" % [level_id, "|".join(problems)]
+		print(validation_msg)
+		if _log != null: _log.store_line(validation_msg)
 		return false
 
 	_world = LevelWorld.new()
