@@ -47,7 +47,7 @@ func show_rewarded(placement: StringName) -> int:
 	# Tum sonuc yollarini coroutine tutar; unavailable durumda network veya
 	# timeout beklenmez, yalnizca mevcut frame tamamlanir.
 	await get_tree().process_frame
-	_track(AnalyticsService.REWARDED_OFFER, {
+	_track(AnalyticsService.REWARDED_CLICK, {
 		"placement": placement,
 		"provider": provider_name(),
 	})
@@ -82,6 +82,10 @@ func show_privacy_options() -> bool:
 func maybe_show_interstitial(context: StringName, is_candidate := true,
 		now_seconds := -1.0) -> int:
 	await get_tree().process_frame
+	if is_candidate:
+		_track(AnalyticsService.INTERSTITIAL_CANDIDATE, {
+			"context": context,
+		})
 	if _policy != null and not _policy.can_show_interstitial(
 			context, is_candidate, now_seconds):
 		return _finish_interstitial(context, AdResult.Code.SKIPPED_POLICY)
@@ -105,11 +109,17 @@ func _finish_rewarded(placement: StringName, result: int) -> int:
 
 
 func _finish_interstitial(context: StringName, result: int) -> int:
-	_track(AnalyticsService.INTERSTITIAL_RESULT, {
-		"context": context,
-		"provider": provider_name(),
-		"result": AdResult.label(result),
-	})
+	if result == AdResult.Code.DISPLAYED:
+		_track(AnalyticsService.INTERSTITIAL_SHOWN, {
+			"context": context,
+			"provider": provider_name(),
+		})
+	elif result == AdResult.Code.FAILED or result == AdResult.Code.UNAVAILABLE:
+		_track(AnalyticsService.INTERSTITIAL_FAILED, {
+			"context": context,
+			"provider": provider_name(),
+			"reason": AdResult.label(result),
+		})
 	return result
 
 

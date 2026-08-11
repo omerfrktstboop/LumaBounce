@@ -1,6 +1,6 @@
 # Monetization Architecture
 
-`AppRoot` is the composition root for `EntitlementStore`, `AnalyticsService`, `AdPolicy`, and `AdService`. Android uses `AdmobAdProvider`; desktop/editor builds safely fall back to `NoOpAdProvider`. Gameplay sees only product-level placement names and never imports a Google SDK class.
+`AppRoot` is the composition root for `EntitlementStore`, `AnalyticsService`, `AdPolicy`, and `AdService`. Android uses `AdmobAdProvider`; desktop/editor builds safely fall back to `NoOpAdProvider`. Gameplay sees only product-level placement names and never imports a Google SDK class. The normalized analytics contract, provider quarantine, privacy filter, and dashboards are documented in `docs/ANALYTICS.md`.
 
 ## Runtime contract
 
@@ -42,6 +42,7 @@ purchase verification and an authoritative server balance.
 ```powershell
 godot --headless --path . --script res://tools/check_monetization_phase2.gd
 godot --headless --path . --script res://tools/check_billing_phase7.gd
+godot --headless --path . --script res://tools/check_analytics_phase10.gd
 godot --headless --path . --script res://tools/check_release_readiness.gd
 ```
 

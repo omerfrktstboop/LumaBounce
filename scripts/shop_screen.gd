@@ -18,6 +18,7 @@ signal menu_requested()
 ## AppRoot tarafindan add_child'dan ONCE atanir.
 var wallet: WalletStore
 var purchase_service: PurchaseService
+var analytics: AnalyticsService
 
 const CARD_HEIGHT := 96.0
 const PREVIEW_SIZE := 56.0
@@ -326,7 +327,18 @@ func _on_purchase_pressed(item: CosmeticData) -> void:
 		return
 	# Satin alinan esya hemen secilir: oyuncu aldigi seyi ayrica secmek
 	# zorunda kalmamali.
-	wallet.select_cosmetic(item.id)
+	var selected := wallet.select_cosmetic(item.id)
+	if analytics != null:
+		analytics.track_event(AnalyticsService.COSMETIC_PURCHASE, {
+			"cosmetic_id": item.id,
+			"kind": item.kind,
+			"price": item.price,
+		})
+		if selected:
+			analytics.track_event(AnalyticsService.COSMETIC_SELECT, {
+				"cosmetic_id": item.id,
+				"kind": item.kind,
+			})
 	Haptics.target_hit()
 	AudioManager.play_level_complete()
 	_rebuild()
@@ -336,6 +348,11 @@ func _on_purchase_pressed(item: CosmeticData) -> void:
 func _on_select_pressed(item: CosmeticData) -> void:
 	if not wallet.select_cosmetic(item.id):
 		return
+	if analytics != null:
+		analytics.track_event(AnalyticsService.COSMETIC_SELECT, {
+			"cosmetic_id": item.id,
+			"kind": item.kind,
+		})
 	Haptics.pulse(18)
 	_rebuild()
 	_flash(item.id)

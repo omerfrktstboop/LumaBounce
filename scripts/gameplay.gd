@@ -10,8 +10,8 @@ extends Node2D
 ##
 ## Ekran baska bir sahne acmaz; yalnizca sinyal yayar, AppRoot karar verir.
 
-signal level_completed(level_id: int, stars: int)
-signal level_failed(level_id: int, reason: String, revive_eligible: bool)
+signal level_completed(level_id: int, stars: int, seconds: float, shots: int, revived: bool)
+signal level_failed(level_id: int, reason: String, revive_eligible: bool, shots: int)
 signal next_level_requested(level_id: int)
 signal level_select_requested()
 signal menu_requested()
@@ -454,6 +454,13 @@ func _connect_signals() -> void:
 func reset_shot() -> void:
 	var is_first_entry := not _has_started
 	if _has_started:
+		if analytics != null and not practice_mode and level_data != null:
+			analytics.track_event(AnalyticsService.RESTART, {
+				"level_id": level_data.level_id,
+				"world": _analytics_world_key(),
+				"shots_bucket": AnalyticsService.shots_bucket(_shots_this_attempt),
+				"source": &"manual",
+			})
 		AudioManager.play_restart()
 		if playtest_stats != null:
 			playtest_stats.record_restart(level_data.level_id)
@@ -691,7 +698,9 @@ func _on_target_hit(_body: Node2D) -> void:
 	var previous_stars := progress.get_level_stars(level_data.level_id) if progress != null else 0
 	var new_record := stars > previous_stars
 
-	level_completed.emit(level_data.level_id, stars)
+	level_completed.emit(
+		level_data.level_id, stars, _final_attempt_seconds,
+		_final_attempt_shots, _revive_used)
 	_open_success_panel(stars, new_record)
 
 
@@ -734,11 +743,18 @@ func _open_failure_panel() -> void:
 		and ad_service != null
 		and ad_service.is_rewarded_ready(MonetizationConfig.PLACEMENT_REVIVE))
 	_result_panel.set_revive_offer_eligible(revive_eligible)
+	if revive_eligible and analytics != null:
+		analytics.track_event(AnalyticsService.REWARDED_OFFER, {
+			"level_id": level_data.level_id,
+			"placement": MonetizationConfig.PLACEMENT_REVIVE,
+		})
 	# COIN ALTERNATIFI: reklam hazir olmasa da (ya da hic olmasa da) oyuncu
 	# devam edebilmeli. Iki yol AYRI degerlendirilir; biri kapaliyken digeri
 	# acik kalabilir.
 	_result_panel.set_revive_coin_offer(_can_afford_coin_revive(), revive_coin_cost)
-	level_failed.emit(level_data.level_id, _last_failure_reason, revive_eligible)
+	level_failed.emit(
+		level_data.level_id, _last_failure_reason, revive_eligible,
+		_final_attempt_shots)
 	_result_panel.show_failure(
 		failed_title, failed_subtitle, restart_label,
 		_final_attempt_seconds, _final_attempt_shots)
@@ -1080,6 +1096,11 @@ func _on_hint_pressed() -> void:
 			"short_available": short_hint_enabled and not _short_hint_shown,
 			"full_unlocked": false,
 		})
+		if short_hint_enabled and not _short_hint_shown:
+			analytics.track_event(AnalyticsService.REWARDED_OFFER, {
+				"level_id": level_data.level_id,
+				"placement": MonetizationConfig.PLACEMENT_SHORT_HINT,
+			})
 	_open_hint_card()
 	# Kart TEK basina acilir ve iki secenegi birden tasir; hangi secenegin
 	# etkin oldugunu kart degil BURASI belirler - urun kurallari (bakiye,
@@ -1100,10 +1121,6 @@ func _on_hint_pressed() -> void:
 func _on_short_hint_requested() -> void:
 	if not short_hint_enabled or _short_hint_shown:
 		return
-	if analytics != null:
-		analytics.track_event(AnalyticsService.HINT_SHORT_REQUESTED, {
-			"level_id": level_data.level_id,
-		})
 	_hint_card.close()
 	short_hint_requested.emit()
 
@@ -1121,6 +1138,11 @@ func grant_short_hint() -> void:
 		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
 		return
 	_short_hint_shown = true
+	if analytics != null:
+		analytics.track_event(AnalyticsService.SHORT_HINT_REWARDED_EARNED, {
+			"level_id": level_data.level_id,
+			"placement": MonetizationConfig.PLACEMENT_SHORT_HINT,
+		})
 	_hint_path.show_path(trace)
 	_show_hint_status(tr("İLK HAMLE"), 2.2)
 	_refresh_hint_hud()
@@ -1145,11 +1167,17 @@ func _on_hint_purchase_requested() -> void:
 	_refresh_hint_hud()
 	_hint_card.close()
 	if analytics != null:
-		analytics.track_event(AnalyticsService.HINT_FULL_UNLOCKED, {
+		analytics.track_event(AnalyticsService.FULL_HINT_UNLOCK, {
 			"level_id": level_data.level_id,
 			"cost": hint_cost,
 		})
 	_show_unlocked_hint()
+
+
+func _analytics_world_key() -> StringName:
+	if level_data == null:
+		return &"world_01"
+	return StringName("world_%02d" % (LevelWorlds.index_for_level(level_data.level_id) + 1))
 
 
 ## ResultPanel'in SDK'dan bagimsiz completion hook'u. AppRoot policy adayini

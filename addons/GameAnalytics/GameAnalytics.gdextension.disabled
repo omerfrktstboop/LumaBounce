@@ -1,0 +1,9 @@
+[configuration]
+
+entry_symbol = "gameanalytics_init"
+compatibility_minimum = 4.3
+
+[libraries]
+
+android.debug.arm64 = "bin/android/libGodotGameAnalytics.so"
+android.release.arm64 = "bin/android/libGodotGameAnalytics.so"

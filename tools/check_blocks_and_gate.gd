@@ -692,7 +692,8 @@ func _test_practice_mode() -> void:
 	# yakalar, dolayisiyla `completed = true` yalnizca lambda'nin kendi
 	# kopyasini degistirir ve test hicbir sey olcmemis olur.
 	var completed := [false]
-	gameplay.level_completed.connect(func(_id: int, _stars: int) -> void: completed[0] = true)
+	gameplay.level_completed.connect(func(_id: int, _stars: int, _seconds: float,
+			_shots: int, _revived: bool) -> void: completed[0] = true)
 	var target := gameplay.get_node("Target") as Target
 	ball.launch(Vector2.UP * 1000.0)
 	target.hit.emit(ball)
@@ -715,7 +716,8 @@ func _test_practice_mode() -> void:
 	root.add_child(normal)
 	await physics_frame
 	var normal_completed := [false]
-	normal.level_completed.connect(func(_id: int, _stars: int) -> void: normal_completed[0] = true)
+	normal.level_completed.connect(func(_id: int, _stars: int, _seconds: float,
+			_shots: int, _revived: bool) -> void: normal_completed[0] = true)
 	var normal_ball := normal.get_node("Ball") as Ball
 	normal_ball.launch(Vector2.UP * 1000.0)
 	(normal.get_node("Target") as Target).hit.emit(normal_ball)

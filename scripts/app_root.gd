@@ -64,6 +64,8 @@ var _editor_source_level_id := 0
 var _busy := false
 var _completion_interstitial_candidate := false
 var _completion_ad_in_progress := false
+var _analytics_session_active := false
+var _analytics_session_started_msec := 0
 
 
 func _ready() -> void:
@@ -85,10 +87,7 @@ func _ready() -> void:
 	# Haptics ile ayni desen.
 	ScreenShake.trauma_scale = _progress.shake_scale
 	_playtest_stats = PlaytestStats.load_from_disk()
-	_analytics.track_event(AnalyticsService.SESSION_START, {
-		"game_version": GameVersion.GAME,
-		"provider": _ad_service.provider_name(),
-	})
+	_start_analytics_session(&"launch")
 	_setup_debug_tools()
 	_connect_debug_panel()
 
@@ -117,11 +116,19 @@ func _notification(what: int) -> void:
 		NOTIFICATION_WM_GO_BACK_REQUEST:
 			_handle_go_back()
 		NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_APPLICATION_PAUSED:
+			_end_analytics_session(&"background")
 			_set_application_paused(true)
 		NOTIFICATION_APPLICATION_FOCUS_IN, NOTIFICATION_APPLICATION_RESUMED:
 			_set_application_paused(false)
+			_start_analytics_session(&"foreground")
 			if _purchase_service != null:
 				_purchase_service.restore_purchases.call_deferred()
+
+
+func _exit_tree() -> void:
+	_end_analytics_session(&"exit")
+	if _analytics != null:
+		_analytics.shutdown()
 
 
 func _set_application_paused(paused: bool) -> void:
@@ -295,6 +302,10 @@ func _configure_shop(screen: Node) -> void:
 		# bakiyeyi geri yazardi.
 		shop.wallet = _wallet
 		shop.purchase_service = _purchase_service
+		shop.analytics = _analytics
+		_analytics.track_event(AnalyticsService.SHOP_OPEN, {
+			"balance": _wallet.balance,
+		})
 
 
 func _configure_settings(screen: Node) -> void:
@@ -328,6 +339,7 @@ func _configure_gameplay(screen: Node, level_id: int) -> void:
 			MonetizationConfig.PLACEMENT_SHORT_HINT)
 		_analytics.track_event(AnalyticsService.LEVEL_START, {
 			"level_id": level_id,
+			"world": _world_key(level_id),
 			"is_bonus": LevelWorlds.is_bonus_id(level_id),
 		})
 
@@ -338,6 +350,12 @@ func _configure_gameplay(screen: Node, level_id: int) -> void:
 func _setup_monetization() -> void:
 	_entitlements = EntitlementStore.load_from_disk()
 	_analytics = AnalyticsService.new(OS.is_debug_build() and not OS.has_feature("production"))
+	var analytics_config := GameAnalyticsConfig.load_from_path()
+	var analytics_provider: AnalyticsProvider = NoOpAnalyticsProvider.new()
+	if analytics_config.is_ready():
+		analytics_provider = GameAnalyticsProvider.new()
+	_analytics.configure(analytics_provider, analytics_config)
+	_analytics.initialize()
 	_ad_policy = AdPolicy.new(_entitlements)
 	_ad_service = AdService.new()
 	_ad_service.name = "AdService"
@@ -405,17 +423,23 @@ func _on_revive_requested(gameplay: Gameplay) -> void:
 		gameplay.set_revive_offer_busy(false)
 
 
-func _on_level_completed(level_id: int, stars: int) -> void:
+func _on_level_completed(level_id: int, stars: int, seconds: float,
+		shots: int, revived: bool) -> void:
 	# Editorden test edilen bolum gercek ilerlemeye YAZILMAZ; henuz oyunun
 	# bir parcasi degil ve kaydi kirletmesi anlamsiz olurdu.
 	if _editor_level != null:
 		return
+	var first_clear := not _progress.is_completed(level_id)
 	_analytics.track_event(AnalyticsService.LEVEL_COMPLETE, {
 		"level_id": level_id,
+		"world": _world_key(level_id),
 		"stars": stars,
+		"seconds_bucket": AnalyticsService.seconds_bucket(seconds),
+		"shots": shots,
+		"first_clear": first_clear,
 		"is_bonus": LevelWorlds.is_bonus_id(level_id),
+		"revived": revived,
 	})
-	var first_clear := not _progress.is_completed(level_id)
 	# "Ilk kez 3 yildiz" kaydetmeden ONCE olculmeli; set_level_stars_if_higher
 	# calistiktan sonra eski deger kaybolur.
 	var first_three_star := stars >= LevelData.NORMAL_MAX_STARS 		and _progress.get_level_stars(level_id) < LevelData.NORMAL_MAX_STARS
@@ -462,13 +486,46 @@ func _completed_normal_level_count() -> int:
 
 ## Failure/retry akisinda interstitial CAGIRILMAZ. Bu sinyal yalnizca analytics
 ## ve gelecekte ResultPanel'e eklenecek istege bagli revive teklifinin hook'udur.
-func _on_level_failed(level_id: int, reason: String, revive_eligible: bool) -> void:
+func _on_level_failed(level_id: int, reason: String, revive_eligible: bool,
+		shots: int) -> void:
 	if _editor_level != null:
 		return
 	_analytics.track_event(AnalyticsService.LEVEL_FAIL, {
 		"level_id": level_id,
-		"reason": reason,
+		"world": _world_key(level_id),
+		"reason": AnalyticsService.failure_reason(reason),
+		"shots_bucket": AnalyticsService.shots_bucket(shots),
 		"revive_eligible": revive_eligible,
+		"is_bonus": LevelWorlds.is_bonus_id(level_id),
+	})
+
+
+func _world_key(level_id: int) -> StringName:
+	return StringName("world_%02d" % (LevelWorlds.index_for_level(level_id) + 1))
+
+
+func _start_analytics_session(reason: StringName) -> void:
+	if _analytics == null or _analytics_session_active:
+		return
+	_analytics_session_active = true
+	_analytics_session_started_msec = Time.get_ticks_msec()
+	_analytics.track_event(AnalyticsService.SESSION_START, {
+		"game_version": GameVersion.GAME,
+		"environment": _analytics.environment(),
+		"analytics_provider": _analytics.provider_name(),
+		"ad_provider": _ad_service.provider_name() if _ad_service != null else &"none",
+		"reason": reason,
+	})
+
+
+func _end_analytics_session(reason: StringName) -> void:
+	if _analytics == null or not _analytics_session_active:
+		return
+	var elapsed := float(Time.get_ticks_msec() - _analytics_session_started_msec) / 1000.0
+	_analytics_session_active = false
+	_analytics.track_event(AnalyticsService.SESSION_END, {
+		"seconds_bucket": AnalyticsService.seconds_bucket(elapsed),
+		"reason": reason,
 	})
 
 

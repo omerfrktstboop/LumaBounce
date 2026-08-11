@@ -32,9 +32,14 @@ func _run() -> void:
 
 func _test_config_and_analytics_contract() -> void:
 	var expected := [
-		&"session_start", &"level_start", &"level_complete", &"level_fail",
-		&"hint_offer_open", &"hint_short_requested", &"hint_full_unlocked",
-		&"rewarded_offer", &"rewarded_result", &"interstitial_result", &"iap_result",
+		&"session_start", &"session_end", &"level_start", &"level_complete",
+		&"level_fail", &"restart", &"hint_offer_open",
+		&"short_hint_rewarded_earned", &"full_hint_unlock", &"rewarded_offer",
+		&"rewarded_click", &"rewarded_result", &"interstitial_candidate",
+		&"interstitial_shown", &"interstitial_failed",
+		&"remove_ads_purchase_result", &"shop_open", &"cosmetic_purchase",
+		&"cosmetic_select", &"daily_open", &"daily_complete",
+		&"quest_complete", &"streak_milestone",
 	]
 	for event_name in expected:
 		_check(AnalyticsService.NORMALIZED_EVENTS.has(event_name),
@@ -149,7 +154,7 @@ func _test_rewarded_results() -> void:
 	_check(int(await service.show_rewarded(placement)) == AdResult.Code.EARNED,
 		"remove_ads user can voluntarily earn rewarded result")
 	_check(analytics.captured_events().size() == 10,
-		"every rewarded request emits offer and result analytics")
+		"every rewarded request emits click and result analytics")
 	root.remove_child(service)
 	service.queue_free()
 	await process_frame

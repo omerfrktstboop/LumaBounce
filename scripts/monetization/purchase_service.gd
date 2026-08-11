@@ -186,7 +186,7 @@ func _finish_purchase(product_id: StringName, result: int) -> int:
 func _track_iap(action: String, result: String) -> void:
 	if _analytics == null:
 		return
-	_analytics.track_event(AnalyticsService.IAP_RESULT, {
+	_analytics.track_event(AnalyticsService.REMOVE_ADS_PURCHASE_RESULT, {
 		"product_id": String(MonetizationConfig.PRODUCT_REMOVE_ADS),
 		"action": action,
 		"result": result,

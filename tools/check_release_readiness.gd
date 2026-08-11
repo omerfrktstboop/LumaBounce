@@ -27,6 +27,13 @@ const BILLING_RELEASE_AAR := "res://addons/GodotGooglePlayBilling/bin/release/Go
 const BILLING_PROVIDER := "res://scripts/monetization/providers/google_play_billing_provider.gd"
 const PURCHASE_SERVICE := "res://scripts/monetization/purchase_service.gd"
 const MONETIZATION_CONFIG := "res://scripts/monetization/monetization_config.gd"
+const ANALYTICS_SERVICE := "res://scripts/monetization/analytics_service.gd"
+const GAMEANALYTICS_PROVIDER := "res://scripts/analytics/gameanalytics_provider.gd"
+const GAMEANALYTICS_CONFIG := "res://scripts/analytics/gameanalytics_config.gd"
+const GAMEANALYTICS_PLUGIN := "res://addons/GameAnalytics/plugin.cfg"
+const GAMEANALYTICS_QUARANTINE := "res://addons/GameAnalytics/GameAnalytics.gdextension.disabled"
+const GAMEANALYTICS_ACTIVE := "res://addons/GameAnalytics/GameAnalytics.gdextension"
+const ANALYTICS_PHASE10_CHECK := "res://tools/check_analytics_phase10.gd"
 
 const RELEASE_PRESET_NAME := "Android Release"
 const DEBUG_PRESET_NAME := "Android Debug"
@@ -77,6 +84,7 @@ func _run() -> void:
 	_check_release_debug_leakage()
 	_check_admob_integration()
 	_check_billing_integration()
+	_check_analytics_integration()
 	_check_gitignore()
 	_check_level_library()
 	_report()
@@ -313,9 +321,40 @@ func _check_billing_integration() -> void:
 	_notes.append("remove_ads client-side restore/ack kullanir; coin paketi veya subscription eklenmemistir.")
 
 
+func _check_analytics_integration() -> void:
+	for path in [
+		ANALYTICS_SERVICE, GAMEANALYTICS_PROVIDER, GAMEANALYTICS_CONFIG,
+		GAMEANALYTICS_PLUGIN, ANALYTICS_PHASE10_CHECK,
+	]:
+		if not FileAccess.file_exists(path):
+			_blockers.append("Analytics Faz 10 dosyasi yok: %s" % path)
+	var service_text := _read_text(ANALYTICS_SERVICE)
+	for contract in [
+		"SESSION_END", "RESTART", "INTERSTITIAL_CANDIDATE",
+		"REMOVE_ADS_PURCHASE_RESULT", "COSMETIC_PURCHASE",
+		"set_collection_enabled", "call_deferred",
+	]:
+		if not service_text.contains(contract):
+			_blockers.append("Analytics sozlesmesi eksik: %s" % contract)
+	var provider_text := _read_text(GAMEANALYTICS_PROVIDER)
+	if not provider_text.contains('useRandomizedId", true'):
+		_blockers.append("GameAnalytics randomized SDK identity zorlanmiyor.")
+	if provider_text.contains("configureUserId") or provider_text.contains("setExternalUserId"):
+		_blockers.append("GameAnalytics provider ham/harici kullanici kimligi ayarliyor.")
+
+	var enabled_plugins: PackedStringArray = ProjectSettings.get_setting(
+		"editor_plugins/enabled", PackedStringArray())
+	if FileAccess.file_exists(GAMEANALYTICS_QUARANTINE):
+		if enabled_plugins.has(GAMEANALYTICS_PLUGIN):
+			_blockers.append("Karantinadaki GameAnalytics export plugin'i etkin; NoOp fallback bozulabilir.")
+		if FileAccess.file_exists(GAMEANALYTICS_ACTIVE):
+			_blockers.append("GameAnalytics hem aktif hem karantina descriptor'u tasiyor.")
+		_notes.append("GameAnalytics 3.1.0 unstable karantinada; analytics guvenli NoOp fallback kullanir.")
+	elif not enabled_plugins.has(GAMEANALYTICS_PLUGIN):
+		_warnings.append("GameAnalytics descriptor aktif gorunuyor ama export plugin'i etkin degil.")
 func _check_gitignore() -> void:
 	var ignore_text := _read_text(GITIGNORE)
-	for required in ["*.keystore", "*.jks", "*.p12", "keystores/", "keystore.properties", "builds/"]:
+	for required in ["*.keystore", "*.jks", "*.p12", "keystores/", "keystore.properties", "builds/", "gameanalytics.cfg"]:
 		if not ignore_text.contains(required):
 			_blockers.append(".gitignore '%s' kalibini icermiyor." % required)
 	for line in ignore_text.split("\n"):

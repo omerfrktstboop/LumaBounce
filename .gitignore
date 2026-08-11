@@ -26,6 +26,9 @@ keystore.properties
 *.keystore.cfg
 local.properties
 
+# GameAnalytics anahtarlari sadece yerel/CI ortaminda tutulur.
+gameanalytics.cfg
+
 # Yerel imzalama ortam dosyalari; ornek/README disinda repoya ekleme.
 .env
 .env.*
