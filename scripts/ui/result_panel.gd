@@ -101,6 +101,24 @@ func hide_result() -> void:
 	_card.scale = Vector2.ONE
 
 
+## Faz 2 hook'lari UI cizmez ve reklam baslatmaz. Sonraki faz bu durumlari
+## istege bagli buton/akislara baglarken ResultPanel SDK sinifi tanimaz.
+func set_revive_offer_eligible(eligible: bool) -> void:
+	set_meta(&"revive_offer_eligible", eligible)
+
+
+func is_revive_offer_eligible() -> bool:
+	return bool(get_meta(&"revive_offer_eligible", false))
+
+
+func set_interstitial_candidate(candidate: bool) -> void:
+	set_meta(&"interstitial_candidate", candidate)
+
+
+func is_interstitial_candidate() -> bool:
+	return bool(get_meta(&"interstitial_candidate", false))
+
+
 func _open() -> void:
 	show()
 	# Kart icerige gore kuculup buyudugu icin pivot her acilista guncellenir.

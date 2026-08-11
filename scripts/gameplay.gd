@@ -11,6 +11,7 @@ extends Node2D
 ## Ekran baska bir sahne acmaz; yalnizca sinyal yayar, AppRoot karar verir.
 
 signal level_completed(level_id: int, stars: int)
+signal level_failed(level_id: int, reason: String, revive_eligible: bool)
 signal next_level_requested(level_id: int)
 signal level_select_requested()
 signal menu_requested()
@@ -116,6 +117,10 @@ var progress: ProgressStore
 ## AppRoot tarafindan add_child'dan ONCE atanir. Harcama ve kalici ipucu
 ## kilitleri bu nesnenin tek sorumlulugudur.
 var wallet: WalletStore
+## AppRoot tarafindan enjekte edilen urun-seviyesi servisler. Gameplay provider,
+## SDK sinifi veya reklam birimi kimligi bilmez.
+var ad_service: AdService
+var analytics: AnalyticsService
 ## TEST MODU - bolum editorunden "TEST" ile acildiginda AppRoot tarafindan
 ## acilir. Bolum BITMEZ: hedefe isabet geri bildirimi oynar ama sonuc karti
 ## acilmaz, haklar tukenmez, ilerleme yazilmaz. Amac bolumu degerlendirmek
@@ -170,7 +175,7 @@ var _launcher_enabled_before_intro := true
 var _launcher_enabled_before_hint := true
 var _hint_trace := PackedVector2Array()
 var _hint_waiting_for_blocks := false
-## Kisa ipucu su an verilebilir mi. AppRoot enjekte eder (bkz. FeatureFlags);
+## Kisa ipucu su an verilebilir mi. AppRoot AdService hazirligindan enjekte eder;
 ## Gameplay NEDENINI bilmez - reklam servisi, abonelik ya da baska bir kosul
 ## olabilir. Boylece reklam SDK'si eklendiginde bu dosya degismez.
 var short_hint_enabled := false
@@ -659,6 +664,11 @@ func _open_failure_panel() -> void:
 	await get_tree().create_timer(result_delay, false).timeout
 	if token != _shot_token or not is_inside_tree():
 		return
+	var revive_eligible := (
+		ad_service != null
+		and ad_service.is_rewarded_ready(MonetizationConfig.PLACEMENT_REVIVE))
+	_result_panel.set_revive_offer_eligible(revive_eligible)
+	level_failed.emit(level_data.level_id, _last_failure_reason, revive_eligible)
 	_result_panel.show_failure(
 		failed_title, failed_subtitle, restart_label,
 		_final_attempt_seconds, _final_attempt_shots)
@@ -921,6 +931,15 @@ func _on_hint_pressed() -> void:
 	if _hint_trace.is_empty():
 		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
 		return
+	if ad_service != null:
+		short_hint_enabled = ad_service.is_rewarded_ready(
+			MonetizationConfig.PLACEMENT_SHORT_HINT)
+	if analytics != null:
+		analytics.track_event(AnalyticsService.HINT_OFFER_OPEN, {
+			"level_id": level_data.level_id,
+			"short_available": short_hint_enabled and not _short_hint_shown,
+			"full_unlocked": false,
+		})
 	_open_hint_card()
 	# Kart TEK basina acilir ve iki secenegi birden tasir; hangi secenegin
 	# etkin oldugunu kart degil BURASI belirler - urun kurallari (bakiye,
@@ -941,6 +960,10 @@ func _on_hint_pressed() -> void:
 func _on_short_hint_requested() -> void:
 	if not short_hint_enabled or _short_hint_shown:
 		return
+	if analytics != null:
+		analytics.track_event(AnalyticsService.HINT_SHORT_REQUESTED, {
+			"level_id": level_data.level_id,
+		})
 	_hint_card.close()
 	short_hint_requested.emit()
 
@@ -981,7 +1004,18 @@ func _on_hint_purchase_requested() -> void:
 		return
 	_refresh_hint_hud()
 	_hint_card.close()
+	if analytics != null:
+		analytics.track_event(AnalyticsService.HINT_FULL_UNLOCKED, {
+			"level_id": level_data.level_id,
+			"cost": hint_cost,
+		})
 	_show_unlocked_hint()
+
+
+## ResultPanel'in SDK'dan bagimsiz completion hook'u. AppRoot policy adayini
+## level_completed sinyalinde hesaplar ve kart acilmadan once buraya yazar.
+func set_interstitial_candidate(candidate: bool) -> void:
+	_result_panel.set_interstitial_candidate(candidate)
 
 
 func _open_hint_card() -> void:

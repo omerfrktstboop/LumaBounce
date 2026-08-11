@@ -38,6 +38,10 @@ const LEVEL_EDITOR_SCENE_PATH := "res://scenes/level_editor.tscn"
 var _progress: ProgressStore
 var _playtest_stats: PlaytestStats
 var _wallet: WalletStore
+var _entitlements: EntitlementStore
+var _analytics: AnalyticsService
+var _ad_policy: AdPolicy
+var _ad_service: AdService
 ## Bu iki kaynak ana sahnenin bagimliligi degildir. Yalnizca debug template
 ## calisirken yuklenir; Android Release filtresi dosyalari pakete dahil etmez.
 var _debug_panel = null
@@ -65,6 +69,7 @@ func _ready() -> void:
 	# bildirimlerini kacirmasin.
 	_progress = ProgressStore.load_from_disk()
 	_wallet = WalletStore.load_from_disk()
+	_setup_monetization()
 	# Titresim tercihi tek okuma noktasina (Haptics) aktarilir; boylece
 	# cagiranlarin ProgressStore'a erisimi olmasi gerekmez (bkz. haptics.gd).
 	Haptics.enabled = _progress.haptics_enabled
@@ -77,6 +82,10 @@ func _ready() -> void:
 	# Haptics ile ayni desen.
 	ScreenShake.trauma_scale = _progress.shake_scale
 	_playtest_stats = PlaytestStats.load_from_disk()
+	_analytics.track_event(AnalyticsService.SESSION_START, {
+		"game_version": GameVersion.GAME,
+		"provider": _ad_service.provider_name(),
+	})
 	_setup_debug_tools()
 	_connect_debug_panel()
 
@@ -236,6 +245,8 @@ func _connect_screen(screen: Node) -> void:
 		gameplay.menu_requested.connect(_on_gameplay_menu_requested)
 		gameplay.obstacle_kind_seen.connect(_on_obstacle_kind_seen)
 		gameplay.block_mechanic_seen.connect(_on_block_mechanic_seen)
+		gameplay.short_hint_requested.connect(_on_short_hint_requested.bind(gameplay))
+		gameplay.level_failed.connect(_on_level_failed)
 		return
 
 	if _is_level_editor(screen):
@@ -275,6 +286,28 @@ func _configure_gameplay(screen: Node, level_id: int) -> void:
 		gameplay.progress = _progress
 		gameplay.wallet = _wallet
 		gameplay.aim_assist = _progress.aim_assist
+		gameplay.ad_service = _ad_service
+		gameplay.analytics = _analytics
+		gameplay.short_hint_enabled = _ad_service.is_rewarded_ready(
+			MonetizationConfig.PLACEMENT_SHORT_HINT)
+		_analytics.track_event(AnalyticsService.LEVEL_START, {
+			"level_id": level_id,
+			"is_bonus": LevelWorlds.is_bonus_id(level_id),
+		})
+
+
+## Servisler AppRoot'a aittir: ekran omru degistiginde provider/policy durumu
+## kaybolmaz. Autoload kullanmamak testlerde NoOp yerine Mock enjekte etmeyi ve
+## sonraki fazda yalnizca bu composition root'u degistirmeyi kolaylastirir.
+func _setup_monetization() -> void:
+	_entitlements = EntitlementStore.load_from_disk()
+	_analytics = AnalyticsService.new(OS.is_debug_build() and not OS.has_feature("production"))
+	_ad_policy = AdPolicy.new(_entitlements)
+	_ad_service = AdService.new()
+	_ad_service.name = "AdService"
+	_ad_service.configure(NoOpAdProvider.new(), _ad_policy, _analytics)
+	add_child(_ad_service)
+	_ad_service.initialize()
 
 
 ## Oynanisin arkasindaki "derin uzay" katmani temanin murekkep rengini takip
@@ -295,11 +328,32 @@ func _apply_background_theme() -> void:
 
 ## Kazanilan yildiz yalnizca oncekinden IYIYSE kaydedilir; eski 3, yeni 1
 ## ise kayit 3 kalir (bkz. ProgressStore.set_level_stars_if_higher).
+## Gameplay yalnizca "kisa ipucu istiyorum" der. Provider sonucu EARNED
+## degilse Coin/rota verilmez; unavailable durumda bir frame sonra normal oyun
+## devam eder. Gercek SDK adapteri bu fonksiyonun disina sizmaz.
+func _on_short_hint_requested(gameplay: Gameplay) -> void:
+	if gameplay == null or not is_instance_valid(gameplay):
+		return
+	if _ad_service == null:
+		return
+	var result := int(await _ad_service.show_rewarded(
+		MonetizationConfig.PLACEMENT_SHORT_HINT))
+	if result != AdResult.Code.EARNED:
+		return
+	if gameplay != null and is_instance_valid(gameplay) and gameplay.is_inside_tree():
+		gameplay.grant_short_hint()
+
+
 func _on_level_completed(level_id: int, stars: int) -> void:
 	# Editorden test edilen bolum gercek ilerlemeye YAZILMAZ; henuz oyunun
 	# bir parcasi degil ve kaydi kirletmesi anlamsiz olurdu.
 	if _editor_level != null:
 		return
+	_analytics.track_event(AnalyticsService.LEVEL_COMPLETE, {
+		"level_id": level_id,
+		"stars": stars,
+		"is_bonus": LevelWorlds.is_bonus_id(level_id),
+	})
 	var first_clear := not _progress.is_completed(level_id)
 	_progress.mark_completed(level_id)
 	_progress.set_level_stars_if_higher(level_id, stars)
@@ -308,6 +362,41 @@ func _on_level_completed(level_id: int, stars: int) -> void:
 		var gameplay := _current as Gameplay
 		if gameplay != null:
 			gameplay.notify_luma_coin_reward(FIRST_CLEAR_LUMA_COIN_REWARD)
+
+	var candidate := _ad_policy.register_successful_completion(
+		_completed_normal_level_count(), not LevelWorlds.is_bonus_id(level_id))
+	var gameplay := _current as Gameplay
+	if gameplay != null:
+		gameplay.set_interstitial_candidate(candidate)
+	if candidate:
+		_show_completion_interstitial.call_deferred()
+
+
+func _show_completion_interstitial() -> void:
+	if _ad_service == null:
+		return
+	await _ad_service.maybe_show_interstitial(
+		MonetizationConfig.CONTEXT_LEVEL_COMPLETE, true)
+
+
+func _completed_normal_level_count() -> int:
+	var count := 0
+	for level_id in _progress.completed_levels:
+		if LevelLibrary.is_valid_id(level_id) and not LevelWorlds.is_bonus_id(level_id):
+			count += 1
+	return count
+
+
+## Failure/retry akisinda interstitial CAGIRILMAZ. Bu sinyal yalnizca analytics
+## ve gelecekte ResultPanel'e eklenecek istege bagli revive teklifinin hook'udur.
+func _on_level_failed(level_id: int, reason: String, revive_eligible: bool) -> void:
+	if _editor_level != null:
+		return
+	_analytics.track_event(AnalyticsService.LEVEL_FAIL, {
+		"level_id": level_id,
+		"reason": reason,
+		"revive_eligible": revive_eligible,
+	})
 
 
 ## Editordeki bolum icin de _on_level_completed ile ayni kural: gercek
