@@ -39,6 +39,7 @@ func _run() -> void:
 	_backup_save()
 	_register_audio_manager()
 
+	_test_responsive_layout()
 	await _test_debug_panel_close()
 	await _test_launcher_power_feel()
 	await _test_block_state_rules()
@@ -66,6 +67,37 @@ func _run() -> void:
 	print("")
 	print("SONUC: %d gecti, %d kaldi." % [_passed, _failed])
 	quit(0 if _failed == 0 else 1)
+
+
+func _test_responsive_layout() -> void:
+	print("--- Mobil ekran yerlesimi ---")
+	_check("canvas item olceklemesi etkin",
+		ProjectSettings.get_setting("display/window/stretch/mode", ""), "canvas_items")
+	_check("uzun ve genis ekranlar siyah barsiz genisler",
+		ProjectSettings.get_setting("display/window/stretch/aspect", ""), "expand")
+
+	# Tum ana ekranlar referans viewport'u doldurmali. `expand`, cihazin
+	# en-boy oranina gore bu rect'i uzatir; tam rect anchor'i olmayan bir kok
+	# uzun telefonda eski 720x1280 alanda kalip yeniden siyah/eksik alan uretir.
+	for path in [
+		"res://scenes/splash.tscn",
+		"res://scenes/main_menu.tscn",
+		"res://scenes/level_select.tscn",
+		"res://scenes/settings.tscn",
+	]:
+		var screen := (load(path) as PackedScene).instantiate() as Control
+		_check("%s yatayda tam ekran" % path.get_file(), screen.anchor_right, 1.0)
+		_check("%s dikeyde tam ekran" % path.get_file(), screen.anchor_bottom, 1.0)
+		screen.free()
+
+	var gameplay := (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+	var background := gameplay.get_node("BackgroundLayer/Background") as Control
+	var safe_area := gameplay.get_node("HUD/SafeArea") as Control
+	_check("oynanis zemini yatayda tam ekran", background.anchor_right, 1.0)
+	_check("oynanis zemini dikeyde tam ekran", background.anchor_bottom, 1.0)
+	_check("oynanis HUD'u yatayda tam ekran", safe_area.anchor_right, 1.0)
+	_check("oynanis HUD'u dikeyde tam ekran", safe_area.anchor_bottom, 1.0)
+	gameplay.free()
 
 
 func _test_debug_panel_close() -> void:

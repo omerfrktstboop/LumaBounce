@@ -149,6 +149,11 @@ func _check_android_identity(config: ConfigFile, preset: String, options: String
 			% [label, target_sdk, EXPECTED_TARGET_SDK])
 	if not bool(config.get_value(options, "package/signed", false)):
 		_blockers.append("%s package/signed=false." % label)
+	if not bool(config.get_value(options, "screen/edge_to_edge", false)):
+		_blockers.append(
+			"%s screen/edge_to_edge=false; sistem cubuklari siyah alan birakabilir." % label)
+	if not bool(config.get_value(options, "screen/immersive_mode", false)):
+		_blockers.append("%s screen/immersive_mode=false; tam ekran Android deneyimi bozulur." % label)
 
 	var version_name := String(config.get_value(options, "version/name", ""))
 	if version_name != GameVersion.GAME:
