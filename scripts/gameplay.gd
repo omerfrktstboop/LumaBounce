@@ -50,12 +50,14 @@ signal revive_requested()
 
 @export_group("Luma Coin Ipucu")
 ## TAM ROTA: bir bolumun ornek rotasini KALICI acma maliyeti.
-@export var hint_cost := 3
+@export var hint_cost := 5
 ## KISA IPUCU: rotanin yalnizca ilk parcasini gosterir. Bedeli odullu reklam
 ## izlemektir; Luma Coin HARCAMAZ ve kalici unlock SAYILMAZ (her istendiginde
 ## yeniden kazanilir). Bu alan 0'dan buyuk yapilirsa kisa ipucu da Coin
 ## isteyen bir secenege donusur - urun karari degisirse tek satir yeter.
-@export var short_hint_cost := 0
+@export var short_hint_cost := 2
+## REVIVE: reklam izlemeye alternatif olarak +1 top almanin Coin bedeli.
+@export var revive_coin_cost := 2
 ## Kisa ipucu rotanin en fazla bu kadarini gosterir.
 ##
 ## Ust sinir SART: bazi bolumlerde ilk sekme yolun cok ilerisindedir ve
@@ -147,13 +149,15 @@ var aim_assist := false
 @onready var _intro_card: MechanicIntroCard = $HUD/MechanicIntroCard
 @onready var _level_title: Label = $HUD/SafeArea/Root/LevelHeader/LevelTitle
 @onready var _level_subtitle: Label = $HUD/SafeArea/Root/LevelHeader/LevelSubtitle
-@onready var _retry_button: Button = $HUD/SafeArea/Root/RetryButton
-@onready var _home_button: Button = $HUD/SafeArea/Root/HomeButton
+@onready var _pause_button: LumaIconButton = $HUD/SafeArea/Root/PauseButton
+@onready var _pause_card: PauseCard = $HUD/PauseCard
 @onready var _hint_button: LumaIconButton = $HUD/SafeArea/Root/HintButton
 @onready var _hint_badge: Label = $HUD/SafeArea/Root/HintButton/HintBadge
-@onready var _coin_chip: HBoxContainer = $HUD/SafeArea/Root/CoinChip
-@onready var _coin_value: Label = $HUD/SafeArea/Root/CoinChip/Value
-@onready var _hint_status: Label = $HUD/SafeArea/Root/HintStatus
+@onready var _coin_chip: PanelContainer = $HUD/SafeArea/Root/CoinChip
+@onready var _coin_value: Label = $HUD/SafeArea/Root/CoinChip/Row/Value
+@onready var _hint_status: HBoxContainer = $HUD/SafeArea/Root/HintStatus
+@onready var _hint_status_text: Label = $HUD/SafeArea/Root/HintStatus/Text
+@onready var _hint_status_glyph: Control = $HUD/SafeArea/Root/HintStatus/Glyph
 @onready var _lives_display: LivesDisplay = $HUD/SafeArea/Root/LivesDisplay
 @onready var _result_panel: ResultPanel = $HUD/ResultPanel
 @onready var _hint_card: HintPurchaseCard = $HUD/HintPurchaseCard
@@ -175,6 +179,7 @@ var _showing_block_intro := false
 ## Kart acilmadan onceki firlatici durumu; kapaninca aynen geri verilir.
 var _launcher_enabled_before_intro := true
 var _launcher_enabled_before_hint := true
+var _launcher_enabled_before_pause := true
 var _hint_trace := PackedVector2Array()
 var _hint_waiting_for_blocks := false
 ## Kisa ipucu su an verilebilir mi. AppRoot AdService hazirligindan enjekte eder;
@@ -186,6 +191,9 @@ var short_hint_enabled := false
 ## tam rotadir.
 var _short_hint_shown := false
 var _revive_used := false
+## Coin ile revive satin alma SURUYOR mu. Cift dokunusun ikinci Coin'i
+## harcamasini engelleyen kilit: harcamadan ONCE kalkar, islem bitince duser.
+var _revive_purchase_pending := false
 var _pending_luma_coin_reward := 0
 var _max_lives := 5
 var _lives_remaining := 0
@@ -240,8 +248,8 @@ func _ready() -> void:
 	_connect_signals()
 	get_viewport().size_changed.connect(_position_shake_camera)
 	_position_shake_camera()
-	_input_blockers.append(_retry_button)
-	_input_blockers.append(_home_button)
+	_input_blockers.append(_pause_button)
+	_input_blockers.append(_pause_card)
 	_input_blockers.append(_hint_button)
 	_input_blockers.append(_hint_card)
 	_refresh_hint_hud()
@@ -292,6 +300,11 @@ func _apply_level() -> void:
 	_target.accent = Palette.ACCENT
 	_target.core_color = Palette.ACCENT_CORE
 	_target._build_visual()
+
+	# Kozmetikler paletten SONRA uygulanir: secili bir deri varsa bant
+	# temasini ezer, yoksa hicbir sey degismez ve bugunku gorunum kalir.
+	# Yalnizca gorunum alanlarina yazar (bkz. CosmeticApplier).
+	CosmeticApplier.apply(wallet, _ball, _launcher, _target)
 
 	_max_lives = maxi(level_data.max_lives, 1)
 
@@ -408,8 +421,14 @@ func _connect_signals() -> void:
 	# Ilk gecerli nisan hareketinde ipucunu sondur.
 	_launcher.aim_updated.connect(_on_aim_updated)
 	# Tiklama sesini LumaButton'un kendisi calar (HUD butonlari da LumaIconButton).
-	_retry_button.pressed.connect(reset_shot)
-	_home_button.pressed.connect(menu_requested.emit)
+	# TEKRAR BASLA ve ANA MENU artik ust seritte DEGIL, duraklat kartinin
+	# icinde: ikisi de geri alinamaz eylemler ve oynanis sirasinda tek
+	# dokunusla erisilebilir olmalari yanlislikla bir denemeyi bitiriyordu.
+	_pause_button.pressed.connect(_on_pause_pressed)
+	_pause_card.resume_requested.connect(_on_pause_resume)
+	_pause_card.restart_requested.connect(_on_pause_restart)
+	_pause_card.level_select_requested.connect(level_select_requested.emit)
+	_pause_card.menu_requested.connect(menu_requested.emit)
 	_hint_button.pressed.connect(_on_hint_pressed)
 	_hint_card.purchase_requested.connect(_on_hint_purchase_requested)
 	_hint_card.short_hint_requested.connect(_on_short_hint_requested)
@@ -418,6 +437,7 @@ func _connect_signals() -> void:
 	_result_panel.next_pressed.connect(_on_result_next)
 	_result_panel.retry_pressed.connect(_on_result_retry)
 	_result_panel.revive_pressed.connect(_on_result_revive)
+	_result_panel.revive_coin_pressed.connect(_on_result_revive_coin)
 	# Gameplay hicbir sahne acmaz; AppRoot mevcut fade gecisiyle karar verir.
 	_result_panel.level_select_pressed.connect(level_select_requested.emit)
 	_result_panel.menu_pressed.connect(menu_requested.emit)
@@ -471,6 +491,47 @@ func reset_shot() -> void:
 ## AppRoot arka plan / geri donus bildirimlerinde cagirir. Oyun agaci
 ## duraklatildigi icin fizik zaten ilerlemez; burada yalnizca playtest
 ## kronometresini ve yarim kalmis dokunma durumunu guvenli hale getiririz.
+# --- Duraklatma -------------------------------------------------------------
+
+## Oyuncu duraklat tusuna basti mi. AppRoot bunu OKUR: uygulama arka plandan
+## geri geldiginde agaci kendiliginden devam ettirmemeli, yoksa elle
+## duraklatilmis oyun kartin arkasinda calismaya baslardi.
+func is_manually_paused() -> bool:
+	return _pause_card != null and _pause_card.is_open()
+
+
+func _on_pause_pressed() -> void:
+	if _attempt_finished or _result_panel.visible or _intro_card.is_open():
+		return
+	if _hint_card.is_open():
+		_hint_card.close()
+	_launcher_enabled_before_pause = _launcher.enabled
+	_launcher.cancel_aim()
+	_launcher.enabled = false
+	_pause_card.open()
+	# Agaci duraklatmak topu, engelleri ve tweenleri BIRLIKTE durdurur.
+	# Kartin kendisi PROCESS_MODE_ALWAYS oldugu icin butonlari calisir kalir.
+	get_tree().paused = true
+	_set_playtest_timing_paused(true)
+
+
+func _on_pause_resume() -> void:
+	_pause_card.close()
+	get_tree().paused = false
+	_set_playtest_timing_paused(false)
+	if not _intro_card.is_open() and not _attempt_finished:
+		_launcher.enabled = _launcher_enabled_before_pause
+
+
+## Duraklatmadan TEKRAR BASLA: once agaci serbest birakmak sart, yoksa
+## reset_shot'in tweenleri ve fizik adimlari donmus agacta calismaz.
+func _on_pause_restart() -> void:
+	_pause_card.close()
+	get_tree().paused = false
+	_set_playtest_timing_paused(false)
+	reset_shot()
+
+
 func set_app_paused(paused: bool) -> void:
 	_set_playtest_timing_paused(paused)
 	if paused:
@@ -655,8 +716,7 @@ func _open_success_panel(stars: int, new_record: bool) -> void:
 	_result_panel.show_success(
 		completed_title, next_text, retry_label,
 		stars, _final_attempt_seconds, _final_attempt_shots, new_record,
-		tr("+%d LUMA COIN") % _pending_luma_coin_reward \
-			if _pending_luma_coin_reward > 0 else "")
+		_pending_luma_coin_reward)
 	# target_hit'ten result_delay kadar sonra geldigi icin ust uste binmez.
 	AudioManager.play_level_complete()
 
@@ -674,6 +734,10 @@ func _open_failure_panel() -> void:
 		and ad_service != null
 		and ad_service.is_rewarded_ready(MonetizationConfig.PLACEMENT_REVIVE))
 	_result_panel.set_revive_offer_eligible(revive_eligible)
+	# COIN ALTERNATIFI: reklam hazir olmasa da (ya da hic olmasa da) oyuncu
+	# devam edebilmeli. Iki yol AYRI degerlendirilir; biri kapaliyken digeri
+	# acik kalabilir.
+	_result_panel.set_revive_coin_offer(_can_afford_coin_revive(), revive_coin_cost)
 	level_failed.emit(level_data.level_id, _last_failure_reason, revive_eligible)
 	_result_panel.show_failure(
 		failed_title, failed_subtitle, restart_label,
@@ -718,17 +782,54 @@ func _on_result_revive() -> void:
 	revive_requested.emit()
 
 
+## Coin ile devam etmenin kosullari. grant_extra_ball()'in on kosullariyla
+## AYNI olmali: harcadiktan sonra odulun verilememesi kabul edilemez.
+func _can_afford_coin_revive() -> bool:
+	return (
+		not _revive_used
+		and revive_coin_cost > 0
+		and wallet != null
+		and wallet.can_afford(revive_coin_cost))
+
+
+## 2 Coin ile +1 top. Reklamdan farkli olarak AppRoot'a ugramaz: ortada
+## reklam servisi yok, yalnizca cuzdan var - ve cuzdan kararlari (ipucu
+## satin alma gibi) zaten Gameplay'in icinde veriliyor.
+##
+## CIFT DUSMEZ: kilit harcamadan once kalkar. Odul herhangi bir sebeple
+## verilemezse Coin GERI IADE edilir - oyuncu alamadigi bir sey icin odemez.
+func _on_result_revive_coin() -> void:
+	if _revive_purchase_pending or not _can_afford_coin_revive():
+		return
+	if _lives_remaining > 0 or not _result_panel.visible:
+		return
+	_revive_purchase_pending = true
+	_result_panel.set_revive_offer_busy(true)
+	if not wallet.spend(revive_coin_cost):
+		_revive_purchase_pending = false
+		_result_panel.set_revive_offer_busy(false)
+		return
+	if not grant_extra_ball():
+		wallet.add(revive_coin_cost)
+		_result_panel.set_revive_offer_busy(false)
+	_revive_purchase_pending = false
+	_refresh_hint_hud()
+
+
 func set_revive_offer_busy(busy: bool) -> void:
 	_result_panel.set_revive_offer_busy(busy)
 
 
 ## Odul callback'i yalnizca AppRoot'tan gelir. Deneme ve kirilmis bloklar
 ## korunur; sadece tek top eklenir ve donmus kronometre kaldigi yerden devam eder.
-func grant_extra_ball() -> void:
+## Odul verildi mi. Coin yolu bu sonuca bakar: verilemediyse harcanan Coin
+## iade edilir (bkz. _on_result_revive_coin).
+func grant_extra_ball() -> bool:
 	if _revive_used or _lives_remaining > 0 or not _result_panel.visible:
-		return
+		return false
 	_revive_used = true
 	_result_panel.set_revive_offer_eligible(false)
+	_result_panel.set_revive_coin_offer(false, revive_coin_cost)
 	_result_panel.hide_result()
 	_lives_remaining = 1
 	_update_lives_hud()
@@ -737,6 +838,7 @@ func grant_extra_ball() -> void:
 	_attempt_timer_running = true
 	_attempt_finished = false
 	_respawn_ball()
+	return true
 
 
 # --- Carpma geri bildirimi ---------------------------------------------------
@@ -1175,13 +1277,19 @@ func notify_luma_coin_reward(amount: int) -> void:
 		return
 	_pending_luma_coin_reward += amount
 	_refresh_hint_hud()
-	_show_hint_status(tr("+%d LUMA COIN") % amount, 2.4)
+	_show_hint_status("+%d" % amount, 2.4, true)
 
 
-func _show_hint_status(text: String, hold_time := 2.0) -> void:
+## [param with_coin] true ise metnin yanina jeton simgesi konur.
+##
+## Neden simge: odul bildirimi "+1 LUMA COIN" yaziyordu ve bolum basliginin
+## hemen altinda para biriminin adini tekrarliyordu. Simge hem kisa hem her
+## dilde ayni; metin yalnizca sayiyi tasir.
+func _show_hint_status(text: String, hold_time := 2.0, with_coin := false) -> void:
 	if _hint_status_tween != null and _hint_status_tween.is_valid():
 		_hint_status_tween.kill()
-	_hint_status.text = text
+	_hint_status_text.text = text
+	_hint_status_glyph.visible = with_coin
 	_hint_status.modulate.a = 0.0
 	_hint_status.show()
 	_hint_status_tween = create_tween()

@@ -12,6 +12,9 @@ enum Glyph {
 	CHECK,
 	RESTART,
 	LOCK,
+	COIN,
+	HINT,
+	PAUSE,
 }
 
 @export var glyph: Glyph = Glyph.SETTINGS:
@@ -46,6 +49,12 @@ func _draw() -> void:
 			_draw_check(center, unit)
 		Glyph.LOCK:
 			_draw_lock(center, unit)
+		Glyph.COIN:
+			_draw_coin(center, unit)
+		Glyph.HINT:
+			_draw_hint(center, unit)
+		Glyph.PAUSE:
+			_draw_pause(center, unit)
 
 
 func _draw_speaker(center: Vector2, unit: float, sound_on: bool) -> void:
@@ -70,6 +79,49 @@ func _draw_speaker(center: Vector2, unit: float, sound_on: bool) -> void:
 	var b := center + Vector2(unit * 0.82, unit * 0.30)
 	draw_line(a, b, color, stroke_width, true)
 	draw_line(Vector2(a.x, b.y), Vector2(b.x, a.y), color, stroke_width, true)
+
+
+## Luma Coin: madeni para halkasi + icinde "L" monogrami.
+##
+## Neden monogram: onceki hali ic ice iki halkaydi ve JETON degil "hedef/kayit"
+## simgesi gibi okunuyordu - ustelik oyunun hedefi ve topu da ic ice
+## dairelerden olustugu icin HUD'da onlarla karisiyordu. Monogram hem para
+## oldugunu hem HANGI para oldugunu bir bakista soyluyor.
+func _draw_coin(center: Vector2, unit: float) -> void:
+	draw_arc(center, unit * 0.84, 0.0, TAU, 32, color, stroke_width, true)
+	# "L": dikey govde + saga kisa taban.
+	var top := center + Vector2(-unit * 0.16, -unit * 0.40)
+	var bottom := center + Vector2(-unit * 0.16, unit * 0.34)
+	draw_line(top, bottom, color, stroke_width * 1.15, true)
+	draw_line(bottom, bottom + Vector2(unit * 0.44, 0.0), color, stroke_width * 1.15, true)
+
+
+## Duraklat: iki dikey cubuk. Ucgen "oynat" simgesiyle karismasin diye
+## bilerek kalin ve kisa - kucuk boyutta ince cubuklar tek bir cizgi gibi
+## okunuyordu.
+func _draw_pause(center: Vector2, unit: float) -> void:
+	var bar := Vector2(unit * 0.30, unit * 1.30)
+	var gap := unit * 0.26
+	for side in [-1.0, 1.0]:
+		var at := center + Vector2((gap + bar.x * 0.5) * side, 0.0)
+		draw_rect(Rect2(at - bar * 0.5, bar), color)
+
+
+## Ipucu: ampul govdesi + taban cizgileri. Yolu degil FIKRI temsil eder;
+## rota zaten HintPath ile arenada cizilir.
+func _draw_hint(center: Vector2, unit: float) -> void:
+	var bulb := center + Vector2(0.0, -unit * 0.18)
+	draw_arc(bulb, unit * 0.52, PI * 0.08, PI * 0.92 + PI, 26, color, stroke_width, true)
+	# Ampulun boynu: govdenin iki ucundan tabana inen kisa cizgiler.
+	var left := bulb + Vector2(-unit * 0.30, unit * 0.42)
+	var right := bulb + Vector2(unit * 0.30, unit * 0.42)
+	draw_line(left, left + Vector2(0.0, unit * 0.20), color, stroke_width, true)
+	draw_line(right, right + Vector2(0.0, unit * 0.20), color, stroke_width, true)
+	# Iki taban cizgisi (vida disi).
+	for i in 2:
+		var y := unit * (0.62 + float(i) * 0.24)
+		draw_line(bulb + Vector2(-unit * 0.28, y), bulb + Vector2(unit * 0.28, y),
+			color, stroke_width * 0.9, true)
 
 
 func _draw_home(center: Vector2, unit: float) -> void:

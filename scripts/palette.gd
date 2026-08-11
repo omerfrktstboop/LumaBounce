@@ -62,6 +62,13 @@ static var ACCENT_ALT_CORE := Color("f6ecff")
 
 # --- Tehlike vurgusu: yalnizca bomba ve temas geri bildirimi. Tema
 # degisse de AYNI kalir - "tehlike" her zaman ayni renge cevrilmeli. ---
+## PARA BIRIMI. HAZARD ile ayni sebeple dunyadan BAGIMSIZ (temalar bu alani
+## ezmez): tehlike her dunyada ayni sey demek zorunda oldugu gibi, para da
+## her dunyada ayni sey demek zorunda. Vurgu rengiyle degisseydi 3. dunyada
+## mor bir jeton, oradaki vurgu renginin bir parcasi gibi okunurdu.
+static var COIN := Color("ffc861")
+static var COIN_CORE := Color("fff1d2")
+
 static var HAZARD := Color("ff667d")
 static var HAZARD_DARK := Color("63364a")
 static var HAZARD_CORE := Color("ffe2e7")
@@ -99,6 +106,8 @@ static func apply_theme(theme: PaletteTheme) -> void:
 	ACCENT_ALT = theme.ACCENT_ALT
 	ACCENT_ALT_CORE = theme.ACCENT_ALT_CORE
 
+	COIN = theme.COIN
+	COIN_CORE = theme.COIN_CORE
 	HAZARD = theme.HAZARD
 	HAZARD_DARK = theme.HAZARD_DARK
 	HAZARD_CORE = theme.HAZARD_CORE

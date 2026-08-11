@@ -1,7 +1,6 @@
 class_name AppRoot
 extends Node
 
-const FIRST_CLEAR_LUMA_COIN_REWARD := 1
 const DEBUG_PANEL_SCENE_PATH := "res://scenes/debug_panel.tscn"
 const LEVEL_EDITOR_SCENE_PATH := "res://scenes/level_editor.tscn"
 
@@ -25,6 +24,7 @@ const LEVEL_EDITOR_SCENE_PATH := "res://scenes/level_editor.tscn"
 @export var main_menu_scene: PackedScene
 @export var level_select_scene: PackedScene
 @export var settings_scene: PackedScene
+@export var shop_scene: PackedScene
 @export var gameplay_scene: PackedScene
 @export var fade_time := 0.28
 @export var fade_color := Palette.INK_TOP
@@ -127,7 +127,11 @@ func _set_application_paused(paused: bool) -> void:
 	var gameplay := _current as Gameplay
 	if gameplay != null:
 		gameplay.set_app_paused(paused)
-	get_tree().paused = paused
+	# ELLE duraklatilmis bir oyun, uygulama on plana dondugunde kendiliginden
+	# devam ETMEMELI: oyuncu duraklat kartini hala aciktir ve arkasinda top
+	# ucmaya baslardi. Agaci serbest birakma karari yine burada, ama gameplay'in
+	# durumuna saygi duyarak.
+	get_tree().paused = paused or (gameplay != null and gameplay.is_manually_paused())
 
 
 # --- Ekran gecisleri ---------------------------------------------------------
@@ -138,6 +142,10 @@ func go_to_main_menu() -> void:
 
 func go_to_level_select() -> void:
 	await _transition(level_select_scene, _configure_level_select)
+
+
+func go_to_shop() -> void:
+	await _transition(shop_scene, _configure_shop)
 
 
 func go_to_settings() -> void:
@@ -224,6 +232,12 @@ func _connect_screen(screen: Node) -> void:
 		menu.play_pressed.connect(go_to_level)
 		menu.levels_requested.connect(go_to_level_select)
 		menu.settings_requested.connect(go_to_settings)
+		menu.shop_requested.connect(go_to_shop)
+		return
+
+	var shop := screen as ShopScreen
+	if shop != null:
+		shop.menu_requested.connect(go_to_main_menu)
 		return
 
 	var settings := screen as SettingsScreen
@@ -270,7 +284,21 @@ func _configure_level_select(screen: Node) -> void:
 		select.debug_force_unlock = _debug_unlock_all
 
 
+func _configure_shop(screen: Node) -> void:
+	var shop := screen as ShopScreen
+	if shop != null:
+		# Ayni WalletStore ORNEGI: magazada yapilan satin alma AppRoot'un
+		# elindeki cuzdanda da gorunmeli, yoksa sonraki bir save eski
+		# bakiyeyi geri yazardi.
+		shop.wallet = _wallet
+
+
 func _configure_settings(screen: Node) -> void:
+	var shop := screen as ShopScreen
+	if shop != null:
+		shop.menu_requested.connect(go_to_main_menu)
+		return
+
 	var settings := screen as SettingsScreen
 	if settings != null:
 		# Ayni ProgressStore ORNEGI verilir, kopyasi degil: ekran bir ayari
@@ -374,13 +402,20 @@ func _on_level_completed(level_id: int, stars: int) -> void:
 		"is_bonus": LevelWorlds.is_bonus_id(level_id),
 	})
 	var first_clear := not _progress.is_completed(level_id)
+	# "Ilk kez 3 yildiz" kaydetmeden ONCE olculmeli; set_level_stars_if_higher
+	# calistiktan sonra eski deger kaybolur.
+	var first_three_star := stars >= LevelData.NORMAL_MAX_STARS 		and _progress.get_level_stars(level_id) < LevelData.NORMAL_MAX_STARS
 	_progress.mark_completed(level_id)
 	_progress.set_level_stars_if_higher(level_id, stars)
-	if first_clear and _wallet != null:
-		_wallet.add(FIRST_CLEAR_LUMA_COIN_REWARD)
-		var gameplay := _current as Gameplay
-		if gameplay != null:
-			gameplay.notify_luma_coin_reward(FIRST_CLEAR_LUMA_COIN_REWARD)
+	if _wallet != null:
+		# Kurallar CoinEconomy'de; burasi yalnizca sonucu yazar ve gosterir.
+		var reward := CoinEconomy.level_complete_reward(
+			level_id, _completed_normal_level_count(), first_clear, first_three_star)
+		if reward > 0:
+			_wallet.add(reward)
+			var rewarded_screen := _current as Gameplay
+			if rewarded_screen != null:
+				rewarded_screen.notify_luma_coin_reward(reward)
 
 	var candidate := _ad_policy.register_successful_completion(
 		_completed_normal_level_count(), not LevelWorlds.is_bonus_id(level_id))

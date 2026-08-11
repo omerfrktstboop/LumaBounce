@@ -64,6 +64,18 @@ Settings live in **two** stores on purpose: `ProgressStore` `[settings]` (langua
 
 `ScreenShake.trauma_scale` is a `static var` for the same reason as `Haptics.enabled`: shake is triggered from six call sites, and scaling at each one guarantees someone eventually misses one and the preference leaks silently.
 
+### Cosmetics (`scripts/cosmetics/*`, `scripts/shop_screen.gd`)
+`CosmeticData` is a Resource holding **only visual fields** — no radius, gravity, bounciness or speed. `CosmeticCatalog` is the single source of items *and prices*; the shop UI never hardcodes a price, so rebalancing touches one file.
+
+Catalog colours are **literal, not read from `Palette`**: the palette changes per level band (see `PaletteThemes`), so a palette-derived skin would turn orange in world 2 — a purchased identity cannot change with the world. Each kind has exactly one default whose colours equal the original palette values, so a player who buys nothing sees no change.
+
+`CosmeticApplier` is the **single** place skins are applied. That is what makes "cosmetics never touch physics" checkable: `check_cosmetics.gd` both measures the ball's physics fields before/after a skin *and* scans the applier's source for assignments to physics field names, so a future "faster ball skin" fails the suite instead of shipping pay-to-win.
+
+Ownership/selection live in `WalletStore` (schema 2, `user://wallet.cfg`). **`ProgressStore.reset()` does not touch them** — cosmetics are purchases, not progress (see `docs/RELEASE.md`).
+
+### Coin economy (`scripts/levels/coin_economy.gd`)
+Earning rules live in one class instead of inside `AppRoot`, which previously held a bare "+1 per first clear". Rewards: every 5th *new* normal level +2, every 10th level's *first* 3-star +1, bonus first-clear +3. The 3-star reward is deliberately independent of first clear — a player may return later to improve a level. Spending lives with each feature (hint cost in `Gameplay`, cosmetic price in `CosmeticData`) because each has its own context.
+
 ### Haptics (`scripts/haptics.gd`)
 `Haptics` is the **single** exit point for `Input.vibrate_handheld` — nothing else in `scripts/` may call it directly, and `check_blocks_and_gate.gd::_test_haptics_setting()` scans the tree to enforce that. The reason is the on/off setting: with vibration calls scattered across the codebase, one always gets missed and the preference silently leaks. `Haptics.enabled` is a `static var` (same pattern as `Palette`) that `AppRoot` fills from `ProgressStore.haptics_enabled` at startup, so callers need no access to the store.
 

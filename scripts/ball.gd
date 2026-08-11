@@ -84,6 +84,10 @@ enum State {
 @export_range(0.05, 0.6, 0.01) var trail_tail_width := 0.30
 ## Kuyrugun saydamlasma hizi: bu orandan once alfa cok dusuk kalir.
 @export_range(0.2, 0.9, 0.05) var trail_fade_pivot := 0.55
+## Izin KENDI rengi. Alfasi 0 iken (varsayilan) topun accent rengi kullanilir,
+## yani mevcut gorunum degismez. Kozmetik sistemi izi toptan BAGIMSIZ
+## boyayabilsin diye ayri: oyuncu "Kor" topla "Iyon" iz secebilmeli.
+@export var trail_accent := Color(0.0, 0.0, 0.0, 0.0)
 
 ## Oyun alani; gameplay.gd tarafindan atanir. Bos birakilirsa viewport kullanilir.
 var play_bounds := Rect2()
@@ -356,10 +360,11 @@ func _setup_trail() -> void:
 
 	# Ek ara durak: alfa uzun sure cok dusuk kalip yalnizca topa yakin
 	# kisimda yukselir, boylece kuyruk sona dogru hizla saydamlasir.
+	var trail_color := trail_accent if trail_accent.a > 0.0 else accent
 	var gradient := Gradient.new()
-	gradient.set_color(0, Color(accent, 0.0))
-	gradient.set_color(1, Color(accent, trail_alpha))
-	gradient.add_point(trail_fade_pivot, Color(accent, trail_alpha * 0.22))
+	gradient.set_color(0, Color(trail_color, 0.0))
+	gradient.set_color(1, Color(trail_color, trail_alpha))
+	gradient.add_point(trail_fade_pivot, Color(trail_color, trail_alpha * 0.22))
 	_trail.gradient = gradient
 
 

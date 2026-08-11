@@ -157,6 +157,26 @@ gerekmez, yeni alanların hepsi savunmacı okunur ve makul bir varsayılana
 düşer. Numara yine de arttı, çünkü sürümün anlamı "bu kaydı hangi alan
 kümesini bilen sürüm yazdı".
 
+### Luma Coin ve kozmetikler — sıfırlama beklentisi
+
+`user://wallet.cfg` (şema 2) bakiyeyi, ipucu açılımlarını, **satın alınmış
+kozmetikleri** ve seçili kozmetikleri tutar.
+
+**"İlerlemeyi sıfırla" bu dosyaya dokunmaz.** Bölümler, yıldızlar ve
+tamamlananlar silinir; Coin bakiyesi, açılmış ipuçları ve kozmetik sahipliği
+**kalır**.
+
+Gerekçe: kozmetik *satın alınmış* bir şeydir, kazanılmış bir ilerleme değil.
+215 Coin'e alınan bir hedef efektini "baştan başla" ile kaybetmek, sıfırlamayı
+bir cezaya çevirirdi. Bugün Coin yalnızca oyun içinde kazanıldığı için bu bir
+tercih; **gerçek parayla Coin satılırsa zorunluluk hâline gelir** ve bakiyenin
+cihazda değil sunucuda tutulması gerekir.
+
+Oyuncuya bu ayrımın ayarlar ekranındaki onay metninde belirtilmesi önerilir
+("İlerlemen silinecek; Coin ve kozmetiklerin kalacak").
+
+---
+
 ### Ayarlar nerede saklanır
 İki ayrı dosya, bilerek:
 

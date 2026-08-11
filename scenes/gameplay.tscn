@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=24 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay.gd" id="1_gameplay"]
 [ext_resource type="Script" path="res://scripts/arena.gd" id="2_arena"]
@@ -20,6 +20,26 @@
 [ext_resource type="PackedScene" path="res://scenes/mechanic_intro_card.tscn" id="19_intro_card"]
 [ext_resource type="Script" path="res://scripts/ui/hint_path.gd" id="20_hint_path"]
 [ext_resource type="PackedScene" path="res://scenes/hint_purchase_card.tscn" id="21_hint_card"]
+[ext_resource type="Script" path="res://scripts/ui/glyph_icon.gd" id="22_glyph"]
+[ext_resource type="PackedScene" path="res://scenes/pause_card.tscn" id="23_pause_card"]
+
+[sub_resource type="StyleBoxFlat" id="CoinChipStyle"]
+content_margin_left = 12.0
+content_margin_top = 4.0
+content_margin_right = 14.0
+content_margin_bottom = 4.0
+bg_color = Color(0.0392157, 0.0666667, 0.113725, 0.72)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.784314, 0.380392, 0.45)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+corner_detail = 8
+anti_aliasing_size = 0.6
 
 [node name="Gameplay" type="Node2D"]
 script = ExtResource("1_gameplay")
@@ -144,8 +164,8 @@ script = ExtResource("7_lives")
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_left = 76.0
-offset_right = -76.0
+offset_left = 144.0
+offset_right = -190.0
 offset_bottom = 76.0
 grow_horizontal = 2
 mouse_filter = 2
@@ -168,85 +188,136 @@ theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="HomeButton" type="Button" parent="HUD/SafeArea/Root"]
+[node name="CoinChip" type="PanelContainer" parent="HUD/SafeArea/Root"]
 layout_mode = 1
 anchors_preset = 0
+anchor_left = 0.0
+anchor_right = 0.0
 offset_left = 0.0
-offset_top = 0.0
-offset_right = 60.0
-offset_bottom = 60.0
-focus_mode = 0
-script = ExtResource("9_icon_button")
-high_contrast = true
-glyph = 3
-idle_color = Color(0.913725, 0.94902, 1, 1)
-
-[node name="RetryButton" type="Button" parent="HUD/SafeArea/Root"]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -60.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 60.0
-grow_horizontal = 0
-focus_mode = 0
-script = ExtResource("9_icon_button")
-high_contrast = true
-glyph = 5
-idle_color = Color(0.913725, 0.94902, 1, 1)
-
-[node name="CoinBalance" type="Label" parent="HUD/SafeArea/Root"]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 0.0
-offset_top = 70.0
-offset_right = 166.0
-offset_bottom = 112.0
+offset_top = 2.0
+offset_right = 132.0
+offset_bottom = 50.0
+grow_horizontal = 1
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.831373, 0.956863, 1, 1)
-theme_override_colors/font_outline_color = Color(0.0392157, 0.0666667, 0.113725, 0.9)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 21
-text = "3 LUMA COIN"
+theme_override_styles/panel = SubResource("CoinChipStyle")
+
+[node name="Row" type="HBoxContainer" parent="HUD/SafeArea/Root/CoinChip"]
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="Glyph" type="Control" parent="HUD/SafeArea/Root/CoinChip/Row"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("22_glyph")
+glyph = 7
+color = Color(1, 0.784314, 0.380392, 1)
+stroke_width = 2.9
+
+[node name="Value" type="Label" parent="HUD/SafeArea/Root/CoinChip/Row"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.945098, 0.823529, 1)
+theme_override_font_sizes/font_size = 24
+text = "3"
 vertical_alignment = 1
 
 [node name="HintButton" type="Button" parent="HUD/SafeArea/Root"]
+custom_minimum_size = Vector2(80, 80)
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -174.0
-offset_top = 70.0
-offset_right = 0.0
-offset_bottom = 124.0
+offset_left = -178.0
+offset_top = 0.0
+offset_right = -98.0
+offset_bottom = 80.0
 grow_horizontal = 0
 focus_mode = 0
-theme_override_font_sizes/font_size = 22
-text = "Ä°PUCU Â· 3"
-script = ExtResource("11_button")
-high_contrast = true
-content_margin = Vector2(16, 8)
+script = ExtResource("9_icon_button")
+glyph = 8
+icon_inset = 21.0
+prominent = true
+prominent_accent = Color(0.752941, 0.376471, 1, 1)
 
-[node name="HintStatus" type="Label" parent="HUD/SafeArea/Root"]
+[node name="HintBadge" type="Label" parent="HUD/SafeArea/Root/HintButton"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -36.0
+offset_top = -28.0
+offset_right = 0.0
+offset_bottom = 2.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.784314, 0.380392, 1)
+theme_override_colors/font_outline_color = Color(0.0392157, 0.0666667, 0.113725, 0.95)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 19
+text = "3"
+horizontal_alignment = 2
+vertical_alignment = 2
+
+[node name="PauseButton" type="Button" parent="HUD/SafeArea/Root"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -80.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 80.0
+grow_horizontal = 0
+focus_mode = 0
+script = ExtResource("9_icon_button")
+glyph = 9
+icon_inset = 23.0
+prominent = true
+
+[node name="HintStatus" type="HBoxContainer" parent="HUD/SafeArea/Root"]
 visible = false
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
 offset_left = 150.0
-offset_top = 130.0
+offset_top = 90.0
 offset_right = -150.0
-offset_bottom = 172.0
+offset_bottom = 132.0
 grow_horizontal = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="Text" type="Label" parent="HUD/SafeArea/Root/HintStatus"]
+layout_mode = 2
+size_flags_vertical = 4
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.913725, 0.823529, 1, 1)
 theme_override_colors/font_outline_color = Color(0.0392157, 0.0666667, 0.113725, 0.95)
 theme_override_constants/outline_size = 5
 theme_override_font_sizes/font_size = 23
 text = "ROTAYI TAKİP ET"
-horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Glyph" type="Control" parent="HUD/SafeArea/Root/HintStatus"]
+visible = false
+custom_minimum_size = Vector2(28, 28)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("22_glyph")
+glyph = 7
+color = Color(1, 0.784314, 0.380392, 1)
+stroke_width = 2.8
 
 [node name="ResultPanel" type="Control" parent="HUD"]
 visible = false
@@ -313,6 +384,30 @@ text = "HEDEFİ VURAMADIN"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
+
+[node name="RewardRow" type="HBoxContainer" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="Value" type="Label" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows/RewardRow"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_font_sizes/font_size = 30
+text = "+1"
+vertical_alignment = 1
+
+[node name="Glyph" type="Control" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows/RewardRow"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("22_glyph")
+glyph = 7
+stroke_width = 3.0
 
 [node name="Stars" type="Control" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
 custom_minimum_size = Vector2(0, 40)
@@ -386,6 +481,17 @@ text = "REKLAM İZLE · +1 TOP"
 script = ExtResource("11_button")
 emphasis = 0
 
+[node name="ReviveCoinButton" type="Button" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
+visible = false
+custom_minimum_size = Vector2(0, 74)
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 0.784314, 0.380392, 1)
+theme_override_font_sizes/font_size = 24
+text = "2 COIN · +1 TOP"
+script = ExtResource("11_button")
+corner_radius = 22
+
 [node name="RetryButton" type="Button" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
 custom_minimum_size = Vector2(0, 74)
 layout_mode = 2
@@ -413,3 +519,5 @@ script = ExtResource("11_button")
 [node name="MechanicIntroCard" parent="HUD" instance=ExtResource("19_intro_card")]
 
 [node name="HintPurchaseCard" parent="HUD" instance=ExtResource("21_hint_card")]
+
+[node name="PauseCard" parent="HUD" instance=ExtResource("23_pause_card")]

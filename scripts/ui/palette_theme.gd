@@ -30,6 +30,10 @@ extends Resource
 @export var ACCENT_ALT := Color("c07dff")
 @export var ACCENT_ALT_CORE := Color("f6ecff")
 
+## Para birimi - hicbir tema bunu EZMEZ (bkz. palette.gd).
+@export var COIN := Color("ffc861")
+@export var COIN_CORE := Color("fff1d2")
+
 @export var HAZARD := Color("ff667d")
 @export var HAZARD_DARK := Color("63364a")
 @export var HAZARD_CORE := Color("ffe2e7")

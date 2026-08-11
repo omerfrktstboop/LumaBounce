@@ -25,6 +25,15 @@ const KEY_BALANCE := "gold"
 const KEY_SPENT := "gold_spent_total"
 const KEY_EARNED := "gold_earned_total"
 const KEY_HINT_UNLOCKS := "hint_unlocks"
+const KEY_OWNED_COSMETICS := "owned_cosmetics"
+const KEY_SELECTED_COSMETICS := "selected_cosmetics"
+const KEY_SCHEMA := "wallet_schema"
+
+## Cuzdan dosyasinin yapisi. 2: kozmetik sahipligi ve secimi eklendi.
+## v1 -> v2 icin VERI DONUSUMU GEREKMEZ; eksik anahtarlar savunmaci okunur ve
+## oyuncu yalnizca varsayilan kozmetiklere sahip sayilir. Numara yine de artti
+## cunku surumun anlami "bu dosyayi hangi alan kumesini bilen surum yazdi".
+const SCHEMA_VERSION := 2
 
 ## Yeni oyuncuya verilen baslangic bakiyesi. Ipucu sistemini bir kez BEDAVA
 ## denemesi icin: hic denemeden "para ister" diyen bir ozellik reddedilir.
@@ -36,6 +45,11 @@ var spent_total := 0
 var earned_total := 0
 ## Anahtar LevelData.uid() degeridir. Dictionary kullanimi tekrar acmayi
 ## idempotent yapar; diske sirali PackedStringArray olarak yazilir.
+## Satin alinmis kozmetik kimlikleri (varsayilanlar burada TUTULMAZ: onlar
+## zaten herkeste acik, kayda yazmak dosyayi sisirirdi).
+var _owned_cosmetics: Dictionary = {}
+## Tur kimligi ("ball") -> secili kozmetik kimligi.
+var _selected_cosmetics: Dictionary = {}
 var _hint_unlocks: Dictionary = {}
 var _save_path := SAVE_PATH
 
@@ -58,6 +72,7 @@ static func load_from_path(path: String) -> WalletStore:
 	store.spent_total = _read_int(config, KEY_SPENT, 0)
 	store.earned_total = _read_int(config, KEY_EARNED, 0)
 	store._load_hint_unlocks(config)
+	store._load_cosmetics(config)
 	return store
 
 
@@ -76,6 +91,11 @@ func save() -> Error:
 	var unlocks := PackedStringArray(_hint_unlocks.keys())
 	unlocks.sort()
 	config.set_value(SECTION, KEY_HINT_UNLOCKS, unlocks)
+	config.set_value(SECTION, KEY_SCHEMA, SCHEMA_VERSION)
+	var owned := PackedStringArray(_owned_cosmetics.keys())
+	owned.sort()
+	config.set_value(SECTION, KEY_OWNED_COSMETICS, owned)
+	config.set_value(SECTION, KEY_SELECTED_COSMETICS, _selected_cosmetics)
 	var error := config.save(_save_path)
 	if error != OK:
 		push_warning("WalletStore: bakiye yazilamadi (hata %d)." % error)
@@ -135,6 +155,92 @@ func add(amount: int) -> void:
 	balance += amount
 	earned_total += amount
 	save()
+
+
+# --- Kozmetikler --------------------------------------------------------------
+#
+# SIFIRLAMA ANLAMI - bilerek: "ilerlemeyi sifirla" kozmetik sahipligini
+# SILMEZ. Cuzdan ProgressStore'dan AYRI bir dosyadir ve ProgressStore.reset()
+# ona hic dokunmaz. Gerekce: kozmetik SATIN ALINMIS bir seydir, kazanilmis bir
+# ilerleme degil. Bolumlerini sifirlayan oyuncunun 215 Coin'e aldigi hedef
+# efektini de kaybetmesi, sifirlamayi cezaya cevirirdi. Bugun Coin yalnizca
+# oyun ici kazanildigi icin bu tercih; ileride GERCEK PARAYLA Coin satilirsa
+# bu davranis zorunluluk haline gelir ve bakiyenin sunucuda tutulmasi gerekir
+# (bkz. dosya basligindaki guvenlik notu).
+
+func owns(cosmetic_id: String) -> bool:
+	var item := CosmeticCatalog.find(cosmetic_id)
+	if item == null:
+		return false
+	# Varsayilanlar herkeste aciktir ve kayda yazilmaz.
+	return item.is_default or _owned_cosmetics.has(cosmetic_id)
+
+
+## Satin alir. Basarisizsa HICBIR SEY degismez ve false doner.
+##
+## Ayni esyaya ikinci kez odeme YOK: cift dokunus, yavas arayuz ya da
+## yarisan bir sinyal ikinci kez cagirsa bile bakiye tek kez duser.
+func purchase_cosmetic(cosmetic_id: String) -> bool:
+	var item := CosmeticCatalog.find(cosmetic_id)
+	if item == null or item.is_default:
+		return false
+	if owns(cosmetic_id):
+		return false
+	if not spend(item.price):
+		return false
+	_owned_cosmetics[cosmetic_id] = true
+	save()
+	return true
+
+
+## Sahip olunmayan bir esya SECILEMEZ; aksi halde magazayi atlayip bedava
+## kullanmanin yolu acilirdi.
+func select_cosmetic(cosmetic_id: String) -> bool:
+	var item := CosmeticCatalog.find(cosmetic_id)
+	if item == null or not owns(cosmetic_id):
+		return false
+	if String(_selected_cosmetics.get(item.kind_id(), "")) == cosmetic_id:
+		return false
+	_selected_cosmetics[item.kind_id()] = cosmetic_id
+	save()
+	return true
+
+
+## Bir tur icin secili esya. Secim yoksa ya da kayittaki kimlik artik
+## katalogda yoksa VARSAYILANA duser - eski bir kayit oyunu gorunumsuz
+## birakmamali.
+func selected_cosmetic(kind: CosmeticData.Kind) -> CosmeticData:
+	var stored := String(_selected_cosmetics.get(
+		String(CosmeticData.KIND_IDS.get(kind, "")), ""))
+	if not stored.is_empty() and owns(stored):
+		var item := CosmeticCatalog.find(stored)
+		if item != null and item.kind == kind:
+			return item
+	return CosmeticCatalog.find(CosmeticCatalog.default_id(kind))
+
+
+func selected_cosmetic_id(kind: CosmeticData.Kind) -> String:
+	var item := selected_cosmetic(kind)
+	return item.id if item != null else ""
+
+
+func owned_cosmetic_count() -> int:
+	return _owned_cosmetics.size()
+
+
+func _load_cosmetics(config: ConfigFile) -> void:
+	var raw_owned: Variant = config.get_value(SECTION, KEY_OWNED_COSMETICS, PackedStringArray())
+	if raw_owned is PackedStringArray or raw_owned is Array:
+		for value in raw_owned:
+			var id := String(value)
+			# Katalogdan KALKMIS bir kimlik sessizce atilir: eski bir surumde
+			# alinmis ama artik var olmayan esya, oyunu bozmamali.
+			if CosmeticCatalog.find(id) != null:
+				_owned_cosmetics[id] = true
+	var raw_selected: Variant = config.get_value(SECTION, KEY_SELECTED_COSMETICS, {})
+	if raw_selected is Dictionary:
+		for key in raw_selected:
+			_selected_cosmetics[String(key)] = String(raw_selected[key])
 
 
 func _load_hint_unlocks(config: ConfigFile) -> void:

@@ -19,6 +19,7 @@ extends Control
 
 signal play_pressed(level_id: int)
 signal levels_requested()
+signal shop_requested()
 signal settings_requested()
 
 ## AppRoot tarafindan add_child'dan ONCE atanir: kalinan bolum.
@@ -34,6 +35,7 @@ var resume_level_id := 1
 @onready var _logo: LumaLogo = $SafeArea/Content/Logo
 @onready var _play_button: LumaButton = $SafeArea/Content/PlayButton
 @onready var _levels_button: LumaButton = $SafeArea/Content/LevelsButton
+@onready var _shop_button: LumaButton = $SafeArea/Content/ShopButton
 @onready var _sound_button: LumaIconButton = $SafeArea/Content/SoundButton
 @onready var _settings_button: LumaIconButton = $SafeArea/Content/SettingsButton
 @onready var _toast: Label = $SafeArea/Content/Toast
@@ -49,6 +51,7 @@ func _ready() -> void:
 
 	_play_button.pressed.connect(_on_play_pressed)
 	_levels_button.pressed.connect(levels_requested.emit)
+	_shop_button.pressed.connect(shop_requested.emit)
 	_settings_button.pressed.connect(settings_requested.emit)
 	_sound_button.pressed.connect(AudioManager.toggle_muted)
 	AudioManager.mute_changed.connect(_on_mute_changed)
