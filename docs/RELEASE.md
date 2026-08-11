@@ -47,6 +47,8 @@ eşlenmelidir (Godot bunu otomatik okumaz).
 - [ ] `export_format=1` (AAB) ve `use_gradle_build=true`
 - [ ] `res://android/build` Gradle şablonu kurulu
 - [ ] Release filtresi yalnızca dev-only addonları dışlıyor; `addons/*` kullanılmıyor
+- [ ] AdMob v7 eklentisi etkin; debug APK yalnızca Google test reklam birimlerini kullanıyor
+- [ ] UMP formu ilk açılışta test edildi; Ayarlar'da gerekli kullanıcılara gizlilik seçenekleri görünüyor
 - [ ] `godot_mcp_toolkit`, debug paneli, DBG rozeti ve level editor release paketinde yok
 - [ ] Launcher ikonları dolu
 - [ ] Keystore hazır ve **repoda değil**

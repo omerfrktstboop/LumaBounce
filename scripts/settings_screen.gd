@@ -25,6 +25,7 @@ signal language_changed(code: String)
 
 ## AppRoot tarafindan add_child'dan ONCE atanir.
 var progress: ProgressStore
+var ad_service: AdService
 
 ## Ekran sarsintisi secenekleri. Tamamen kaldirmak yerine olceklenir: sarsinti
 ## oyunun geri bildiriminin parcasi, ama hareket duyarliligi olan oyuncu icin
@@ -51,6 +52,9 @@ func _ready() -> void:
 	_back_button.pressed.connect(menu_requested.emit)
 	_confirm_button.pressed.connect(_on_reset_confirmed)
 	_cancel_button.pressed.connect(_hide_confirm)
+	if ad_service != null:
+		ad_service.privacy_options_availability_changed.connect(
+			_on_privacy_options_availability_changed)
 	_rebuild()
 
 
@@ -77,6 +81,10 @@ func _rebuild() -> void:
 		"Nişan izi uzun bölümlerde de tam görünür")
 	_add_action_row("Öğreticileri tekrar göster", _on_forget_mechanics)
 	_add_action_row("İlerlemeyi sıfırla", _show_confirm)
+
+	if ad_service != null and ad_service.is_privacy_options_available():
+		_add_section("Gizlilik")
+		_add_action_row("Gizlilik seçenekleri", _on_privacy_options_pressed)
 
 	_add_section("Sürüm")
 	_add_info_row(GameVersion.describe())
@@ -282,6 +290,17 @@ func _on_aim_assist_toggled(enabled: bool) -> void:
 
 func _on_forget_mechanics() -> void:
 	progress.forget_seen_mechanics()
+	_rebuild()
+
+
+func _on_privacy_options_availability_changed(_available: bool) -> void:
+	_rebuild()
+
+
+func _on_privacy_options_pressed() -> void:
+	if ad_service == null:
+		return
+	await ad_service.show_privacy_options()
 	_rebuild()
 
 

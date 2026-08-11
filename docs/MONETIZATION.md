@@ -1,25 +1,29 @@
 # Monetization Architecture
 
-FAZ 2 keeps gameplay independent from AdMob, Play Billing, and analytics SDKs. `AppRoot` is the composition root: it owns one `EntitlementStore`, `AnalyticsService`, `AdPolicy`, and `AdService` for the application session, then injects only product-level services into `Gameplay`. This avoids global autoload state and lets headless tests replace the provider deterministically.
+`AppRoot` is the composition root for `EntitlementStore`, `AnalyticsService`, `AdPolicy`, and `AdService`. Android uses `AdmobAdProvider`; desktop/editor builds safely fall back to `NoOpAdProvider`. Gameplay sees only product-level placement names and never imports a Google SDK class.
 
 ## Runtime contract
 
-- `AdService.initialize()` initializes the configured provider.
-- `is_rewarded_ready(placement)` reports a voluntary offer without waiting.
-- `show_rewarded(placement)` returns `earned`, `closed_without_reward`, `failed`, or `unavailable`.
-- `is_interstitial_ready()` includes provider readiness and the no-ads entitlement.
-- `maybe_show_interstitial(context, candidate)` applies policy and returns immediately when blocked or unavailable.
-- `EntitlementStore` caches `remove_ads` separately in `user://entitlements.cfg`; it does not change `ProgressStore` or the save schema.
-- `AnalyticsService` accepts only normalized product events. It logs locally in debug builds and performs no network calls.
+- `show_rewarded(short_hint)` grants the first route move only after `earned`.
+- `show_rewarded(revive)` grants one extra ball once per failed attempt. Closing or failing the ad grants nothing.
+- `maybe_show_interstitial(level_complete)` runs only when the player requests the next level and only after `AdPolicy` accepts the completion candidate.
+- The first five normal completions are protected; later candidates follow the every-four, 180-second fullscreen cooldown, and 120-second rewarded suppression rules.
+- `remove_ads` disables interstitials but keeps voluntary rewarded offers.
+- Missing or unloaded ads return immediately without blocking play.
 
-`ResultPanel` currently stores only `revive_offer_eligible` and `interstitial_candidate` hooks. It does not render an ad button or start an ad. Failure and retry contexts can never pass `AdPolicy` v1.
+## AdMob and consent
 
-## Provider adapter seam
+The vendored `godot-sdk-integrations/godot-admob` v7.0 plugin lives under `addons/AdmobPlugin` and `addons/GMPShared`. `LumaAdmobConfig` is the only source for application/ad-unit IDs. The `production` export feature selects live IDs; debug APKs always use Google's demo rewarded and interstitial IDs.
 
-`NoOpAdProvider` is the current runtime provider; `tools/mocks/mock_ad_provider.gd` is test-only. In the next phase, add an adapter such as `scripts/monetization/providers/admob_ad_provider.gd` implementing `AdProvider`, and select it only in `AppRoot._setup_monetization()`. Keep plugin classes, ad unit IDs, and callbacks inside that adapter. A future Billing adapter should verify purchases and call `EntitlementStore.update_remove_ads()`; Gameplay and MainMenu must remain unchanged.
+UMP consent information is refreshed on every Android launch before Mobile Ads initialization. A required form is loaded and shown first. If consent has no usable current or cached state, the adapter fails closed and requests no production ads. For affected users, Settings exposes **Privacy options** so choices can be reopened. UMP propagates the selected personalization state to Google Mobile Ads.
 
-Run the focused suite with:
+No consent value is written to `ProgressStore`; UMP owns its storage, so the save schema is unchanged.
+
+## Verification
 
 ```powershell
 godot --headless --path . --script res://tools/check_monetization_phase2.gd
+godot --headless --path . --script res://tools/check_release_readiness.gd
 ```
+
+Before a production upload, verify the consent form, rewarded cancellation/failure, earned extra ball/hint, interstitial cadence, and privacy-options entry point on a physical Android test device. Do not click production ads during development.

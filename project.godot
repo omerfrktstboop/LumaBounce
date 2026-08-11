@@ -41,7 +41,7 @@ window/handheld/orientation=1
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg")
+enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg", "res://addons/AdmobPlugin/plugin.cfg")
 
 [internationalization]
 

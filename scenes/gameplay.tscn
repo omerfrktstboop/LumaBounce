@@ -376,6 +376,16 @@ text = "SONRAKİ BÖLÜM"
 script = ExtResource("11_button")
 emphasis = 0
 
+[node name="ReviveButton" type="Button" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
+visible = false
+custom_minimum_size = Vector2(0, 82)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 27
+text = "REKLAM İZLE · +1 TOP"
+script = ExtResource("11_button")
+emphasis = 0
+
 [node name="RetryButton" type="Button" parent="HUD/ResultPanel/CardCenter/Card/Margin/Rows"]
 custom_minimum_size = Vector2(0, 74)
 layout_mode = 2

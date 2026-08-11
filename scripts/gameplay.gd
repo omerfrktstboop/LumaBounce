@@ -25,6 +25,8 @@ signal block_mechanic_seen()
 ## KISA IPUCU istendi. Odulu veren AppRoot'tur (ileride odullu reklam
 ## servisi); Gameplay yalnizca ister ve grant_short_hint() ile sonucu alir.
 signal short_hint_requested()
+## Son hak bittiginde oyuncunun istegiyle +1 top odullu reklami.
+signal revive_requested()
 
 @export var completed_title := "BÖLÜM TAMAMLANDI"
 @export var failed_title := "BÖLÜM BAŞARISIZ"
@@ -183,6 +185,7 @@ var short_hint_enabled := false
 ## yeniden baslatilinca sifirlanir, cunku kalici olan tek sey satin alinan
 ## tam rotadir.
 var _short_hint_shown := false
+var _revive_used := false
 var _pending_luma_coin_reward := 0
 var _max_lives := 5
 var _lives_remaining := 0
@@ -414,6 +417,7 @@ func _connect_signals() -> void:
 	_intro_card.dismissed.connect(_on_intro_card_dismissed)
 	_result_panel.next_pressed.connect(_on_result_next)
 	_result_panel.retry_pressed.connect(_on_result_retry)
+	_result_panel.revive_pressed.connect(_on_result_revive)
 	# Gameplay hicbir sahne acmaz; AppRoot mevcut fade gecisiyle karar verir.
 	_result_panel.level_select_pressed.connect(level_select_requested.emit)
 	_result_panel.menu_pressed.connect(menu_requested.emit)
@@ -439,6 +443,7 @@ func reset_shot() -> void:
 	_hint_path.hide_path()
 	_hint_waiting_for_blocks = false
 	_short_hint_shown = false
+	_revive_used = false
 	_pending_luma_coin_reward = 0
 	_hide_hint_status()
 	# Ipucu yalnizca bolum bastan baslarken geri gelir; basarisiz atistan
@@ -665,7 +670,8 @@ func _open_failure_panel() -> void:
 	if token != _shot_token or not is_inside_tree():
 		return
 	var revive_eligible := (
-		ad_service != null
+		not _revive_used
+		and ad_service != null
 		and ad_service.is_rewarded_ready(MonetizationConfig.PLACEMENT_REVIVE))
 	_result_panel.set_revive_offer_eligible(revive_eligible)
 	level_failed.emit(level_data.level_id, _last_failure_reason, revive_eligible)
@@ -699,6 +705,38 @@ func _can_advance_to_next() -> bool:
 ## retry pulse'ini sifirlar; panel de orada kapanir.
 func _on_result_retry() -> void:
 	reset_shot()
+
+
+func _on_result_revive() -> void:
+	if _revive_used or not _result_panel.is_revive_offer_eligible():
+		return
+	if ad_service == null or not ad_service.is_rewarded_ready(
+		MonetizationConfig.PLACEMENT_REVIVE):
+		_result_panel.set_revive_offer_eligible(false)
+		return
+	_result_panel.set_revive_offer_busy(true)
+	revive_requested.emit()
+
+
+func set_revive_offer_busy(busy: bool) -> void:
+	_result_panel.set_revive_offer_busy(busy)
+
+
+## Odul callback'i yalnizca AppRoot'tan gelir. Deneme ve kirilmis bloklar
+## korunur; sadece tek top eklenir ve donmus kronometre kaldigi yerden devam eder.
+func grant_extra_ball() -> void:
+	if _revive_used or _lives_remaining > 0 or not _result_panel.visible:
+		return
+	_revive_used = true
+	_result_panel.set_revive_offer_eligible(false)
+	_result_panel.hide_result()
+	_lives_remaining = 1
+	_update_lives_hud()
+	_attempt_elapsed_seconds = _final_attempt_seconds
+	_attempt_active_start_msec = Time.get_ticks_msec()
+	_attempt_timer_running = true
+	_attempt_finished = false
+	_respawn_ball()
 
 
 # --- Carpma geri bildirimi ---------------------------------------------------

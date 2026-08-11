@@ -61,6 +61,8 @@ var _editor_batch_context := {}
 ## Editorde duzenlenen sey bir resmi bolumden geldiyse onun numarasi, yoksa 0.
 var _editor_source_level_id := 0
 var _busy := false
+var _completion_interstitial_candidate := false
+var _completion_ad_in_progress := false
 
 
 func _ready() -> void:
@@ -238,7 +240,7 @@ func _connect_screen(screen: Node) -> void:
 	var gameplay := screen as Gameplay
 	if gameplay != null:
 		gameplay.level_completed.connect(_on_level_completed)
-		gameplay.next_level_requested.connect(go_to_level)
+		gameplay.next_level_requested.connect(_on_next_level_requested)
 		gameplay.level_select_requested.connect(go_to_level_select)
 		# Editorden test edildiyse "menu" tusu editore geri doner; yoksa
 		# tasarladigin bolumu terk etmek icin tek yol kaydetmek olurdu.
@@ -246,6 +248,7 @@ func _connect_screen(screen: Node) -> void:
 		gameplay.obstacle_kind_seen.connect(_on_obstacle_kind_seen)
 		gameplay.block_mechanic_seen.connect(_on_block_mechanic_seen)
 		gameplay.short_hint_requested.connect(_on_short_hint_requested.bind(gameplay))
+		gameplay.revive_requested.connect(_on_revive_requested.bind(gameplay))
 		gameplay.level_failed.connect(_on_level_failed)
 		return
 
@@ -274,6 +277,7 @@ func _configure_settings(screen: Node) -> void:
 		# yazdiginda AppRoot'un elindeki nesne de guncel olmali, yoksa bir
 		# sonraki save() eski degeri geri yazardi.
 		settings.progress = _progress
+		settings.ad_service = _ad_service
 
 
 func _configure_gameplay(screen: Node, level_id: int) -> void:
@@ -305,7 +309,10 @@ func _setup_monetization() -> void:
 	_ad_policy = AdPolicy.new(_entitlements)
 	_ad_service = AdService.new()
 	_ad_service.name = "AdService"
-	_ad_service.configure(NoOpAdProvider.new(), _ad_policy, _analytics)
+	var provider: AdProvider = NoOpAdProvider.new()
+	if OS.get_name() == "Android" and Engine.has_singleton(Admob.PLUGIN_SINGLETON_NAME):
+		provider = AdmobAdProvider.new()
+	_ad_service.configure(provider, _ad_policy, _analytics)
 	add_child(_ad_service)
 	_ad_service.initialize()
 
@@ -344,6 +351,18 @@ func _on_short_hint_requested(gameplay: Gameplay) -> void:
 		gameplay.grant_short_hint()
 
 
+func _on_revive_requested(gameplay: Gameplay) -> void:
+	if gameplay == null or not is_instance_valid(gameplay) or _ad_service == null:
+		return
+	var result := int(await _ad_service.show_rewarded(MonetizationConfig.PLACEMENT_REVIVE))
+	if not is_instance_valid(gameplay):
+		return
+	if result == AdResult.Code.EARNED:
+		gameplay.grant_extra_ball()
+	else:
+		gameplay.set_revive_offer_busy(false)
+
+
 func _on_level_completed(level_id: int, stars: int) -> void:
 	# Editorden test edilen bolum gercek ilerlemeye YAZILMAZ; henuz oyunun
 	# bir parcasi degil ve kaydi kirletmesi anlamsiz olurdu.
@@ -365,18 +384,23 @@ func _on_level_completed(level_id: int, stars: int) -> void:
 
 	var candidate := _ad_policy.register_successful_completion(
 		_completed_normal_level_count(), not LevelWorlds.is_bonus_id(level_id))
+	_completion_interstitial_candidate = candidate
 	var gameplay := _current as Gameplay
 	if gameplay != null:
 		gameplay.set_interstitial_candidate(candidate)
-	if candidate:
-		_show_completion_interstitial.call_deferred()
 
 
-func _show_completion_interstitial() -> void:
-	if _ad_service == null:
+func _on_next_level_requested(level_id: int) -> void:
+	if _completion_ad_in_progress:
 		return
-	await _ad_service.maybe_show_interstitial(
-		MonetizationConfig.CONTEXT_LEVEL_COMPLETE, true)
+	_completion_ad_in_progress = true
+	var candidate := _completion_interstitial_candidate
+	_completion_interstitial_candidate = false
+	if _ad_service != null:
+		await _ad_service.maybe_show_interstitial(
+			MonetizationConfig.CONTEXT_LEVEL_COMPLETE, candidate)
+	_completion_ad_in_progress = false
+	go_to_level(level_id)
 
 
 func _completed_normal_level_count() -> int:

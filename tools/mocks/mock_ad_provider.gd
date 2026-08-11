@@ -6,6 +6,9 @@ extends AdProvider
 var initialize_result := true
 var rewarded_calls: Array[StringName] = []
 var interstitial_calls: Array[StringName] = []
+var privacy_options_calls := 0
+var privacy_options_available := false
+var privacy_options_result := true
 
 var _rewarded_ready := {}
 var _rewarded_results: Array[int] = []
@@ -59,3 +62,13 @@ func show_interstitial(context: StringName) -> int:
 	if _interstitial_results.is_empty():
 		return AdResult.Code.UNAVAILABLE
 	return _interstitial_results.pop_front()
+
+
+func is_privacy_options_available() -> bool:
+	return privacy_options_available
+
+
+func show_privacy_options() -> bool:
+	privacy_options_calls += 1
+	await get_tree().process_frame
+	return privacy_options_result

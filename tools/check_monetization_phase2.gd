@@ -17,8 +17,10 @@ func _run() -> void:
 	_test_policy_cadence()
 	_test_policy_cooldowns()
 	_test_policy_remove_ads()
+	_test_admob_config()
 	await _test_rewarded_results()
 	await _test_interstitial_results()
+	await _test_privacy_options()
 	_cleanup_cache()
 	if _failures == 0:
 		print("PASS monetization phase 2: provider results, policy, cache, analytics")
@@ -41,6 +43,19 @@ func _test_config_and_analytics_contract() -> void:
 	_check(analytics.track_event(AnalyticsService.IAP_RESULT, {"result": "unavailable"}),
 		"normalized event is accepted")
 	_check(analytics.captured_events().size() == 1, "analytics capture stays deterministic")
+
+
+func _test_admob_config() -> void:
+	_check(LumaAdmobConfig.ANDROID_APP_ID.begins_with("ca-app-pub-")
+		and LumaAdmobConfig.ANDROID_APP_ID.contains("~"), "AdMob application ID shape")
+	_check(LumaAdmobConfig.REWARDED_EXTRA_BALL != LumaAdmobConfig.REWARDED_SHORT_HINT,
+		"rewarded placements use separate production units")
+	_check(LumaAdmobConfig.rewarded_unit_id(MonetizationConfig.PLACEMENT_SHORT_HINT)
+		== LumaAdmobConfig.TEST_REWARDED, "debug short hint uses Google test unit")
+	_check(LumaAdmobConfig.rewarded_unit_id(MonetizationConfig.PLACEMENT_REVIVE)
+		== LumaAdmobConfig.TEST_REWARDED, "debug extra ball uses Google test unit")
+	_check(LumaAdmobConfig.interstitial_unit_id() == LumaAdmobConfig.TEST_INTERSTITIAL,
+		"debug interstitial uses Google test unit")
 
 
 func _test_entitlement_cache() -> void:
@@ -174,6 +189,24 @@ func _cleanup_cache() -> void:
 	var absolute := ProjectSettings.globalize_path(_cache_path)
 	if FileAccess.file_exists(absolute):
 		DirAccess.remove_absolute(absolute)
+
+
+func _test_privacy_options() -> void:
+	var provider := MockAdProvider.new()
+	provider.privacy_options_available = true
+	var service := AdService.new()
+	service.configure(
+		provider,
+		AdPolicy.new(EntitlementStore.new("user://unused_phase2.cfg")),
+		AnalyticsService.new(false, true))
+	root.add_child(service)
+	service.initialize()
+	_check(service.is_privacy_options_available(), "privacy entry point follows provider")
+	_check(bool(await service.show_privacy_options()), "privacy options result is preserved")
+	_check(provider.privacy_options_calls == 1, "privacy options delegates once")
+	root.remove_child(service)
+	service.queue_free()
+	await process_frame
 
 
 func _check(condition: bool, message: String) -> void:

@@ -13,6 +13,7 @@ extends Control
 
 signal next_pressed()
 signal retry_pressed()
+signal revive_pressed()
 signal level_select_pressed()
 signal menu_pressed()
 
@@ -31,6 +32,7 @@ signal menu_pressed()
 @onready var _time_value: Label = $CardCenter/Card/Margin/Rows/Stats/TimeColumn/Value
 @onready var _shot_value: Label = $CardCenter/Card/Margin/Rows/Stats/ShotColumn/Value
 @onready var _next_button: LumaButton = $CardCenter/Card/Margin/Rows/NextButton
+@onready var _revive_button: LumaButton = $CardCenter/Card/Margin/Rows/ReviveButton
 @onready var _retry_button: LumaButton = $CardCenter/Card/Margin/Rows/RetryButton
 @onready var _level_select_button: LumaButton = $CardCenter/Card/Margin/Rows/LevelSelectButton
 @onready var _menu_button: LumaButton = $CardCenter/Card/Margin/Rows/MenuButton
@@ -42,6 +44,7 @@ func _ready() -> void:
 	_scrim.color = scrim_color
 	_apply_card_style()
 	_next_button.pressed.connect(next_pressed.emit)
+	_revive_button.pressed.connect(revive_pressed.emit)
 	_retry_button.pressed.connect(retry_pressed.emit)
 	_level_select_button.pressed.connect(level_select_pressed.emit)
 	_menu_button.pressed.connect(menu_pressed.emit)
@@ -71,6 +74,7 @@ func show_success(title_text: String, next_text: String, retry_text: String,
 
 	_next_button.text = next_text
 	_next_button.show()
+	_revive_button.hide()
 	_retry_button.text = retry_text
 	_open()
 
@@ -89,6 +93,8 @@ func show_failure(title_text: String, subtitle_text: String, retry_text: String,
 	_shot_value.text = str(shots)
 
 	_next_button.hide()
+	_revive_button.visible = is_revive_offer_eligible()
+	_revive_button.disabled = false
 	_retry_button.text = retry_text
 	_open()
 
@@ -105,10 +111,18 @@ func hide_result() -> void:
 ## istege bagli buton/akislara baglarken ResultPanel SDK sinifi tanimaz.
 func set_revive_offer_eligible(eligible: bool) -> void:
 	set_meta(&"revive_offer_eligible", eligible)
+	if is_node_ready():
+		_revive_button.visible = eligible
+		_revive_button.disabled = false
 
 
 func is_revive_offer_eligible() -> bool:
 	return bool(get_meta(&"revive_offer_eligible", false))
+
+
+func set_revive_offer_busy(busy: bool) -> void:
+	if is_node_ready():
+		_revive_button.disabled = busy
 
 
 func set_interstitial_candidate(candidate: bool) -> void:

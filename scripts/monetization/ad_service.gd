@@ -4,6 +4,9 @@ extends Node
 ## Ekranlarin gorebildigi tek reklam API'si. Provider yalnizca burada yasar;
 ## Gameplay/MainMenu gercek SDK sinifi veya reklam birimi kimligi bilmez.
 
+signal availability_changed()
+signal privacy_options_availability_changed(available: bool)
+
 var _provider: AdProvider
 var _policy: AdPolicy
 var _analytics: AnalyticsService
@@ -17,6 +20,10 @@ func configure(provider: AdProvider, policy: AdPolicy,
 	_analytics = analytics
 	if _provider != null and _provider.get_parent() == null:
 		add_child(_provider)
+	if _provider != null:
+		_provider.availability_changed.connect(availability_changed.emit)
+		_provider.privacy_options_availability_changed.connect(
+			privacy_options_availability_changed.emit)
 
 
 func initialize() -> bool:
@@ -60,6 +67,16 @@ func is_interstitial_ready() -> bool:
 		and _provider != null
 		and _provider.is_interstitial_ready()
 		and (_policy == null or _policy.interstitials_enabled()))
+
+
+func is_privacy_options_available() -> bool:
+	return _initialized and _provider != null and _provider.is_privacy_options_available()
+
+
+func show_privacy_options() -> bool:
+	if not is_privacy_options_available():
+		return false
+	return bool(await _provider.show_privacy_options())
 
 
 func maybe_show_interstitial(context: StringName, is_candidate := true,

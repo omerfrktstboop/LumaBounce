@@ -14,11 +14,18 @@ const DEBUG_PANEL_SCRIPT := "res://scripts/debug/debug_panel.gd"
 const GITIGNORE := "res://.gitignore"
 const MCP_EXPORT_STRIP := "res://addons/godot_mcp_toolkit/core/export_strip.gd"
 const ANDROID_GRADLE_BUILD := "res://android/build/build.gradle"
+const ADMOB_PLUGIN := "res://addons/AdmobPlugin/plugin.cfg"
+const ADMOB_EXPORT_CONFIG := "res://addons/AdmobPlugin/android_export.cfg"
+const ADMOB_DEBUG_AAR := "res://addons/AdmobPlugin/bin/debug/AdmobPlugin-debug.aar"
+const ADMOB_RELEASE_AAR := "res://addons/AdmobPlugin/bin/release/AdmobPlugin-release.aar"
+const ADMOB_PROVIDER := "res://scripts/monetization/providers/admob_ad_provider.gd"
+const ADMOB_CONFIG := "res://scripts/monetization/luma_admob_config.gd"
 
 const RELEASE_PRESET_NAME := "Android Release"
 const DEBUG_PRESET_NAME := "Android Debug"
 const EXPECTED_PACKAGE := "com.ofsgames.lumabounce"
 const EXPECTED_TARGET_SDK := 36
+const EXPECTED_ADMOB_APP_ID := "ca-app-pub-4666663369729289~4144593249"
 const MAX_ANDROID_VERSION_CODE := 2_100_000_000
 
 const REQUIRED_RELEASE_EXCLUDES := [
@@ -60,6 +67,7 @@ func _run() -> void:
 		_check_export_presets(config)
 	_check_project_settings()
 	_check_release_debug_leakage()
+	_check_admob_integration()
 	_check_gitignore()
 	_check_level_library()
 	_report()
@@ -225,6 +233,41 @@ func _check_release_debug_leakage() -> void:
 		_blockers.append("DebugPanel production feature guard'i yok.")
 	if not debug_script_text.contains("queue_free()"):
 		_blockers.append("DebugPanel release build'de kendini agactan kaldirmiyor.")
+
+
+func _check_admob_integration() -> void:
+	for path in [ADMOB_PLUGIN, ADMOB_EXPORT_CONFIG, ADMOB_DEBUG_AAR, ADMOB_RELEASE_AAR,
+			ADMOB_PROVIDER, ADMOB_CONFIG]:
+		if not FileAccess.file_exists(path):
+			_blockers.append("AdMob entegrasyon dosyasi yok: %s" % path)
+
+	var enabled_plugins: PackedStringArray = ProjectSettings.get_setting(
+		"editor_plugins/enabled", PackedStringArray())
+	if not enabled_plugins.has(ADMOB_PLUGIN):
+		_blockers.append("AdMob export plugin'i editor_plugins/enabled icinde etkin degil.")
+
+	var export_config := ConfigFile.new()
+	if export_config.load(ADMOB_EXPORT_CONFIG) != OK:
+		_blockers.append("AdMob android_export.cfg okunamadi.")
+	else:
+		for section in ["Debug", "Release"]:
+			var app_id := String(export_config.get_value(section, "app_id", ""))
+			if app_id != EXPECTED_ADMOB_APP_ID:
+				_blockers.append("AdMob %s app_id hatali: '%s'." % [section, app_id])
+
+	var provider_text := _read_text(ADMOB_PROVIDER)
+	if provider_text.find("update_consent_info") < 0:
+		_blockers.append("AdMob provider her acilista UMP consent bilgisini guncellemiyor.")
+	if provider_text.find("update_consent_info") > provider_text.find("_admob.initialize()"):
+		_blockers.append("AdMob SDK, UMP consent guncellemesinden once initialize ediliyor.")
+	if not provider_text.contains("Engine.has_singleton"):
+		_blockers.append("AdMob provider native singleton yoklugunda guvenli fallback kullanmiyor.")
+
+	var config_text := _read_text(ADMOB_CONFIG)
+	for required in ["OS.has_feature(\"production\")", "TEST_REWARDED", "TEST_INTERSTITIAL"]:
+		if not config_text.contains(required):
+			_blockers.append("AdMob debug/production korumasi eksik: %s" % required)
+	_notes.append("AdMob uygulama kimligi ve uc placement kimligi public config'te; secret degildir.")
 
 
 func _check_gitignore() -> void:
