@@ -21,6 +21,9 @@ signal obstacle_kind_seen(kind: int)
 ## Kirilabilir blok mekanigi ilk kez gosterildiginde yayilir - obstacle_kind_seen
 ## ile ayni yazma kurali (bkz. app_root.gd).
 signal block_mechanic_seen()
+## KISA IPUCU istendi. Odulu veren AppRoot'tur (ileride odullu reklam
+## servisi); Gameplay yalnizca ister ve grant_short_hint() ile sonucu alir.
+signal short_hint_requested()
 
 @export var completed_title := "BÖLÜM TAMAMLANDI"
 @export var failed_title := "BÖLÜM BAŞARISIZ"
@@ -43,8 +46,22 @@ signal block_mechanic_seen()
 @export var tutorial_fade_time := 0.25
 
 @export_group("Luma Coin Ipucu")
-## Bir bolumun ornek rotasini kalici acma maliyeti.
+## TAM ROTA: bir bolumun ornek rotasini KALICI acma maliyeti.
 @export var hint_cost := 3
+## KISA IPUCU: rotanin yalnizca ilk parcasini gosterir. Bedeli odullu reklam
+## izlemektir; Luma Coin HARCAMAZ ve kalici unlock SAYILMAZ (her istendiginde
+## yeniden kazanilir). Bu alan 0'dan buyuk yapilirsa kisa ipucu da Coin
+## isteyen bir secenege donusur - urun karari degisirse tek satir yeter.
+@export var short_hint_cost := 0
+## Kisa ipucu rotanin en fazla bu kadarini gosterir.
+##
+## Ust sinir SART: bazi bolumlerde ilk sekme yolun cok ilerisindedir ve
+## "ilk sekmeye kadar goster" kurali tek basina rotanin tamamini vermis
+## olurdu - o zaman tam rotayi satin almanin anlami kalmazdi.
+@export_range(0.15, 0.60, 0.01) var short_hint_max_ratio := 0.40
+## Kisa ipucu bundan kisa olmaz. Ilk sekme hemen firlaticinin onunde ise
+## birkac pikselik bir cizgi hicbir sey anlatmazdi.
+@export_range(0.05, 0.30, 0.01) var short_hint_min_ratio := 0.15
 
 @export_group("Hizli Yeniden Nisan")
 ## Ucan bir top varken yalnizca firlaticinin bu yaricapindaki dokunuslar
@@ -125,8 +142,10 @@ var aim_assist := false
 @onready var _level_subtitle: Label = $HUD/SafeArea/Root/LevelHeader/LevelSubtitle
 @onready var _retry_button: Button = $HUD/SafeArea/Root/RetryButton
 @onready var _home_button: Button = $HUD/SafeArea/Root/HomeButton
-@onready var _hint_button: LumaButton = $HUD/SafeArea/Root/HintButton
-@onready var _coin_balance: Label = $HUD/SafeArea/Root/CoinBalance
+@onready var _hint_button: LumaIconButton = $HUD/SafeArea/Root/HintButton
+@onready var _hint_badge: Label = $HUD/SafeArea/Root/HintButton/HintBadge
+@onready var _coin_chip: HBoxContainer = $HUD/SafeArea/Root/CoinChip
+@onready var _coin_value: Label = $HUD/SafeArea/Root/CoinChip/Value
 @onready var _hint_status: Label = $HUD/SafeArea/Root/HintStatus
 @onready var _lives_display: LivesDisplay = $HUD/SafeArea/Root/LivesDisplay
 @onready var _result_panel: ResultPanel = $HUD/ResultPanel
@@ -151,6 +170,14 @@ var _launcher_enabled_before_intro := true
 var _launcher_enabled_before_hint := true
 var _hint_trace := PackedVector2Array()
 var _hint_waiting_for_blocks := false
+## Kisa ipucu su an verilebilir mi. AppRoot enjekte eder (bkz. FeatureFlags);
+## Gameplay NEDENINI bilmez - reklam servisi, abonelik ya da baska bir kosul
+## olabilir. Boylece reklam SDK'si eklendiginde bu dosya degismez.
+var short_hint_enabled := false
+## Kisa ipucu SU ANKI denemede gosterildi mi. Kalici degildir: bolum
+## yeniden baslatilinca sifirlanir, cunku kalici olan tek sey satin alinan
+## tam rotadir.
+var _short_hint_shown := false
 var _pending_luma_coin_reward := 0
 var _max_lives := 5
 var _lives_remaining := 0
@@ -377,6 +404,7 @@ func _connect_signals() -> void:
 	_home_button.pressed.connect(menu_requested.emit)
 	_hint_button.pressed.connect(_on_hint_pressed)
 	_hint_card.purchase_requested.connect(_on_hint_purchase_requested)
+	_hint_card.short_hint_requested.connect(_on_short_hint_requested)
 	_hint_card.dismissed.connect(_on_hint_card_dismissed)
 	_intro_card.dismissed.connect(_on_intro_card_dismissed)
 	_result_panel.next_pressed.connect(_on_result_next)
@@ -405,6 +433,7 @@ func reset_shot() -> void:
 	_reset_attempt_timer()
 	_hint_path.hide_path()
 	_hint_waiting_for_blocks = false
+	_short_hint_shown = false
 	_pending_luma_coin_reward = 0
 	_hide_hint_status()
 	# Ipucu yalnizca bolum bastan baslarken geri gelir; basarisiz atistan
@@ -863,15 +892,19 @@ func _to_world(viewport_position: Vector2) -> Vector2:
 func _refresh_hint_hud() -> void:
 	var available := (
 		wallet != null and level_data != null and level_data.has_hint() and not practice_mode)
-	_coin_balance.visible = wallet != null and not practice_mode
+	_coin_chip.visible = wallet != null and not practice_mode
 	_hint_button.visible = available
 	if wallet == null:
 		return
-	_coin_balance.text = tr("%d LUMA COIN") % wallet.balance
+	# Yalnizca SAYI: "LUMA COIN" kelimesi her karede tekrar etmez, simge
+	# zaten neyin sayildigini soyluyor (bkz. GlyphIcon.Glyph.COIN).
+	_coin_value.text = str(wallet.balance)
 	if not available:
 		return
+	# Rozet fiyati tasir; acilmis bolumde fiyat yoktur, bu yuzden gizlenir.
 	var unlocked := wallet.is_hint_unlocked(level_data.uid())
-	_hint_button.text = tr("İPUCU") if unlocked else tr("İPUCU · %d") % hint_cost
+	_hint_badge.visible = not unlocked
+	_hint_badge.text = str(hint_cost)
 	_hint_button.disabled = false
 
 
@@ -889,17 +922,62 @@ func _on_hint_pressed() -> void:
 		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
 		return
 	_open_hint_card()
-	if wallet.can_afford(hint_cost):
-		_hint_card.show_purchase(hint_cost, wallet.balance)
-	else:
-		_hint_card.show_insufficient(wallet.balance)
+	# Kart TEK basina acilir ve iki secenegi birden tasir; hangi secenegin
+	# etkin oldugunu kart degil BURASI belirler - urun kurallari (bakiye,
+	# ozellik bayragi, bu denemede kisa ipucu kullanildi mi) oyunun bilgisi.
+	_hint_card.show_options({
+		"full_cost": hint_cost,
+		"balance": wallet.balance,
+		"can_afford_full": wallet.can_afford(hint_cost),
+		"short_cost": short_hint_cost,
+		"short_enabled": short_hint_enabled and not _short_hint_shown,
+		"short_used": _short_hint_shown,
+	})
+
+
+## KISA IPUCU istendi. Gameplay odulu KENDISI vermez: karari veren AppRoot'tur
+## (ileride odullu reklam servisi). Boylece bu dosya hicbir reklam sinifini
+## tanimaz - mimari kural.
+func _on_short_hint_requested() -> void:
+	if not short_hint_enabled or _short_hint_shown:
+		return
+	_hint_card.close()
+	short_hint_requested.emit()
+
+
+## AppRoot odul kazanildiginda cagirir (reklam izlendi / bayrak acik).
+## Kalici DEGILDIR ve Coin harcamaz: yalnizca bu denemede rotanin basi gorunur.
+func grant_short_hint() -> void:
+	if level_data == null or not level_data.has_hint():
+		return
+	if _blocks.get_remaining_count() > 0:
+		_show_hint_status(tr("ÖNCE BLOKLARI KIR"), 2.8)
+		return
+	var trace := _build_short_hint_trace()
+	if trace.is_empty():
+		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
+		return
+	_short_hint_shown = true
+	_hint_path.show_path(trace)
+	_show_hint_status(tr("İLK HAMLE"), 2.2)
+	_refresh_hint_hud()
 
 
 func _on_hint_purchase_requested() -> void:
 	if wallet == null or level_data == null:
 		return
 	if not wallet.unlock_hint(level_data.uid(), hint_cost):
-		_hint_card.show_insufficient(wallet.balance)
+		# Savunma amacli: "TAM ROTAYI AC" satiri zaten yalnizca bakiye
+		# yetiyorken tiklanabilir. Yine de yarisan bir harcama olursa karti
+		# guncel bakiyeyle yeniden cizeriz - Coin kesilmez.
+		_hint_card.show_options({
+			"full_cost": hint_cost,
+			"balance": wallet.balance,
+			"can_afford_full": false,
+			"short_cost": short_hint_cost,
+			"short_enabled": short_hint_enabled and not _short_hint_shown,
+			"short_used": _short_hint_shown,
+		})
 		return
 	_refresh_hint_hud()
 	_hint_card.close()
@@ -954,6 +1032,69 @@ func _build_hint_trace() -> PackedVector2Array:
 		push_warning("Gameplay: %s icin kayitli ipucu hedefe ulasmiyor." % level_data.uid())
 		return empty
 	return result.get("trace_points", empty) as PackedVector2Array
+
+
+## KISA IPUCU: tam rotanin yalnizca bas kismi.
+##
+## Mevcut _build_hint_trace() YENIDEN YAZILMAZ - ayni dogrulanmis rotayi
+## uretir, burada sadece KIRPILIR. Boylece kisa ipucu ile tam rota asla
+## farkli bir yol gosteremez.
+##
+## Kesim noktasi: ILK SEKME, ama rotanin short_hint_max_ratio'sunu gecmemek
+## ve short_hint_min_ratio'nun altina inmemek kaydiyla. Iki sinir da olculebilir
+## bir sebeple var:
+##   ust sinir - bazi bolumlerde ilk sekme yolun sonuna yakindir; yalnizca
+##               "ilk sekmeye kadar" demek rotanin tamamini vermek olurdu.
+##   alt sinir - ilk sekme firlaticinin hemen onundeyse birkac piksellik bir
+##               cizgi hicbir yon bilgisi tasimaz.
+func _build_short_hint_trace() -> PackedVector2Array:
+	var full := _hint_trace
+	if full.is_empty():
+		full = _build_hint_trace()
+	if full.size() < 2:
+		return PackedVector2Array()
+
+	# Yay uzunlugu boyunca kumulatif mesafe: kirpma noktalarini SAYIYLA degil
+	# UZUNLUKLA secmek gerekiyor, cunku nokta yogunlugu hiza gore degisir.
+	var lengths := PackedFloat32Array()
+	lengths.resize(full.size())
+	lengths[0] = 0.0
+	for i in range(1, full.size()):
+		lengths[i] = lengths[i - 1] + full[i - 1].distance_to(full[i])
+	var total: float = lengths[full.size() - 1]
+	if total <= 0.0:
+		return PackedVector2Array()
+
+	var min_length := total * short_hint_min_ratio
+	var max_length := total * short_hint_max_ratio
+	var cut_length := max_length
+	var bounce_length := _first_bounce_length(full, lengths)
+	if bounce_length > 0.0:
+		cut_length = clampf(bounce_length, min_length, max_length)
+
+	var out := PackedVector2Array()
+	for i in full.size():
+		out.append(full[i])
+		if lengths[i] >= cut_length:
+			break
+	return out if out.size() >= 2 else PackedVector2Array()
+
+
+## Rotanin ilk KESKIN yon degisimine kadar olan uzunluk; bulunamazsa 0.
+##
+## Sekme sayaci yerine acidan tespit edilir, cunku _build_hint_trace yalnizca
+## noktalari dondurur. Yercekimi altindaki serbest ucus kucuk aci degisimleri
+## uretir; gercek bir sekme keskin bir kirilmadir - esik bu ikisini ayirir.
+func _first_bounce_length(points: PackedVector2Array, lengths: PackedFloat32Array) -> float:
+	const BOUNCE_ANGLE_THRESHOLD := 0.55
+	for i in range(1, points.size() - 1):
+		var incoming := points[i] - points[i - 1]
+		var outgoing := points[i + 1] - points[i]
+		if incoming.length() < 0.5 or outgoing.length() < 0.5:
+			continue
+		if absf(incoming.angle_to(outgoing)) >= BOUNCE_ANGLE_THRESHOLD:
+			return lengths[i]
+	return 0.0
 
 
 ## AppRoot ilk tamamlama odulunu ayni WalletStore'a yazdiktan sonra cagirir.
