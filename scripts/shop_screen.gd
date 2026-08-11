@@ -17,6 +17,7 @@ signal menu_requested()
 
 ## AppRoot tarafindan add_child'dan ONCE atanir.
 var wallet: WalletStore
+var purchase_service: PurchaseService
 
 const CARD_HEIGHT := 96.0
 const PREVIEW_SIZE := 56.0
@@ -26,12 +27,15 @@ const PREVIEW_SIZE := 56.0
 @onready var _back_button: LumaButton = $SafeArea/Content/BackButton
 
 var _flash_tween: Tween
+var _iap_message := ""
 
 
 func _ready() -> void:
 	if wallet == null:
 		wallet = WalletStore.load_from_disk()
 	_back_button.pressed.connect(menu_requested.emit)
+	if purchase_service != null:
+		purchase_service.state_changed.connect(_on_purchase_state_changed)
 	_rebuild()
 
 
@@ -41,6 +45,10 @@ func _rebuild() -> void:
 		child.queue_free()
 
 	_balance_value.text = str(wallet.balance)
+	if purchase_service != null:
+		_rows.add_child(_make_section(tr("PREMİUM")))
+		_rows.add_child(_make_remove_ads_card())
+		_rows.add_child(_make_restore_purchases_button())
 	for kind in CosmeticCatalog.KIND_ORDER:
 		_rows.add_child(_make_section(CosmeticCatalog.kind_label(kind)))
 		for item in CosmeticCatalog.by_kind(kind):
@@ -118,6 +126,106 @@ func _make_card(item: CosmeticData) -> Button:
 	return card
 
 
+func _make_remove_ads_card() -> Button:
+	var active := purchase_service.is_remove_ads_active()
+	var ready := purchase_service.is_product_ready(MonetizationConfig.PRODUCT_REMOVE_ADS)
+	var busy := purchase_service.is_busy()
+
+	var card := Button.new()
+	card.name = "RemoveAdsCard"
+	card.custom_minimum_size = Vector2(0.0, 112.0)
+	card.focus_mode = Control.FOCUS_NONE
+	card.disabled = active or busy or not ready
+	card.add_theme_stylebox_override("normal", _card_style(Palette.ACCENT, active, 2))
+	card.add_theme_stylebox_override("hover", _card_style(Palette.ACCENT, true, 2))
+	card.add_theme_stylebox_override("pressed", _card_style(Palette.ACCENT, true, 3))
+	card.add_theme_stylebox_override("disabled", _card_style(Palette.ACCENT, active, 2))
+
+	var margin := MarginContainer.new()
+	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
+	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	margin.add_theme_constant_override("margin_left", 16)
+	margin.add_theme_constant_override("margin_right", 16)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
+	card.add_child(margin)
+
+	var line := HBoxContainer.new()
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_theme_constant_override("separation", 14)
+	margin.add_child(line)
+
+	var icon := GlyphIcon.new()
+	icon.glyph = GlyphIcon.Glyph.CHECK if active else GlyphIcon.Glyph.LOCK
+	icon.color = Palette.ACCENT
+	icon.stroke_width = 3.0
+	icon.custom_minimum_size = Vector2(PREVIEW_SIZE, PREVIEW_SIZE)
+	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(icon)
+
+	var texts := VBoxContainer.new()
+	texts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	texts.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	texts.add_theme_constant_override("separation", 3)
+	texts.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(texts)
+
+	var title := Label.new()
+	title.text = tr("REKLAMLARI KALDIR")
+	title.add_theme_font_size_override("font_size", 23)
+	title.add_theme_color_override("font_color", Palette.TEXT)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texts.add_child(title)
+
+	var description := Label.new()
+	description.text = tr("Geçiş reklamlarını kalıcı olarak kapatır")
+	description.add_theme_font_size_override("font_size", 16)
+	description.add_theme_color_override("font_color", Palette.TEXT_DIM)
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	description.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	texts.add_child(description)
+
+	var status := Label.new()
+	status.text = _remove_ads_status(active, ready, busy)
+	status.add_theme_font_size_override("font_size", 19)
+	status.add_theme_color_override(
+		"font_color", Palette.ACCENT if active else Palette.COIN)
+	status.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_child(status)
+
+	if not card.disabled:
+		card.pressed.connect(_on_remove_ads_pressed)
+	return card
+
+
+func _remove_ads_status(active: bool, ready: bool, busy: bool) -> String:
+	if active:
+		return tr("AKTİF")
+	if busy:
+		return tr("İŞLENİYOR...")
+	if not _iap_message.is_empty():
+		return tr(_iap_message)
+	if ready:
+		var price := purchase_service.formatted_price(MonetizationConfig.PRODUCT_REMOVE_ADS)
+		return price if not price.is_empty() else tr("SATIN AL")
+	return tr("PLAY STORE'A BAĞLANILIYOR")
+
+
+func _make_restore_purchases_button() -> Button:
+	var button := LumaButton.new()
+	button.name = "RestorePurchasesButton"
+	button.text = tr("SATIN ALMALARI GERİ YÜKLE")
+	button.corner_radius = 18
+	button.custom_minimum_size = Vector2(0.0, 52.0)
+	button.focus_mode = Control.FOCUS_NONE
+	button.disabled = purchase_service.is_busy() or not purchase_service.is_available()
+	button.add_theme_font_size_override("font_size", 18)
+	button.pressed.connect(_on_restore_purchases_pressed)
+	return button
+
+
 func _make_status(item: CosmeticData, owned: bool, selected: bool,
 		affordable: bool) -> Control:
 	var box := HBoxContainer.new()
@@ -169,6 +277,46 @@ func _card_style(accent: Color, strong: bool, border: int) -> StyleBoxFlat:
 
 
 # --- Islemler -----------------------------------------------------------------
+
+func _on_remove_ads_pressed() -> void:
+	if purchase_service == null:
+		return
+	_iap_message = ""
+	_rebuild()
+	var result := int(await purchase_service.purchase_remove_ads())
+	match result:
+		PurchaseResult.Code.PURCHASED, PurchaseResult.Code.RESTORED, \
+				PurchaseResult.Code.ALREADY_OWNED:
+			_iap_message = "REKLAMLAR KALDIRILDI"
+		PurchaseResult.Code.PENDING:
+			_iap_message = "ÖDEME BEKLEMEDE"
+		PurchaseResult.Code.CANCELLED:
+			_iap_message = ""
+		PurchaseResult.Code.UNAVAILABLE:
+			_iap_message = "PLAY STORE'A BAĞLANILAMADI"
+		_:
+			_iap_message = "SATIN ALMA TAMAMLANAMADI"
+	_rebuild()
+
+
+func _on_restore_purchases_pressed() -> void:
+	if purchase_service == null:
+		return
+	_iap_message = "İŞLENİYOR..."
+	_rebuild()
+	var success := bool(await purchase_service.restore_purchases())
+	if not success:
+		_iap_message = "PLAY STORE'A BAĞLANILAMADI"
+	elif purchase_service.is_remove_ads_active():
+		_iap_message = "SATIN ALMA GERİ YÜKLENDİ"
+	else:
+		_iap_message = "AKTİF SATIN ALMA BULUNAMADI"
+	_rebuild()
+
+
+func _on_purchase_state_changed() -> void:
+	if is_inside_tree():
+		_rebuild()
 
 ## Satin alma CIFT DUSMEZ: WalletStore.purchase_cosmetic sahip olunan esyada
 ## false doner ve bakiyeye dokunmaz. Kart da satin alindiktan hemen sonra

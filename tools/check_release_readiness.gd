@@ -20,6 +20,13 @@ const ADMOB_DEBUG_AAR := "res://addons/AdmobPlugin/bin/debug/AdmobPlugin-debug.a
 const ADMOB_RELEASE_AAR := "res://addons/AdmobPlugin/bin/release/AdmobPlugin-release.aar"
 const ADMOB_PROVIDER := "res://scripts/monetization/providers/admob_ad_provider.gd"
 const ADMOB_CONFIG := "res://scripts/monetization/luma_admob_config.gd"
+const BILLING_PLUGIN := "res://addons/GodotGooglePlayBilling/plugin.cfg"
+const BILLING_EXPORT_PLUGIN := "res://addons/GodotGooglePlayBilling/export_plugin.gd"
+const BILLING_DEBUG_AAR := "res://addons/GodotGooglePlayBilling/bin/debug/GodotGooglePlayBilling-debug.aar"
+const BILLING_RELEASE_AAR := "res://addons/GodotGooglePlayBilling/bin/release/GodotGooglePlayBilling-release.aar"
+const BILLING_PROVIDER := "res://scripts/monetization/providers/google_play_billing_provider.gd"
+const PURCHASE_SERVICE := "res://scripts/monetization/purchase_service.gd"
+const MONETIZATION_CONFIG := "res://scripts/monetization/monetization_config.gd"
 
 const RELEASE_PRESET_NAME := "Android Release"
 const DEBUG_PRESET_NAME := "Android Debug"
@@ -30,6 +37,7 @@ const MAX_ANDROID_VERSION_CODE := 2_100_000_000
 
 const REQUIRED_RELEASE_EXCLUDES := [
 	"tools/*",
+	"tmp/*",
 	"addons/godot_mcp_toolkit/*",
 	"scripts/debug/*",
 	"scripts/editor/*",
@@ -68,6 +76,7 @@ func _run() -> void:
 	_check_project_settings()
 	_check_release_debug_leakage()
 	_check_admob_integration()
+	_check_billing_integration()
 	_check_gitignore()
 	_check_level_library()
 	_report()
@@ -268,6 +277,40 @@ func _check_admob_integration() -> void:
 		if not config_text.contains(required):
 			_blockers.append("AdMob debug/production korumasi eksik: %s" % required)
 	_notes.append("AdMob uygulama kimligi ve uc placement kimligi public config'te; secret degildir.")
+
+
+func _check_billing_integration() -> void:
+	for path in [BILLING_PLUGIN, BILLING_EXPORT_PLUGIN, BILLING_DEBUG_AAR,
+			BILLING_RELEASE_AAR, BILLING_PROVIDER, PURCHASE_SERVICE, MONETIZATION_CONFIG]:
+		if not FileAccess.file_exists(path):
+			_blockers.append("Billing entegrasyon dosyasi yok: %s" % path)
+
+	var enabled_plugins: PackedStringArray = ProjectSettings.get_setting(
+		"editor_plugins/enabled", PackedStringArray())
+	if not enabled_plugins.has(BILLING_PLUGIN):
+		_blockers.append("GodotGooglePlayBilling export plugin'i etkin degil.")
+
+	var plugin_text := _read_text(BILLING_PLUGIN)
+	if not plugin_text.contains('version="3.3.0"'):
+		_warnings.append("GodotGooglePlayBilling beklenen 3.3.0 surumunde degil.")
+	var export_text := _read_text(BILLING_EXPORT_PLUGIN)
+	if not export_text.contains("com.android.billingclient:billing-ktx:9.1.0"):
+		_blockers.append("Billing plugin Google Play Billing 9.1.0 bagimliligini tasimiyor.")
+
+	var config_text := _read_text(MONETIZATION_CONFIG)
+	if not config_text.contains('PRODUCT_REMOVE_ADS := &"remove_ads"'):
+		_blockers.append("Play Console urun kimligi remove_ads olarak sabitlenmemis.")
+	var provider_text := _read_text(BILLING_PROVIDER)
+	for contract in ["query_product_details", "query_purchases", "PurchaseState.PENDING",
+			"PurchaseState.PURCHASED", "acknowledge_purchase"]:
+		if not provider_text.contains(contract):
+			_blockers.append("Billing provider yasam dongusu eksik: %s" % contract)
+	var service_text := _read_text(PURCHASE_SERVICE)
+	if not service_text.contains("_apply_authoritative_records"):
+		_blockers.append("Billing restore sonucu entitlement'i authoritative yenilemiyor.")
+	if service_text.contains("purchase_token\"") and service_text.contains("track_event"):
+		_notes.append("Billing token servis icinde islenir; analytics payloadlarinda token olmadigini test et.")
+	_notes.append("remove_ads client-side restore/ack kullanir; coin paketi veya subscription eklenmemistir.")
 
 
 func _check_gitignore() -> void:

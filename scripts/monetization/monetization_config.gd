@@ -8,6 +8,8 @@ extends RefCounted
 const PLACEMENT_SHORT_HINT := &"short_hint"
 const PLACEMENT_REVIVE := &"revive"
 
+const PRODUCT_REMOVE_ADS := &"remove_ads"
+
 const CONTEXT_LEVEL_COMPLETE := &"level_complete"
 const CONTEXT_LEVEL_FAIL := &"level_fail"
 const CONTEXT_RETRY := &"retry"

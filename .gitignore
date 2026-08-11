@@ -35,3 +35,6 @@ local.properties
 builds/
 *.aab
 *.apk
+
+# Yerel arastirma/inceleme ciktilari; export paketine de alinmaz.
+tmp/

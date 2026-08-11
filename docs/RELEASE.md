@@ -279,3 +279,36 @@ Aşağıdakiler **uygulanmadı**, ama mevcut yapı bunlara engel değil:
 
 Yeni kayıt alanı eklerken: alanı ekle, `SAVE_SCHEMA`'yı artır, `_read`'e
 savunmacı okuma koy. Eski kayıtlar varsayılana düşer, silinmez.
+
+---
+
+## 8. Google Play Billing / remove_ads
+
+V1'de yalnızca `remove_ads` adlı **tek seferlik, non-consumable** ürün bulunur.
+Coin paketi veya abonelik oluşturma. Fiyat uygulamada sabit yazılmaz; mağaza
+kartı Google Play'in döndürdüğü yerelleştirilmiş fiyatı gösterir.
+
+### Play Console manuel kurulumu
+
+1. **Para kazanma > Ürünler > Uygulama içi ürünler** altında `remove_ads`
+   ürününü oluştur ve etkinleştir.
+2. Ürünü tek seferlik/non-consumable davranışla yayınla; çoklu adet ve
+   consumable davranışı açma.
+3. Internal testing sürümünü oluştur, lisans test kullanıcılarını ekle ve
+   test cihazında Play Store'daki aynı Google hesabını kullan.
+4. Uygulamayı doğrudan APK ile değil internal test Play bağlantısından kur;
+   gerçek ürün sorgusu sideload build'de güvenilir şekilde test edilemez.
+5. Başarılı, iptal, `PENDING`, already-owned, yeniden kurulum/restore ve çevrimdışı
+   açılış senaryolarını dene. `PENDING` iken reklamlar kaldırılmamalıdır.
+6. Satın alma sonrası interstitial'ın kapandığını; ekstra top ve kısa ipucu
+   rewarded tekliflerinin isteğe bağlı olarak kaldığını doğrula.
+
+Kod testi:
+
+```powershell
+godot --headless --path . --script res://tools/check_billing_phase7.gd
+```
+
+Bu sürüm client-side restore/ack kullanır. Tek `remove_ads` ürünü için kapsam
+bilerek sınırlıdır; ileride gerçek para ile Coin satılacaksa backend doğrulaması
+ve sunucu otoriteli bakiye kurulmadan ürün açılmamalıdır.

@@ -19,11 +19,30 @@ UMP consent information is refreshed on every Android launch before Mobile Ads i
 
 No consent value is written to `ProgressStore`; UMP owns its storage, so the save schema is unchanged.
 
+## Google Play Billing
+
+The official `GodotGooglePlayBilling` 3.3.0 plugin is vendored under
+`addons/GodotGooglePlayBilling` and exports Google Play Billing Library 9.1.0.
+V1 exposes only the one-time, non-consumable Play product `remove_ads`; coin
+packs and subscriptions are deliberately out of scope.
+
+`PurchaseService` queries Play for the localized price, restores owned purchases
+at launch and resume, rejects `PENDING` purchases, grants the entitlement only
+for `PURCHASED`, and then acknowledges an unacknowledged purchase. A successful
+authoritative restore with no owned `remove_ads` purchase revokes a stale local
+cache; an offline/failed query keeps the last cache so paid users are not
+temporarily penalized. Purchase tokens never enter analytics or `ProgressStore`.
+
+The implementation is client-side for V1. It is suitable for the simple
+`remove_ads` entitlement, but future consumable coin products require backend
+purchase verification and an authoritative server balance.
+
 ## Verification
 
 ```powershell
 godot --headless --path . --script res://tools/check_monetization_phase2.gd
+godot --headless --path . --script res://tools/check_billing_phase7.gd
 godot --headless --path . --script res://tools/check_release_readiness.gd
 ```
 
-Before a production upload, verify the consent form, rewarded cancellation/failure, earned extra ball/hint, interstitial cadence, and privacy-options entry point on a physical Android test device. Do not click production ads during development.
+Before a production upload, verify the consent form, rewarded cancellation/failure, earned extra ball/hint, interstitial cadence, privacy-options entry point, purchase, pending purchase, acknowledgment, and restore on a physical Android license-test device. Do not click production ads during development.

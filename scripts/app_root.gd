@@ -42,6 +42,7 @@ var _entitlements: EntitlementStore
 var _analytics: AnalyticsService
 var _ad_policy: AdPolicy
 var _ad_service: AdService
+var _purchase_service: PurchaseService
 ## Bu iki kaynak ana sahnenin bagimliligi degildir. Yalnizca debug template
 ## calisirken yuklenir; Android Release filtresi dosyalari pakete dahil etmez.
 var _debug_panel = null
@@ -119,6 +120,8 @@ func _notification(what: int) -> void:
 			_set_application_paused(true)
 		NOTIFICATION_APPLICATION_FOCUS_IN, NOTIFICATION_APPLICATION_RESUMED:
 			_set_application_paused(false)
+			if _purchase_service != null:
+				_purchase_service.restore_purchases.call_deferred()
 
 
 func _set_application_paused(paused: bool) -> void:
@@ -291,6 +294,7 @@ func _configure_shop(screen: Node) -> void:
 		# elindeki cuzdanda da gorunmeli, yoksa sonraki bir save eski
 		# bakiyeyi geri yazardi.
 		shop.wallet = _wallet
+		shop.purchase_service = _purchase_service
 
 
 func _configure_settings(screen: Node) -> void:
@@ -343,6 +347,16 @@ func _setup_monetization() -> void:
 	_ad_service.configure(provider, _ad_policy, _analytics)
 	add_child(_ad_service)
 	_ad_service.initialize()
+
+	_purchase_service = PurchaseService.new()
+	_purchase_service.name = "PurchaseService"
+	var purchase_provider: PurchaseProvider = NoOpPurchaseProvider.new()
+	if OS.get_name() == "Android" and Engine.has_singleton(
+			GooglePlayBillingProvider.PLUGIN_SINGLETON_NAME):
+		purchase_provider = GooglePlayBillingProvider.new()
+	_purchase_service.configure(purchase_provider, _entitlements, _analytics)
+	add_child(_purchase_service)
+	_purchase_service.initialize()
 
 
 ## Oynanisin arkasindaki "derin uzay" katmani temanin murekkep rengini takip
