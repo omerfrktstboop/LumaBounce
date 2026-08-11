@@ -1,24 +1,41 @@
 extends SceneTree
 
-## GELISTIRME ARACI - oyuna dahil degildir.
+## Play Store release zincirini salt-okunur olarak denetler.
 ##
-## Play Store surumu icin yapilandirmayi DENETLER ve raporlar. Hicbir seyi
-## KENDILIGINDEN DEGISTIRMEZ: paket adi, surum numarasi ve imzalama gibi
-## kararlar yayinciya aittir; bir aracin bunlari sessizce degistirmesi
-## yanlis paketle magazaya cikmak demektir.
-##
-## Iki siddet seviyesi:
-##   BLOKER - bu haliyle magazaya yuklenemez veya yuklenirse hatali olur.
-##   UYARI  - calisir ama duzeltilmesi onerilir.
-##
-## Cikis kodu: BLOKER varsa 1, yoksa 0 (CI'da kullanilabilir).
-##
+## Cikis kodu: en az bir BLOKER varsa 1, aksi halde 0.
 ## Kullanim:
 ##   godot --headless --path . --script res://tools/check_release_readiness.gd
 
 const EXPORT_PRESETS := "res://export_presets.cfg"
-## Yayinci tarafindan istenen paket adi. Farkliysa RAPORLANIR, degistirilmez.
+const APP_ROOT_SCENE := "res://scenes/app_root.tscn"
+const APP_ROOT_SCRIPT := "res://scripts/app_root.gd"
+const DEBUG_PANEL_SCENE := "res://scenes/debug_panel.tscn"
+const DEBUG_PANEL_SCRIPT := "res://scripts/debug/debug_panel.gd"
+const GITIGNORE := "res://.gitignore"
+const MCP_EXPORT_STRIP := "res://addons/godot_mcp_toolkit/core/export_strip.gd"
+const ANDROID_GRADLE_BUILD := "res://android/build/build.gradle"
+
+const RELEASE_PRESET_NAME := "Android Release"
+const DEBUG_PRESET_NAME := "Android Debug"
 const EXPECTED_PACKAGE := "com.ofsgames.lumabounce"
+const EXPECTED_TARGET_SDK := 36
+const MAX_ANDROID_VERSION_CODE := 2_100_000_000
+
+const REQUIRED_RELEASE_EXCLUDES := [
+	"tools/*",
+	"addons/godot_mcp_toolkit/*",
+	"scripts/debug/*",
+	"scripts/editor/*",
+	"scenes/debug_panel.tscn",
+	"scenes/level_editor.tscn",
+	"test107.gd",
+	"test_level.gd",
+]
+const TRACKED_SIGNING_KEYS := [
+	"keystore/release",
+	"keystore/release_user",
+	"keystore/release_password",
+]
 
 var _blockers: Array[String] = []
 var _warnings: Array[String] = []
@@ -36,94 +53,190 @@ func _run() -> void:
 	print("  icerik      : %d" % GameVersion.CONTENT)
 	print("")
 
-	_check_export_preset()
+	var config := ConfigFile.new()
+	if config.load(EXPORT_PRESETS) != OK:
+		_blockers.append("export_presets.cfg okunamadi - Android presetleri yok.")
+	else:
+		_check_export_presets(config)
 	_check_project_settings()
+	_check_release_debug_leakage()
+	_check_gitignore()
 	_check_level_library()
 	_report()
 	quit(1 if not _blockers.is_empty() else 0)
 
 
-func _check_export_preset() -> void:
-	var config := ConfigFile.new()
-	if config.load(EXPORT_PRESETS) != OK:
-		_blockers.append("export_presets.cfg okunamadi - Android preset'i yok.")
-		return
+func _check_export_presets(config: ConfigFile) -> void:
+	var release_preset := _find_preset(config, RELEASE_PRESET_NAME)
+	if release_preset.is_empty():
+		_blockers.append("'%s' Android export preset'i yok." % RELEASE_PRESET_NAME)
+	else:
+		_check_release_preset(config, release_preset)
 
-	var section := "preset.0.options"
-	var preset := "preset.0"
+	var debug_preset := _find_preset(config, DEBUG_PRESET_NAME)
+	if debug_preset.is_empty():
+		_warnings.append("'%s' APK preset'i yok; cihaz playtest export'u korunmuyor." % DEBUG_PRESET_NAME)
+	else:
+		_check_debug_preset(config, debug_preset)
 
-	var package := String(config.get_value(section, "package/unique_name", ""))
-	if package != EXPECTED_PACKAGE:
-		_blockers.append(
-			"Paket adi '%s'; istenen '%s'. ELLE degistirilmeli - paket adi magazada "
-			% [package, EXPECTED_PACKAGE]
-			+ "DEGISTIRILEMEZ, ilk yuklemeden sonra sabittir.")
 
-	# Play Store yalnizca .aab kabul eder; .aab uretmek icin gradle build sart.
-	var export_format := int(config.get_value(section, "gradle_build/export_format", 0))
+func _find_preset(config: ConfigFile, wanted_name: String) -> String:
+	for section in config.get_sections():
+		if not section.begins_with("preset.") or section.ends_with(".options"):
+			continue
+		if String(config.get_value(section, "name", "")) == wanted_name:
+			return section
+	return ""
+
+
+func _check_release_preset(config: ConfigFile, preset: String) -> void:
+	var options := preset + ".options"
+	_check_android_identity(config, preset, options, RELEASE_PRESET_NAME)
+
+	if bool(config.get_value(preset, "runnable", true)):
+		_warnings.append("Android Release runnable=true; AAB cihazda dogrudan calistirilamaz.")
+	var output := String(config.get_value(preset, "export_path", ""))
+	if not output.to_lower().ends_with(".aab"):
+		_blockers.append("Android Release export_path .aab ile bitmiyor: '%s'." % output)
+	if not bool(config.get_value(options, "gradle_build/use_gradle_build", false)):
+		_blockers.append("Android Release Gradle build kullanmiyor.")
+	var export_format := int(config.get_value(options, "gradle_build/export_format", 0))
 	if export_format != 1:
-		_blockers.append(
-			"gradle_build/export_format=%d (APK). Play Store .aab ister -> 1 olmali."
-			% export_format)
-	if not bool(config.get_value(section, "gradle_build/use_gradle_build", false)):
-		_blockers.append(
-			"gradle_build/use_gradle_build=false. .aab uretimi gradle build ister -> true olmali.")
+		_blockers.append("Android Release export_format=%d; Play Store icin AAB (1) olmali." % export_format)
 
-	if not bool(config.get_value(section, "package/signed", false)):
-		_blockers.append("package/signed=false - magaza imzasiz paket kabul etmez.")
+	var custom_features := String(config.get_value(preset, "custom_features", ""))
+	if "debug" in custom_features.to_lower() or "development" in custom_features.to_lower():
+		_blockers.append("Android Release debug/development custom feature iceriyor.")
 
-	var version_name := String(config.get_value(section, "version/name", ""))
+	var patterns := _filter_patterns(String(config.get_value(preset, "exclude_filter", "")))
+	for required in REQUIRED_RELEASE_EXCLUDES:
+		if not patterns.has(required):
+			_blockers.append("Android Release exclude_filter '%s' icermiyor." % required)
+	if patterns.has("addons/*") or patterns.has("res://addons/*"):
+		_blockers.append(
+			"Android Release tum addons/* klasorunu disliyor. Yalnizca dev-only addonlar dislanmali; "
+			+ "AdMob/Billing runtime pluginleri addons altinda kalacak.")
+
+	for key in TRACKED_SIGNING_KEYS:
+		if not String(config.get_value(options, key, "")).strip_edges().is_empty():
+			_blockers.append(
+				"Android Release '%s' degerini repoda tasiyor. GODOT_ANDROID_KEYSTORE_RELEASE_* " % key
+				+ "ortam degiskenlerini kullan; preset bos kalmali.")
+
+
+func _check_debug_preset(config: ConfigFile, preset: String) -> void:
+	var options := preset + ".options"
+	_check_android_identity(config, preset, options, DEBUG_PRESET_NAME)
+	var output := String(config.get_value(preset, "export_path", ""))
+	if not output.to_lower().ends_with(".apk"):
+		_warnings.append("Android Debug export_path .apk ile bitmiyor: '%s'." % output)
+	if not bool(config.get_value(options, "gradle_build/use_gradle_build", false)):
+		_blockers.append("Android Debug Gradle build kullanmiyor; gelecek Android pluginleri test edilemez.")
+	if int(config.get_value(options, "gradle_build/export_format", 1)) != 0:
+		_warnings.append("Android Debug export_format APK (0) degil.")
+
+
+func _check_android_identity(config: ConfigFile, preset: String, options: String,
+		label: String) -> void:
+	if String(config.get_value(preset, "platform", "")) != "Android":
+		_blockers.append("%s platform=Android degil." % label)
+	var package := String(config.get_value(options, "package/unique_name", ""))
+	if package != EXPECTED_PACKAGE:
+		_blockers.append("%s paket adi '%s'; beklenen '%s'." % [label, package, EXPECTED_PACKAGE])
+	var target_sdk := int(String(config.get_value(options, "gradle_build/target_sdk", "0")))
+	if target_sdk != EXPECTED_TARGET_SDK:
+		_blockers.append("%s target API=%d; 31 Agustos 2026 hedefi icin %d olmali."
+			% [label, target_sdk, EXPECTED_TARGET_SDK])
+	if not bool(config.get_value(options, "package/signed", false)):
+		_blockers.append("%s package/signed=false." % label)
+
+	var version_name := String(config.get_value(options, "version/name", ""))
 	if version_name != GameVersion.GAME:
-		_warnings.append(
-			"version/name='%s' ile GameVersion.GAME='%s' ayni degil - ikisi elle eslenmeli."
-			% [version_name, GameVersion.GAME])
+		_blockers.append("%s version/name='%s' != GameVersion.GAME='%s'."
+			% [label, version_name, GameVersion.GAME])
+	var version_code := int(config.get_value(options, "version/code", 0))
+	if version_code < 1 or version_code > MAX_ANDROID_VERSION_CODE:
+		_blockers.append("%s version/code=%d; 1..%d araliginda olmali."
+			% [label, version_code, MAX_ANDROID_VERSION_CODE])
+	_notes.append("%s versionCode=%d; her Play yuklemesinden once benzersiz ve daha buyuk yap."
+		% [label, version_code])
 
-	var version_code := int(config.get_value(section, "version/code", 0))
-	if version_code < 1:
-		_blockers.append("version/code=%d - en az 1 olmali." % version_code)
-	_notes.append(
-		"version/code su an %d. HER Play Store yuklemesinde ARTMALI; ayni kod ikinci kez kabul edilmez."
-		% version_code)
 
-	var excludes := String(config.get_value(preset, "exclude_filter", ""))
-	for pattern in ["tools/*", "addons/*"]:
-		if not excludes.contains(pattern):
-			_warnings.append(
-				"exclude_filter '%s' icermiyor - gelistirme dosyalari pakete giriyor." % pattern)
-
-	var icon := String(config.get_value(section, "launcher_icons/main_192x192", ""))
-	if icon.is_empty():
-		_warnings.append("launcher_icons/main_192x192 bos - varsayilan Godot ikonu ile cikar.")
-
-	if bool(config.get_value(section, "permissions/internet", false)):
-		_notes.append(
-			"permissions/internet=true. AI uretici icin gerekliydi ama o ozellik "
-			+ "OS.is_debug_build() ile kapali; reklam/analitik eklenmeyecekse bu izin kaldirilabilir.")
+func _filter_patterns(raw_filter: String) -> PackedStringArray:
+	var result := PackedStringArray()
+	for raw_pattern in raw_filter.split(",", false):
+		var pattern := raw_pattern.strip_edges().trim_prefix("res://")
+		if not pattern.is_empty():
+			result.append(pattern)
+	return result
 
 
 func _check_project_settings() -> void:
 	var declared := String(ProjectSettings.get_setting("application/config/version", ""))
 	if declared.is_empty():
-		_warnings.append(
-			"project.godot'ta application/config/version bos - GameVersion.GAME (%s) ile doldurulabilir."
-			% GameVersion.GAME)
+		_warnings.append("project.godot application/config/version bos.")
 	elif declared != GameVersion.GAME:
 		_warnings.append("application/config/version='%s' != GameVersion.GAME='%s'."
 			% [declared, GameVersion.GAME])
 
-	# Gelistirme autoload'lari release'de calismamali.
-	var autoloads := []
-	for key in ProjectSettings.get_property_list():
-		var name := String(key.get("name", ""))
-		if name.begins_with("autoload/"):
-			autoloads.append(name.trim_prefix("autoload/"))
-	for name in autoloads:
-		var path := String(ProjectSettings.get_setting("autoload/" + name, ""))
-		if path.contains("addons/"):
-			_notes.append(
-				"Autoload '%s' bir addon'a bakiyor (%s). Kendi icinde " % [name, path.trim_prefix("*")]
-				+ "OS.has_feature(\"editor\") korumasi var, yani export'ta calismaz; "
-				+ "yine de exclude_filter'a addons/* eklenirse paket kuculur.")
+	if not FileAccess.file_exists(ANDROID_GRADLE_BUILD):
+		_blockers.append(
+			"Gradle build template yok (res://android/build). Godot 4.7.1 export template paketini "
+			+ "kurup Project > Install Android Build Template calistir.")
+
+	var mcp_autoload := String(ProjectSettings.get_setting("autoload/MCPRuntimeServer", ""))
+	if not mcp_autoload.is_empty():
+		if not FileAccess.file_exists(MCP_EXPORT_STRIP):
+			_blockers.append("MCPRuntimeServer autoload var ama export_strip.gd yok.")
+		var enabled_plugins: PackedStringArray = ProjectSettings.get_setting(
+			"editor_plugins/enabled", PackedStringArray())
+		if not enabled_plugins.has("res://addons/godot_mcp_toolkit/plugin.cfg"):
+			_blockers.append("MCPRuntimeServer autoload var ama MCP export-strip plugin'i etkin degil.")
+		_notes.append("MCPRuntimeServer editor playtest autoload'u; release export plugin'i bake sirasinda kaldirir.")
+
+
+func _check_release_debug_leakage() -> void:
+	var scene_text := _read_text(APP_ROOT_SCENE)
+	for forbidden in ["debug_panel.tscn", "level_editor.tscn", "DebugLayer", "text = \"DBG\""]:
+		if scene_text.contains(forbidden):
+			_blockers.append("app_root.tscn release bagimliligi/DBG izi iceriyor: %s" % forbidden)
+
+	var app_root_text := _read_text(APP_ROOT_SCRIPT)
+	if not app_root_text.contains("func _setup_debug_tools()"):
+		_blockers.append("AppRoot debug araclarini ayri kurulum yolunda toplamiyor.")
+	if not app_root_text.contains("if not OS.is_debug_build():"):
+		if not app_root_text.contains("if not OS.is_debug_build() or OS.has_feature(\"production\"):"):
+			_blockers.append("AppRoot debug kurulumunda release guard bulunamadi.")
+	if not app_root_text.contains("OS.has_feature(\"production\")"):
+		_blockers.append("AppRoot production feature guard'i yok.")
+
+	var debug_scene_text := _read_text(DEBUG_PANEL_SCENE)
+	if not debug_scene_text.contains("text = \"DBG\""):
+		_warnings.append("DBG regression fixture'i debug_panel.tscn icinde bulunamadi.")
+	var debug_script_text := _read_text(DEBUG_PANEL_SCRIPT)
+	if not debug_script_text.contains("OS.is_debug_build()"):
+		_blockers.append("DebugPanel release guard'i yok.")
+	if not debug_script_text.contains("OS.has_feature(\"production\")"):
+		_blockers.append("DebugPanel production feature guard'i yok.")
+	if not debug_script_text.contains("queue_free()"):
+		_blockers.append("DebugPanel release build'de kendini agactan kaldirmiyor.")
+
+
+func _check_gitignore() -> void:
+	var ignore_text := _read_text(GITIGNORE)
+	for required in ["*.keystore", "*.jks", "*.p12", "keystores/", "keystore.properties", "builds/"]:
+		if not ignore_text.contains(required):
+			_blockers.append(".gitignore '%s' kalibini icermiyor." % required)
+	for line in ignore_text.split("\n"):
+		if line.strip_edges() == "export_presets.cfg":
+			_blockers.append("export_presets.cfg ignore ediliyor; guvenli release ayarlari surumlenmeli.")
+
+
+func _read_text(path: String) -> String:
+	if not FileAccess.file_exists(path):
+		_blockers.append("Gerekli dosya yok: %s" % path)
+		return ""
+	return FileAccess.get_file_as_string(path)
 
 
 func _check_level_library() -> void:

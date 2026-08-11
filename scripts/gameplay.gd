@@ -307,20 +307,16 @@ func _build_panels() -> void:
 		_panels.add_child(panel)
 
 
-## Uzun ekranlarda ust tarafta olusan bosluga bolum kimligi. Metin gercek
-## LevelData'dan gelir; home ve restart butonlarinin arasinda, safe area icinde.
+## Uzun ekranlarda ust tarafta olusan bosluga bolum kimligi ve editorun
+## hesapladigi zorluk tier'i gelir; bolum adi HUD'da tekrarlanmaz.
 func _apply_level_header() -> void:
 	# tr() BICIMLENDIRMEDEN ONCE: Control'un otomatik cevirisi hazir metni
 	# arar, yani "BÖLÜM 5" tabloda bulunamaz. Cevrilmesi gereken KALIPTIR.
 	_level_title.text = tr(level_title_format) % level_data.level_id
 	# Test modu basligi: bolum neden bitmiyor sorusunun yaniti gorunur olsun,
 	# yoksa "hedefi vurdum ama bir sey olmadi" bir hata gibi okunur.
-	# Bolum adi .tres icinde Turkce durur; ceviri tablosunun anahtari o metnin
-	# KENDISIDIR (bkz. assets/i18n/levels.csv), boylece 125 bolum dosyasina
-	# dokunmadan cevrilebiliyor ve cevirisi olmayan bir ad ekranda bos degil,
-	# Turkce gorunuyor.
-	var subtitle := tr(level_data.display_name) if not level_data.display_name.is_empty() \
-		else ""
+	var difficulty_label := level_data.difficulty_label()
+	var subtitle := tr(difficulty_label) if not difficulty_label.is_empty() else ""
 	if practice_mode:
 		subtitle = tr("%s · TEST (bölüm bitmez)") % subtitle if not subtitle.is_empty() \
 			else tr("TEST (bölüm bitmez)")

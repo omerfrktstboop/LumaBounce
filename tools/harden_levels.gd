@@ -23,7 +23,7 @@ func _run() -> void:
 	
 	var hardened_count = 0
 	_print("Kolay bolumler taraniyor (51-155)...")
-	for level_id in range(51, 156):
+	for level_id in range(51, LevelLibrary.last_level_id() + 1):
 		var level := LevelLibrary.load_level(level_id)
 		if level == null: continue
 		

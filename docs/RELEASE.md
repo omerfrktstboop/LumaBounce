@@ -42,44 +42,86 @@ eşlenmelidir (Godot bunu otomatik okumaz).
 - [ ] `verify_levels.gd` → tüm bölümler geçiyor
 - [ ] `version/code` bir önceki yüklemeden büyük
 - [ ] `version/name` = `GameVersion.GAME`
-- [ ] Paket adı doğru (aşağıya bak)
-- [ ] `export_format=1` (.aab) ve `use_gradle_build=true`
-- [ ] `exclude_filter` = `tools/*,addons/*`
+- [ ] `Android Release` paket adı `com.ofsgames.lumabounce`
+- [ ] Target API = 36; Android SDK Platform 36 kurulu
+- [ ] `export_format=1` (AAB) ve `use_gradle_build=true`
+- [ ] `res://android/build` Gradle şablonu kurulu
+- [ ] Release filtresi yalnızca dev-only addonları dışlıyor; `addons/*` kullanılmıyor
+- [ ] `godot_mcp_toolkit`, debug paneli, DBG rozeti ve level editor release paketinde yok
 - [ ] Launcher ikonları dolu
 - [ ] Keystore hazır ve **repoda değil**
+- [ ] AAB/APK içindeki bütün `.so` dosyaları 16 KB page-size için doğrulandı
 - [ ] Gerçek cihazda: yeni oyuncu akışı + güncelleme akışı denendi
 
 ---
 
-## 3. Şu an açık olan maddeler (elle yapılmalı)
+## 3. Android release zinciri
 
-Bunlar bilerek otomatik değiştirilmedi; kimlik ve imzalama kararları yayıncıya aittir.
+Sürüm kontrolündeki iki preset farklı amaç taşır:
 
-### 3.1 Paket adı — BLOKER
-Mevcut: `com.lumabounce.game` · İstenen: `com.ofsgames.lumabounce`
+| Preset | Çıktı | Kullanım |
+|---|---|---|
+| `Android Release` | `builds/lumabounce-release.aab` | Google Play production |
+| `Android Debug` | `builds/lumabounce-debug.apk` | Cihaza kurulan debug/playtest |
 
-> Paket adı ilk yüklemeden sonra **asla değiştirilemez**. Değiştirilecekse
-> mağazaya ilk yüklemeden **önce** yapılmalıdır.
+İkisi de Gradle ve target API 36 kullanır. Release preset yalnızca dev araçlarını
+(`tools`, kök test betikleri, `godot_mcp_toolkit`, debug panel ve level editor) dışlar. **`addons/*`
+toplu olarak dışlanmaz**; gelecekte AdMob ve Google Play Billing runtime pluginleri
+`addons/` altında pakete girebilmelidir.
 
-Godot editöründe: `Project → Export → Android → Package → Unique Name`.
+### 3.1 MANUEL: SDK, JDK ve Gradle şablonu
 
-### 3.2 .aab çıktısı — BLOKER
-Play Store `.apk` kabul etmiyor. Gereken:
-- `gradle_build/use_gradle_build = true`
-- `gradle_build/export_format = 1` (AAB)
+1. Android Studio SDK Manager ile `platforms;android-36`, güncel Platform-Tools,
+   Build-Tools ve Command-line Tools kur.
+2. Godot'ta `Editor → Editor Settings → Export → Android` altında `Java SDK Path`
+   (JDK 17) ve `Android SDK Path` alanlarını ayarla.
+3. Godot 4.7.1 ile eşleşen tam export template paketini kur. Paket
+   `android_source.zip` içermelidir.
+4. `Project → Install Android Build Template...` ile `res://android/build`
+   oluştur. Bu adım AAB ve sonraki AdMob/Billing pluginleri için gereklidir.
 
-Gradle build için Android SDK + JDK kurulumu ve
-`Editor → Editor Settings → Export → Android` yolları gerekir.
+API 36 kurulamazsa preset'i sessizce 35'e düşürme; export'u durdur ve engeli çöz.
+31 Ağustos 2026'dan itibaren yeni mobil uygulamalar ve güncellemeler API 36 veya
+üstünü hedeflemelidir.
 
-### 3.3 Keystore
-Bu depoda **keystore veya parola yoktur ve olmamalıdır**. Release imzalama
-anahtarını ayrı ve yedekli tut; kaybedilirse uygulamanın güncellenmesi
-imkânsız hale gelir.
+### 3.2 MANUEL: release imzası
 
-`.gitignore` içine en az şunlar girmeli: `*.keystore`, `*.jks`, `builds/`.
+Keystore'u, alias'ı veya parolayı **repoya ya da `export_presets.cfg` içine yazma**.
+Anahtarı ayrı, erişimi sınırlı ve yedekli bir konumda tut. Export yapılacak terminal
+oturumunda Godot'un resmi ortam değişkenlerini kullan:
 
-### 3.4 İkonlar
-`launcher_icons/*` boş; varsayılan Godot ikonuyla çıkar.
+```powershell
+$env:GODOT_ANDROID_KEYSTORE_RELEASE_PATH = "C:\secure\lumabounce-release.jks"
+$env:GODOT_ANDROID_KEYSTORE_RELEASE_USER = "<KEY_ALIAS>"
+$env:GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD = "<PASSWORD>"
+```
+
+Bu değerleri bir `.ps1`, `.env`, CI logu veya shell geçmişine kaydetme. İş bittikten
+sonra terminali kapat veya değişkenleri temizle.
+
+### 3.3 Production AAB
+
+```powershell
+godot --headless --path . --export-release "Android Release" builds/lumabounce-release.aab
+```
+
+GUI alternatifi: `Project → Export → Android Release → Export Project`; **Export
+With Debug** kapalı olmalı. `Android Debug` presetini APK playtest için kullan.
+
+### 3.4 Android 15+ ve 16 KB page size
+
+Godot motoru ve ileride eklenecek her native AdMob/Billing SDK'sı `.so` dosyası
+taşıyabilir. Her plugin ekleme veya sürüm yükseltmeden sonra production çıktısını
+Android Studio APK Analyzer ile incele; tüm native kütüphanelerde alignment uyarısı
+olmadığını doğrula. Ayrıca 16 KB Android 15+ emülatöründe:
+
+```text
+adb shell getconf PAGE_SIZE
+```
+
+sonucu `16384` olmalı. APK türevi için `zipalign -c -P 16 -v 4 app.apk` çalıştır
+ve temel açılış/oynanış akışını cihazda dene. Native plugin yokken bu faz yalnızca
+prosedürü hazırlar; plugin geldiğinde onun 16 KB uyumluluğu ayrıca doğrulanmalıdır.
 
 ---
 

@@ -24,8 +24,8 @@ const WALL_OVERSHOOT := 320.0
 ## Hangi dunya/tema paketine ait. Tema paleti ve ileride dunya bazli klasorleme
 ## icin (bkz. PaletteThemes.for_level).
 @export var theme_id := ""
-## Kaba zorluk etiketi (1-5). Yalnizca siralama/raporlama icindir; oynanisi
-## etkilemez - gercek zorluk olcusu LevelSolver'in saglam hucre sayisidir.
+## Kaba zorluk etiketi (1-5). Oynanisi etkilemez; editorun fizik tabanli
+## skorunun onerdigi tier burada saklanir ve oyun HUD'unda metne cevrilir.
 @export_range(0, 5, 1) var difficulty := 0
 ## Saniye cinsinden sure siniri; 0 = sinirsiz (bugunku davranis).
 @export var time_limit := 0.0
@@ -60,6 +60,27 @@ const BONUS_MAX_STARS := 5
 
 @export var level_id := 1
 @export var display_name := ""
+
+
+## Editor ve runtime ayni zorluk adlarini kullanir. Tier 0 henuz
+## hesaplanmamis demektir ve HUD'da bos birakilir.
+static func difficulty_label_for_tier(tier: int) -> String:
+	match clampi(tier, 0, 5):
+		1:
+			return "KOLAY"
+		2:
+			return "ORTA"
+		3:
+			return "ZOR"
+		4:
+			return "COK ZOR"
+		5:
+			return "USTA"
+	return ""
+
+
+func difficulty_label() -> String:
+	return difficulty_label_for_tier(difficulty)
 
 @export_group("Yerlesim")
 @export var launcher_position := Vector2(360.0, 1120.0)

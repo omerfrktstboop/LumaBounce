@@ -855,6 +855,7 @@ func _on_analyse() -> void:
 
 	_last_difficulty_result = LevelDifficultyScorer.evaluate(
 		level, free_scan, free_analysis, opened_scan, opened_analysis)
+	_apply_difficulty_result_to_level()
 	_status_text = LevelDifficultyScorer.summary(_last_difficulty_result)
 	_analysis_busy = false
 	_analyse_button.disabled = false
@@ -919,6 +920,7 @@ func _on_solution_pressed() -> void:
 
 	_last_difficulty_result = LevelDifficultyScorer.evaluate(
 		level, free_scan, free_analysis, opened_scan, opened_analysis)
+	_apply_difficulty_result_to_level()
 	for index in routes.size():
 		var route := routes[index]
 		var state_label := String(route.get("label", "ROTA"))
@@ -936,6 +938,12 @@ func _on_solution_pressed() -> void:
 	if routes.is_empty():
 		_status_text = "Saglam veya basarili cozum rotasi bulunamadi."
 	_refresh_solution_state()
+
+
+func _apply_difficulty_result_to_level() -> void:
+	if _last_difficulty_result.is_empty():
+		return
+	level.difficulty = clampi(int(_last_difficulty_result.get("tier", 0)), 0, 5)
 
 
 func _routes_from_scan(scan_result: Dictionary, excluded: Array[RID], label: String,

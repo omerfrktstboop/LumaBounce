@@ -4,7 +4,7 @@ func _init() -> void:
 	print("Checking levels for similarities...")
 	var levels: Array = []
 
-	for i in range(1, 156):
+	for i in range(LevelLibrary.FIRST_LEVEL_ID, LevelLibrary.last_level_id() + 1):
 		var path := "res://levels/level_%02d.tres" % i
 		if not ResourceLoader.exists(path):
 			path = "res://levels/level_%03d.tres" % i

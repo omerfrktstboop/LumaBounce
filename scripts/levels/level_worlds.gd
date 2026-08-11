@@ -17,11 +17,11 @@ extends RefCounted
 ##
 ## Bonus bolumler numara sirasinin DISINDA durur (151+): boylece bir dunyaya
 ## normal bolum eklemek bonus numaralarini kaydirmaz ve kayitlar bozulmaz.
-## Her dunyanin sonunda iki tane vardir; ikincisi birincisinden zordur.
+## Ilk iki dunyanin sonunda iki, final dunyasinda bir bonus vardir.
 const WORLDS := [
 	{"name": "BAŞLANGIÇ", "first": 1, "bonus": [151, 152]},
 	{"name": "KİNETİK", "first": 51, "bonus": [153, 154]},
-	{"name": "FİNAL", "first": 101, "bonus": [155, 156]},
+	{"name": "FİNAL", "first": 101, "bonus": [155]},
 ]
 
 ## Ilk bonus bolumun numarasi. Bundan kucuk her numara NORMAL bolumdur ve

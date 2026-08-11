@@ -191,6 +191,8 @@ func _test_difficulty_scorer() -> void:
 	_check("dar ve sekmeli rota daha zor", int(hard["score"]) > int(easy["score"]), true)
 	_check("kolay skor etiketi", easy["label"], "KOLAY")
 	_check("zor skor 1-5 etiketi", int(hard["tier"]) >= 3, true)
+	_check("tier etiketleri runtime ile ortak",
+		LevelData.difficulty_label_for_tier(int(hard["tier"])), hard["label"])
 
 	var gated := LevelDifficultyScorer.evaluate(
 		hard_level,
@@ -372,6 +374,10 @@ func _test_editor_score_and_official_navigation() -> void:
 	_check("editor zorluk skoru hesaplandi", not result.is_empty(), true)
 	_check("editor zorluk skoru aralikta", int(result.get("score", -1)) in range(0, 101), true)
 	_check("editor skor metni gorunur", String(editor.get("_status_text")).begins_with("ZORLUK"), true)
+	_check("editor skoru bolum tier'ina yaziliyor", first.difficulty,
+		int(result.get("tier", 0)))
+	_check("bolum tier etiketi skor etiketiyle ayni", first.difficulty_label(),
+		String(result.get("label", "")))
 
 	var expected_name := CustomLevelStore.entry_name_for(editor.call("_saved_name_for_current"))
 	CustomLevelStore.delete(CustomLevelStore.Bucket.SAVED, expected_name)
@@ -383,6 +389,9 @@ func _test_editor_score_and_official_navigation() -> void:
 		int(result.get("score", -2)))
 	_check("kayitta cozum sayisi sakli", int(saved_meta.get("solution_count", -1)),
 		int(result.get("solution_count", -2)))
+	var saved_level := CustomLevelStore.load_level(CustomLevelStore.Bucket.SAVED, expected_name)
+	_check("kayitli bolum zorluk tier'ini tasiyor", saved_level != null
+		and saved_level.difficulty == int(result.get("tier", 0)), true)
 
 	editor.call("_on_batch_step", 1)
 	await process_frame

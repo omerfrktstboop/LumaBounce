@@ -111,17 +111,7 @@ static func tier_for_score(score: int) -> int:
 
 
 static func label_for_score(score: int) -> String:
-	match tier_for_score(score):
-		1:
-			return "KOLAY"
-		2:
-			return "ORTA"
-		3:
-			return "ZOR"
-		4:
-			return "COK ZOR"
-		_:
-			return "USTA"
+	return LevelData.difficulty_label_for_tier(tier_for_score(score))
 
 
 static func _complexity(level: LevelData) -> float:

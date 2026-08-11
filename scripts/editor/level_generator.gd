@@ -333,6 +333,7 @@ func generate(profile: Profile, wanted: int, max_tries := 400, seed_value := 0) 
 		var verdict := await _evaluate(candidate, profile)
 		budget += int(verdict["sims"])
 		if bool(verdict["ok"]):
+			_apply_verdict_difficulty(candidate, verdict)
 			candidate.display_name = "%s %d" % [profile.display_name, accepted.size() + 1]
 			accepted.append(candidate)
 			_last_generation_records.append(_metadata_from_verdict(verdict))
@@ -385,6 +386,7 @@ func generate_from_blueprints(profile: Profile, blueprints: Array, wanted: int,
 			_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 		var verdict := await _evaluate(candidate, profile)
 		if bool(verdict["ok"]) and not _cancelled:
+			_apply_verdict_difficulty(candidate, verdict)
 			if candidate.display_name.is_empty():
 				candidate.display_name = "AI Aday %d" % (accepted_levels.size() + 1)
 			accepted_levels.append(candidate)
@@ -964,9 +966,15 @@ func _difficulty_score_matches(profile: Profile, difficulty: Dictionary) -> bool
 func _standard_verdict(verdict: Dictionary, difficulty: Dictionary) -> Dictionary:
 	verdict["difficulty_score"] = int(difficulty.get("score", 100))
 	verdict["difficulty_label"] = String(difficulty.get("label", "COZUMSUZ"))
+	verdict["difficulty_tier"] = int(difficulty.get("tier", 5))
 	verdict["difficulty_breakdown"] = difficulty.get("breakdown", {}).duplicate(true)
 	verdict["solution_count"] = int(difficulty.get("solution_count", 0))
 	return verdict
+
+
+func _apply_verdict_difficulty(level: LevelData, verdict: Dictionary) -> void:
+	if verdict.has("difficulty_tier"):
+		level.difficulty = clampi(int(verdict["difficulty_tier"]), 0, 5)
 
 
 func _metadata_from_verdict(verdict: Dictionary) -> Dictionary:

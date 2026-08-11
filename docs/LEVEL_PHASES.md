@@ -29,6 +29,6 @@ A new mechanic starts with a readable introduction but never resets the whole ga
 - The target and launcher keep explicit clearance zones.
 - Late-game levels combine mechanics, but layouts stay readable; difficulty should come from route/timing rather than object clutter.
 - Moving bars and speed boosts are not used in the 150-level normal campaign for now. They remain available for bonus/special content.
-- Bonus levels 151-156 are outside this normal campaign rebuild and are not overwritten.
+- Bonus levels 151-155 are outside this normal campaign rebuild and are not overwritten.
 
 Any future level generator or manual edit should preserve these phase gates and placement clearances.

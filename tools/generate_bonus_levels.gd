@@ -2,7 +2,7 @@ extends SceneTree
 
 ## GELISTIRME ARACI - oyuna dahil degildir.
 ##
-## BONUS bolumleri (151-156) uretir: her dunyanin sonunda duran, numarasiz
+## BONUS bolumleri (151-155) uretir: dunya sonlarinda duran, numarasiz
 ## gosterilen, gecildiginde yildizin tamamini veren iki zor sinav.
 ##
 ## NORMAL URETICIDEN FARKI - kabul bandi TERS YONDE dar:
@@ -44,7 +44,6 @@ const PLAN := {
 	153: {"name": "Kinetik Sınav I", "kinds": [WHEEL, BAR], "bricks": 0, "strong": 0},
 	154: {"name": "Kinetik Sınav II", "kinds": [WHEEL, BAR, RING], "bricks": 0, "strong": 0},
 	155: {"name": "Son Sınav I", "kinds": [LASER, WHEEL], "bricks": 3, "strong": 2},
-	156: {"name": "Son Sınav II", "kinds": [LASER, LASER, BAR, RING], "bricks": 4, "strong": 3},
 }
 
 var _only: Array[int] = []

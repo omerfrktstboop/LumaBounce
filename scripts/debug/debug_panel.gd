@@ -40,7 +40,7 @@ var _three_finger_start_msec := -1
 
 
 func _ready() -> void:
-	if not OS.is_debug_build():
+	if not OS.is_debug_build() or OS.has_feature("production"):
 		queue_free()
 		return
 

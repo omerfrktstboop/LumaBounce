@@ -12,7 +12,7 @@ func _process(_delta):
 	if _taking:
 		return
 
-	if current > 156:
+	if current > LevelLibrary.last_level_id():
 		print("Screenshotting done!")
 		queue_free()
 		return

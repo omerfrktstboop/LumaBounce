@@ -54,6 +54,7 @@ thickness = 26.0
 
 [resource]
 script = ExtResource("4_48qp2")
+difficulty = 5
 is_bonus = true
 hint_angle_degrees = -42.0
 hint_power = 2150.0

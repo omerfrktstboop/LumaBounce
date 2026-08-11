@@ -2,6 +2,8 @@ class_name AppRoot
 extends Node
 
 const FIRST_CLEAR_LUMA_COIN_REWARD := 1
+const DEBUG_PANEL_SCENE_PATH := "res://scenes/debug_panel.tscn"
+const LEVEL_EDITOR_SCENE_PATH := "res://scenes/level_editor.tscn"
 
 ## Uygulamanin giris noktasi: splash -> ana menu -> bolum secimi -> oynanis.
 ##
@@ -24,9 +26,6 @@ const FIRST_CLEAR_LUMA_COIN_REWARD := 1
 @export var level_select_scene: PackedScene
 @export var settings_scene: PackedScene
 @export var gameplay_scene: PackedScene
-## Yalnizca debug build'de acilir (bkz. _on_debug_editor_requested); release
-## export'ta debug paneli var olmadigi icin bu ekrana giden yol yoktur.
-@export var level_editor_scene: PackedScene
 @export var fade_time := 0.28
 @export var fade_color := Palette.INK_TOP
 ## Arka katman, arenanin murekkep tonundan bu kadar koyu olur (bkz.
@@ -35,11 +34,14 @@ const FIRST_CLEAR_LUMA_COIN_REWARD := 1
 
 @onready var _host: Node = $ScreenHost
 @onready var _fade: ColorRect = $FadeLayer/Fade
-@onready var _debug_panel: DebugPanel = $DebugLayer/DebugPanel
 
 var _progress: ProgressStore
 var _playtest_stats: PlaytestStats
 var _wallet: WalletStore
+## Bu iki kaynak ana sahnenin bagimliligi degildir. Yalnizca debug template
+## calisirken yuklenir; Android Release filtresi dosyalari pakete dahil etmez.
+var _debug_panel = null
+var _level_editor_scene: PackedScene
 ## Debug paneli disinda hicbir yerde okunmaz; gercek save'e asla yazilmaz.
 var _debug_unlock_all := false
 var _current: Node
@@ -75,6 +77,7 @@ func _ready() -> void:
 	# Haptics ile ayni desen.
 	ScreenShake.trauma_scale = _progress.shake_scale
 	_playtest_stats = PlaytestStats.load_from_disk()
+	_setup_debug_tools()
 	_connect_debug_panel()
 
 	# Ilk ekran bilerek fade'siz acilir: splash'in kendi top-dususu zaten
@@ -191,10 +194,10 @@ func _swap_to(scene: PackedScene, configure := Callable()) -> void:
 	_current = instance
 
 	if _debug_panel != null and is_instance_valid(_debug_panel) and not _debug_panel.is_queued_for_deletion():
-		_debug_panel.set_active_gameplay(instance as Gameplay)
+		_debug_panel.call("set_active_gameplay", instance as Gameplay)
 		# Editorun kendi GERI dugmesi ayni koseyi kullaniyor; orada kose
 		# dugmesi gizlenir (uc parmak jesti calismaya devam eder).
-		_debug_panel.set_toggle_visible(not (instance is LevelEditor))
+		_debug_panel.call("set_toggle_visible", not _is_level_editor(instance))
 
 
 # --- Ekran kurulumu ----------------------------------------------------------
@@ -235,10 +238,9 @@ func _connect_screen(screen: Node) -> void:
 		gameplay.block_mechanic_seen.connect(_on_block_mechanic_seen)
 		return
 
-	var editor := screen as LevelEditor
-	if editor != null:
-		editor.test_requested.connect(_on_editor_test_requested)
-		editor.menu_requested.connect(_on_editor_closed)
+	if _is_level_editor(screen):
+		screen.connect("test_requested", _on_editor_test_requested)
+		screen.connect("menu_requested", _on_editor_closed)
 
 
 func _configure_main_menu(screen: Node) -> void:
@@ -331,45 +333,48 @@ func _on_gameplay_menu_requested() -> void:
 
 # --- Bolum editoru (yalnizca debug) -------------------------------------------
 #
-# Ayri bir "admin" yapisi yok: bu ekrana giden tek yol debug panelidir, o da
-# release export'ta kendini agactan siler. Editor ekrani release APK'da
-# bulunur ama ulasilamaz.
+# Ayri bir "admin" yapisi yok: bu ekrana giden tek yol debug panelidir.
+# Panel ve editor sahnesi ana sahneye bagli degildir; yalnizca debug template
+# calisirken dinamik yuklenir ve release AAB filtresinden tamamen cikarilir.
 
 ## [param source_level_id] 0'dan buyukse duzenlenen sey bir RESMI bolumdur;
 ## editor bunu kaydederken sidecar'a yazar (bkz. LevelEditor.source_level_id).
 func go_to_editor(edit_level: LevelData = null, source_level_id := 0) -> void:
-	if not OS.is_debug_build():
+	if not OS.is_debug_build() or OS.has_feature("production"):
+		return
+	if _level_editor_scene == null:
+		_level_editor_scene = load(LEVEL_EDITOR_SCENE_PATH) as PackedScene
+	if _level_editor_scene == null:
+		push_error("AppRoot: debug level editor sahnesi yuklenemedi.")
 		return
 	if edit_level == null:
 		_editor_batch_context.clear()
 	_editor_level = edit_level
 	_editor_source_level_id = source_level_id
-	await _transition(level_editor_scene, _configure_editor)
+	await _transition(_level_editor_scene, _configure_editor)
 
 
 func _configure_editor(screen: Node) -> void:
-	var editor := screen as LevelEditor
-	if editor == null:
+	if not _is_level_editor(screen):
 		return
-	editor.source_level_id = _editor_source_level_id
+	screen.set("source_level_id", _editor_source_level_id)
 	if not _editor_batch_context.is_empty():
-		editor.initial_batch_context = _editor_batch_context
+		screen.set("initial_batch_context", _editor_batch_context)
 	elif _editor_level != null:
-		editor.level = _editor_level
+		screen.set("level", _editor_level)
 
 
 ## Editordeki bolumu oynatir. Kopya DEGIL ayni kaynak verilir: test sirasinda
 ## bolum degismez, ve geri donuldugunde duzenleme aynen durur.
 func _on_editor_test_requested(edit_level: LevelData) -> void:
-	var editor := _current as LevelEditor
-	if editor != null:
-		_editor_batch_context = editor.get_batch_context()
-		_editor_source_level_id = editor.source_level_id
+	if _is_level_editor(_current):
+		_editor_batch_context = _current.call("get_batch_context")
+		_editor_source_level_id = int(_current.get("source_level_id"))
 	_editor_level = edit_level
 	# Acik kalan debug paneli arenanin ustunu ortup test edilen bolumu
 	# gizlerdi. Kose dugmesi durdugu icin tek dokunusla geri acilir.
 	if _debug_panel != null and is_instance_valid(_debug_panel):
-		_debug_panel.hide_panel()
+		_debug_panel.call("hide_panel")
 	await _transition(gameplay_scene, _configure_editor_gameplay,
 		_editor_level.level_id if _editor_level != null else 0)
 
@@ -404,8 +409,7 @@ func _handle_go_back() -> void:
 		splash.skip()
 		return
 
-	var editor := _current as LevelEditor
-	if editor != null:
+	if _is_level_editor(_current):
 		_on_editor_closed()
 		return
 
@@ -429,19 +433,44 @@ func _handle_go_back() -> void:
 
 # --- Debug paneli -------------------------------------------------------------
 #
-# Panel sadece debug build'de var olur (bkz. debug_panel.gd _ready). Release
-# export'ta $DebugLayer/DebugPanel kendini agactan kaldirdigi icin bu
-# baglantilar kurulamaz ama zararsizdir; _debug_panel null/gecersiz kalir.
+# Panel sadece debug build'de dinamik kurulur. Release export'ta sahne ve script
+# pakette bulunmaz; _debug_panel null kalir ve bu baglantilar kurulmaz.
+
+func _setup_debug_tools() -> void:
+	if not OS.is_debug_build() or OS.has_feature("production"):
+		return
+	var panel_scene := load(DEBUG_PANEL_SCENE_PATH) as PackedScene
+	if panel_scene == null:
+		push_error("AppRoot: debug panel sahnesi yuklenemedi.")
+		return
+	var debug_layer := CanvasLayer.new()
+	debug_layer.name = "DebugLayer"
+	debug_layer.layer = 200
+	add_child(debug_layer)
+	_debug_panel = panel_scene.instantiate()
+	debug_layer.add_child(_debug_panel)
+	_level_editor_scene = load(LEVEL_EDITOR_SCENE_PATH) as PackedScene
+
+
+func _is_level_editor(screen: Node) -> bool:
+	return (
+		OS.is_debug_build()
+		and not OS.has_feature("production")
+		and screen != null
+		and screen.has_signal("test_requested")
+		and screen.has_signal("menu_requested")
+		and screen.has_method("get_batch_context")
+	)
 
 func _connect_debug_panel() -> void:
 	if _debug_panel == null or not is_instance_valid(_debug_panel) or _debug_panel.is_queued_for_deletion():
 		return
-	_debug_panel.previous_level_requested.connect(_on_debug_previous_level)
-	_debug_panel.next_level_requested.connect(_on_debug_next_level)
-	_debug_panel.restart_level_requested.connect(_on_debug_restart_level)
-	_debug_panel.unlock_all_toggled.connect(_on_debug_unlock_all_toggled)
-	_debug_panel.reset_stats_requested.connect(_on_debug_reset_stats)
-	_debug_panel.editor_requested.connect(_on_debug_editor_requested)
+	_debug_panel.connect("previous_level_requested", _on_debug_previous_level)
+	_debug_panel.connect("next_level_requested", _on_debug_next_level)
+	_debug_panel.connect("restart_level_requested", _on_debug_restart_level)
+	_debug_panel.connect("unlock_all_toggled", _on_debug_unlock_all_toggled)
+	_debug_panel.connect("reset_stats_requested", _on_debug_reset_stats)
+	_debug_panel.connect("editor_requested", _on_debug_editor_requested)
 
 
 func _on_debug_previous_level() -> void:
@@ -501,9 +530,9 @@ func _on_debug_reset_stats() -> void:
 
 
 func _on_debug_editor_requested() -> void:
-	if not OS.is_debug_build():
+	if not OS.is_debug_build() or OS.has_feature("production"):
 		return
-	if _current is LevelEditor:
+	if _is_level_editor(_current):
 		return
 
 	# OYNANAN RESMI BOLUMU DUZENLE: debug panelini bir bolumun icinde acip

@@ -8,10 +8,10 @@ extends RefCounted
 ## bos/bozuk bir bolumle acilmaz.
 
 const FIRST_LEVEL_ID := 1
-## TOPLAM bolum dosyasi sayisi - BONUS bolumler dahil (150 normal + 6 bonus).
+## TOPLAM bolum dosyasi sayisi - BONUS bolumler dahil (150 normal + 5 bonus).
 ## Normal bandin nerede bittigi LevelWorlds.FIRST_BONUS_ID ile belirlenir;
 ## burasi yalnizca "kac dosya var" sorusunu yanitlar.
-const LEVEL_COUNT := 156
+const LEVEL_COUNT := 155
 const PATH_FORMAT := "res://levels/level_%02d.tres"
 
 ## Yildiz kapilari: bolum_id -> o bolumun acilmasi icin gereken yildiz sayisi.

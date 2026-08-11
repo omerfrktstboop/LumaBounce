@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 LumaBounce is a Godot 4.7 portrait-mobile physics bounce-puzzle game (GDScript, GL Compatibility renderer). The player drags back a fixed launcher to fire a ball that bounces off panels/walls/obstacles into a target. 50 hand- and AI-authored levels, no external art/audio assets — everything is drawn procedurally (`ShapeBuilder`, `_draw()`) and synthesized (`tools/generate_sfx.py`).
 
-No README, AGENTS.md, or Cursor/Copilot rule files exist in this repo — this file is the only project-level guidance.
+`AGENTS.md` is the authoritative contributor guide; this file contains additional architecture notes.
 
 ## Commands
 
@@ -41,7 +41,7 @@ python3 tools/generate_sfx.py   # Linux/macOS
 ```
 New sounds must be appended at the end of the `written` list in `main()` — the RNG is a single stream shared across all sound recipes, so inserting mid-list reshuffles every later sound's samples and rewrites unchanged WAVs.
 
-**Android export**: single preset in `export_presets.cfg`, `arm64-v8a` only, package `com.lumabounce.game`, `gradle_build/use_gradle_build=false`. `permissions/internet=true` is required for the AI generator's OpenRouter calls, but that whole feature is `OS.is_debug_build()`-gated so it's unreachable in a release build regardless.
+**Android export**: `Android Release` is the Gradle/AAB Play preset and `Android Debug` is the Gradle/APK playtest preset. Both target API 36 and package `com.ofsgames.lumabounce`. Release excludes only dev resources (`tools`, MCP toolkit, debug panel, level editor), never blanket `addons/*`; future runtime AdMob/Billing addons must remain exportable. See `docs/RELEASE.md` and run `tools/check_release_readiness.gd` before release.
 
 ## Architecture
 

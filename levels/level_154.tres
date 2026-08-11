@@ -43,6 +43,7 @@ thickness = 26.0
 
 [resource]
 script = ExtResource("4_f2swb")
+difficulty = 5
 is_bonus = true
 hint_angle_degrees = -4.0
 hint_power = 1800.0

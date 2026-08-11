@@ -49,7 +49,7 @@ func _test_wallet_contract() -> void:
 func _test_hint_coverage() -> void:
 	var missing: Array[int] = []
 	# 1-150 ana kampanya, 151-155 bonus bolumlerdir.
-	for level_id in range(1, 156):
+	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, LevelLibrary.last_level_id() + 1):
 		var level := load(LevelLibrary.level_path(level_id)) as LevelData
 		if level == null or not level.has_hint():
 			missing.append(level_id)

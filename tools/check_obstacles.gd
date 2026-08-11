@@ -529,7 +529,7 @@ func _test_official_obstacle_levels() -> void:
 	var laser_band_wheel_levels := 0
 	var laser_band_ring_levels := 0
 	var laser_band_bomb_levels := 0
-	# Bonus 151-156 normal kampanya faz kapilarinin disindadir.
+	# Bonus 151-155 normal kampanya faz kapilarinin disindadir.
 	for level_id in range(126, 151):
 		var level := LevelLibrary.load_level(level_id)
 		laser_band_blocks += level.breakable_blocks.size()

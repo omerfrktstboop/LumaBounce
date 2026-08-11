@@ -1,12 +1,10 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/app_root.gd" id="1_app_root"]
 [ext_resource type="PackedScene" path="res://scenes/splash.tscn" id="2_splash"]
 [ext_resource type="PackedScene" path="res://scenes/main_menu.tscn" id="3_main_menu"]
 [ext_resource type="PackedScene" path="res://scenes/gameplay.tscn" id="4_gameplay"]
 [ext_resource type="PackedScene" path="res://scenes/level_select.tscn" id="5_level_select"]
-[ext_resource type="PackedScene" path="res://scenes/debug_panel.tscn" id="6_debug_panel"]
-[ext_resource type="PackedScene" path="res://scenes/level_editor.tscn" id="7_level_editor"]
 [ext_resource type="PackedScene" path="res://scenes/settings.tscn" id="8_settings"]
 
 [node name="AppRoot" type="Node"]
@@ -17,7 +15,6 @@ main_menu_scene = ExtResource("3_main_menu")
 level_select_scene = ExtResource("5_level_select")
 settings_scene = ExtResource("8_settings")
 gameplay_scene = ExtResource("4_gameplay")
-level_editor_scene = ExtResource("7_level_editor")
 
 [node name="BackgroundLayer" type="CanvasLayer" parent="."]
 layer = -10
@@ -62,8 +59,3 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.090196, 0.137255, 0.227451, 0)
-
-[node name="DebugLayer" type="CanvasLayer" parent="."]
-layer = 200
-
-[node name="DebugPanel" parent="DebugLayer" instance=ExtResource("6_debug_panel")]

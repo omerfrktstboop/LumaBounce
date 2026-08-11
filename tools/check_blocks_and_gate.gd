@@ -631,6 +631,12 @@ func _test_practice_mode() -> void:
 	gameplay.practice_mode = true
 	root.add_child(gameplay)
 	await physics_frame
+	var header_subtitle := gameplay.get_node(
+		"HUD/SafeArea/Root/LevelHeader/LevelSubtitle") as Label
+	_check("HUD bolum adini gostermiyor",
+		header_subtitle.text.contains(gameplay.level_data.display_name), false)
+	_check("HUD editor zorluk tier'ini gosteriyor",
+		header_subtitle.text.begins_with(tr(gameplay.level_data.difficulty_label())), true)
 
 	var lives_at_start := int((gameplay.get_debug_snapshot() as Dictionary)["lives_remaining"])
 	_check("baslangicta haklar dolu", lives_at_start > 0, true)
@@ -1133,12 +1139,12 @@ func _test_level_select() -> void:
 		grid.get_child(0).get("accent_override"), LevelWorlds.accent_for_index(1))
 
 	select.call("_show_world", 2, 1)
-	# Son dunya ACIK UCLU: LEVEL_COUNT buyudukce buyur (101-150).
+	# Son dunya normal bolum bandi 101-150'dir; bonuslar ayri tutulur.
 	_check("son dunya kutuphanenin sonuna kadar uzanir", grid.get_child_count(),
 		LevelWorlds.level_count(2))
-	_check("son dunyanin son bolumu kutuphanenin sonu",
+	_check("son dunyanin son normal bolumu 150",
 		grid.get_child(grid.get_child_count() - 1).name,
-		"Level%d" % LevelLibrary.last_level_id())
+		"Level%d" % LevelWorlds.last_level(2))
 
 	root.remove_child(select)
 	select.free()
@@ -1156,13 +1162,14 @@ func _test_level_worlds() -> void:
 	_check("2. dunya 51'de baslar", LevelWorlds.first_level(1), 51)
 	_check("2. dunya 100'de biter", LevelWorlds.last_level(1), 100)
 	_check("3. dunya 101'de baslar", LevelWorlds.first_level(2), 101)
-	# Son dunya ACIK UCLU: LEVEL_COUNT buyudugunde yeni bolumler kendiliginden
-	# buraya girer, LevelWorlds'te bir sey degistirmek gerekmez.
-	_check("son dunya kutuphanenin sonuna kadar",
-		LevelWorlds.last_level(2), LevelLibrary.last_level_id())
-	_check("dunya bolum sayilari toplami kutuphaneye esit",
+	_check("son dunya 150'de biter", LevelWorlds.last_level(2), 150)
+	_check("dunya normal bolum sayilari toplami 150",
 		LevelWorlds.level_count(0) + LevelWorlds.level_count(1) + LevelWorlds.level_count(2),
-		LevelLibrary.LEVEL_COUNT)
+		LevelWorlds.FIRST_BONUS_ID - LevelLibrary.FIRST_LEVEL_ID)
+	_check("toplam bes bonus bolum",
+		LevelWorlds.bonus_ids(0).size() + LevelWorlds.bonus_ids(1).size()
+			+ LevelWorlds.bonus_ids(2).size(), 5)
+	_check("final bonusu 155", LevelWorlds.bonus_ids(2), [155])
 
 	_check("bolum 1 -> dunya 0", LevelWorlds.index_for_level(1), 0)
 	_check("bolum 50 -> dunya 0", LevelWorlds.index_for_level(50), 0)
@@ -1258,6 +1265,8 @@ func _test_locale() -> void:
 	Locale.apply("en")
 	_check("apply locale'i degistirir", Locale.current(), "en")
 	_check("ceviri uygulaniyor", TranslationServer.translate("OYNA"), "PLAY")
+	_check("zorluk etiketi cevriliyor",
+		TranslationServer.translate("KOLAY"), "EASY")
 
 	# BOS tercih = "oyuncu henuz secmedi" -> cihaz dili. "tr" secmis olmakla
 	# ayni sey DEGIL; ikisi karisirsa Ingilizce telefonda oyun Turkce acilir.
@@ -1374,7 +1383,7 @@ func _test_settings_screen() -> void:
 func _test_library_bounds() -> void:
 	print("")
 	print("--- LevelLibrary sinirlari ---")
-	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 150)
+	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 155)
 	_check("has_next(20)", LevelLibrary.has_next(20), true)
 	_check("has_next(24)", LevelLibrary.has_next(24), true)
 	_check("has_next(25)", LevelLibrary.has_next(25), true)
@@ -1385,7 +1394,7 @@ func _test_library_bounds() -> void:
 	_check("has_next(125)", LevelLibrary.has_next(125), true)
 	_check("has_next(149)", LevelLibrary.has_next(149), true)
 	_check("has_next(150)", LevelLibrary.has_next(150), false)
-	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 450)
+	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 475)
 
 	# 1-50: elle tasarlanmis kutuphane. 26 tek kolay blok tanitimidir; 27-50
 	# onceki panel/duvar bilgisini bloklarla birlikte kullanir.
