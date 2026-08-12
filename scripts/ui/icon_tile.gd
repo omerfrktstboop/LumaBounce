@@ -19,13 +19,16 @@ extends PanelContainer
 ## Karo zemini. Alfasi 0 iken Palette.SURFACE_ELEVATED kullanilir.
 @export var tile_accent := Color(0.0, 0.0, 0.0, 0.0)
 @export var tile_size := 48.0
+## Sifirdan buyukse kare yerine yatay rozet olusturur. Normal navigasyon
+## ikonlari kare kalir; premium kart gibi vurgu alanlari genisleyebilir.
+@export var tile_width := 0.0
 @export var icon_inset := 12.0
 
 var _icon: GlyphIcon
 
 
 func _ready() -> void:
-	custom_minimum_size = Vector2(tile_size, tile_size)
+	custom_minimum_size = Vector2(tile_width if tile_width > 0.0 else tile_size, tile_size)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	var style := StyleBoxFlat.new()

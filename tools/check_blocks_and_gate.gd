@@ -1449,14 +1449,31 @@ func _test_faz9_tall_aspect() -> void:
 			not coin_chip.get_rect().intersects(settings_button.get_rect()), true)
 		_check("%s: ev - coin rozeti ekran icinde kaliyor" % label,
 			coin_chip.get_rect().end.x <= home.size.x + 1.0, true)
+		var hero := home.get_node(
+			"SafeArea/Content/MainActions/HeroCard") as Control
+		var shop_card := home.get_node(
+			"SafeArea/Content/MainActions/ShopCard") as Control
+		var action_center_y := (hero.get_global_rect().position.y
+			+ shop_card.get_global_rect().end.y) * 0.5
+		_check("%s: ev - ana eylemler dikey orta bantta" % label,
+			action_center_y >= home.size.y * 0.40
+			and action_center_y <= home.size.y * 0.62, true)
 		root.remove_child(home)
 		home.free()
 		await process_frame
 
 		var shop_wallet_path := "user://faz9_tall_shop_%s.cfg" % label
 		temp_paths.append(shop_wallet_path)
+		var entitlement_path := "user://faz9_tall_entitlement_%s.cfg" % label
+		temp_paths.append(entitlement_path)
+		var purchase_service := PurchaseService.new()
+		purchase_service.configure(NoOpPurchaseProvider.new(),
+			EntitlementStore.new(entitlement_path), AnalyticsService.new(false, true))
+		root.add_child(purchase_service)
+		purchase_service.initialize()
 		var shop := (load("res://scenes/shop_screen.tscn") as PackedScene).instantiate()
 		shop.set("wallet", WalletStore.load_from_path(shop_wallet_path))
+		shop.set("purchase_service", purchase_service)
 		root.add_child(shop)
 		shop.set_deferred("size", size)
 		await process_frame
@@ -1467,8 +1484,15 @@ func _test_faz9_tall_aspect() -> void:
 			not back.get_rect().intersects(shop_chip.get_rect()), true)
 		_check("%s: magaza - coin rozeti ekran icinde kaliyor" % label,
 			shop_chip.get_rect().end.x <= shop.size.x + 1.0, true)
+		var remove_ads_icon := shop.find_child("RemoveAdsIcon", true, false) as Control
+		_check("%s: magaza - reklamsiz ikon yatay rozet" % label,
+			remove_ads_icon != null
+			and remove_ads_icon.custom_minimum_size.x
+			> remove_ads_icon.custom_minimum_size.y, true)
 		root.remove_child(shop)
 		shop.free()
+		root.remove_child(purchase_service)
+		purchase_service.free()
 		await process_frame
 
 		var settings := (load("res://scenes/settings.tscn") as PackedScene).instantiate()
@@ -1485,6 +1509,13 @@ func _test_faz9_tall_aspect() -> void:
 		_check("%s: ayarlar - kaydirma alani ekran icinde kaliyor" % label,
 			settings.get_node("SafeArea/Content/Scroll").get_rect().end.y \
 			<= settings.size.y + 1.0, true)
+		var language_dropdown := settings.find_child(
+			"LanguageDropdown", true, false) as LumaDropdown
+		_check("%s: ayarlar - dil acilir listesi kullaniliyor" % label,
+			language_dropdown != null, true)
+		if language_dropdown != null:
+			_check("%s: ayarlar - dil secenekleri eksiksiz" % label,
+				language_dropdown.item_count, 2)
 		root.remove_child(settings)
 		settings.free()
 		await process_frame

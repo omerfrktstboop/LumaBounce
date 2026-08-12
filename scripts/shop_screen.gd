@@ -132,11 +132,14 @@ func _make_remove_ads_card() -> Button:
 	margin.add_child(line)
 
 	var tile := IconTile.new()
+	tile.name = "RemoveAdsIcon"
 	tile.glyph = GlyphIcon.Glyph.CHECK if active else GlyphIcon.Glyph.LOCK
 	tile.icon_color = Palette.ACCENT
 	tile.tile_accent = Palette.ACCENT
-	tile.tile_size = 56.0
-	tile.icon_inset = 14.0
+	tile.tile_size = 64.0
+	tile.tile_width = 88.0
+	tile.icon_inset = 16.0
+	tile.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	line.add_child(tile)
 
 	var texts := VBoxContainer.new()

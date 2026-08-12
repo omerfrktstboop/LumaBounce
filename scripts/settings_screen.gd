@@ -78,7 +78,7 @@ func _rebuild() -> void:
 	_current_card_body = null
 
 	_begin_card("Genel")
-	_add_choice_row("Dil", _language_labels(), _language_index(), _on_language_chosen)
+	_add_dropdown_row("Dil", _language_labels(), _language_index(), _on_language_chosen)
 
 	_begin_card("Sesler")
 	_add_toggle_row("Ses", not AudioManager.is_muted(), _on_sound_toggled)
@@ -185,7 +185,20 @@ func _add_toggle_row(label_text: String, value: bool, handler: Callable,
 	_add_row(label_text, toggle, hint)
 
 
-## Iki-uc secenekli ayar (dil, sarsinti). Secili olan vurgulu gorunur;
+## Dil gibi uzun etiketli ve tek secimli ayarlar acilir liste kullanir. Boylece
+## satir iki-uc ayri dugmeyle dolmaz ve yeni diller eklendiginde tasma olmaz.
+func _add_dropdown_row(label_text: String, labels: Array, selected: int,
+		handler: Callable, hint := "") -> void:
+	var dropdown := LumaDropdown.new()
+	dropdown.name = "LanguageDropdown"
+	dropdown.setup(labels, selected)
+	dropdown.item_selected.connect(func(index: int) -> void:
+		handler.call(index)
+		_rebuild())
+	_add_row(label_text, dropdown, hint)
+
+
+## Iki-uc secenekli kisa ayar (ornegin sarsinti). Secili olan vurgulu gorunur;
 ## acik/kapali anahtarindan farkli olarak burada TUM secenekler gorunmelidir,
 ## cunku oyuncu neyin arasindan sectigini bilmeli.
 func _add_choice_row(label_text: String, labels: Array, selected: int,

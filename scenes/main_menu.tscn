@@ -81,21 +81,28 @@ size_flags_vertical = 4
 focus_mode = 0
 script = ExtResource("6_icon_button")
 
-[node name="HeroCard" type="PanelContainer" parent="SafeArea/Content"]
+[node name="MainActions" type="VBoxContainer" parent="SafeArea/Content"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 260)
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 18
+alignment = 1
 
-[node name="Decor" type="Control" parent="SafeArea/Content/HeroCard"]
+[node name="HeroCard" type="PanelContainer" parent="SafeArea/Content/MainActions"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 250)
+
+[node name="Decor" type="Control" parent="SafeArea/Content/MainActions/HeroCard"]
 layout_mode = 2
 mouse_filter = 2
 script = ExtResource("7_decor")
 
-[node name="PrimaryActionMargin" type="MarginContainer" parent="SafeArea/Content"]
+[node name="PrimaryActionMargin" type="MarginContainer" parent="SafeArea/Content/MainActions"]
 layout_mode = 2
 theme_override_constants/margin_left = 44
 theme_override_constants/margin_right = 44
 
-[node name="PlayButton" type="Button" parent="SafeArea/Content/PrimaryActionMargin"]
+[node name="PlayButton" type="Button" parent="SafeArea/Content/MainActions/PrimaryActionMargin"]
 layout_mode = 2
 custom_minimum_size = Vector2(0, 88)
 focus_mode = 0
@@ -104,7 +111,7 @@ text = "OYNA"
 script = ExtResource("8_button")
 emphasis = 0
 
-[node name="LevelsCard" type="Button" parent="SafeArea/Content"]
+[node name="LevelsCard" type="Button" parent="SafeArea/Content/MainActions"]
 layout_mode = 2
 focus_mode = 0
 script = ExtResource("9_nav_card")
@@ -112,18 +119,13 @@ glyph = 12
 title_text = "Bölümler"
 supporting_text = "Zorluk artan bölümleri keşfet"
 
-[node name="ShopCard" type="Button" parent="SafeArea/Content"]
+[node name="ShopCard" type="Button" parent="SafeArea/Content/MainActions"]
 layout_mode = 2
 focus_mode = 0
 script = ExtResource("9_nav_card")
 glyph = 7
 title_text = "Mağaza"
 supporting_text = "Toplarını ve izlerini özelleştir"
-
-[node name="BottomSpacer" type="Control" parent="SafeArea/Content"]
-layout_mode = 2
-size_flags_vertical = 3
-mouse_filter = 2
 
 [node name="UtilityArea" type="HBoxContainer" parent="SafeArea/Content"]
 layout_mode = 2

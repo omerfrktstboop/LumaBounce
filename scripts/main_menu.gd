@@ -46,10 +46,11 @@ var progress: ProgressStore
 @onready var _brand_mark: LumaLogo = $SafeArea/Content/TopAppBar/BrandMark
 @onready var _coin_chip: CoinChip = $SafeArea/Content/TopAppBar/CoinChip
 @onready var _settings_button: LumaIconButton = $SafeArea/Content/TopAppBar/SettingsButton
-@onready var _hero_card: PanelContainer = $SafeArea/Content/HeroCard
-@onready var _play_button: LumaButton = $SafeArea/Content/PrimaryActionMargin/PlayButton
-@onready var _levels_card: NavigationCard = $SafeArea/Content/LevelsCard
-@onready var _shop_card: NavigationCard = $SafeArea/Content/ShopCard
+@onready var _hero_card: PanelContainer = $SafeArea/Content/MainActions/HeroCard
+@onready var _play_button: LumaButton = \
+	$SafeArea/Content/MainActions/PrimaryActionMargin/PlayButton
+@onready var _levels_card: NavigationCard = $SafeArea/Content/MainActions/LevelsCard
+@onready var _shop_card: NavigationCard = $SafeArea/Content/MainActions/ShopCard
 @onready var _sound_button: LumaIconButton = $SafeArea/Content/UtilityArea/SoundButton
 @onready var _progress_label: Label = $SafeArea/Content/UtilityArea/ProgressLabel
 @onready var _toast: Label = $Toast
