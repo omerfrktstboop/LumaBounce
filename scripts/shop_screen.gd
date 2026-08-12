@@ -1,14 +1,15 @@
 class_name ShopScreen
 extends Control
 
-## Luma Coin magazasi: kozmetik satin alma ve secme.
+## Luma Coin magazasi: kozmetik satin alma ve secme (FAZ 9 yeniden tasarimi).
 ##
 ## Diger ekranlarla ayni kural: KENDISI hicbir sahne acmaz, yalnizca sinyal
 ## yayar; cuzdan AppRoot tarafindan add_child'dan ONCE enjekte edilir.
 ##
 ## Kartlar kod ile uretilir (ayarlar ekranindaki desen): satin alma ya da
-## secim sonrasi hem fiyat/durum etiketi hem SECILI isareti degisir; tek bir
-## _rebuild ikisini de tutarli tutar.
+## secim sonrasi hem fiyat/durum etiketi hem SEÇİLİ isareti degisir; tek bir
+## _rebuild ikisini de tutarli tutar. Sekme (tur) degisimi de ayni tam
+## yeniden kurulumu kullanir - _active_kind_index durumu korunur.
 ##
 ## FIYAT BURADA YAZILI DEGIL - CosmeticData'dan okunur. Denge degisikligi
 ## katalogda yapilir ve bu dosya hic degismez.
@@ -20,13 +21,20 @@ var wallet: WalletStore
 var purchase_service: PurchaseService
 var analytics: AnalyticsService
 
-const CARD_HEIGHT := 96.0
-const PREVIEW_SIZE := 56.0
+## Sekme etiketleri kisa tutulur (720px genislikte 4 sekme sigmali). Tam
+## isimler CosmeticCatalog.kind_label()'da kalir, baska yerlerde kullanilir.
+const KIND_TAB_LABELS := {
+	CosmeticData.Kind.BALL: "TOP",
+	CosmeticData.Kind.TRAIL: "İZ",
+	CosmeticData.Kind.LAUNCHER: "FIRLATICI",
+	CosmeticData.Kind.TARGET_FX: "EFEKT",
+}
 
 @onready var _rows: VBoxContainer = $SafeArea/Content/Scroll/Rows
-@onready var _balance_value: Label = $SafeArea/Content/BalanceChip/Row/Value
-@onready var _back_button: LumaButton = $SafeArea/Content/BackButton
+@onready var _balance_chip: CoinChip = $SafeArea/Content/Header/CoinChip
+@onready var _back_button: LumaIconButton = $SafeArea/Content/Header/BackButton
 
+var _active_kind_index := 0
 var _flash_tween: Tween
 var _iap_message := ""
 
@@ -45,85 +53,51 @@ func _rebuild() -> void:
 		_rows.remove_child(child)
 		child.queue_free()
 
-	_balance_value.text = str(wallet.balance)
+	_balance_chip.bind(wallet)
 	if purchase_service != null:
-		_rows.add_child(_make_section(tr("PREMİUM")))
+		_rows.add_child(LumaCard.section_header(tr("PREMİUM")))
 		_rows.add_child(_make_remove_ads_card())
 		_rows.add_child(_make_restore_purchases_button())
+
+	var tabs := SegmentedControl.new()
+	tabs.name = "CategoryTabs"
+	var labels: Array = []
 	for kind in CosmeticCatalog.KIND_ORDER:
-		_rows.add_child(_make_section(CosmeticCatalog.kind_label(kind)))
-		for item in CosmeticCatalog.by_kind(kind):
-			_rows.add_child(_make_card(item))
+		labels.append(tr(String(KIND_TAB_LABELS.get(kind, CosmeticCatalog.kind_label(kind)))))
+	tabs.setup(labels, _active_kind_index)
+	tabs.value_changed.connect(_on_category_changed)
+	_rows.add_child(tabs)
+
+	var grid := GridContainer.new()
+	grid.name = "ProductGrid"
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", UIMetrics.SPACE_MD)
+	grid.add_theme_constant_override("v_separation", UIMetrics.SPACE_MD)
+	_rows.add_child(grid)
+
+	var active_kind: CosmeticData.Kind = CosmeticCatalog.KIND_ORDER[_active_kind_index]
+	for item in CosmeticCatalog.by_kind(active_kind):
+		grid.add_child(_make_card(item))
 
 
-func _make_section(title: String) -> Label:
-	var label := Label.new()
-	label.text = title
-	label.add_theme_font_size_override("font_size", 21)
-	label.add_theme_color_override("font_color", Palette.ACCENT)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.custom_minimum_size = Vector2(0.0, 44.0)
-	label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-	return label
+func _on_category_changed(index: int) -> void:
+	_active_kind_index = index
+	_rebuild()
 
 
 ## Kart uc durumdan birini gosterir:
 ##   satin alinabilir -> fiyat
 ##   sahip ama secili degil -> "SAHİP" (dokununca secilir)
 ##   secili -> "SEÇİLİ" (dokunulamaz, zaten aktif)
-func _make_card(item: CosmeticData) -> Button:
+func _make_card(item: CosmeticData) -> ProductCard:
 	var owned := wallet.owns(item.id)
 	var selected := wallet.selected_cosmetic_id(item.kind) == item.id
 	var affordable := owned or wallet.can_afford(item.price)
 
-	var card := Button.new()
-	card.name = "Card_%s" % item.id
-	card.custom_minimum_size = Vector2(0.0, CARD_HEIGHT)
-	card.focus_mode = Control.FOCUS_NONE
-	card.disabled = selected or (not owned and not affordable)
-	var accent := item.accent
-	card.add_theme_stylebox_override("normal", _card_style(accent, selected, 2))
-	card.add_theme_stylebox_override("hover", _card_style(accent, true, 2))
-	card.add_theme_stylebox_override("pressed", _card_style(accent, true, 3))
-	card.add_theme_stylebox_override("disabled", _card_style(accent, selected, 2))
-
-	var margin := MarginContainer.new()
-	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
-	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_right", 16)
-	card.add_child(margin)
-
-	var line := HBoxContainer.new()
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_theme_constant_override("separation", 14)
-	margin.add_child(line)
-
-	var preview := CosmeticPreview.new()
-	preview.name = "Preview"
-	preview.item = item
-	preview.custom_minimum_size = Vector2(PREVIEW_SIZE, PREVIEW_SIZE)
-	preview.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(preview)
-
-	var name_label := Label.new()
-	name_label.text = item.display_name
-	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	name_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	name_label.add_theme_font_size_override("font_size", 23)
-	name_label.add_theme_color_override("font_color", Palette.TEXT)
-	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(name_label)
-
-	line.add_child(_make_status(item, owned, selected, affordable))
-
-	if selected:
-		pass
-	elif owned:
-		card.pressed.connect(_on_select_pressed.bind(item))
-	elif affordable:
-		card.pressed.connect(_on_purchase_pressed.bind(item))
+	var card := ProductCard.new()
+	card.configure(item, owned, selected, affordable)
+	card.purchase_requested.connect(_on_purchase_pressed)
+	card.select_requested.connect(_on_select_pressed)
 	return card
 
 
@@ -134,36 +108,36 @@ func _make_remove_ads_card() -> Button:
 
 	var card := Button.new()
 	card.name = "RemoveAdsCard"
-	card.custom_minimum_size = Vector2(0.0, 112.0)
+	card.custom_minimum_size = Vector2(0.0, 156.0)
 	card.focus_mode = Control.FOCUS_NONE
 	card.disabled = active or busy or not is_ready
-	card.add_theme_stylebox_override("normal", _card_style(Palette.ACCENT, active, 2))
-	card.add_theme_stylebox_override("hover", _card_style(Palette.ACCENT, true, 2))
-	card.add_theme_stylebox_override("pressed", _card_style(Palette.ACCENT, true, 3))
-	card.add_theme_stylebox_override("disabled", _card_style(Palette.ACCENT, active, 2))
+	card.text = ""
+	card.add_theme_stylebox_override("normal", LumaCard.style(Palette.ACCENT, active, 2))
+	card.add_theme_stylebox_override("hover", LumaCard.style(Palette.ACCENT, true, 2))
+	card.add_theme_stylebox_override("pressed", LumaCard.style(Palette.ACCENT, true, 3))
+	card.add_theme_stylebox_override("disabled", LumaCard.style(Palette.ACCENT, active, 2))
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_theme_constant_override("margin_left", 16)
-	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_top", 10)
-	margin.add_theme_constant_override("margin_bottom", 10)
+	margin.add_theme_constant_override("margin_left", UIMetrics.CARD_PADDING)
+	margin.add_theme_constant_override("margin_right", UIMetrics.CARD_PADDING)
+	margin.add_theme_constant_override("margin_top", UIMetrics.SPACE_LG)
+	margin.add_theme_constant_override("margin_bottom", UIMetrics.SPACE_LG)
 	card.add_child(margin)
 
 	var line := HBoxContainer.new()
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_theme_constant_override("separation", 14)
+	line.add_theme_constant_override("separation", UIMetrics.SPACE_LG)
 	margin.add_child(line)
 
-	var icon := GlyphIcon.new()
-	icon.glyph = GlyphIcon.Glyph.CHECK if active else GlyphIcon.Glyph.LOCK
-	icon.color = Palette.ACCENT
-	icon.stroke_width = 3.0
-	icon.custom_minimum_size = Vector2(PREVIEW_SIZE, PREVIEW_SIZE)
-	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(icon)
+	var tile := IconTile.new()
+	tile.glyph = GlyphIcon.Glyph.CHECK if active else GlyphIcon.Glyph.LOCK
+	tile.icon_color = Palette.ACCENT
+	tile.tile_accent = Palette.ACCENT
+	tile.tile_size = 56.0
+	tile.icon_inset = 14.0
+	line.add_child(tile)
 
 	var texts := VBoxContainer.new()
 	texts.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -174,14 +148,14 @@ func _make_remove_ads_card() -> Button:
 
 	var title := Label.new()
 	title.text = tr("REKLAMLARI KALDIR")
-	title.add_theme_font_size_override("font_size", 23)
+	title.add_theme_font_size_override("font_size", UIMetrics.FONT_CARD_TITLE + 3)
 	title.add_theme_color_override("font_color", Palette.TEXT)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texts.add_child(title)
 
 	var description := Label.new()
 	description.text = tr("Geçiş reklamlarını kalıcı olarak kapatır")
-	description.add_theme_font_size_override("font_size", 16)
+	description.add_theme_font_size_override("font_size", UIMetrics.FONT_SUPPORTING + 1)
 	description.add_theme_color_override("font_color", Palette.TEXT_DIM)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	description.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -189,12 +163,12 @@ func _make_remove_ads_card() -> Button:
 
 	var status := Label.new()
 	status.text = _remove_ads_status(active, is_ready, busy)
-	status.add_theme_font_size_override("font_size", 19)
+	status.add_theme_font_size_override("font_size", UIMetrics.FONT_SUPPORTING + 3)
 	status.add_theme_color_override(
 		"font_color", Palette.ACCENT if active else Palette.COIN)
-	status.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(status)
+	texts.add_child(status)
 
 	if not card.disabled:
 		card.pressed.connect(_on_remove_ads_pressed)
@@ -218,63 +192,13 @@ func _make_restore_purchases_button() -> Button:
 	var button := LumaButton.new()
 	button.name = "RestorePurchasesButton"
 	button.text = tr("SATIN ALMALARI GERİ YÜKLE")
-	button.corner_radius = 18
-	button.custom_minimum_size = Vector2(0.0, 52.0)
+	button.corner_radius = UIMetrics.RADIUS_MD
+	button.custom_minimum_size = Vector2(0.0, UIMetrics.MIN_TOUCH)
 	button.focus_mode = Control.FOCUS_NONE
 	button.disabled = purchase_service.is_busy() or not purchase_service.is_available()
-	button.add_theme_font_size_override("font_size", 18)
+	button.add_theme_font_size_override("font_size", UIMetrics.FONT_BODY)
 	button.pressed.connect(_on_restore_purchases_pressed)
 	return button
-
-
-func _make_status(item: CosmeticData, owned: bool, selected: bool,
-		affordable: bool) -> Control:
-	var box := HBoxContainer.new()
-	box.name = "Status"
-	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	box.add_theme_constant_override("separation", 6)
-
-	var label := Label.new()
-	label.name = "Label"
-	label.add_theme_font_size_override("font_size", 20)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-
-	if selected:
-		label.text = tr("SEÇİLİ")
-		label.add_theme_color_override("font_color", item.accent)
-	elif owned:
-		label.text = tr("SAHİP")
-		label.add_theme_color_override("font_color", Palette.TEXT_DIM)
-	else:
-		label.text = str(item.price)
-		label.add_theme_color_override(
-			"font_color", Palette.COIN if affordable else Color(Palette.TEXT_DIM, 0.65))
-		var coin := GlyphIcon.new()
-		coin.glyph = GlyphIcon.Glyph.COIN
-		coin.color = Palette.COIN if affordable else Color(Palette.TEXT_DIM, 0.65)
-		coin.stroke_width = 2.4
-		coin.custom_minimum_size = Vector2(24.0, 24.0)
-		coin.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		coin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		box.add_child(label)
-		box.add_child(coin)
-		return box
-
-	box.add_child(label)
-	return box
-
-
-func _card_style(accent: Color, strong: bool, border: int) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(Palette.INK_MID, 0.92)
-	style.border_color = Color(accent, 0.8 if strong else 0.28)
-	style.set_border_width_all(border)
-	style.set_corner_radius_all(20)
-	style.corner_detail = 10
-	style.anti_aliasing = true
-	return style
 
 
 # --- Islemler -----------------------------------------------------------------
@@ -361,7 +285,10 @@ func _on_select_pressed(item: CosmeticData) -> void:
 ## Satin alma/secim sonrasi kisa bir parlama: islemin GERCEKLESTIGI
 ## gorulmeli, yoksa dokunusun ise yarayip yaramadigi belirsiz kalir.
 func _flash(cosmetic_id: String) -> void:
-	var card := _rows.get_node_or_null("Card_%s" % cosmetic_id) as Control
+	var grid := _rows.get_node_or_null("ProductGrid")
+	if grid == null:
+		return
+	var card := grid.get_node_or_null("Card_%s" % cosmetic_id) as Control
 	if card == null:
 		return
 	if _flash_tween != null and _flash_tween.is_valid():

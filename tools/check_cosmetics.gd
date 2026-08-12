@@ -265,12 +265,16 @@ func _test_shop_screen() -> void:
 	await process_frame
 	await process_frame
 
+	# Sekme yapisi: varsayilan aktif sekme TOP (KIND_ORDER'in ilki), bu yuzden
+	# grid dogrudan ball_* kartlarini gosterir - sekme degistirmeye gerek yok.
 	var rows := shop.get_node("SafeArea/Content/Scroll/Rows")
-	_check(rows.get_child_count() > CosmeticCatalog.all().size(),
-		"shop lists every cosmetic plus section headers")
-	_check(rows.has_node("Card_ball_ember"), "shop shows a purchasable card")
+	_check(rows.has_node("CategoryTabs"), "shop shows category tabs")
+	var grid := rows.get_node("ProductGrid")
+	_check(grid.get_child_count() == CosmeticCatalog.by_kind(CosmeticData.Kind.BALL).size(),
+		"shop grid lists exactly the active tab's cosmetics")
+	_check(grid.has_node("Card_ball_ember"), "shop shows a purchasable card")
 
-	var card := rows.get_node("Card_ball_ember") as Button
+	var card := grid.get_node("Card_ball_ember") as Button
 	_check(not card.disabled, "affordable card is pressable")
 	var before := wallet.balance
 	var price := CosmeticCatalog.find("ball_ember").price
@@ -282,9 +286,20 @@ func _test_shop_screen() -> void:
 		"purchased cosmetic is selected immediately")
 
 	# Satin alinan kart yeniden kuruldu; artik SECILI ve basilamaz olmali.
-	var refreshed := rows.get_node("Card_ball_ember") as Button
+	var refreshed := rows.get_node("ProductGrid/Card_ball_ember") as Button
 	_check(refreshed.disabled, "selected card cannot be pressed again")
 	_check(wallet.balance == before - price, "re-render never charges again")
+
+	# Sekme degisimi: baska bir tur secildiginde grid o turun kartlarini
+	# gostermeli ve TOP kartlari kaybolmali.
+	var tabs := rows.get_node("CategoryTabs")
+	tabs.call("_on_option_pressed", 1)
+	await process_frame
+	var trail_grid := shop.get_node("SafeArea/Content/Scroll/Rows/ProductGrid")
+	_check(trail_grid.get_child_count() == CosmeticCatalog.by_kind(CosmeticData.Kind.TRAIL).size(),
+		"switching tabs shows the new kind's cosmetics")
+	_check(not trail_grid.has_node("Card_ball_ember"),
+		"switching tabs hides the previous kind's cards")
 
 	root.remove_child(shop)
 	shop.queue_free()

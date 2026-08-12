@@ -60,6 +60,7 @@ func _run() -> void:
 	_test_locale()
 	_test_translation_coverage()
 	await _test_settings_screen()
+	await _test_faz9_tall_aspect()
 	_test_library_bounds()
 
 	_restore_save()
@@ -1363,8 +1364,11 @@ func _test_settings_screen() -> void:
 	root.add_child(screen)
 	await process_frame
 
+	# FAZ 9: satirlar artik tek tek degil, bolum basina bir KART halinde
+	# gruplanir (Genel/Sesler/Oynanis/Surum + aralara giren bosluklar) - bu
+	# yuzden dogrudan cocuk sayisi eskisinden (>8 duz satir) cok daha kucuk.
 	var rows: Node = screen.get_node("SafeArea/Content/Scroll/Rows")
-	_check("ayar satirlari kuruldu", rows.get_child_count() > 8, true)
+	_check("ayar satirlari kuruldu", rows.get_child_count() >= 7, true)
 
 	# Dil degistirme: hem locale hem KAYIT guncellenmeli, yoksa secim
 	# uygulamayi kapatinca kaybolur.
@@ -1372,7 +1376,7 @@ func _test_settings_screen() -> void:
 	_check("dil secimi locale'i degistirir", Locale.current(), "en")
 	_check("dil secimi kayda yazilir", progress.language, "en")
 	screen.call("_rebuild")
-	_check("dil degisince satirlar yeniden kurulur", rows.get_child_count() > 8, true)
+	_check("dil degisince satirlar yeniden kurulur", rows.get_child_count() >= 7, true)
 
 	screen.call("_on_shake_chosen", 0)
 	_check("sarsinti kapatilabiliyor", progress.shake_scale, 0.0)
@@ -1412,6 +1416,82 @@ func _test_settings_screen() -> void:
 	ScreenShake.trauma_scale = 1.0
 	Haptics.enabled = true
 	TranslationServer.set_locale(before_locale)
+
+
+## FAZ 9: Ev/Magaza/Ayarlar yeniden tasarimi genis/uzun ekranlarda tasmamali.
+##
+## DisplayServer.window_set_size() bu test ortaminda guvenilir calismiyor
+## (bkz. check_hint_economy.gd::_test_hud_fits_tall_aspect'in ayni notu) -
+## bunun yerine ekran KOKUNUN size'i DOGRUDAN zorlanir. Kok, root Viewport'a
+## dogrudan eklendigi ve ustunde onu yeniden boyutlandiracak bir Container
+## olmadigi icin bu deger degismeden kalir ve SafeArea/Content'e normal
+## anchor/Container zinciriyle dogru sekilde yayilir.
+func _test_faz9_tall_aspect() -> void:
+	print("")
+	print("--- Faz 9: Ev/Magaza/Ayarlar uzun ekran yerlesimi ---")
+	var temp_paths: Array[String] = []
+	for size in [Vector2(720.0, 1280.0), Vector2(1080.0, 2400.0)]:
+		var label := "%dx%d" % [int(size.x), int(size.y)]
+
+		var home_wallet_path := "user://faz9_tall_home_%s.cfg" % label
+		temp_paths.append(home_wallet_path)
+		var home := (load("res://scenes/main_menu.tscn") as PackedScene).instantiate()
+		home.set("wallet", WalletStore.load_from_path(home_wallet_path))
+		home.set("progress", ProgressStore.new())
+		root.add_child(home)
+		home.set_deferred("size", size)
+		await process_frame
+		await process_frame
+		var coin_chip := home.get_node("SafeArea/Content/TopAppBar/CoinChip") as Control
+		var settings_button := home.get_node(
+			"SafeArea/Content/TopAppBar/SettingsButton") as Control
+		_check("%s: ev - coin rozeti ayarlar dugmesiyle cakismiyor" % label,
+			not coin_chip.get_rect().intersects(settings_button.get_rect()), true)
+		_check("%s: ev - coin rozeti ekran icinde kaliyor" % label,
+			coin_chip.get_rect().end.x <= home.size.x + 1.0, true)
+		root.remove_child(home)
+		home.free()
+		await process_frame
+
+		var shop_wallet_path := "user://faz9_tall_shop_%s.cfg" % label
+		temp_paths.append(shop_wallet_path)
+		var shop := (load("res://scenes/shop_screen.tscn") as PackedScene).instantiate()
+		shop.set("wallet", WalletStore.load_from_path(shop_wallet_path))
+		root.add_child(shop)
+		shop.set_deferred("size", size)
+		await process_frame
+		await process_frame
+		var back := shop.get_node("SafeArea/Content/Header/BackButton") as Control
+		var shop_chip := shop.get_node("SafeArea/Content/Header/CoinChip") as Control
+		_check("%s: magaza - geri dugmesi coin rozetiyle cakismiyor" % label,
+			not back.get_rect().intersects(shop_chip.get_rect()), true)
+		_check("%s: magaza - coin rozeti ekran icinde kaliyor" % label,
+			shop_chip.get_rect().end.x <= shop.size.x + 1.0, true)
+		root.remove_child(shop)
+		shop.free()
+		await process_frame
+
+		var settings := (load("res://scenes/settings.tscn") as PackedScene).instantiate()
+		settings.set("progress", ProgressStore.new())
+		root.add_child(settings)
+		settings.set_deferred("size", size)
+		await process_frame
+		await process_frame
+		var header_back := settings.get_node(
+			"SafeArea/Content/Header/HeaderBackButton") as Control
+		var title := settings.get_node("SafeArea/Content/Header/Title") as Control
+		_check("%s: ayarlar - ust geri dugmesi baslikla cakismiyor" % label,
+			not header_back.get_rect().intersects(title.get_rect()), true)
+		_check("%s: ayarlar - kaydirma alani ekran icinde kaliyor" % label,
+			settings.get_node("SafeArea/Content/Scroll").get_rect().end.y \
+			<= settings.size.y + 1.0, true)
+		root.remove_child(settings)
+		settings.free()
+		await process_frame
+
+	for path in temp_paths:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
 func _test_library_bounds() -> void:

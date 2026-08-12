@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/settings_screen.gd" id="1_settings"]
 [ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="2_ink"]
 [ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="3_safe_area"]
 [ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="4_button"]
+[ext_resource type="Script" path="res://scripts/ui/luma_icon_button.gd" id="5_icon_button"]
 
 [node name="SettingsScreen" type="Control"]
 layout_mode = 3
@@ -35,33 +36,45 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("3_safe_area")
 
-[node name="Content" type="Control" parent="SafeArea"]
+[node name="Content" type="VBoxContainer" parent="SafeArea"]
 layout_mode = 2
 mouse_filter = 2
+theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="SafeArea/Content"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = 60.0
-offset_bottom = 140.0
-grow_horizontal = 2
+[node name="Header" type="HBoxContainer" parent="SafeArea/Content"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderBackButton" type="Button" parent="SafeArea/Content/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 72)
+focus_mode = 0
+script = ExtResource("5_icon_button")
+glyph = 13
+
+[node name="Title" type="Label" parent="SafeArea/Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
-theme_override_font_sizes/font_size = 46
+theme_override_font_sizes/font_size = 36
 text = "AYARLAR"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="HeaderEndSpacer" type="Control" parent="SafeArea/Content/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 72)
+mouse_filter = 2
+
 [node name="Scroll" type="ScrollContainer" parent="SafeArea/Content"]
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.12
-anchor_right = 1.0
-anchor_bottom = 0.85
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
+size_flags_vertical = 3
 horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
 
 [node name="Rows" type="VBoxContainer" parent="SafeArea/Content/Scroll"]
 layout_mode = 2
@@ -69,6 +82,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 10
 
 [node name="BackButton" type="Button" parent="SafeArea/Content"]
+visible = false
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5

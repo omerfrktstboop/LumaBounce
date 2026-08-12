@@ -285,6 +285,10 @@ func _configure_main_menu(screen: Node) -> void:
 	var menu := screen as MainMenu
 	if menu != null:
 		menu.resume_level_id = _progress.get_resume_level_id()
+		# Ayni WalletStore/ProgressStore ORNEKLERI: Coin rozeti ve ilerleme
+		# ozeti Magaza/Ayarlar'in zaten yaptigi gibi dogrudan okur.
+		menu.wallet = _wallet
+		menu.progress = _progress
 
 
 func _configure_level_select(screen: Node) -> void:

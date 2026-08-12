@@ -1,28 +1,10 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/shop_screen.gd" id="1_shop"]
 [ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="2_ink"]
 [ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="3_safe_area"]
-[ext_resource type="Script" path="res://scripts/ui/luma_button.gd" id="4_button"]
-[ext_resource type="Script" path="res://scripts/ui/glyph_icon.gd" id="5_glyph"]
-
-[sub_resource type="StyleBoxFlat" id="ShopCoinChip"]
-content_margin_left = 12.0
-content_margin_top = 4.0
-content_margin_right = 14.0
-content_margin_bottom = 4.0
-bg_color = Color(0.0392157, 0.0666667, 0.113725, 0.72)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(1, 0.784314, 0.380392, 0.45)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-corner_detail = 8
-anti_aliasing_size = 0.6
+[ext_resource type="Script" path="res://scripts/ui/luma_icon_button.gd" id="4_icon_button"]
+[ext_resource type="Script" path="res://scripts/ui/coin_chip.gd" id="5_coin_chip"]
 
 [node name="ShopScreen" type="Control"]
 layout_mode = 3
@@ -54,91 +36,47 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("3_safe_area")
 
-[node name="Content" type="Control" parent="SafeArea"]
+[node name="Content" type="VBoxContainer" parent="SafeArea"]
 layout_mode = 2
 mouse_filter = 2
+theme_override_constants/separation = 16
 
-[node name="Title" type="Label" parent="SafeArea/Content"]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = 46.0
-offset_bottom = 112.0
-grow_horizontal = 2
+[node name="Header" type="HBoxContainer" parent="SafeArea/Content"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
 mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="SafeArea/Content/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 72)
+focus_mode = 0
+script = ExtResource("4_icon_button")
+glyph = 13
+
+[node name="Title" type="Label" parent="SafeArea/Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
-theme_override_font_sizes/font_size = 40
+theme_override_font_sizes/font_size = 34
 text = "MAĞAZA"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="BalanceChip" type="PanelContainer" parent="SafeArea/Content"]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -132.0
-offset_top = 54.0
-offset_right = 0.0
-offset_bottom = 102.0
-grow_horizontal = 0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("ShopCoinChip")
-
-[node name="Row" type="HBoxContainer" parent="SafeArea/Content/BalanceChip"]
-layout_mode = 2
-mouse_filter = 2
-alignment = 1
-theme_override_constants/separation = 8
-
-[node name="Glyph" type="Control" parent="SafeArea/Content/BalanceChip/Row"]
-custom_minimum_size = Vector2(30, 30)
+[node name="CoinChip" type="Button" parent="SafeArea/Content/Header"]
 layout_mode = 2
 size_flags_vertical = 4
-mouse_filter = 2
-script = ExtResource("5_glyph")
-glyph = 7
-color = Color(1, 0.784314, 0.380392, 1)
-stroke_width = 2.9
-
-[node name="Value" type="Label" parent="SafeArea/Content/BalanceChip/Row"]
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.945098, 0.823529, 1)
-theme_override_font_sizes/font_size = 24
-text = "3"
-vertical_alignment = 1
+focus_mode = 0
+script = ExtResource("5_coin_chip")
 
 [node name="Scroll" type="ScrollContainer" parent="SafeArea/Content"]
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.12
-anchor_right = 1.0
-anchor_bottom = 0.86
-grow_horizontal = 2
-grow_vertical = 2
+layout_mode = 2
+size_flags_vertical = 3
 horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
 
 [node name="Rows" type="VBoxContainer" parent="SafeArea/Content/Scroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 10
-
-[node name="BackButton" type="Button" parent="SafeArea/Content"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -140.0
-offset_top = -128.0
-offset_right = 140.0
-offset_bottom = -52.0
-grow_horizontal = 2
-grow_vertical = 0
-focus_mode = 0
-theme_override_font_sizes/font_size = 28
-text = "GERİ"
-script = ExtResource("4_button")
+theme_override_constants/separation = 12

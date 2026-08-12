@@ -77,6 +77,16 @@ static var HAZARD_CORE := Color("ffe2e7")
 static var TEXT := Color("e9f2ff")
 static var TEXT_DIM := Color("93a7c9")
 
+# --- FAZ 9: Ev/Magaza/Ayarlar yeniden tasarimi icin ek tonlar ---
+## Bant temasindan BAGIMSIZ (bkz. apply_theme altinda YOK): Ev/Magaza/Ayarlar
+## ekranlari her zaman notr taban temada acilir (AppRoot._transition'in
+## varsayilan theme_level=0'i), bu yuzden bir bant degisimiyle degismelerine
+## hic gerek yok - COIN/HAZARD ile ayni gerekce.
+static var SURFACE_ELEVATED := Color("33456a")
+static var TEXT_MUTED := Color("7086ab")
+static var TEXT_DISABLED := Color("4c5970")
+static var INFO := Color("68a7e8")
+
 
 ## Butun alanlari verilen temadan tek seferde uygular. Cagrildigi andan
 ## itibaren her Palette.XXX okuyusu yeni degeri gorur.

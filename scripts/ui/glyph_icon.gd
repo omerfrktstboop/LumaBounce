@@ -15,6 +15,10 @@ enum Glyph {
 	COIN,
 	HINT,
 	PAUSE,
+	CHEVRON_RIGHT,
+	INFO,
+	GRID,
+	CHEVRON_LEFT,
 }
 
 @export var glyph: Glyph = Glyph.SETTINGS:
@@ -55,6 +59,14 @@ func _draw() -> void:
 			_draw_hint(center, unit)
 		Glyph.PAUSE:
 			_draw_pause(center, unit)
+		Glyph.CHEVRON_RIGHT:
+			_draw_chevron_right(center, unit)
+		Glyph.INFO:
+			_draw_info(center, unit)
+		Glyph.GRID:
+			_draw_grid(center, unit)
+		Glyph.CHEVRON_LEFT:
+			_draw_chevron_left(center, unit)
 
 
 func _draw_speaker(center: Vector2, unit: float, sound_on: bool) -> void:
@@ -187,6 +199,47 @@ func _draw_lock(center: Vector2, unit: float) -> void:
 	draw_rect(
 		Rect2(Vector2(center.x - unit * 0.62, body_top), Vector2(unit * 1.24, unit * 0.84)),
 		color)
+
+
+## Sag ok: navigasyon/aksiyon satirlarinin sonundaki "gir" isareti.
+func _draw_chevron_right(center: Vector2, unit: float) -> void:
+	var points := PackedVector2Array([
+		center + Vector2(-unit * 0.30, -unit * 0.52),
+		center + Vector2(unit * 0.34, 0.0),
+		center + Vector2(-unit * 0.30, unit * 0.52),
+	])
+	draw_polyline(points, color, stroke_width, true)
+
+
+## Sol ok: Magaza/Ayarlar baslik cubugundaki geri butonu.
+func _draw_chevron_left(center: Vector2, unit: float) -> void:
+	var points := PackedVector2Array([
+		center + Vector2(unit * 0.30, -unit * 0.52),
+		center + Vector2(-unit * 0.34, 0.0),
+		center + Vector2(unit * 0.30, unit * 0.52),
+	])
+	draw_polyline(points, color, stroke_width, true)
+
+
+## Bilgi: cember + ust nokta + govde. Yalnizca Ayarlar'daki surum karti kullanir.
+func _draw_info(center: Vector2, unit: float) -> void:
+	draw_arc(center, unit * 0.82, 0.0, TAU, 28, color, stroke_width, true)
+	draw_circle(center + Vector2(0.0, -unit * 0.34), stroke_width * 0.85, color)
+	draw_line(center + Vector2(0.0, -unit * 0.02), center + Vector2(0.0, unit * 0.42),
+		color, stroke_width, true)
+
+
+## Bolum secimi: 2x2 yuvarlatilmis kare izgarasi.
+func _draw_grid(center: Vector2, unit: float) -> void:
+	var cell := unit * 0.62
+	var gap := unit * 0.28
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.set_corner_radius_all(int(cell * 0.24))
+	for x in [-1.0, 1.0]:
+		for y in [-1.0, 1.0]:
+			var at := center + Vector2(x, y) * (cell * 0.5 + gap * 0.5)
+			draw_style_box(style, Rect2(at - Vector2.ONE * cell * 0.5, Vector2.ONE * cell))
 
 
 func _draw_gear(center: Vector2, unit: float) -> void:

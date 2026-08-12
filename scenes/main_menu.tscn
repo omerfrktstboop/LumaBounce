@@ -4,11 +4,13 @@
 [ext_resource type="Script" uid="uid://crkgh238sytb" path="res://scripts/ui/ink_background.gd" id="2_ink"]
 [ext_resource type="Script" uid="uid://dxakx6dds6blo" path="res://scripts/ui/safe_area_margin.gd" id="3_safe_area"]
 [ext_resource type="Script" uid="uid://cfi2714h7ro0y" path="res://scripts/ui/luma_logo.gd" id="4_logo"]
-[ext_resource type="Script" uid="uid://dicugs765gs8i" path="res://scripts/menu_decor.gd" id="5_decor"]
-[ext_resource type="Script" uid="uid://6np78oomdjsw" path="res://scripts/ui/luma_button.gd" id="6_button"]
-[ext_resource type="Script" uid="uid://ctrv1ui3c3gp6" path="res://scripts/ui/luma_icon_button.gd" id="7_icon_button"]
+[ext_resource type="Script" path="res://scripts/ui/coin_chip.gd" id="5_coin_chip"]
+[ext_resource type="Script" uid="uid://ctrv1ui3c3gp6" path="res://scripts/ui/luma_icon_button.gd" id="6_icon_button"]
+[ext_resource type="Script" uid="uid://dicugs765gs8i" path="res://scripts/menu_decor.gd" id="7_decor"]
+[ext_resource type="Script" uid="uid://6np78oomdjsw" path="res://scripts/ui/luma_button.gd" id="8_button"]
+[ext_resource type="Script" path="res://scripts/ui/navigation_card.gd" id="9_nav_card"]
 
-[node name="MainMenu" type="Control" unique_id=1864388757]
+[node name="MainMenu" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -18,7 +20,7 @@ grow_vertical = 2
 mouse_filter = 1
 script = ExtResource("1_main_menu")
 
-[node name="Background" type="TextureRect" parent="." unique_id=1337979110]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -28,7 +30,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_ink")
 
-[node name="SafeArea" type="MarginContainer" parent="." unique_id=14516435]
+[node name="SafeArea" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,88 +40,114 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("3_safe_area")
 
-[node name="Content" type="Control" parent="SafeArea" unique_id=1910219677]
+[node name="Content" type="VBoxContainer" parent="SafeArea"]
 layout_mode = 2
 mouse_filter = 2
+theme_override_constants/separation = 14
 
-[node name="Logo" type="Control" parent="SafeArea/Content" unique_id=525108428]
-layout_mode = 1
-anchors_preset = 10
-anchor_right = 1.0
-offset_top = 56.0
-offset_bottom = 156.0
-grow_horizontal = 2
+[node name="TopAppBar" type="HBoxContainer" parent="SafeArea/Content"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="BrandMark" type="Control" parent="SafeArea/Content/TopAppBar"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+custom_minimum_size = Vector2(220, 52)
 mouse_filter = 2
 script = ExtResource("4_logo")
+font_size = 28
+glyph_size = 32.0
+separation = 10.0
 
-[node name="Decor" type="Control" parent="SafeArea/Content" unique_id=2068567509]
-layout_mode = 1
-anchor_left = 0.04
-anchor_top = 0.19
-anchor_right = 0.96
-anchor_bottom = 0.6
-grow_horizontal = 2
-grow_vertical = 2
+[node name="AppBarSpacer" type="Control" parent="SafeArea/Content/TopAppBar"]
+layout_mode = 2
+size_flags_horizontal = 3
 mouse_filter = 2
-script = ExtResource("5_decor")
 
-[node name="PlayButton" type="Button" parent="SafeArea/Content" unique_id=1077028997]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -200.0
-offset_top = -392.0
-offset_right = 200.0
-offset_bottom = -288.0
-grow_horizontal = 2
-grow_vertical = 0
+[node name="CoinChip" type="Button" parent="SafeArea/Content/TopAppBar"]
+layout_mode = 2
+size_flags_vertical = 4
 focus_mode = 0
-theme_override_font_sizes/font_size = 38
+script = ExtResource("5_coin_chip")
+tappable = true
+
+[node name="SettingsButton" type="Button" parent="SafeArea/Content/TopAppBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 72)
+size_flags_vertical = 4
+focus_mode = 0
+script = ExtResource("6_icon_button")
+
+[node name="HeroCard" type="PanelContainer" parent="SafeArea/Content"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 260)
+
+[node name="Decor" type="Control" parent="SafeArea/Content/HeroCard"]
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("7_decor")
+
+[node name="PrimaryActionMargin" type="MarginContainer" parent="SafeArea/Content"]
+layout_mode = 2
+theme_override_constants/margin_left = 44
+theme_override_constants/margin_right = 44
+
+[node name="PlayButton" type="Button" parent="SafeArea/Content/PrimaryActionMargin"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 88)
+focus_mode = 0
+theme_override_font_sizes/font_size = 34
 text = "OYNA"
-script = ExtResource("6_button")
+script = ExtResource("8_button")
 emphasis = 0
 
-[node name="LevelsButton" type="Button" parent="SafeArea/Content" unique_id=314887897]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -160.0
-offset_top = -262.0
-offset_right = 160.0
-offset_bottom = -186.0
-grow_horizontal = 2
-grow_vertical = 0
+[node name="LevelsCard" type="Button" parent="SafeArea/Content"]
+layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 27
-text = "BÖLÜMLER"
-script = ExtResource("6_button")
+script = ExtResource("9_nav_card")
+glyph = 12
+title_text = "Bölümler"
+supporting_text = "Zorluk artan bölümleri keşfet"
 
-[node name="ShopButton" type="Button" parent="SafeArea/Content"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -160.0
-offset_top = -174.0
-offset_right = 160.0
-offset_bottom = -114.0
-grow_horizontal = 2
-grow_vertical = 0
+[node name="ShopCard" type="Button" parent="SafeArea/Content"]
+layout_mode = 2
 focus_mode = 0
-theme_override_font_sizes/font_size = 23
-text = "MAĞAZA"
-script = ExtResource("6_button")
-corner_radius = 22
+script = ExtResource("9_nav_card")
+glyph = 7
+title_text = "Mağaza"
+supporting_text = "Toplarını ve izlerini özelleştir"
 
-[node name="Toast" type="Label" parent="SafeArea/Content" unique_id=2091199431]
+[node name="BottomSpacer" type="Control" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+
+[node name="UtilityArea" type="HBoxContainer" parent="SafeArea/Content"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="SoundButton" type="Button" parent="SafeArea/Content/UtilityArea"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 72)
+focus_mode = 0
+script = ExtResource("6_icon_button")
+glyph = 0
+
+[node name="ProgressLabel" type="Label" parent="SafeArea/Content/UtilityArea"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+horizontal_alignment = 2
+theme_override_colors/font_color = Color(0.576471, 0.654902, 0.788235, 1)
+theme_override_font_sizes/font_size = 18
+text = "0 / 0 yıldız"
+
+[node name="Toast" type="Label" parent="."]
 visible = false
 layout_mode = 1
 anchors_preset = -1
@@ -130,38 +158,9 @@ offset_top = -166.0
 offset_bottom = -118.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 theme_override_colors/font_color = Color(0.576471, 0.654902, 0.788235, 1)
 theme_override_font_sizes/font_size = 26
 text = "Yakında"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="SoundButton" type="Button" parent="SafeArea/Content" unique_id=2000312049]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 8.0
-offset_top = -84.0
-offset_right = 76.0
-offset_bottom = -16.0
-grow_vertical = 0
-focus_mode = 0
-script = ExtResource("7_icon_button")
-glyph = 0
-
-[node name="SettingsButton" type="Button" parent="SafeArea/Content" unique_id=254207074]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -76.0
-offset_top = -84.0
-offset_right = -8.0
-offset_bottom = -16.0
-grow_horizontal = 0
-grow_vertical = 0
-focus_mode = 0
-script = ExtResource("7_icon_button")
