@@ -106,14 +106,14 @@ func is_privacy_options_available() -> bool:
 	return (
 		_admob != null
 		and not _privacy_request_active
-		and _consent_status in [UserConsent.Status.REQUIRED, UserConsent.Status.OBTAINED])
+		and _admob.get_privacy_options_requirement_status() == "REQUIRED")
 
 
 func show_privacy_options() -> bool:
 	if not is_privacy_options_available():
 		return false
 	_privacy_request_active = true
-	_admob.load_consent_form()
+	_admob.show_privacy_options_form()
 	return bool(await _privacy_options_completed)
 
 
@@ -123,6 +123,7 @@ func _connect_admob_signals() -> void:
 	_admob.consent_form_loaded.connect(_on_consent_form_loaded)
 	_admob.consent_form_failed_to_load.connect(_on_consent_form_failed_to_load)
 	_admob.consent_form_dismissed.connect(_on_consent_form_dismissed)
+	_admob.privacy_options_form_dismissed.connect(_on_privacy_options_form_dismissed)
 	_admob.initialization_completed.connect(_on_initialization_completed)
 	_admob.rewarded_ad_loaded.connect(_on_rewarded_loaded)
 	_admob.rewarded_ad_failed_to_load.connect(_on_rewarded_failed_to_load)
@@ -182,15 +183,19 @@ func _on_consent_form_failed_to_load(_error: FormError) -> void:
 
 
 func _on_consent_form_dismissed(error: FormError) -> void:
-	var was_privacy_request := _privacy_request_active
-	_privacy_request_active = false
 	_consent_flow_active = false
 	_refresh_consent_status()
-	var success := error == null or error.get_message().is_empty()
-	if was_privacy_request:
-		_privacy_options_completed.emit(success)
 	if _consent_status in [UserConsent.Status.NOT_REQUIRED, UserConsent.Status.OBTAINED]:
 		_initialize_ads_sdk_once()
+
+
+func _on_privacy_options_form_dismissed(error: FormError) -> void:
+	if not _privacy_request_active:
+		return
+	_privacy_request_active = false
+	_refresh_consent_status()
+	var success := error == null or error.get_message().is_empty()
+	_privacy_options_completed.emit(success)
 
 
 func _initialize_ads_sdk_once() -> void:

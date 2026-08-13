@@ -236,7 +236,7 @@ thickness = 26.0
 script = ExtResource("3")
 position = Vector2(488.15533, 645.09705)
 rotation_degrees = 0.0
-length = 440.0
+length = 414.0
 thickness = 26.0
 
 [resource]

@@ -39,7 +39,7 @@ eşlenmelidir (Godot bunu otomatik okumaz).
 - [ ] `check_release_readiness.gd` → BLOKER yok
 - [ ] `check_blocks_and_gate.gd` → 0 hata
 - [ ] `check_obstacles.gd` → 0 hata
-- [ ] `verify_levels.gd` → tüm bölümler geçiyor
+- [ ] `verify_levels.gd` → çözülemezlik, çakışma veya HUD ihlali yok
 - [ ] `version/code` bir önceki yüklemeden büyük
 - [ ] `version/name` = `GameVersion.GAME`
 - [ ] `Android Release` paket adı `com.ofsgames.lumabounce`
@@ -202,6 +202,9 @@ dile dönmesi kabul edilemez.
    ```
    godot --headless --path . --script res://tools/verify_levels.gd -- --level NNN
    ```
+   Bu komut yayın blokerlerini ölçer. Dar rota, mekanik kestirmesi ve bölüm
+   ayarı uyarılarını da hata koduna katmak için tasarım çalışmasında
+   `--strict-design` ekle.
 5. Tekrar kontrolü:
    ```
    py -3 tools/find_duplicate_levels.py

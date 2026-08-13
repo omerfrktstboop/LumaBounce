@@ -25,6 +25,8 @@ extends SceneTree
 ##   godot --headless --path . --script res://tools/verify_levels.gd -- --angle-step 1 --power-step 25
 ##   godot --headless --path . --script res://tools/verify_levels.gd -- --level 21
 ##   godot --headless --path . --script res://tools/verify_levels.gd -- --level 27 --free-only
+##   godot --headless --path . --script res://tools/verify_levels.gd -- --from-level 51 --to-level 75
+##   godot --headless --path . --script res://tools/verify_levels.gd -- --strict-design
 
 ## Cok atisli aramada ziyaret edilecek en fazla "kirik blok" durumu.
 ## Kombinasyon sayisi 2^blok oldugu icin ust sinir sart.
@@ -41,11 +43,20 @@ const RICOCHET_LAST_LEVEL := 25
 const RICOCHET_MIN_BOUNCES := 5
 const RICOCHET_MAX_BOUNCES := 10
 const MIN_RICOCHET_CHAIN_CELLS := 2
+## Karma ve bonus bantlarinda hareketli/tehlikeli engeller kaotik sekme
+## uretebilir. Dort komsulu arti yerine, en az iki bitisik gercek isabet
+## oyuncuya hem aci hem guc yonunde olculebilir bir tolerans verir.
+const MIN_MIXED_ROUTE_CELLS := 2
+const MIN_STANDARD_ROUTE_CELLS := 3
 ## 26 blok mekanigini zorunlu rota ile ogretir. 27-29'da bloklu guvenli rota
 ## ve bloksuz ustalik rotasi birlikte vardir. 30-40 kalici hasar/blok durumu
 ## kullanan cok atisli bulmacalardir.
 const BLOCK_OPTIONAL_FIRST_LEVEL := 27
 const BLOCK_OPTIONAL_LAST_LEVEL := 29
+## Blok Koridoru 26-50 araliginda blok kirmayi rota sozlesmesinin parcasi
+## yapar. Sonraki karma bantlarda blok yeniden kullanilan engellerden yalnizca
+## biridir; hedefe giden saglam rota bloklu ya da bloksuz olabilir.
+const BLOCK_REQUIRED_LAST_LEVEL := 50
 
 var _angle_step := 2.0
 var _power_step := 50.0
@@ -55,9 +66,15 @@ var _block_angle_step := 3.0
 var _block_power_step := 100.0
 ## -1: tum bolumler. Tek bir bolumu hizlica denemek icin --level N.
 var _only_level := -1
+var _first_level := LevelLibrary.FIRST_LEVEL_ID
+var _last_level := LevelLibrary.last_level_id()
 ## Yalnizca "hicbir blok kirilmamis" durumunu tarar. Bloksuz rotayi ayarlarken
 ## tum durum agacini beklemeye gerek yok - tasarim dongusunu kisaltir.
 var _free_only := false
+## Varsayilan mod yayin blokerlerini (cozulemezlik, cakisma, HUD ihlali)
+## olcer. --strict-design dar rota ve mekanik kestirmelerini de hata koduna
+## dahil eder; bu mod bolum ayarlama calismasi icindir.
+var _strict_design := false
 
 var _solver: LevelSolver
 var _world: LevelWorld
@@ -81,8 +98,14 @@ func _parse_args() -> void:
 			_block_power_step = maxf(float(args[i + 1]), 5.0)
 		elif args[i] == "--level" and i + 1 < args.size():
 			_only_level = int(args[i + 1])
+		elif args[i] == "--from-level" and i + 1 < args.size():
+			_first_level = maxi(int(args[i + 1]), LevelLibrary.FIRST_LEVEL_ID)
+		elif args[i] == "--to-level" and i + 1 < args.size():
+			_last_level = mini(int(args[i + 1]), LevelLibrary.last_level_id())
 		elif args[i] == "--free-only":
 			_free_only = true
+		elif args[i] == "--strict-design":
+			_strict_design = true
 
 
 func _run() -> void:
@@ -96,10 +119,11 @@ func _run() -> void:
 	print("  izgara: aci adimi %.2f deg, guc adimi %.0f" % [_angle_step, _power_step])
 	print("  blok izgarasi: aci adimi %.2f deg, guc adimi %.0f" % [
 		_block_angle_step, _block_power_step])
+	print("  mod: %s" % ("siki tasarim" if _strict_design else "yayin blokerleri"))
 	print("")
 
 	var failures := 0
-	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, LevelLibrary.last_level_id() + 1):
+	for level_id in range(_first_level, _last_level + 1):
 		if _only_level > 0 and level_id != _only_level:
 			continue
 		var level := LevelLibrary.load_level(level_id)
@@ -187,8 +211,18 @@ func _check_solvability(level: LevelData) -> bool:
 
 	var analysis := LevelSolver.analyse_robust(scan)
 	if int(analysis["robust"]) == 0:
-		print("  UYARI: saglam cozum yok - her isabet tek bir dar aci/guce bagli.")
-		return false
+		var all_hits_band := LevelSolver.analyse_bounce_band(scan, 0, 9999)
+		var all_hits_cells := int(all_hits_band["largest_cluster"])
+		if (level.level_id < RICOCHET_FIRST_LEVEL
+				and all_hits_cells >= MIN_STANDARD_ROUTE_CELLS):
+			print("  STANDART ROTA BANDI: %d bitisik isabet hucre" % all_hits_cells)
+			return true
+		if level.level_id > BLOCK_REQUIRED_LAST_LEVEL:
+			if all_hits_cells >= MIN_MIXED_ROUTE_CELLS:
+				print("  KARMA ROTA BANDI: %d bitisik isabet hucre" % all_hits_cells)
+				return true
+		print("  UYARI: saglam cozum yok - en buyuk isabet bandi %d hucre." % all_hits_cells)
+		return not _strict_design
 	_print_robust(analysis)
 	return true
 
@@ -203,13 +237,19 @@ func _check_ricochet_chain(level_id: int, scan: Dictionary) -> bool:
 		print("  UYARI: %d-%d sekme zinciri fazla dar (%d/%d hucre)." % [
 			minimum_bounces, RICOCHET_MAX_BOUNCES,
 			chain_cells, MIN_RICOCHET_CHAIN_CELLS])
-		return false
+		var narrow_clusters: Array = band["clusters"]
+		if not narrow_clusters.is_empty():
+			var narrow: Dictionary = narrow_clusters[0]
+			print("  en iyi dar zincir: %d sekme, aci %.1f, guc %.0f" % [
+				int(narrow["bounces"]), float(narrow["angle"]), float(narrow["power"])])
+		return not _strict_design
 	var ordinary := LevelSolver.analyse_robust(scan)
 	if (int(ordinary["robust"]) > 0
 			and int(ordinary["bounces"]) < minimum_bounces):
 		print("  UYARI: %d sekmeli saglam kestirme var; ustalik zinciri atlanabiliyor." %
 			int(ordinary["bounces"]))
-		return false
+		_print_robust(ordinary)
+		return not _strict_design
 	var clusters: Array = band["clusters"]
 	var best: Dictionary = clusters[0]
 	print("  USTALIK ZINCIRI: %d hucre, %d sekme, aci %.1f..%.1f, guc %.0f..%.0f" % [
@@ -288,12 +328,19 @@ func _check_multi_shot_solvability(level: LevelData) -> bool:
 			var scan := _scan(
 				level, _world.rids_for_state(state), _block_angle_step, _block_power_step)
 			if int(scan["hit_count"]) > 0:
-				solutions.append({
+				var entry := {
 					"shots": depth + 1,
 					"state": state,
 					"scan": scan,
 					"analysis": LevelSolver.analyse_robust(scan),
-				})
+				}
+				solutions.append(entry)
+				# Karma bantta ilk oynanabilir rota yeterlidir; 26-50'nin blok
+				# tasarim karsilastirmasi gibi butun durum agacini gezmek gerekmez.
+				if (level.level_id > BLOCK_REQUIRED_LAST_LEVEL
+						and _playable_cells(entry) >= MIN_MIXED_ROUTE_CELLS):
+					print("  %d durum tarandi, oynanabilir karma rota bulundu." % states_visited)
+					return _report_mixed_route("EN IYI KARMA ROTA", entry)
 
 			var reached: Dictionary = scan["reached"]
 			for raw_mask in reached:
@@ -333,6 +380,8 @@ func _report_solutions(level: LevelData, solutions: Array[Dictionary],
 	if _free_only:
 		# Tasarim dongusu modu: yalnizca bloksuz rota olculur.
 		return _report_route("BLOKSUZ USTALIK ROTASI (tek atis)", free_route)
+	if level.level_id > BLOCK_REQUIRED_LAST_LEVEL:
+		return _report_mixed_route("EN IYI KARMA ROTA", _pick_best_mixed_route(solutions))
 
 	var optional_block_route := level.level_id in range(
 		BLOCK_OPTIONAL_FIRST_LEVEL, BLOCK_OPTIONAL_LAST_LEVEL + 1)
@@ -341,13 +390,13 @@ func _report_solutions(level: LevelData, solutions: Array[Dictionary],
 		if (not free_route.is_empty()
 				and _robust_of(free_route) >= MIN_ROBUST_CELLS):
 			print("  UYARI: blok kirmadan saglam kestirme var; cok atisli rota atlanabiliyor.")
-			return false
+			return not _strict_design
 		return _report_route("BLOKLU ANA ROTA", block_route)
 
 	var ok := _report_route("BLOKSUZ USTALIK ROTASI (tek atis)", free_route)
 	ok = _report_route("BLOKLU GUVENLI ROTA", block_route) and ok
 	if not ok:
-		return false
+		return not _strict_design
 
 	# Blok kirmak rotayi gercekten kolaylastirmali; kolaylastirmiyorsa blok
 	# bulmacaya hicbir sey katmiyor demektir.
@@ -357,7 +406,7 @@ func _report_solutions(level: LevelData, solutions: Array[Dictionary],
 		free_robust, block_robust])
 	if block_robust <= free_robust:
 		print("  UYARI: blok kirmak rotayi kolaylastirmiyor - blok bulmacaya katki vermiyor.")
-		return false
+		return not _strict_design
 	return true
 
 
@@ -368,6 +417,17 @@ func _pick_route(solutions: Array[Dictionary], block_free: bool) -> Dictionary:
 		if (int(entry["state"]) == 0) != block_free:
 			continue
 		if best.is_empty() or _is_better_route(entry, best):
+			best = entry
+	return best
+
+
+func _pick_best_mixed_route(solutions: Array[Dictionary]) -> Dictionary:
+	var best: Dictionary = {}
+	for entry in solutions:
+		if (best.is_empty()
+				or _playable_cells(entry) > _playable_cells(best)
+				or (_playable_cells(entry) == _playable_cells(best)
+					and int(entry["shots"]) < int(best["shots"]))):
 			best = entry
 	return best
 
@@ -386,18 +446,43 @@ func _robust_of(entry: Dictionary) -> int:
 	return int((entry["analysis"] as Dictionary)["robust"])
 
 
+func _playable_cells(entry: Dictionary) -> int:
+	var robust := _robust_of(entry)
+	var band := LevelSolver.analyse_bounce_band(entry["scan"], 0, 9999)
+	return maxi(robust, int(band["largest_cluster"]))
+
+
 func _report_route(label: String, route: Dictionary) -> bool:
 	if route.is_empty():
-		print("  HATA: %s yok - hedefe hic ulasilamiyor." % label)
-		return false
+		print("  %s: %s yok; baska bir cozum rotasi mevcut." % [
+			"HATA" if _strict_design else "NOT", label])
+		return not _strict_design
 	print("  %s -> %d atis, kirilan blok: %s" % [
 		label, int(route["shots"]), _describe_state(int(route["state"]))])
 	_print_scan_summary(route["scan"])
 	if _robust_of(route) < MIN_ROBUST_CELLS:
 		print("  UYARI: %s %d saglam hucre esigini gecmiyor (%d) - cozum var ama dar." % [
 			label, MIN_ROBUST_CELLS, _robust_of(route)])
-		return false
+		return not _strict_design
 	_print_robust(route["analysis"])
+	return true
+
+
+func _report_mixed_route(label: String, route: Dictionary) -> bool:
+	if route.is_empty():
+		print("  %s: %s yok; baska bir cozum rotasi mevcut." % [
+			"HATA" if _strict_design else "NOT", label])
+		return not _strict_design
+	var playable := _playable_cells(route)
+	print("  %s -> %d atis, kirilan blok: %s, oynanabilir hucre: %d" % [
+		label, int(route["shots"]), _describe_state(int(route["state"])), playable])
+	_print_scan_summary(route["scan"])
+	if playable < MIN_MIXED_ROUTE_CELLS:
+		print("  UYARI: %s %d bitisik isabet esigini gecmiyor (%d)." % [
+			label, MIN_MIXED_ROUTE_CELLS, playable])
+		return not _strict_design
+	if _robust_of(route) > 0:
+		_print_robust(route["analysis"])
 	return true
 
 

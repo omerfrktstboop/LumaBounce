@@ -40,6 +40,8 @@ const DEBUG_PRESET_NAME := "Android Debug"
 const EXPECTED_PACKAGE := "com.ofsgames.lumabounce"
 const EXPECTED_TARGET_SDK := 36
 const EXPECTED_ADMOB_APP_ID := "ca-app-pub-4666663369729289~4144593249"
+const EXPECTED_ADMOB_DEBUG_SHA256 := "08a7889416d97fde91b170bf22dd66b850419e9439b4c737d48c0a339f90fc69"
+const EXPECTED_ADMOB_RELEASE_SHA256 := "86bd590dbf3721b26db51271c265581dd844e3e3ed784a93fd49c63e38191ae3"
 const MAX_ANDROID_VERSION_CODE := 2_100_000_000
 
 const REQUIRED_RELEASE_EXCLUDES := [
@@ -279,6 +281,24 @@ func _check_admob_integration() -> void:
 		_blockers.append("AdMob SDK, UMP consent guncellemesinden once initialize ediliyor.")
 	if not provider_text.contains("Engine.has_singleton"):
 		_blockers.append("AdMob provider native singleton yoklugunda guvenli fallback kullanmiyor.")
+	if not provider_text.contains('get_privacy_options_requirement_status() == "REQUIRED"'):
+		_blockers.append("UMP gizlilik secenekleri requirement status ile yonetilmiyor.")
+	if not provider_text.contains("_admob.show_privacy_options_form()"):
+		_blockers.append("UMP gizlilik secenekleri dedicated privacy form API'sini kullanmiyor.")
+	var admob_wrapper_text := _read_text("res://addons/AdmobPlugin/Admob.gd")
+	for privacy_contract in ["get_privacy_options_requirement_status", "show_privacy_options_form",
+			"privacy_options_form_dismissed"]:
+		if not admob_wrapper_text.contains(privacy_contract):
+			_blockers.append("AdMob native UMP privacy kontrati eksik: %s" % privacy_contract)
+	var expected_admob_hashes := {
+		ADMOB_DEBUG_AAR: EXPECTED_ADMOB_DEBUG_SHA256,
+		ADMOB_RELEASE_AAR: EXPECTED_ADMOB_RELEASE_SHA256,
+	}
+	for aar_path in expected_admob_hashes:
+		if FileAccess.file_exists(aar_path):
+			var actual_hash := FileAccess.get_sha256(aar_path).to_lower()
+			if actual_hash != String(expected_admob_hashes[aar_path]):
+				_blockers.append("AdMob AAR UMP privacy build'iyle eslesmiyor: %s" % aar_path)
 
 	var config_text := _read_text(ADMOB_CONFIG)
 	for required in ["OS.has_feature(\"production\")", "TEST_REWARDED", "TEST_INTERSTITIAL"]:

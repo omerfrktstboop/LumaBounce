@@ -9,7 +9,6 @@
 script = ExtResource("3")
 position = Vector2(210.6836, 618.7012)
 rotation_degrees = -24.0
-length = 220.0
 thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
@@ -22,7 +21,6 @@ thickness = 26.0
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("3")
 position = Vector2(168.98438, 393.1836)
-rotation_degrees = 0.0
 length = 280.0
 thickness = 26.0
 
@@ -30,25 +28,15 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_009"
 display_order = 9
-theme_id = ""
 difficulty = 1
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = 26.0
-hint_power = 1800.0
+hint_angle_degrees = -38.0
+hint_power = 2100.0
 level_id = 9
 display_name = "Duvar Rotası"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(208.67188, 166.29883)
+target_position = Vector2(208.67188, 220)
 target_scale = 0.984
 ball_scale = 0.78
 panels = Array[ExtResource("3")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
-breakable_blocks = Array[ExtResource("1")]([])
-obstacles = Array[ExtResource("2")]([])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 58.0
 two_star_max_shots = 3
 three_star_max_seconds = 34.0

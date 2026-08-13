@@ -22,14 +22,12 @@ thickness = 26.0
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("3")
 position = Vector2(288.16406, 375.66406)
-rotation_degrees = 0.0
 length = 280.0
 thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("3")
 position = Vector2(575.09766, 498.75977)
-rotation_degrees = 0.0
 length = 280.0
 thickness = 26.0
 
@@ -37,24 +35,13 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_025"
 display_order = 25
-theme_id = ""
 difficulty = 3
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = -10.0
-hint_power = 2150.0
+hint_angle_degrees = -8.0
+hint_power = 1850.0
 level_id = 25
 display_name = "Yedi Temas"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(481.93326, 112.21445)
-target_scale = 1.0
-ball_scale = 1.0
+target_position = Vector2(481.93326, 220)
 panels = Array[ExtResource("3")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui")])
-breakable_blocks = Array[ExtResource("1")]([])
-obstacles = Array[ExtResource("2")]([])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
 tutorial_text = "Ritmi bozma; son dönüş hedefi açar."
 two_star_max_seconds = 110.0
 two_star_max_shots = 2

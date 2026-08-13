@@ -58,14 +58,14 @@ pulse_on_ratio = 0.667
 
 [sub_resource type="Resource" id="Resource_lgnf6"]
 script = ExtResource("3")
-position = Vector2(116.75243, 443.76788)
+position = Vector2(170, 443.76788)
 rotation_degrees = -8.596606636047364
 length = 291.0
 thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_lglry"]
 script = ExtResource("3")
-position = Vector2(129.11044, 627.20197)
+position = Vector2(141, 627.20197)
 rotation_degrees = -14.185583496093749
 length = 241.0
 thickness = 26.0

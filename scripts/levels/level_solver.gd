@@ -30,7 +30,10 @@ const MAX_FRAMES := 420
 const MAX_SUBSTEPS := 6
 ## Temas sonrasi ayni yuzeyi tekrar yakalamamak icin normal yonunde itme.
 const CONTACT_EPSILON := 0.05
-## Bir hucrenin "saglam" sayilmasi icin 4 komsusunun da isabet etmesi gerekir.
+## Bir hucrenin "saglam" sayilmasi icin izgara icindeki dort yonlu
+## komsularinin tamami isabet etmelidir. Aci/guc sinirindaki eksik komsu,
+## oyuncunun gidemeyecegi bir degerdir; ozellikle maksimum guc siniri fiziksel
+## bir dayanak oldugu icin bu hucreleri yapay olarak guvensiz saymayiz.
 ## Bu, "piksel hassasiyeti gerektirmesin" kuralinin olculebilir karsiligi.
 const ROBUST_NEIGHBOURS := 4
 ## Editorun COZUM dugmesi kaba izgarada hic isabet bulamazsa sirayla bu
@@ -341,20 +344,33 @@ static func analyse_robust(scan_result: Dictionary) -> Dictionary:
 	var power_hi := -99999.0
 	var by_bounces := {}
 
-	for ai in range(1, angles.size() - 1):
-		for pi in range(1, powers.size() - 1):
+	for ai in angles.size():
+		for pi in powers.size():
 			if not hits[ai][pi]:
 				continue
 			var neighbours := 0
-			if hits[ai - 1][pi]:
+			var available_neighbours := 0
+			if ai > 0:
+				available_neighbours += 1
+			if ai > 0 and hits[ai - 1][pi]:
 				neighbours += 1
-			if hits[ai + 1][pi]:
+			if ai + 1 < angles.size():
+				available_neighbours += 1
+			if ai + 1 < angles.size() and hits[ai + 1][pi]:
 				neighbours += 1
-			if hits[ai][pi - 1]:
+			if pi > 0:
+				available_neighbours += 1
+			if pi > 0 and hits[ai][pi - 1]:
 				neighbours += 1
-			if hits[ai][pi + 1]:
+			if pi + 1 < powers.size():
+				available_neighbours += 1
+			if pi + 1 < powers.size() and hits[ai][pi + 1]:
 				neighbours += 1
-			if neighbours < ROBUST_NEIGHBOURS:
+			# Aci+guc kosesinde yalnizca iki komsu vardir; bu, iki eksende de
+			# tolerans gostermedigi icin saglam rota sayilmaz. Tek sinirdaki uc
+			# komsu ise fiziksel dayanakli bir pencereyi kanitlar.
+			if (available_neighbours < 3
+					or neighbours < mini(ROBUST_NEIGHBOURS, available_neighbours)):
 				continue
 
 			robust += 1
@@ -395,8 +411,8 @@ static func analyse_solution_clusters(scan_result: Dictionary) -> Array[Dictiona
 		robust_row.resize(powers.size())
 		robust_row.fill(false)
 		robust_map.append(robust_row)
-	for ai in range(1, angles.size() - 1):
-		for pi in range(1, powers.size() - 1):
+	for ai in angles.size():
+		for pi in powers.size():
 			robust_map[ai][pi] = _is_robust_cell(hits, ai, pi)
 
 	var clusters: Array[Dictionary] = []
@@ -537,8 +553,12 @@ static func _bounce_clusters(scan_result: Dictionary,
 	var bounce_counts: Array = scan_result["bounces"]
 	var visited := {}
 	var clusters: Array[Dictionary] = []
+	# Aci ve gucun birlikte bir adim degistigi capraz hucre de oyuncu icin
+	# ayni yakinliktedir; yalnizca dort yon kullanmak gercek bir tolerans
+	# bandini yapay olarak tekil noktalara bolebilir.
 	var offsets: Array[Vector2i] = [
-		Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
+		Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN,
+		Vector2i(-1, -1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(1, 1)]
 	for ai in angles.size():
 		for pi in powers.size():
 			var key := ai * powers.size() + pi
@@ -574,8 +594,18 @@ static func _bounce_clusters(scan_result: Dictionary,
 
 
 static func _is_robust_cell(hits: Array, ai: int, pi: int) -> bool:
-	return (hits[ai][pi] and hits[ai - 1][pi] and hits[ai + 1][pi]
-		and hits[ai][pi - 1] and hits[ai][pi + 1])
+	if not hits[ai][pi]:
+		return false
+	var angle_count := hits.size()
+	var power_count := (hits[ai] as Array).size()
+	var available_neighbours := int(ai > 0) + int(ai + 1 < angle_count) \
+		+ int(pi > 0) + int(pi + 1 < power_count)
+	if available_neighbours < 3:
+		return false
+	return ((ai == 0 or hits[ai - 1][pi])
+		and (ai + 1 == angle_count or hits[ai + 1][pi])
+		and (pi == 0 or hits[ai][pi - 1])
+		and (pi + 1 == power_count or hits[ai][pi + 1]))
 
 
 static func _describe_cluster(cells: Array[Vector2i], angles: Array[float],
@@ -703,7 +733,10 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 		for rid in broke_this_frame:
 			if not ignored.has(rid):
 				ignored.append(rid)
-		if capture_trace and frame_index % 3 == 0:
+		# Hedef Area2D'si her fizik karesinde degerlendirilir. Ipucu ve editor
+		# izleri de ayni ornekleme sikligini kullanir; uc kare atlamak hedef
+		# kosesinden gecen hizli rotalarda yanlis pozitif uretebiliyordu.
+		if capture_trace:
 			trace_points.append(pos)
 			trace_bounces.append(bounces)
 

@@ -60,6 +60,7 @@ signal consent_form_dismissed(error_data: FormError)
 signal consent_form_failed_to_load(error_data: FormError)
 signal consent_info_updated
 signal consent_info_update_failed(error_data: FormError)
+signal privacy_options_form_dismissed(error_data: FormError)
 signal tracking_authorization_granted
 signal tracking_authorization_denied
 
@@ -561,6 +562,7 @@ func _connect_signals() -> void:
 	_plugin_singleton.connect("consent_form_failed_to_load", _on_consent_form_failed_to_load)
 	_plugin_singleton.connect("consent_info_updated", _on_consent_info_updated)
 	_plugin_singleton.connect("consent_info_update_failed", _on_consent_info_update_failed)
+	_plugin_singleton.connect("privacy_options_form_dismissed", _on_privacy_options_form_dismissed)
 	if _plugin_singleton.has_signal("tracking_authorization_granted"):
 		_plugin_singleton.connect("tracking_authorization_granted", _on_tracking_authorization_granted)
 	if _plugin_singleton.has_signal("tracking_authorization_denied"):
@@ -1236,6 +1238,20 @@ func is_consent_form_available() -> bool:
 	return false
 
 
+func get_privacy_options_requirement_status() -> String:
+	if _plugin_singleton == null:
+		GmpLogger.log_error("%s plugin not initialized" % PLUGIN_SINGLETON_NAME)
+		return "UNKNOWN"
+	return String(_plugin_singleton.get_privacy_options_requirement_status())
+
+
+func show_privacy_options_form() -> void:
+	if _plugin_singleton == null:
+		GmpLogger.log_error("%s plugin not initialized" % PLUGIN_SINGLETON_NAME)
+	else:
+		_plugin_singleton.show_privacy_options_form()
+
+
 func update_consent_info(a_parameters: ConsentRequestParameters = null) -> void:
 	if _plugin_singleton == null:
 		GmpLogger.log_error("%s plugin not initialized" % PLUGIN_SINGLETON_NAME)
@@ -1534,6 +1550,10 @@ func _on_consent_info_updated() -> void:
 
 func _on_consent_info_update_failed(error_data: Dictionary) -> void:
 	consent_info_update_failed.emit(FormError.new(error_data))
+
+
+func _on_privacy_options_form_dismissed(error_data: Dictionary) -> void:
+	privacy_options_form_dismissed.emit(FormError.new(error_data))
 
 
 func _on_tracking_authorization_granted() -> void:

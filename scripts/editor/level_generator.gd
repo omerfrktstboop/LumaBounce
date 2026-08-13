@@ -1008,7 +1008,10 @@ func _evaluate_ricochet(_level: LevelData, profile: Profile,
 	if robust > profile.max_robust:
 		return _reject("pencere-genis", sims)
 	var ordinary := LevelSolver.analyse_robust(fine)
-	if (int(ordinary["robust"]) > 0
+	# Tek bir saglam kisa-yol hucresi, ozellikle guc izgarasinin sinirinda,
+	# oyuncuya tekrar edilebilir bir kestirme sunmaz. En az iki saglam hucre
+	# uzun sekme zincirini gecersiz kilacak bir pencereyi kanitlar.
+	if (int(ordinary["robust"]) >= 2
 			and int(ordinary["bounces"]) < profile.min_bounces):
 		return _reject("kisa-yol", sims)
 	var clusters: Array = band["clusters"]

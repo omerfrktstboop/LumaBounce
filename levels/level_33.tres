@@ -8,51 +8,38 @@
 [sub_resource type="Resource" id="Resource_ntj7m"]
 script = ExtResource("1")
 position = Vector2(120, 850)
-rotation_degrees = 0.0
 size = Vector2(160, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("1")
 position = Vector2(310, 850)
-rotation_degrees = 0.0
 size = Vector2(160, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("1")
 position = Vector2(335.62872, 375.27)
-rotation_degrees = 0.0
 size = Vector2(160, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("1")
 position = Vector2(629.867, 311.66647)
-rotation_degrees = 0.0
 size = Vector2(160, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("1")
 position = Vector2(109.32939, 502.00195)
-rotation_degrees = 0.0
 size = Vector2(146.6667, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_lgnf6"]
 script = ExtResource("1")
 position = Vector2(285.46875, 503.14453)
-rotation_degrees = 0.0
 size = Vector2(146.6667, 34)
 hit_points = 2
 
 [sub_resource type="Resource" id="Resource_lglry"]
 script = ExtResource("1")
 position = Vector2(460.20184, 499.7168)
-rotation_degrees = 0.0
 size = Vector2(146.6667, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_hp77n"]
 script = ExtResource("3")
@@ -65,26 +52,15 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_033"
 display_order = 33
-theme_id = ""
 difficulty = 4
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = -40.0
-hint_power = 2050.0
+hint_angle_degrees = -38.0
+hint_power = 2150.0
 level_id = 33
 display_name = "Üçlü Hat"
 launcher_position = Vector2(359.788, 1120)
-target_position = Vector2(505.11444, 191.8558)
-target_scale = 1.0
-ball_scale = 1.0
+target_position = Vector2(505.11444, 220)
 panels = Array[ExtResource("3")]([SubResource("Resource_hp77n")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj"), SubResource("Resource_lgnf6"), SubResource("Resource_lglry")])
-obstacles = Array[ExtResource("2")]([])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 115.0
 two_star_max_shots = 3
 three_star_max_seconds = 60.0
-three_star_max_shots = 2

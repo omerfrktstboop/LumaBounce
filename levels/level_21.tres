@@ -30,47 +30,34 @@ thickness = 26.0
 script = ExtResource("3")
 position = Vector2(147.2461, 350.2246)
 rotation_degrees = 12.0
-length = 220.0
 thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("3")
 position = Vector2(161.89453, 641.7285)
 rotation_degrees = 6.0
-length = 220.0
 thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_lgnf6"]
 script = ExtResource("3")
 position = Vector2(567.1289, 343.9746)
 rotation_degrees = 16.0
-length = 220.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4")
 level_uid = "level_021"
 display_order = 21
-theme_id = ""
 difficulty = 1
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = 34.0
-hint_power = 2050.0
+hint_angle_degrees = -6.0
+hint_power = 2000.0
 level_id = 21
 display_name = "Ritim Finali"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(116.71875, 136.01563)
+target_position = Vector2(116.71875, 220)
 target_scale = 0.96
 ball_scale = 0.78
 panels = Array[ExtResource("3")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj"), SubResource("Resource_lgnf6")])
-breakable_blocks = Array[ExtResource("1")]([])
-obstacles = Array[ExtResource("2")]([])
 left_wall_segments = Array[Vector2]([Vector2(-320, 500), Vector2(700, 1600)])
 right_wall_segments = Array[Vector2]([Vector2(-320, 660), Vector2(860, 1600)])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 67.0
-two_star_max_shots = 4
 three_star_max_seconds = 40.0
-three_star_max_shots = 2

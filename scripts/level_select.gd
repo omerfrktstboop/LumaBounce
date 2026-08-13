@@ -217,13 +217,12 @@ func _scroll_to_current_level() -> void:
 	# en ust kenarina yapismis bir buton "liste burada basliyor" gibi okunur.
 	var target := maxf(float(row - 1) * row_height, 0.0)
 	# Grid henuz yerlesmedigi icin dogrudan atamak calismaz; bir kare beklenir.
-	_apply_scroll.call_deferred(target)
+	# Signal baglantisi, ekran bu arada silinirse otomatik olarak kopar ve
+	# serbest birakilmis instance icinde coroutine resume edilmeye calisilmaz.
+	get_tree().process_frame.connect(_apply_scroll.bind(target), CONNECT_ONE_SHOT)
 
 
 func _apply_scroll(target: float) -> void:
-	if not is_inside_tree():
-		return
-	await get_tree().process_frame
 	if not is_inside_tree():
 		return
 	_scroll.scroll_vertical = int(target)

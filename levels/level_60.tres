@@ -7,18 +7,10 @@
 
 [sub_resource type="Resource" id="Resource_ntj7m"]
 script = ExtResource("2")
-kind = 0
 position = Vector2(471.59393, 624.0693)
 rotation_degrees = 180.0
 size = Vector2(180, 28)
 inner_radius = 67.765
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-pulse_on_ratio = 0.667
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("3")
@@ -38,26 +30,16 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_060"
 display_order = 60
-theme_id = ""
 difficulty = 4
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = 18.0
-hint_power = 1850.0
+hint_angle_degrees = -32.0
+hint_power = 1900.0
 level_id = 60
 display_name = "Halka Koridoru"
-launcher_position = Vector2(360, 1120)
-target_position = Vector2(105.127304, 154.44955)
-target_scale = 1.0
-ball_scale = 1.0
+target_position = Vector2(105.127304, 220)
 panels = Array[ExtResource("3")]([SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
-breakable_blocks = Array[ExtResource("1")]([])
 obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m")])
 left_wall_segments = Array[Vector2]([Vector2(-320, 420), Vector2(780, 1440)])
 right_wall_segments = Array[Vector2]([Vector2(-320, 500), Vector2(760, 1440)])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 82.7
 two_star_max_shots = 3
 three_star_max_seconds = 44.1
-three_star_max_shots = 2

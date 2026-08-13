@@ -52,7 +52,7 @@ pulse_on_ratio = 0.667
 script = ExtResource("3")
 position = Vector2(520.04016, 686.4476)
 rotation_degrees = -7.528408432006836
-length = 359.0
+length = 352.0
 thickness = 26.0
 
 [resource]

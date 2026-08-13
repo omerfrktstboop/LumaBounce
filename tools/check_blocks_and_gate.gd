@@ -42,6 +42,7 @@ func _run() -> void:
 	_test_responsive_layout()
 	await _test_debug_panel_close()
 	await _test_launcher_power_feel()
+	_test_solver_robust_boundaries()
 	await _test_block_state_rules()
 	_test_block_tier_colors()
 	_test_haptics_setting()
@@ -68,6 +69,26 @@ func _run() -> void:
 	print("")
 	print("SONUC: %d gecti, %d kaldi." % [_passed, _failed])
 	quit(0 if _failed == 0 else 1)
+
+
+func _test_solver_robust_boundaries() -> void:
+	print("--- Solver saglamlik sinirlari ---")
+	var scan := {
+		"angles": [-2.0, 0.0, 2.0],
+		"powers": [2000.0, 2100.0, 2150.0],
+		"hits": [
+			[false, false, true],
+			[false, true, true],
+			[false, false, true],
+		],
+		"bounces": [
+			[-1, -1, 1],
+			[-1, 1, 1],
+			[-1, -1, 1],
+		],
+	}
+	var analysis := LevelSolver.analyse_robust(scan)
+	_check("maksimum guc dayanakli hucre sayiliyor", int(analysis["robust"]) > 0, true)
 
 
 func _test_responsive_layout() -> void:
@@ -835,7 +856,9 @@ func _test_generator() -> void:
 		await process_frame
 
 	_check("uretec aday buldu", produced.size() > 0, true)
-	_check("eleme dokumu tutuluyor", generator.describe_rejections().is_empty(), false)
+	_check("eleme dokumu tutarli",
+		generator.describe_rejections().is_empty(),
+		generator.get_rejection_summary().is_empty())
 
 	# Kabul edilen her bolum profili saglamali ve gecerli olmali.
 	var solver := LevelSolver.from_scenes()
@@ -1567,8 +1590,9 @@ func _test_library_bounds() -> void:
 	# mekanikleri yeniden kullanilir. Blok kapilari kasitli olarak aralikir:
 	# her bolumde ayni kapiyi gostermek de tekrar olurdu.
 	var expected_block_levels := [
-		53, 54, 55, 57, 58, 59, 61, 64, 67, 70, 73, 75,
-		80, 83, 86, 89, 92, 95, 98, 100,
+		53, 54, 55, 57, 58, 59, 61, 62, 64, 67, 69,
+		70, 73, 74, 75, 78, 79, 80, 82, 83, 86, 89, 90, 91, 92,
+		94, 95, 96, 98, 99, 100,
 	]
 	for id in range(51, 101):
 		var level := LevelLibrary.load_level(id)

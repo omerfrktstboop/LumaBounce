@@ -61,6 +61,18 @@ func _test_admob_config() -> void:
 		== LumaAdmobConfig.TEST_REWARDED, "debug extra ball uses Google test unit")
 	_check(LumaAdmobConfig.interstitial_unit_id() == LumaAdmobConfig.TEST_INTERSTITIAL,
 		"debug interstitial uses Google test unit")
+	var provider_source := FileAccess.get_file_as_string(
+		"res://scripts/monetization/providers/admob_ad_provider.gd")
+	var wrapper_source := FileAccess.get_file_as_string(
+		"res://addons/AdmobPlugin/Admob.gd")
+	_check(provider_source.contains("get_privacy_options_requirement_status() == \"REQUIRED\""),
+		"privacy entry point follows UMP requirement status")
+	_check(provider_source.contains("_admob.show_privacy_options_form()"),
+		"privacy entry point uses the dedicated UMP form")
+	_check(not provider_source.contains("_privacy_request_active = true\n\t_admob.load_consent_form()"),
+		"privacy entry point never reuses the initial consent form")
+	_check(wrapper_source.contains("privacy_options_form_dismissed"),
+		"AdMob wrapper exposes privacy form completion")
 
 
 func _test_entitlement_cache() -> void:

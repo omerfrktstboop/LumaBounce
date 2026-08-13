@@ -44,7 +44,7 @@ thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("3")
-position = Vector2(18.203888, 619.2112)
+position = Vector2(30, 619.2112)
 rotation_degrees = -90.0
 length = 280.0
 thickness = 26.0
