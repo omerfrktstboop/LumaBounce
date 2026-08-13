@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/app_root.gd" id="1_app_root"]
 [ext_resource type="PackedScene" path="res://scenes/splash.tscn" id="2_splash"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/level_select.tscn" id="5_level_select"]
 [ext_resource type="PackedScene" path="res://scenes/settings.tscn" id="8_settings"]
 [ext_resource type="PackedScene" path="res://scenes/shop_screen.tscn" id="90_shop"]
+[ext_resource type="PackedScene" path="res://scenes/retention_screen.tscn" id="91_retention"]
 
 [node name="AppRoot" type="Node"]
 process_mode = 3
@@ -16,6 +17,7 @@ main_menu_scene = ExtResource("3_main_menu")
 level_select_scene = ExtResource("5_level_select")
 settings_scene = ExtResource("8_settings")
 shop_scene = ExtResource("90_shop")
+retention_scene = ExtResource("91_retention")
 gameplay_scene = ExtResource("4_gameplay")
 
 [node name="BackgroundLayer" type="CanvasLayer" parent="."]

@@ -25,6 +25,7 @@ const LEVEL_EDITOR_SCENE_PATH := "res://scenes/level_editor.tscn"
 @export var level_select_scene: PackedScene
 @export var settings_scene: PackedScene
 @export var shop_scene: PackedScene
+@export var retention_scene: PackedScene
 @export var gameplay_scene: PackedScene
 @export var fade_time := 0.28
 @export var fade_color := Palette.INK_TOP
@@ -43,6 +44,8 @@ var _analytics: AnalyticsService
 var _ad_policy: AdPolicy
 var _ad_service: AdService
 var _purchase_service: PurchaseService
+var _daily_store: DailyStore
+var _achievement_store: AchievementStore
 ## Bu iki kaynak ana sahnenin bagimliligi degildir. Yalnizca debug template
 ## calisirken yuklenir; Android Release filtresi dosyalari pakete dahil etmez.
 var _debug_panel = null
@@ -64,6 +67,7 @@ var _editor_source_level_id := 0
 var _busy := false
 var _completion_interstitial_candidate := false
 var _completion_ad_in_progress := false
+var _active_daily_challenge := false
 var _analytics_session_active := false
 var _analytics_session_started_msec := 0
 
@@ -74,7 +78,10 @@ func _ready() -> void:
 	# bildirimlerini kacirmasin.
 	_progress = ProgressStore.load_from_disk()
 	_wallet = WalletStore.load_from_disk()
+	_daily_store = DailyStore.load_from_disk()
+	_achievement_store = AchievementStore.load_from_disk()
 	_setup_monetization()
+	_apply_achievement_unlocks(_achievement_store.sync_campaign(_progress), null)
 	# Titresim tercihi tek okuma noktasina (Haptics) aktarilir; boylece
 	# cagiranlarin ProgressStore'a erisimi olmasi gerekmez (bkz. haptics.gd).
 	Haptics.enabled = _progress.haptics_enabled
@@ -126,6 +133,10 @@ func _notification(what: int) -> void:
 
 
 func _exit_tree() -> void:
+	if _daily_store != null:
+		_daily_store.save()
+	if _achievement_store != null:
+		_achievement_store.save()
 	_end_analytics_session(&"exit")
 	if _analytics != null:
 		_analytics.shutdown()
@@ -147,22 +158,42 @@ func _set_application_paused(paused: bool) -> void:
 # --- Ekran gecisleri ---------------------------------------------------------
 
 func go_to_main_menu() -> void:
+	_active_daily_challenge = false
 	await _transition(main_menu_scene, _configure_main_menu)
 
 
 func go_to_level_select() -> void:
+	_active_daily_challenge = false
 	await _transition(level_select_scene, _configure_level_select)
 
 
 func go_to_shop() -> void:
+	_active_daily_challenge = false
 	await _transition(shop_scene, _configure_shop)
 
 
 func go_to_settings() -> void:
+	_active_daily_challenge = false
 	await _transition(settings_scene, _configure_settings)
 
 
+func go_to_retention() -> void:
+	_active_daily_challenge = false
+	await _transition(retention_scene, _configure_retention)
+
+
+func go_to_daily_challenge() -> void:
+	if not _progress.is_completed(DailyStore.CHALLENGE_UNLOCK_LEVEL):
+		return
+	_daily_store.refresh_for_date()
+	_active_daily_challenge = true
+	_current_level_id = _daily_store.challenge_level_id
+	await _transition(gameplay_scene, _configure_daily_gameplay,
+		_daily_store.challenge_level_id)
+
+
 func go_to_level(level_id: int) -> void:
+	_active_daily_challenge = false
 	_current_level_id = LevelLibrary.clamp_id(level_id)
 	await _transition(gameplay_scene, _configure_gameplay.bind(_current_level_id),
 		_current_level_id)
@@ -243,6 +274,7 @@ func _connect_screen(screen: Node) -> void:
 		menu.levels_requested.connect(go_to_level_select)
 		menu.settings_requested.connect(go_to_settings)
 		menu.shop_requested.connect(go_to_shop)
+		menu.daily_requested.connect(go_to_retention)
 		return
 
 	var shop := screen as ShopScreen
@@ -255,6 +287,12 @@ func _connect_screen(screen: Node) -> void:
 		settings.menu_requested.connect(go_to_main_menu)
 		return
 
+	var retention := screen as RetentionScreen
+	if retention != null:
+		retention.menu_requested.connect(go_to_main_menu)
+		retention.challenge_requested.connect(go_to_daily_challenge)
+		return
+
 	var select := screen as LevelSelect
 	if select != null:
 		select.level_selected.connect(go_to_level)
@@ -265,7 +303,7 @@ func _connect_screen(screen: Node) -> void:
 	if gameplay != null:
 		gameplay.level_completed.connect(_on_level_completed)
 		gameplay.next_level_requested.connect(_on_next_level_requested)
-		gameplay.level_select_requested.connect(go_to_level_select)
+		gameplay.level_select_requested.connect(_on_gameplay_level_select_requested)
 		# Editorden test edildiyse "menu" tusu editore geri doner; yoksa
 		# tasarladigin bolumu terk etmek icin tek yol kaydetmek olurdu.
 		gameplay.menu_requested.connect(_on_gameplay_menu_requested)
@@ -274,6 +312,7 @@ func _connect_screen(screen: Node) -> void:
 		gameplay.short_hint_requested.connect(_on_short_hint_requested.bind(gameplay))
 		gameplay.revive_requested.connect(_on_revive_requested.bind(gameplay))
 		gameplay.level_failed.connect(_on_level_failed)
+		gameplay.bounce_recorded.connect(_on_bounce_recorded.bind(gameplay))
 		return
 
 	if _is_level_editor(screen):
@@ -289,6 +328,7 @@ func _configure_main_menu(screen: Node) -> void:
 		# ozeti Magaza/Ayarlar'in zaten yaptigi gibi dogrudan okur.
 		menu.wallet = _wallet
 		menu.progress = _progress
+		menu.daily_store = _daily_store
 
 
 func _configure_level_select(screen: Node) -> void:
@@ -327,6 +367,17 @@ func _configure_settings(screen: Node) -> void:
 		settings.ad_service = _ad_service
 
 
+func _configure_retention(screen: Node) -> void:
+	var retention := screen as RetentionScreen
+	if retention == null:
+		return
+	retention.daily_store = _daily_store
+	retention.achievement_store = _achievement_store
+	retention.wallet = _wallet
+	retention.progress = _progress
+	retention.analytics = _analytics
+
+
 func _configure_gameplay(screen: Node, level_id: int) -> void:
 	var gameplay := screen as Gameplay
 	if gameplay != null:
@@ -346,6 +397,32 @@ func _configure_gameplay(screen: Node, level_id: int) -> void:
 			"world": _world_key(level_id),
 			"is_bonus": LevelWorlds.is_bonus_id(level_id),
 		})
+		if _progress.is_completed(DailyStore.QUESTS_UNLOCK_LEVEL) \
+			and LevelWorlds.is_bonus_id(level_id):
+			_record_completed_quests(_daily_store.record_bonus_attempt())
+			_claim_quest_reward(gameplay)
+
+
+func _configure_daily_gameplay(screen: Node) -> void:
+	var gameplay := screen as Gameplay
+	if gameplay == null:
+		return
+	var level_id := _daily_store.challenge_level_id
+	gameplay.level_data = LevelLibrary.load_level(level_id)
+	gameplay.playtest_stats = _playtest_stats
+	gameplay.progress = _progress
+	gameplay.wallet = _wallet
+	gameplay.aim_assist = _progress.aim_assist
+	gameplay.ad_service = _ad_service
+	gameplay.analytics = _analytics
+	gameplay.daily_mode = true
+	gameplay.short_hint_enabled = _ad_service.is_rewarded_ready(
+		MonetizationConfig.PLACEMENT_SHORT_HINT)
+	_analytics.track_event(AnalyticsService.LEVEL_START, {
+		"level_id": level_id,
+		"world": _world_key(level_id),
+		"is_bonus": false,
+	})
 
 
 ## Servisler AppRoot'a aittir: ekran omru degistiginde provider/policy durumu
@@ -433,6 +510,13 @@ func _on_level_completed(level_id: int, stars: int, seconds: float,
 	# bir parcasi degil ve kaydi kirletmesi anlamsiz olurdu.
 	if _editor_level != null:
 		return
+	var gameplay := _current as Gameplay
+	var retention_snapshot := gameplay.get_retention_snapshot() if gameplay != null else {}
+	var full_hint_used := bool(retention_snapshot.get("full_hint_used", false))
+	if _active_daily_challenge:
+		_on_daily_completed(level_id, stars, seconds, shots, revived, full_hint_used,
+			gameplay)
+		return
 	var first_clear := not _progress.is_completed(level_id)
 	_analytics.track_event(AnalyticsService.LEVEL_COMPLETE, {
 		"level_id": level_id,
@@ -462,12 +546,16 @@ func _on_level_completed(level_id: int, stars: int, seconds: float,
 	var candidate := _ad_policy.register_successful_completion(
 		_completed_normal_level_count(), not LevelWorlds.is_bonus_id(level_id))
 	_completion_interstitial_candidate = candidate
-	var gameplay := _current as Gameplay
 	if gameplay != null:
 		gameplay.set_interstitial_candidate(candidate)
+	_record_meta_completion(
+		LevelData.uid_for(level_id), stars, shots, full_hint_used, gameplay)
 
 
 func _on_next_level_requested(level_id: int) -> void:
+	if _active_daily_challenge:
+		go_to_retention()
+		return
 	if _completion_ad_in_progress:
 		return
 	_completion_ad_in_progress = true
@@ -502,6 +590,105 @@ func _on_level_failed(level_id: int, reason: String, revive_eligible: bool,
 		"revive_eligible": revive_eligible,
 		"is_bonus": LevelWorlds.is_bonus_id(level_id),
 	})
+
+
+func _on_daily_completed(level_id: int, stars: int, seconds: float, shots: int,
+		revived: bool, full_hint_used: bool, gameplay: Gameplay) -> void:
+	_analytics.track_event(AnalyticsService.LEVEL_COMPLETE, {
+		"level_id": level_id,
+		"world": _world_key(level_id),
+		"stars": stars,
+		"seconds_bucket": AnalyticsService.seconds_bucket(seconds),
+		"shots": shots,
+		"first_clear": not _daily_store.is_daily_claimed(),
+		"is_bonus": false,
+		"revived": revived,
+	})
+	var completion := _daily_store.complete_daily()
+	var reward := int(completion.get("reward", 0))
+	if reward > 0:
+		_wallet.add(reward)
+		if gameplay != null:
+			gameplay.notify_luma_coin_reward(reward)
+		_analytics.track_event(AnalyticsService.DAILY_COMPLETE, {
+			"day_index": DailyStore.day_index(_daily_store.active_date),
+			"reward": reward,
+		})
+	if stars >= LevelData.NORMAL_MAX_STARS:
+		_analytics.track_event(AnalyticsService.DAILY_THREE_STAR, {
+			"day_index": DailyStore.day_index(_daily_store.active_date),
+		})
+	var milestone := int(completion.get("milestone", 0))
+	if milestone > 0:
+		_analytics.track_event(AnalyticsService.STREAK_MILESTONE, {
+			"streak_bucket": StringName(str(milestone)),
+		})
+	_record_meta_completion(
+		"daily:%s" % _daily_store.active_date, stars, shots, full_hint_used, gameplay)
+	_completion_interstitial_candidate = false
+	if gameplay != null:
+		gameplay.set_interstitial_candidate(false)
+
+
+func _record_meta_completion(completion_key: String, stars: int, shots: int,
+		full_hint_used: bool, gameplay: Gameplay) -> void:
+	if _progress.is_completed(DailyStore.QUESTS_UNLOCK_LEVEL):
+		_record_completed_quests(_daily_store.record_level_completion(
+			stars, shots, full_hint_used))
+		_claim_quest_reward(gameplay)
+	var final_world_start := LevelWorlds.first_level(LevelWorlds.count() - 1)
+	var unlocks := _achievement_store.record_completion(
+		completion_key, _progress.completed_levels.size(), shots, stars,
+		_progress.is_unlocked(final_world_start))
+	_apply_achievement_unlocks(unlocks, gameplay)
+
+
+func _record_completed_quests(quest_ids: PackedStringArray) -> void:
+	for quest_id in quest_ids:
+		var quest := DailyQuestCatalog.find(quest_id)
+		if quest == null:
+			continue
+		_analytics.track_event(AnalyticsService.QUEST_COMPLETE, {
+			"quest_id": quest.id,
+			"quest_type": quest.analytics_type,
+		})
+
+
+func _claim_quest_reward(gameplay: Gameplay) -> void:
+	var reward := _daily_store.claim_all_quests_reward()
+	if reward <= 0:
+		return
+	_wallet.add(reward)
+	if gameplay != null:
+		gameplay.notify_luma_coin_reward(reward)
+	_analytics.track_event(AnalyticsService.ALL_DAILY_QUESTS_COMPLETE, {
+		"day_index": DailyStore.day_index(_daily_store.active_date),
+		"reward": reward,
+	})
+
+
+func _on_bounce_recorded(gameplay: Gameplay) -> void:
+	if _editor_level != null:
+		return
+	if _progress.is_completed(DailyStore.QUESTS_UNLOCK_LEVEL):
+		_record_completed_quests(_daily_store.record_bounce())
+		_claim_quest_reward(gameplay)
+	_apply_achievement_unlocks(_achievement_store.record_bounce(), gameplay)
+
+
+func _apply_achievement_unlocks(unlocks: Array[Dictionary], gameplay: Gameplay) -> void:
+	for unlock in unlocks:
+		var reward := int(unlock.get("coin_reward", 0))
+		if reward > 0 and _wallet != null:
+			_wallet.add(reward)
+		if gameplay != null and is_instance_valid(gameplay):
+			gameplay.notify_achievement_unlocked(
+				String(unlock.get("title_key", "")), reward)
+		if _analytics != null:
+			_analytics.track_event(AnalyticsService.ACHIEVEMENT_UNLOCK, {
+				"achievement_id": String(unlock.get("id", "")),
+				"reward": reward,
+			})
 
 
 func _world_key(level_id: int) -> StringName:
@@ -551,7 +738,17 @@ func _on_gameplay_menu_requested() -> void:
 	if _editor_level != null:
 		go_to_editor(_editor_level, _editor_source_level_id)
 		return
+	if _active_daily_challenge:
+		go_to_retention()
+		return
 	go_to_main_menu()
+
+
+func _on_gameplay_level_select_requested() -> void:
+	if _active_daily_challenge:
+		go_to_retention()
+		return
+	go_to_level_select()
 
 
 # --- Bolum editoru (yalnizca debug) -------------------------------------------

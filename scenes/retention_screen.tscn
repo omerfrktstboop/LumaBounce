@@ -1,0 +1,80 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/retention_screen.gd" id="1_screen"]
+[ext_resource type="Script" path="res://scripts/ui/ink_background.gd" id="2_ink"]
+[ext_resource type="Script" path="res://scripts/ui/safe_area_margin.gd" id="3_safe"]
+[ext_resource type="Script" path="res://scripts/ui/luma_icon_button.gd" id="4_icon_button"]
+[ext_resource type="Script" path="res://scripts/ui/coin_chip.gd" id="5_coin"]
+
+[node name="RetentionScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_screen")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_ink")
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_safe")
+
+[node name="Content" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="SafeArea/Content"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 72)
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="SafeArea/Content/Header"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 72)
+focus_mode = 0
+script = ExtResource("4_icon_button")
+glyph = 13
+
+[node name="Title" type="Label" parent="SafeArea/Content/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.913725, 0.94902, 1, 1)
+theme_override_font_sizes/font_size = 36
+text = "GÜNLÜK"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CoinChip" type="Button" parent="SafeArea/Content/Header"]
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+script = ExtResource("5_coin")
+
+[node name="Scroll" type="ScrollContainer" parent="SafeArea/Content"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="Rows" type="VBoxContainer" parent="SafeArea/Content/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16

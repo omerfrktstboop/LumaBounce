@@ -27,6 +27,9 @@ signal block_mechanic_seen()
 signal short_hint_requested()
 ## Son hak bittiginde oyuncunun istegiyle +1 top odullu reklami.
 signal revive_requested()
+## Retention sayaçlari icin hafif olay. Analytics'e gonderilmez; AppRoot bunu
+## DailyStore/AchievementStore'a yazar.
+signal bounce_recorded()
 
 @export var completed_title := "BÖLÜM TAMAMLANDI"
 @export var failed_title := "BÖLÜM BAŞARISIZ"
@@ -37,6 +40,7 @@ signal revive_requested()
 @export var restart_label := "TEKRAR BAŞLA"
 @export var menu_label := "ANA MENÜ"
 @export var out_of_balls_message := "TOP HAKKI BİTTİ"
+@export var daily_return_label := "GÜNLÜĞE DÖN"
 ## Kazanma efekti gorulsun diye sonuc karti kisa bir gecikmeyle acilir.
 @export var result_delay := 0.75
 ## Basarisiz atistan sonra, hala hakki varsa otomatik sifirlama gecikmesi.
@@ -130,6 +134,9 @@ var analytics: AnalyticsService
 ## acilmaz, haklar tukenmez, ilerleme yazilmaz. Amac bolumu degerlendirmek
 ## degil, geometriyi istedigin kadar denemek.
 var practice_mode := false
+## Daily challenge campaign progression'ina yazilmaz ve sonuc kartinin ana
+## eylemi sonraki bolum yerine retention ekranina doner.
+var daily_mode := false
 ## Oyuncunun ayarlardan sectigi nisan yardimi. AppRoot tarafindan add_child'dan
 ## ONCE atanir; ProgressStore'dan okunur, ekran kendi basina ayara bakmaz.
 var aim_assist := false
@@ -190,6 +197,7 @@ var short_hint_enabled := false
 ## yeniden baslatilinca sifirlanir, cunku kalici olan tek sey satin alinan
 ## tam rotadir.
 var _short_hint_shown := false
+var _full_hint_used_this_attempt := false
 var _revive_used := false
 ## Coin ile revive satin alma SURUYOR mu. Cift dokunusun ikinci Coin'i
 ## harcamasini engelleyen kilit: harcamadan ONCE kalkar, islem bitince duser.
@@ -470,6 +478,7 @@ func reset_shot() -> void:
 	_hint_path.hide_path()
 	_hint_waiting_for_blocks = false
 	_short_hint_shown = false
+	_full_hint_used_this_attempt = false
 	_revive_used = false
 	_pending_luma_coin_reward = 0
 	_hide_hint_status()
@@ -721,7 +730,8 @@ func _open_success_panel(stars: int, new_record: bool) -> void:
 	# Bu arada yeniden baslatildiysa karti acma.
 	if token != _shot_token or not is_inside_tree():
 		return
-	var next_text := next_level_label if _can_advance_to_next() else level_select_label
+	var next_text := daily_return_label if daily_mode else (
+		next_level_label if _can_advance_to_next() else level_select_label)
 	_result_panel.show_success(
 		completed_title, next_text, retry_label,
 		stars, _final_attempt_seconds, _final_attempt_shots, new_record,
@@ -761,6 +771,9 @@ func _open_failure_panel() -> void:
 
 
 func _on_result_next() -> void:
+	if daily_mode:
+		menu_requested.emit()
+		return
 	if _can_advance_to_next():
 		next_level_requested.emit(level_data.level_id + 1)
 	else:
@@ -773,6 +786,8 @@ func _on_result_next() -> void:
 ## level_completed sinyalini isleyip yildizi kaydetmis olur, yani kapinin
 ## bu tamamlamayla acilip acilmadigi da dogru gorunur.
 func _can_advance_to_next() -> bool:
+	if daily_mode:
+		return false
 	var next_id := level_data.level_id + 1
 	if not LevelLibrary.has_next(level_data.level_id):
 		return false
@@ -943,6 +958,8 @@ func _on_ball_bounced(at: Vector2, normal: Vector2, impact_speed: float) -> void
 	Haptics.bounce(strength)
 	# Ham impact_speed verilir; katman secimi ve cooldown AudioManager'da.
 	AudioManager.play_bounce(impact_speed)
+	if not practice_mode:
+		bounce_recorded.emit()
 
 
 func _clear_effects() -> void:
@@ -1212,7 +1229,20 @@ func _show_unlocked_hint() -> void:
 		return
 	_hint_waiting_for_blocks = false
 	_hint_path.show_path(_hint_trace)
+	_full_hint_used_this_attempt = true
 	_show_hint_status(tr("ROTAYI TAKİP ET"), 2.2)
+
+
+func get_retention_snapshot() -> Dictionary:
+	return {
+		"full_hint_used": _full_hint_used_this_attempt,
+	}
+
+
+func notify_achievement_unlocked(title_key: String, coin_reward: int) -> void:
+	if coin_reward > 0:
+		_pending_luma_coin_reward += coin_reward
+	_show_hint_status(tr("BAŞARI AÇILDI: %s") % tr(title_key), 2.8, coin_reward > 0)
 
 
 ## Offline taramada bulunan tek atisi runtime fizik dunyasinda bir kez oynatir.

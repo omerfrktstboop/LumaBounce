@@ -28,6 +28,7 @@ signal play_pressed(level_id: int)
 signal levels_requested()
 signal shop_requested()
 signal settings_requested()
+signal daily_requested()
 
 ## AppRoot tarafindan add_child'dan ONCE atanir: kalinan bolum.
 var resume_level_id := 1
@@ -35,6 +36,7 @@ var resume_level_id := 1
 ## ozeti icin. Magaza/Ayarlar'in zaten yaptigi gibi ayni ORNEK enjekte edilir.
 var wallet: WalletStore
 var progress: ProgressStore
+var daily_store: DailyStore
 
 ## Kisa bilgi mesaji icin ayarlar. Su an menude bunu tetikleyen bir yol yok
 ## (ayarlar dislisi artik gercek ekrani aciyor); yapi ileride "kaydedildi",
@@ -53,6 +55,7 @@ var progress: ProgressStore
 @onready var _shop_card: NavigationCard = $SafeArea/Content/MainActions/ShopCard
 @onready var _sound_button: LumaIconButton = $SafeArea/Content/UtilityArea/SoundButton
 @onready var _progress_label: Label = $SafeArea/Content/UtilityArea/ProgressLabel
+@onready var _utility_area: HBoxContainer = $SafeArea/Content/UtilityArea
 @onready var _toast: Label = $Toast
 
 var _toast_tween: Tween
@@ -66,6 +69,7 @@ func _ready() -> void:
 		UIMetrics.RADIUS_LARGE_CARD, Color(Palette.INK_MID, 0.78)))
 	_refresh_sound_glyph()
 	_refresh_progress_label()
+	_build_daily_button()
 	if wallet != null:
 		_coin_chip.bind(wallet)
 
@@ -76,6 +80,27 @@ func _ready() -> void:
 	_coin_chip.pressed.connect(shop_requested.emit)
 	_sound_button.pressed.connect(AudioManager.toggle_muted)
 	AudioManager.mute_changed.connect(_on_mute_changed)
+
+
+## Ana menu zaten dolu bir dikey hiyerarsiye sahip. Daily erisimini ucuncu
+## buyuk NavigationCard olarak eklemek kisa telefonlarda tasma yaratirdi;
+## alt utility satirindaki 72 birimlik kompakt buton ayni isi yapar.
+func _build_daily_button() -> void:
+	var button := LumaButton.new()
+	button.name = "DailyButton"
+	button.custom_minimum_size = Vector2(210.0, UIMetrics.MIN_TOUCH)
+	button.emphasis = LumaButton.Emphasis.SECONDARY
+	button.add_theme_font_size_override("font_size", UIMetrics.FONT_BODY + 1)
+	# Gorevler 8'de, challenge 10'da acilir. Oyuncu 8'den itibaren ekrana
+	# girebilmeli; challenge karti kendi kilidini ayrica gosterir.
+	var unlocked := progress != null and progress.is_completed(DailyStore.QUESTS_UNLOCK_LEVEL)
+	var claimed := daily_store != null and daily_store.is_daily_claimed()
+	button.text = tr("GÜNLÜK ✓") if claimed else tr("GÜNLÜK")
+	button.disabled = not unlocked
+	button.tooltip_text = tr("8. bölümü tamamlayınca açılır") if not unlocked else tr("Günlük challenge ve görevler")
+	button.pressed.connect(daily_requested.emit)
+	_utility_area.add_child(button)
+	_utility_area.move_child(button, _progress_label.get_index())
 
 
 func _on_play_pressed() -> void:

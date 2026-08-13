@@ -25,8 +25,11 @@ const COSMETIC_PURCHASE := &"cosmetic_purchase"
 const COSMETIC_SELECT := &"cosmetic_select"
 const DAILY_OPEN := &"daily_open"
 const DAILY_COMPLETE := &"daily_complete"
+const DAILY_THREE_STAR := &"daily_three_star"
 const QUEST_COMPLETE := &"quest_complete"
+const ALL_DAILY_QUESTS_COMPLETE := &"all_daily_quests_complete"
 const STREAK_MILESTONE := &"streak_milestone"
+const ACHIEVEMENT_UNLOCK := &"achievement_unlock"
 
 # Onceki fazdaki adlari kullanan test/entegrasyonlar icin kaynak uyumlulugu.
 const HINT_SHORT_REQUESTED := REWARDED_CLICK
@@ -42,7 +45,9 @@ const NORMALIZED_EVENTS := [
 	INTERSTITIAL_CANDIDATE, INTERSTITIAL_SHOWN, INTERSTITIAL_FAILED,
 	REMOVE_ADS_PURCHASE_RESULT,
 	SHOP_OPEN, COSMETIC_PURCHASE, COSMETIC_SELECT,
-	DAILY_OPEN, DAILY_COMPLETE, QUEST_COMPLETE, STREAK_MILESTONE,
+	DAILY_OPEN, DAILY_COMPLETE, DAILY_THREE_STAR,
+	QUEST_COMPLETE, ALL_DAILY_QUESTS_COMPLETE, STREAK_MILESTONE,
+	ACHIEVEMENT_UNLOCK,
 ]
 
 const EVENT_FIELDS := {
@@ -67,8 +72,11 @@ const EVENT_FIELDS := {
 	COSMETIC_SELECT: [&"cosmetic_id", &"kind"],
 	DAILY_OPEN: [&"day_index", &"streak_bucket"],
 	DAILY_COMPLETE: [&"day_index", &"reward"],
+	DAILY_THREE_STAR: [&"day_index"],
 	QUEST_COMPLETE: [&"quest_id", &"quest_type"],
+	ALL_DAILY_QUESTS_COMPLETE: [&"day_index", &"reward"],
 	STREAK_MILESTONE: [&"streak_bucket"],
+	ACHIEVEMENT_UNLOCK: [&"achievement_id", &"reward"],
 }
 
 const MAX_PENDING_EVENTS := 128

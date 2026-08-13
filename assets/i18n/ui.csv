@@ -124,3 +124,43 @@ PLAY STORE'A BAĞLANILAMADI,PLAY STORE'A BAĞLANILAMADI,COULD NOT CONNECT TO PLA
 SATIN ALMA TAMAMLANAMADI,SATIN ALMA TAMAMLANAMADI,PURCHASE COULD NOT BE COMPLETED
 SATIN ALMA GERİ YÜKLENDİ,SATIN ALMA GERİ YÜKLENDİ,PURCHASE RESTORED
 AKTİF SATIN ALMA BULUNAMADI,AKTİF SATIN ALMA BULUNAMADI,NO ACTIVE PURCHASE FOUND
+GÜNLÜK,GÜNLÜK,DAILY
+GÜNLÜK ✓,GÜNLÜK ✓,DAILY ✓
+Günlük challenge ve görevler,Günlük challenge ve görevler,Daily challenge and quests
+8. bölümü tamamlayınca açılır,8. bölümü tamamlayınca açılır,Unlocks after completing level 8
+GÜNLÜK CHALLENGE,GÜNLÜK CHALLENGE,DAILY CHALLENGE
+Günün bölümü: %s,Günün bölümü: %s,Today's level: %s
+10. bölümü tamamlayınca açılır,10. bölümü tamamlayınca açılır,Unlocks after completing level 10
+Bugünün ödülü alındı,Bugünün ödülü alındı,Today's reward claimed
+Tamamla ve +%d Luma Coin kazan,Tamamla ve +%d Luma Coin kazan,Complete it and earn +%d Luma Coin
+CHALLENGE'I OYNA,CHALLENGE'I OYNA,PLAY CHALLENGE
+GÜNLÜĞE DÖN,GÜNLÜĞE DÖN,BACK TO DAILY
+STREAK,STREAK,STREAK
+%d günlük seri · En iyi %d,%d günlük seri · En iyi %d,%d day streak · Best %d
+%d GÜN,%d GÜN,%d DAYS
+Seri günlük challenge tamamlayınca ilerler,Seri günlük challenge tamamlayınca ilerler,The streak grows when you complete the daily challenge
+GÜNLÜK GÖREVLER,GÜNLÜK GÖREVLER,DAILY QUESTS
+8. bölümü tamamlayınca üç günlük görev açılır,8. bölümü tamamlayınca üç günlük görev açılır,Three daily quests unlock after completing level 8
+Üç görev ödülü alındı,Üç görev ödülü alındı,Three-quest reward claimed
+Tüm görevler tamamlandı · +%d Luma Coin,Tüm görevler tamamlandı · +%d Luma Coin,All quests complete · +%d Luma Coin
+Üçünü tamamla · +%d Luma Coin,Üçünü tamamla · +%d Luma Coin,Complete all three · +%d Luma Coin
+3 bölüm tamamla,3 bölüm tamamla,Complete 3 levels
+Bir bölümü tek atışta tamamla,Bir bölümü tek atışta tamamla,Complete a level in one shot
+Toplam 25 sekme yap,Toplam 25 sekme yap,Make 25 bounces
+Bir bölümü 3 yıldızla tamamla,Bir bölümü 3 yıldızla tamamla,Complete a level with 3 stars
+Tam rota kullanmadan 3 bölüm tamamla,Tam rota kullanmadan 3 bölüm tamamla,Complete 3 levels without the full route
+Bir bonus bölüm dene,Bir bonus bölüm dene,Try a bonus level
+BAŞARILAR,BAŞARILAR,ACHIEVEMENTS
+%d / %d başarı açıldı,%d / %d başarı açıldı,%d / %d achievements unlocked
+AÇILDI,AÇILDI,UNLOCKED
+Keskin Nişancı,Keskin Nişancı,Sharpshooter
+10 farklı tamamlamayı tek atışta yap,10 farklı tamamlamayı tek atışta yap,Complete 10 different runs in one shot
+Yüzlük Seri,Yüzlük Seri,Century Run
+100 kampanya bölümünü tamamla,100 kampanya bölümünü tamamla,Complete 100 campaign levels
+Sekme Ustası,Sekme Ustası,Bounce Master
+Toplam 1000 sekme yap,Toplam 1000 sekme yap,Make 1000 bounces
+Kusursuz Rota,Kusursuz Rota,Perfect Route
+25 farklı tamamlamada 3 yıldız kazan,25 farklı tamamlamada 3 yıldız kazan,Earn 3 stars on 25 different completions
+Tüm Dünyalar,Tüm Dünyalar,All Worlds
+Üç dünyanın tamamını aç,Üç dünyanın tamamını aç,Unlock all three worlds
+BAŞARI AÇILDI: %s,BAŞARI AÇILDI: %s,ACHIEVEMENT UNLOCKED: %s
