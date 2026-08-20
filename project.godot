@@ -24,10 +24,6 @@ run/max_fps=60
 boot_splash/show_image=false
 config/icon="res://assets/icons/luma_bounce_icon.png"
 
-[audio]
-
-buses/default_bus_layout="res://default_bus_layout.tres"
-
 [autoload]
 
 AudioManager="*res://scripts/audio/audio_manager.gd"
@@ -57,12 +53,6 @@ locale/fallback="tr"
 2d_physics/layer_1="obstacle"
 2d_physics/layer_2="ball"
 2d_physics/layer_3="target"
-
-[mcp_toolkit]
-
-status="No .mcp.json found — use Project > Tools > MCP Toolkit > Write .mcp.json to create one.
-
-NODE.JS NOT FOUND — The MCP server bridge requires Node.js 22+. Download it from https://nodejs.org"
 
 [physics]
 
