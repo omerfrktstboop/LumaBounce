@@ -1,0 +1,21 @@
+{
+  "enabledPlugins": {
+    "godot-claude-skills@godot-claude-skills": true,
+    "router@awesome-gamedev-agent-skills": true,
+    "godot@awesome-gamedev-agent-skills": true
+  },
+  "extraKnownMarketplaces": {
+    "godot-claude-skills": {
+      "source": {
+        "source": "github",
+        "repo": "alexmeckes/godot-claude-skills"
+      }
+    },
+    "awesome-gamedev-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "gamedev-skills/awesome-gamedev-agent-skills"
+      }
+    }
+  }
+}

@@ -11,9 +11,29 @@ extends Button
 ## kalir, boylece "tek vurgu" kurali korunur.
 
 enum Emphasis {
-	PRIMARY,   ## Ana eylem (OYNA): duragan halde bile hafif cyan kenar.
+	PRIMARY,   ## Ana eylem: duragan halde bile hafif cyan kenar.
 	SECONDARY, ## Ikincil eylem: mat kenar, cyan yalnizca etkilesimde.
+	## Ekranin TEK birincil eylemi (Ev'deki OYNA). PRIMARY'nin her seyini
+	## devralir, uzerine vurgu tonuna dogru kaydirilmis KOYU TEAL bir dolgu
+	## ekler.
+	##
+	## Neden ayri bir seviye: PRIMARY bu projede "ana eylem" degil, fiilen
+	## "secili/tamamlanmis" durumu isaretliyor (level_select.gd tamamlanan
+	## bolum butonlari ve dunya sekmeleri, segmented_control.gd secili
+	## segment). PRIMARY'nin dolgusunu degistirmek bolum secim izgarasindaki
+	## onlarca butonu birden boyar ve "tek vurgu" kuralini kirardi.
+	CTA,
 }
+
+## CTA dolgusunun vurgu tonuna dogru karisim orani. Degerler bilerek dusuk:
+## dolgu KOYU teal kalmali, neon/fosforlu olmamali. Hover ve basili hal
+## ayni eksende yukari/asagi kayar, boylece etkilesim TON degisimi olarak
+## okunur - ayri bir parlama katmani eklemeye gerek kalmaz.
+const CTA_FILL_MIX := 0.20
+const CTA_FILL_MIX_HOVER := 0.30
+const CTA_FILL_MIX_PRESSED := 0.12
+## PRIMARY'nin 0.5'inden belirgin ama parlamayacak kadar yukarida.
+const CTA_BORDER_ALPHA := 0.62
 
 @export var emphasis: Emphasis = Emphasis.SECONDARY:
 	set(value):
@@ -53,9 +73,12 @@ enum Emphasis {
 			_apply_style()
 
 @export_group("Basis Animasyonu")
-@export_range(0.7, 1.0, 0.01) var press_scale := 0.95
-@export var press_time := 0.09
-@export var release_time := 0.22
+## Basis geri bildirimi bilerek SIG ve KISA: derin bir ezilme (0.95) buyuk
+## bir CTA'da yavas ve yumusak okunuyordu. 0.97 + kisa sureler "tok" bir
+## dokunus hissi verir ve tum butonlarda ayni dili korur.
+@export_range(0.7, 1.0, 0.01) var press_scale := 0.97
+@export var press_time := 0.07
+@export var release_time := 0.14
 
 @export_group("Ses")
 ## Kapatilirsa bu buton tiklama sesi calmaz (or. sesin kendisini bozacak
@@ -102,22 +125,33 @@ func _current_radius() -> int:
 func _apply_style() -> void:
 	var radius := _current_radius()
 	_applied_radius = radius
-	var is_primary := emphasis == Emphasis.PRIMARY
+	var is_cta := emphasis == Emphasis.CTA
+	var is_primary := is_cta or emphasis == Emphasis.PRIMARY
 
 	var solid := is_primary or high_contrast
 	var surface := _surface()
 	var surface_edge := _surface_edge()
+	var accent := _accent()
 	var solid_fill := Color(surface, 0.92)
 	var normal_bg := solid_fill if solid else Color(surface, 0.5)
 	var hover_bg := Color(surface_edge, 0.92) if solid else Color(surface, 0.85)
 	var pressed_bg := Color(_pressed_fill(), 1.0)
 
-	var accent := _accent()
 	var normal_border := Color(surface_edge, 0.9)
 	if is_primary:
 		normal_border = Color(accent, 0.5)
 	elif high_contrast:
 		normal_border = Color(_surface_light(), 1.0)
+
+	# CTA: PRIMARY'nin uzerine vurgu tonuna kaydirilmis koyu teal dolgu.
+	# Dolgu zeminden (INK_MID) turetilir, SURFACE'tan degil - kartlar ve
+	# ikincil butonlar SURFACE ailesinde kaldigi icin hiyerarsi farki
+	# boylece TON olarak da okunur, yalnizca parlaklik olarak degil.
+	if is_cta:
+		normal_bg = Color(_cta_fill(accent, CTA_FILL_MIX), 0.96)
+		hover_bg = Color(_cta_fill(accent, CTA_FILL_MIX_HOVER), 0.98)
+		pressed_bg = Color(_cta_fill(accent, CTA_FILL_MIX_PRESSED), 1.0)
+		normal_border = Color(accent, CTA_BORDER_ALPHA)
 	var hover_border := Color(accent, 0.95) if is_primary else Color(accent, 0.55)
 	var pressed_border := Color(accent, 1.0) if is_primary else Color(accent, 0.85)
 
@@ -131,7 +165,10 @@ func _apply_style() -> void:
 	add_theme_color_override("font_color", Palette.TEXT if is_primary else Palette.TEXT_DIM)
 	add_theme_color_override("font_hover_color", Palette.TEXT)
 	add_theme_color_override("font_pressed_color", Palette.ACCENT_CORE)
-	add_theme_color_override("font_disabled_color", Color(Palette.TEXT_DIM, 0.45))
+	# 0.45 -> 0.52: bolum secim izgarasinda kilitli bolum NUMARALARI okunmuyordu
+	# (numara tek basina bilgi tasiyor - "kacinci bolumdeyim"). Artis bilerek
+	# kucuk: devre disi hissi kaybolmamali, yalnizca metin secilebilir olmali.
+	add_theme_color_override("font_disabled_color", Color(Palette.TEXT_DIM, 0.52))
 
 
 ## accent_override atanmissa o, degilse paletin vurgusu. Alfa 0 "atanmadi"
@@ -153,6 +190,14 @@ func _surface_edge() -> Color:
 
 func _surface_light() -> Color:
 	return surface_override.lightened(0.38) if surface_override.a > 0.0 else Palette.SURFACE_LIGHT
+
+
+## CTA dolgusu: murekkep zeminden vurgu tonuna dogru kontrollu karisim.
+## Taban Palette.INK_MID oldugu icin tema degistiginde (PaletteThemes) dolgu
+## da dunyanin vurgusunu kendiliginden takip eder - sabit bir cyan yazmak
+## 51+ bandinda turuncu temanin yaninda yanlis renk birakirdi.
+func _cta_fill(accent: Color, mix: float) -> Color:
+	return Palette.INK_MID.lerp(accent, mix)
 
 
 func _pressed_fill() -> Color:
