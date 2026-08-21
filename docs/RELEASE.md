@@ -242,10 +242,10 @@ Portekizcesi, Almanca ve Fransızca**.
 | Dosya | İçerik |
 |---|---|
 | `ui.csv` | arayüz metinleri |
-| `levels.csv` | 125 bölüm adı + 13 öğretici metni |
+| `levels.csv` | bölüm adları + öğretici metinleri (155 bölüm dosyası, 136 farklı ad) |
 
 **Anahtar, Türkçe metnin kendisidir.** Bunun sebebi doğrudan bakım maliyeti:
-`LEVEL_042_NAME` gibi anahtarlar kullanılsaydı 125 bölüm dosyasının hepsine
+`LEVEL_042_NAME` gibi anahtarlar kullanılsaydı 155 bölüm dosyasının hepsine
 dokunmak gerekirdi ve `.tres` dosyaları insan tarafından okunamaz hale
 gelirdi. Bu şekilde çevirisi olmayan bir metin ekranda **boş değil, Türkçe**
 görünür.
