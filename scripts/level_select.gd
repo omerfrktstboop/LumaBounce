@@ -381,7 +381,7 @@ func _make_button_stars(level_id: int, accent: Color) -> StarRow:
 ## "34 / 40 *" satiri. Yildiz karakteri metin olarak yazilmaz - projede hicbir
 ## yerde harici font/asset varsayimi yok, bu yuzden yildiz prosedurel StarRow
 ## ile cizilir.
-func _make_gate_row(gate: Vector2i, accent: Color) -> HBoxContainer:
+func _make_gate_row(gate: Vector2i, _accent: Color) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.name = "StarGate"
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -398,17 +398,22 @@ func _make_gate_row(gate: Vector2i, accent: Color) -> HBoxContainer:
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.add_theme_font_size_override("font_size", gate_font_size)
-	label.add_theme_color_override("font_color", LevelWorlds.accent_dim_for_index(_world))
+	# NOTR gri, dunya vurgusu DEGIL. Kapi satiri kartin alt kenarinda,
+	# tamamlanmis bolumlerin yildiz satiriyla AYNI yerde duruyor; ayni rengi
+	# de tasidiginda "bu bolumden 5 yildiz aldim" diye okunuyordu. Gereksinim
+	# kazanilmis bir puan degil, bu yuzden kazanilmis puanin dilini konusmamali.
+	label.add_theme_color_override("font_color", Palette.TEXT_MUTED)
 	row.add_child(label)
 
 	var star := StarRow.new()
 	star.star_count = 1
 	star.star_radius = gate_star_radius
 	star.spacing = 0.0
-	star.filled_color = accent
-	star.filled_core_color = LevelWorlds.accent_core_for_index(_world)
+	# BOS (konturlu) yildiz: ambiguity'nin asil kaynagi buydu - dolu vurgu
+	# renkli yildiz, tamamlanmis bolum yildizlarindan ayirt edilemiyordu.
+	star.empty_color = Color(Palette.TEXT_MUTED, 0.8)
 	star.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	star.set_stars(1)
+	star.set_stars(0)
 	row.add_child(star)
 
 	return row

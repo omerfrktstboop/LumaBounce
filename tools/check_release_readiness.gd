@@ -304,7 +304,7 @@ func _check_admob_integration() -> void:
 	for required in ["OS.has_feature(\"production\")", "TEST_REWARDED", "TEST_INTERSTITIAL"]:
 		if not config_text.contains(required):
 			_blockers.append("AdMob debug/production korumasi eksik: %s" % required)
-	_notes.append("AdMob uygulama kimligi ve uc placement kimligi public config'te; secret degildir.")
+	_notes.append("AdMob uygulama kimligi ve iki reklam birimi kimligi public config'te; secret degildir.")
 
 
 func _check_billing_integration() -> void:

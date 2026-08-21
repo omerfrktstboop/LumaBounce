@@ -236,6 +236,9 @@ kullan; `level_uid` sabit kaldığı sürece kayıtlar bozulmaz.
 
 Kaynak dil **Türkçe**. Çeviri tabloları `assets/i18n/`:
 
+İlk sürümde desteklenen diller: **Türkçe, İngilizce, İspanyolca, Brezilya
+Portekizcesi, Almanca ve Fransızca**.
+
 | Dosya | İçerik |
 |---|---|
 | `ui.csv` | arayüz metinleri |
@@ -305,8 +308,8 @@ kartı Google Play'in döndürdüğü yerelleştirilmiş fiyatı gösterir.
    gerçek ürün sorgusu sideload build'de güvenilir şekilde test edilemez.
 5. Başarılı, iptal, `PENDING`, already-owned, yeniden kurulum/restore ve çevrimdışı
    açılış senaryolarını dene. `PENDING` iken reklamlar kaldırılmamalıdır.
-6. Satın alma sonrası interstitial'ın kapandığını; ekstra top ve kısa ipucu
-   rewarded tekliflerinin isteğe bağlı olarak kaldığını doğrula.
+6. Satın alma sonrası interstitial'ın kapandığını; kısa ipucu rewarded teklifinin
+   isteğe bağlı olarak kaldığını doğrula.
 
 Kod testi:
 

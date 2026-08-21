@@ -29,6 +29,12 @@ signal hit(body: Node2D)
 @export var idle_time := 2.2
 @export var hit_scale := 1.45
 @export var hit_time := 0.45
+## Acilmadan ONCE cok kisa bir sikisma (anticipation). Oncesinde hedef
+## dogrudan buyumeye gidiyordu ve temas ani "yumusak" okunuyordu; kucuk bir
+## on-sikisma darbeyi tok hissettirir. Sure bilerek ~1 goz kirpmasi altinda:
+## uzatildiginda isabet "gecikmis" gibi gorunuyor.
+@export var hit_compress_scale := 0.92
+@export var hit_compress_time := 0.065
 @export var ring_scale := 2.8
 @export var ring_time := 0.55
 
@@ -76,11 +82,14 @@ func play_hit_effect() -> void:
 	_visual.scale = Vector2.ONE
 	_visual.modulate = Color.WHITE
 
+	# Sira: kisa sikisma -> hizli acilma (+ parlama) -> yerine oturma.
 	_hit_tween = create_tween()
-	_hit_tween.set_parallel(true)
+	_hit_tween.tween_property(_visual, "scale", Vector2.ONE * hit_compress_scale,
+		hit_compress_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 	_hit_tween.tween_property(_visual, "scale", Vector2.ONE * hit_scale, hit_time * 0.35) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_hit_tween.tween_property(_visual, "modulate", Color(1.55, 1.5, 1.5, 1.0), hit_time * 0.2)
+	_hit_tween.parallel().tween_property(
+		_visual, "modulate", Color(1.55, 1.5, 1.5, 1.0), hit_time * 0.2)
 	_hit_tween.chain().tween_property(_visual, "scale", Vector2.ONE * 1.1, hit_time * 0.65) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_hit_tween.parallel().tween_property(_visual, "modulate", Color.WHITE, hit_time * 0.65)

@@ -6,7 +6,10 @@ extends Node2D
 ## Yonleri deterministik olarak (normal etrafinda esit araliklarla) secer;
 ## rastgelelik yoktur, boylece ayni atis ayni gorseli uretir.
 
-const LIFETIME := 0.26
+## Temas geri bildirimi bilerek KISA: 0.26 sn'de kivilcimlar topun kendisinden
+## daha uzun sure ekranda kaliyordu ve hizli sekmelerde birbirine binerek
+## gorusu bulandiriyordu. 0.18 sn "tok" bir temas birakip hemen cekiliyor.
+const LIFETIME := 0.18
 
 var _normal := Vector2.UP
 var _strength := 1.0
@@ -75,3 +78,12 @@ func _draw() -> void:
 
 	# Carpma anindaki kisa parlama.
 	draw_circle(Vector2.ZERO, reach * 0.32 * fade, Color(_core_color, alpha * 0.5))
+
+	# Ince temas halkasi: kivilcim cizgileri "hangi yone" savruldugunu
+	# anlatir, halka ise "tam nerede" degdigini tek okunakli sekille verir.
+	# Tek draw_arc oldugu icin maliyeti ihmal edilebilir; kalinlik ve alfa
+	# bilerek dusuk tutulur - amac vurgu eklemek degil, temasi netlestirmek.
+	var ring_alpha := alpha * 0.40
+	if ring_alpha > 0.01:
+		draw_arc(Vector2.ZERO, reach * (0.35 + 0.95 * _progress), 0.0, TAU, 20,
+			Color(_core_color, ring_alpha), 1.4, true)

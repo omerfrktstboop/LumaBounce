@@ -1,166 +1,161 @@
-keys,tr,en
-KOLAY,KOLAY,EASY
-ORTA,ORTA,MEDIUM
-ZOR,ZOR,HARD
-COK ZOR,ÇOK ZOR,VERY HARD
-USTA,USTA,MASTER
-OYNA,OYNA,PLAY
-BÖLÜMLER,BÖLÜMLER,LEVELS
-GERİ,GERİ,BACK
-AYARLAR,AYARLAR,SETTINGS
-Yakında,Yakında,Coming soon
-TOP HAKKI BİTTİ,TOP HAKKI BİTTİ,OUT OF BALLS
-BÖLÜM TAMAMLANDI,BÖLÜM TAMAMLANDI,LEVEL COMPLETE
-BÖLÜM BAŞARISIZ,BÖLÜM BAŞARISIZ,LEVEL FAILED
-HEDEFİ VURAMADIN,HEDEFİ VURAMADIN,YOU MISSED THE TARGET
-Süre,Süre,Time
-Top,Top,Balls
-SONRAKİ BÖLÜM,SONRAKİ BÖLÜM,NEXT LEVEL
-TEKRAR OYNA,TEKRAR OYNA,PLAY AGAIN
-TEKRAR BAŞLA,TEKRAR BAŞLA,RESTART
-BÖLÜM SEÇİMİ,BÖLÜM SEÇİMİ,LEVEL SELECT
-ANA MENÜ,ANA MENÜ,MAIN MENU
-BÖLÜM %d,BÖLÜM %d,LEVEL %d
-BÖLÜM 1,BÖLÜM 1,LEVEL 1
-%.1f sn,%.1f sn,%.1f s
-TEST (bölüm bitmez),TEST (bölüm bitmez),TEST (level will not end)
-%s · TEST (bölüm bitmez),%s · TEST (bölüm bitmez),%s · TEST (level will not end)
-YENİ MEKANİK,YENİ MEKANİK,NEW MECHANIC
-YENİ ENGEL,YENİ ENGEL,NEW OBSTACLE
-Açıklama,Açıklama,Description
-Anladım,Anladım,Got it
-Metal Halka,Metal Halka,Metal Ring
-Mayın,Mayın,Mine
-Hızlandırıcı,Hızlandırıcı,Speed Boost
-Kırılabilir Tuğla,Kırılabilir Tuğla,Breakable Brick
-Metal halka,Metal halka,Metal ring
-Bomba,Bomba,Mine
-Donen cark,Donen cark,Spinning wheel
-Kayan engel,Kayan engel,Sliding barrier
-Hızlandirici,Hızlandirici,Speed boost
-Engel,Engel,Obstacle
-"Halka bir at nalıdır: yalnızca üst tarafı açıktır. Alttan gelen top metal gövdeye çarpıp seker.","Halka bir at nalıdır: yalnızca üst tarafı açıktır. Alttan gelen top metal gövdeye çarpıp seker.","The ring is a horseshoe: only its top is open. A ball coming from below hits the metal body and bounces off."
-Mayına dokunma. Değdiği anda atış biter ve bir top hakkın gider.,Mayına dokunma. Değdiği anda atış biter ve bir top hakkın gider.,Do not touch the mine. On contact the shot ends and you lose a ball.
-Çark sürekli döner. Kollar arasındaki boşluğu zamanlaman gerekir.,Çark sürekli döner. Kollar arasındaki boşluğu zamanlaman gerekir.,The wheel spins constantly. You have to time the gap between its spokes.
-Bariyer ileri geri kayar. Açılan boşluğu doğru anda yakala.,Bariyer ileri geri kayar. Açılan boşluğu doğru anda yakala.,The barrier slides back and forth. Catch the gap at the right moment.
-İçinden geçen top hızlanır.,İçinden geçen top hızlanır.,A ball passing through it speeds up.
-"Mavi tuğla tek vuruşta kırılır. Bronz tuğla iki vuruş ister: önce çatlar, sonra dağılır.","Mavi tuğla tek vuruşta kırılır. Bronz tuğla iki vuruş ister: önce çatlar, sonra dağılır.","A blue brick breaks in one hit. A bronze brick needs two: first it cracks, then it shatters."
-Dil,Dil,Language
-Ses,Ses,Sound
-Müzik,Müzik,Music
-Efektler,Efektler,Effects
-Titreşim,Titreşim,Vibration
-Ekran sarsıntısı,Ekran sarsıntısı,Screen shake
-Nişan yardımı,Nişan yardımı,Aim assist
-İlerlemeyi sıfırla,İlerlemeyi sıfırla,Reset progress
-Açık,Açık,On
-Kapalı,Kapalı,Off
-Az,Az,Low
-Normal,Normal,Normal
-Sürüm,Sürüm,Version
-SIFIRLA,SIFIRLA,RESET
-VAZGEÇ,VAZGEÇ,CANCEL
-Tüm ilerlemen silinecek. Bu geri alınamaz.,Tüm ilerlemen silinecek. Bu geri alınamaz.,All your progress will be deleted. This cannot be undone.
-İlerleme sıfırlandı,İlerleme sıfırlandı,Progress reset
-Öğreticileri tekrar göster,Öğreticileri tekrar göster,Show tutorials again
-Öğreticiler tekrar gösterilecek,Öğreticiler tekrar gösterilecek,Tutorials will be shown again
-Sesler,Sesler,Audio
-Oynanış,Oynanış,Gameplay
-Genel,Genel,General
-Nişan izi uzun bölümlerde de tam görünür,Nişan izi uzun bölümlerde de tam görünür,The aim trail stays full length in later levels
-Sekme ve çarpmalarda titreşim,Sekme ve çarpmalarda titreşim,Vibration on bounces and impacts
-Lazer Bariyer,Lazer Bariyer,Pulse Laser
-Lazer bariyer,Lazer bariyer,Pulse laser
-Işın aralıklarla yanar. Yanmadan hemen önce parlar; sönük olduğu anda geç.,Işın aralıklarla yanar. Yanmadan hemen önce parlar; sönük olduğu anda geç.,The beam fires in bursts. It glows just before igniting — cross while it is dark.
-LUMA COIN,LUMA COIN,LUMA COIN
-İPUCUYU AÇ,İPUCUYU AÇ,UNLOCK HINT
-Bu bölümün örnek atış rotasını gösterir. İpucu bu bölüm için kalıcı açılır.,Bu bölümün örnek atış rotasını gösterir. İpucu bu bölüm için kalıcı açılır.,Shows a sample shot path. The hint stays unlocked for this level.
-BAKİYE: %d LUMA COIN,BAKİYE: %d LUMA COIN,BALANCE: %d LUMA COIN
-%d LUMA COIN İLE AÇ,%d LUMA COIN İLE AÇ,UNLOCK FOR %d LUMA COIN
-BAKİYE YETERSİZ,BAKİYE YETERSİZ,NOT ENOUGH LUMA COIN
-Yeni bölümleri ilk kez tamamlayarak Luma Coin kazanabilirsin.,Yeni bölümleri ilk kez tamamlayarak Luma Coin kazanabilirsin.,Complete new levels for the first time to earn Luma Coin.
-KAPAT,KAPAT,CLOSE
-%d LUMA COIN,%d LUMA COIN,%d LUMA COIN
-İPUCU,İPUCU,HINT
-İPUCU · %d,İPUCU · %d,HINT · %d
-İPUCU HAZIR DEĞİL,İPUCU HAZIR DEĞİL,HINT NOT READY
-ÖNCE BLOKLARI KIR,ÖNCE BLOKLARI KIR,BREAK THE BLOCKS FIRST
-ROTAYI TAKİP ET,ROTAYI TAKİP ET,FOLLOW THE PATH
-+%d LUMA COIN,+%d LUMA COIN,+%d LUMA COIN
-Nasıl yardım istersin?,Nasıl yardım istersin?,How do you want help?
-KISA İPUCU,KISA İPUCU,QUICK HINT
-Rotanın ilk hamlesini gösterir,Rotanın ilk hamlesini gösterir,Shows the first move of the route
-TAM ROTAYI AÇ,TAM ROTAYI AÇ,UNLOCK FULL ROUTE
-Bu bölüm için kalıcı açılır,Bu bölüm için kalıcı açılır,Unlocked permanently for this level
-Bakiye yetersiz,Bakiye yetersiz,Not enough coins
-Bu denemede kullanıldı,Bu denemede kullanıldı,Used on this attempt
-YAKINDA,YAKINDA,SOON
-ÜCRETSİZ,ÜCRETSİZ,FREE
-%d ◈,%d ◈,%d ◈
-İLK HAMLE,İLK HAMLE,FIRST MOVE
-DURAKLATILDI,DURAKLATILDI,PAUSED
-DEVAM ET,DEVAM ET,RESUME
-Gizlilik,Gizlilik,Privacy
-Gizlilik seçenekleri,Gizlilik seçenekleri,Privacy options
-REKLAM İZLE · +1 TOP,REKLAM İZLE · +1 TOP,WATCH AD · +1 BALL
-MAĞAZA,MAĞAZA,SHOP
-SEÇİLİ,SEÇİLİ,SELECTED
-SAHİP,SAHİP,OWNED
-TOP,TOP,BALL
-İZ,İZ,TRAIL
-FIRLATICI,FIRLATICI,LAUNCHER
-HEDEF EFEKTİ,HEDEF EFEKTİ,TARGET FX
-PREMİUM,PREMİUM,PREMIUM
-REKLAMLARI KALDIR,REKLAMLARI KALDIR,REMOVE ADS
-Geçiş reklamlarını kalıcı olarak kapatır,Geçiş reklamlarını kalıcı olarak kapatır,Permanently disables interstitial ads
-AKTİF,AKTİF,ACTIVE
-İŞLENİYOR...,İŞLENİYOR...,PROCESSING...
-SATIN AL,SATIN AL,PURCHASE
-PLAY STORE'A BAĞLANILIYOR,PLAY STORE'A BAĞLANILIYOR,CONNECTING TO PLAY STORE
-SATIN ALMALARI GERİ YÜKLE,SATIN ALMALARI GERİ YÜKLE,RESTORE PURCHASES
-REKLAMLAR KALDIRILDI,REKLAMLAR KALDIRILDI,ADS REMOVED
-ÖDEME BEKLEMEDE,ÖDEME BEKLEMEDE,PAYMENT PENDING
-PLAY STORE'A BAĞLANILAMADI,PLAY STORE'A BAĞLANILAMADI,COULD NOT CONNECT TO PLAY STORE
-SATIN ALMA TAMAMLANAMADI,SATIN ALMA TAMAMLANAMADI,PURCHASE COULD NOT BE COMPLETED
-SATIN ALMA GERİ YÜKLENDİ,SATIN ALMA GERİ YÜKLENDİ,PURCHASE RESTORED
-AKTİF SATIN ALMA BULUNAMADI,AKTİF SATIN ALMA BULUNAMADI,NO ACTIVE PURCHASE FOUND
-GÜNLÜK,GÜNLÜK,DAILY
-GÜNLÜK ✓,GÜNLÜK ✓,DAILY ✓
-Günlük challenge ve görevler,Günlük challenge ve görevler,Daily challenge and quests
-8. bölümü tamamlayınca açılır,8. bölümü tamamlayınca açılır,Unlocks after completing level 8
-GÜNLÜK CHALLENGE,GÜNLÜK CHALLENGE,DAILY CHALLENGE
-Günün bölümü: %s,Günün bölümü: %s,Today's level: %s
-10. bölümü tamamlayınca açılır,10. bölümü tamamlayınca açılır,Unlocks after completing level 10
-Bugünün ödülü alındı,Bugünün ödülü alındı,Today's reward claimed
-Tamamla ve +%d Luma Coin kazan,Tamamla ve +%d Luma Coin kazan,Complete it and earn +%d Luma Coin
-CHALLENGE'I OYNA,CHALLENGE'I OYNA,PLAY CHALLENGE
-GÜNLÜĞE DÖN,GÜNLÜĞE DÖN,BACK TO DAILY
-STREAK,STREAK,STREAK
-%d günlük seri · En iyi %d,%d günlük seri · En iyi %d,%d day streak · Best %d
-%d GÜN,%d GÜN,%d DAYS
-Seri günlük challenge tamamlayınca ilerler,Seri günlük challenge tamamlayınca ilerler,The streak grows when you complete the daily challenge
-GÜNLÜK GÖREVLER,GÜNLÜK GÖREVLER,DAILY QUESTS
-8. bölümü tamamlayınca üç günlük görev açılır,8. bölümü tamamlayınca üç günlük görev açılır,Three daily quests unlock after completing level 8
-Üç görev ödülü alındı,Üç görev ödülü alındı,Three-quest reward claimed
-Tüm görevler tamamlandı · +%d Luma Coin,Tüm görevler tamamlandı · +%d Luma Coin,All quests complete · +%d Luma Coin
-Üçünü tamamla · +%d Luma Coin,Üçünü tamamla · +%d Luma Coin,Complete all three · +%d Luma Coin
-3 bölüm tamamla,3 bölüm tamamla,Complete 3 levels
-Bir bölümü tek atışta tamamla,Bir bölümü tek atışta tamamla,Complete a level in one shot
-Toplam 25 sekme yap,Toplam 25 sekme yap,Make 25 bounces
-Bir bölümü 3 yıldızla tamamla,Bir bölümü 3 yıldızla tamamla,Complete a level with 3 stars
-Tam rota kullanmadan 3 bölüm tamamla,Tam rota kullanmadan 3 bölüm tamamla,Complete 3 levels without the full route
-Bir bonus bölüm dene,Bir bonus bölüm dene,Try a bonus level
-BAŞARILAR,BAŞARILAR,ACHIEVEMENTS
-%d / %d başarı açıldı,%d / %d başarı açıldı,%d / %d achievements unlocked
-AÇILDI,AÇILDI,UNLOCKED
-Keskin Nişancı,Keskin Nişancı,Sharpshooter
-10 farklı tamamlamayı tek atışta yap,10 farklı tamamlamayı tek atışta yap,Complete 10 different runs in one shot
-Yüzlük Seri,Yüzlük Seri,Century Run
-100 kampanya bölümünü tamamla,100 kampanya bölümünü tamamla,Complete 100 campaign levels
-Sekme Ustası,Sekme Ustası,Bounce Master
-Toplam 1000 sekme yap,Toplam 1000 sekme yap,Make 1000 bounces
-Kusursuz Rota,Kusursuz Rota,Perfect Route
-25 farklı tamamlamada 3 yıldız kazan,25 farklı tamamlamada 3 yıldız kazan,Earn 3 stars on 25 different completions
-Tüm Dünyalar,Tüm Dünyalar,All Worlds
-Üç dünyanın tamamını aç,Üç dünyanın tamamını aç,Unlock all three worlds
-BAŞARI AÇILDI: %s,BAŞARI AÇILDI: %s,ACHIEVEMENT UNLOCKED: %s
+keys,tr,en,es,pt_BR,de,fr
+KOLAY,KOLAY,EASY,FÁCIL,FÁCIL,LEICHT,FACILE
+ORTA,ORTA,MEDIUM,MEDIO,MÉDIO,MITTEL,MOYEN
+ZOR,ZOR,HARD,DIFÍCIL,DIFÍCIL,SCHWER,DIFFICILE
+COK ZOR,ÇOK ZOR,VERY HARD,MUY DIFÍCIL,MUITO DIFÍCIL,SEHR SCHWER,TRÈS DIFFICILE
+USTA,USTA,MASTER,MAESTRO,MESTRE,MEISTER,MAÎTRE
+OYNA,OYNA,PLAY,JUGAR,JOGAR,SPIELEN,JOUER
+BÖLÜMLER,BÖLÜMLER,LEVELS,NIVELES,FASES,LEVELS,NIVEAUX
+GERİ,GERİ,BACK,VOLVER,VOLTAR,ZURÜCK,RETOUR
+AYARLAR,AYARLAR,SETTINGS,AJUSTES,CONFIGURAÇÕES,EINSTELLUNGEN,PARAMÈTRES
+Yakında,Yakında,Coming soon,Próximamente,Em breve,Bald verfügbar,Bientôt disponible
+TOP HAKKI BİTTİ,TOP HAKKI BİTTİ,OUT OF BALLS,SIN BOLAS,SEM BOLAS,KEINE BÄLLE MEHR,PLUS DE BALLES
+BÖLÜM TAMAMLANDI,BÖLÜM TAMAMLANDI,LEVEL COMPLETE,NIVEL COMPLETADO,FASE CONCLUÍDA,LEVEL GESCHAFFT,NIVEAU TERMINÉ
+BÖLÜM BAŞARISIZ,BÖLÜM BAŞARISIZ,LEVEL FAILED,NIVEL FALLIDO,FASE FRACASSADA,LEVEL FEHLGESCHLAGEN,NIVEAU ÉCHOUÉ
+HEDEFİ VURAMADIN,HEDEFİ VURAMADIN,YOU MISSED THE TARGET,NO ALCANZASTE EL OBJETIVO,VOCÊ ERROU O ALVO,ZIEL VERFEHLT,VOUS AVEZ MANQUÉ LA CIBLE
+Süre,Süre,Time,Tiempo,Tempo,Zeit,Temps
+Top,Top,Balls,Bolas,Bolas,Bälle,Balles
+SONRAKİ BÖLÜM,SONRAKİ BÖLÜM,NEXT LEVEL,SIGUIENTE NIVEL,PRÓXIMA FASE,NÄCHSTES LEVEL,NIVEAU SUIVANT
+TEKRAR OYNA,TEKRAR OYNA,PLAY AGAIN,JUGAR DE NUEVO,JOGAR NOVAMENTE,NOCH MAL SPIELEN,REJOUER
+TEKRAR BAŞLA,TEKRAR BAŞLA,RESTART,REINICIAR,REINICIAR,NEU STARTEN,RECOMMENCER
+BÖLÜM SEÇİMİ,BÖLÜM SEÇİMİ,LEVEL SELECT,SELECCIÓN DE NIVEL,SELEÇÃO DE FASE,LEVELAUSWAHL,SÉLECTION DU NIVEAU
+ANA MENÜ,ANA MENÜ,MAIN MENU,MENÚ PRINCIPAL,MENU PRINCIPAL,HAUPTMENÜ,MENU PRINCIPAL
+BÖLÜM %d,BÖLÜM %d,LEVEL %d,NIVEL %d,FASE %d,LEVEL %d,NIVEAU %d
+BÖLÜM 1,BÖLÜM 1,LEVEL 1,NIVEL 1,FASE 1,LEVEL 1,NIVEAU 1
+%.1f sn,%.1f sn,%.1f s,%.1f s,%.1f s,%.1f s,%.1f s
+TEST (bölüm bitmez),TEST (bölüm bitmez),TEST (level will not end),PRUEBA (el nivel no termina),TESTE (a fase não termina),TEST (Level endet nicht),TEST (le niveau ne se termine pas)
+%s · TEST (bölüm bitmez),%s · TEST (bölüm bitmez),%s · TEST (level will not end),%s · PRUEBA (el nivel no termina),%s · TESTE (a fase não termina),%s · TEST (Level endet nicht),%s · TEST (le niveau ne se termine pas)
+YENİ MEKANİK,YENİ MEKANİK,NEW MECHANIC,NUEVA MECÁNICA,NOVA MECÂNICA,NEUE MECHANIK,NOUVELLE MÉCANIQUE
+YENİ ENGEL,YENİ ENGEL,NEW OBSTACLE,NUEVO OBSTÁCULO,NOVO OBSTÁCULO,NEUES HINDERNIS,NOUVEL OBSTACLE
+Açıklama,Açıklama,Description,Descripción,Descrição,Beschreibung,Description
+Anladım,Anladım,Got it,Entendido,Entendi,Verstanden,Compris
+Metal Halka,Metal Halka,Metal Ring,Aro metálico,Anel de metal,Metallring,Anneau métallique
+Mayın,Mayın,Mine,Mina,Mina,Mine,Mine
+Hızlandırıcı,Hızlandırıcı,Speed Boost,Acelerador,Acelerador,Beschleuniger,Accélérateur
+Kırılabilir Tuğla,Kırılabilir Tuğla,Breakable Brick,Ladrillo rompible,Tijolo quebrável,Zerbrechlicher Stein,Brique cassable
+Metal halka,Metal halka,Metal ring,Aro metálico,Anel de metal,Metallring,Anneau métallique
+Bomba,Bomba,Mine,Mina,Mina,Mine,Mine
+Donen cark,Donen cark,Spinning wheel,Rueda giratoria,Roda giratória,Drehrad,Roue tournante
+Kayan engel,Kayan engel,Sliding barrier,Barrera deslizante,Barreira deslizante,Gleitende Barriere,Barrière coulissante
+Hızlandirici,Hızlandirici,Speed boost,Acelerador,Acelerador,Beschleuniger,Accélérateur
+Engel,Engel,Obstacle,Obstáculo,Obstáculo,Hindernis,Obstacle
+"Halka bir at nalıdır: yalnızca üst tarafı açıktır. Alttan gelen top metal gövdeye çarpıp seker.","Halka bir at nalıdır: yalnızca üst tarafı açıktır. Alttan gelen top metal gövdeye çarpıp seker.","The ring is a horseshoe: only its top is open. A ball coming from below hits the metal body and bounces off.","El aro tiene forma de herradura: solo está abierto por arriba. Una bola que llega desde abajo golpea el metal y rebota.","O anel tem formato de ferradura: apenas a parte de cima é aberta. Uma bola vinda de baixo bate no metal e quica.","Der Ring ist hufeisenförmig: Nur oben ist er offen. Ein Ball von unten trifft den Metallkörper und prallt ab.","L’anneau est en fer à cheval : seul le haut est ouvert. Une balle arrivant par dessous heurte le métal et rebondit."
+Mayına dokunma. Değdiği anda atış biter ve bir top hakkın gider.,Mayına dokunma. Değdiği anda atış biter ve bir top hakkın gider.,Do not touch the mine. On contact the shot ends and you lose a ball.,No toques la mina. Al contacto termina el tiro y pierdes una bola.,Não toque na mina. Ao encostar o lançamento termina e você perde uma bola.,Berühre die Mine nicht. Bei Kontakt endet der Schuss und du verlierst einen Ball.,Ne touchez pas la mine. Au contact le tir se termine et vous perdez une balle.
+Çark sürekli döner. Kollar arasındaki boşluğu zamanlaman gerekir.,Çark sürekli döner. Kollar arasındaki boşluğu zamanlaman gerekir.,The wheel spins constantly. You have to time the gap between its spokes.,La rueda gira constantemente. Debes calcular el momento para pasar entre sus aspas.,A roda gira sem parar. Você precisa acertar o momento de passar entre as pás.,Das Rad dreht sich ständig. Passe den richtigen Moment zwischen seinen Armen ab.,La roue tourne sans arrêt. Vous devez passer au bon moment entre ses branches.
+Bariyer ileri geri kayar. Açılan boşluğu doğru anda yakala.,Bariyer ileri geri kayar. Açılan boşluğu doğru anda yakala.,The barrier slides back and forth. Catch the gap at the right moment.,La barrera se desliza de un lado a otro. Aprovecha el hueco en el momento justo.,A barreira desliza para frente e para trás. Pegue a abertura na hora certa.,Die Barriere gleitet hin und her. Nutze die Lücke im richtigen Moment.,La barrière coulisse d’avant en arrière. Profitez de l’ouverture au bon moment.
+İçinden geçen top hızlanır.,İçinden geçen top hızlanır.,A ball passing through it speeds up.,La bola acelera al atravesarlo.,A bola acelera ao passar por ele.,Ein Ball wird beim Durchqueren beschleunigt.,Une balle accélère en le traversant.
+"Mavi tuğla tek vuruşta kırılır. Bronz tuğla iki vuruş ister: önce çatlar, sonra dağılır.","Mavi tuğla tek vuruşta kırılır. Bronz tuğla iki vuruş ister: önce çatlar, sonra dağılır.","A blue brick breaks in one hit. A bronze brick needs two: first it cracks, then it shatters.","El ladrillo azul se rompe de un golpe. El de bronce necesita dos: primero se agrieta y luego se rompe.","O tijolo azul quebra com um golpe. O de bronze precisa de dois: primeiro racha e depois se despedaça.","Ein blauer Stein zerbricht mit einem Treffer. Ein bronzener braucht zwei: Erst bekommt er Risse, dann zerfällt er.","Une brique bleue se brise en un coup. Une brique de bronze en demande deux : elle se fissure puis éclate."
+Dil,Dil,Language,Idioma,Idioma,Sprache,Langue
+Ses,Ses,Sound,Sonido,Som,Ton,Son
+Müzik,Müzik,Music,Música,Música,Musik,Musique
+Efektler,Efektler,Effects,Efectos,Efeitos,Effekte,Effets
+Titreşim,Titreşim,Vibration,Vibración,Vibração,Vibration,Vibration
+Ekran sarsıntısı,Ekran sarsıntısı,Screen shake,Vibración de pantalla,Tremor da tela,Bildschirmwackeln,Tremblement de l’écran
+Nişan yardımı,Nişan yardımı,Aim assist,Ayuda de apuntado,Auxílio de mira,Zielhilfe,Aide à la visée
+İlerlemeyi sıfırla,İlerlemeyi sıfırla,Reset progress,Restablecer progreso,Redefinir progresso,Fortschritt zurücksetzen,Réinitialiser la progression
+Açık,Açık,On,Activado,Ativado,An,Activé
+Kapalı,Kapalı,Off,Desactivado,Desativado,Aus,Désactivé
+Az,Az,Low,Baja,Baixo,Niedrig,Faible
+Normal,Normal,Normal,Normal,Normal,Normal,Normal
+Sürüm,Sürüm,Version,Versión,Versão,Version,Version
+SIFIRLA,SIFIRLA,RESET,RESTABLECER,REDEFINIR,ZURÜCKSETZEN,RÉINITIALISER
+VAZGEÇ,VAZGEÇ,CANCEL,CANCELAR,CANCELAR,ABBRECHEN,ANNULER
+Tüm ilerlemen silinecek. Bu geri alınamaz.,Tüm ilerlemen silinecek. Bu geri alınamaz.,All your progress will be deleted. This cannot be undone.,Se eliminará todo tu progreso. Esta acción no se puede deshacer.,Todo o seu progresso será apagado. Isso não pode ser desfeito.,Dein gesamter Fortschritt wird gelöscht. Dies kann nicht rückgängig gemacht werden.,Toute votre progression sera supprimée. Cette action est irréversible.
+İlerleme sıfırlandı,İlerleme sıfırlandı,Progress reset,Progreso restablecido,Progresso redefinido,Fortschritt zurückgesetzt,Progression réinitialisée
+Öğreticileri tekrar göster,Öğreticileri tekrar göster,Show tutorials again,Mostrar tutoriales de nuevo,Mostrar tutoriais novamente,Tutorials erneut anzeigen,Afficher à nouveau les tutoriels
+Öğreticiler tekrar gösterilecek,Öğreticiler tekrar gösterilecek,Tutorials will be shown again,Los tutoriales se mostrarán de nuevo,Os tutoriais serão mostrados novamente,Tutorials werden erneut angezeigt,Les tutoriels seront à nouveau affichés
+Sesler,Sesler,Audio,Audio,Áudio,Audio,Audio
+Oynanış,Oynanış,Gameplay,Jugabilidad,Jogabilidade,Gameplay,Jouabilité
+Genel,Genel,General,General,Geral,Allgemein,Général
+Nişan izi uzun bölümlerde de tam görünür,Nişan izi uzun bölümlerde de tam görünür,The aim trail stays full length in later levels,La trayectoria de apuntado conserva toda su longitud en niveles avanzados,A trajetória da mira mantém o comprimento total nas fases avançadas,Die Ziellinie bleibt auch in späteren Levels vollständig sichtbar,La trajectoire de visée reste entière dans les niveaux avancés
+Sekme ve çarpmalarda titreşim,Sekme ve çarpmalarda titreşim,Vibration on bounces and impacts,Vibración en rebotes e impactos,Vibração em quicadas e impactos,Vibration bei Abprallern und Treffern,Vibration lors des rebonds et des impacts
+Lazer Bariyer,Lazer Bariyer,Pulse Laser,Láser pulsante,Laser pulsante,Impulslaser,Laser à impulsions
+Lazer bariyer,Lazer bariyer,Pulse laser,Láser pulsante,Laser pulsante,Impulslaser,Laser à impulsions
+Işın aralıklarla yanar. Yanmadan hemen önce parlar; sönük olduğu anda geç.,Işın aralıklarla yanar. Yanmadan hemen önce parlar; sönük olduğu anda geç.,The beam fires in bursts. It glows just before igniting — cross while it is dark.,El rayo se activa por intervalos. Brilla justo antes de encenderse; cruza cuando esté apagado.,O feixe dispara em intervalos. Ele brilha pouco antes de acender; passe enquanto estiver apagado.,Der Strahl feuert in Intervallen. Kurz davor leuchtet er auf; quere ihn im dunklen Moment.,Le rayon s’active par intermittence. Il brille juste avant; traversez lorsqu’il est éteint.
+LUMA COIN,LUMA COIN,LUMA COIN,LUMA COIN,LUMA COIN,LUMA COIN,LUMA COIN
+İPUCUYU AÇ,İPUCUYU AÇ,UNLOCK HINT,DESBLOQUEAR PISTA,DESBLOQUEAR DICA,HINWEIS FREISCHALTEN,DÉBLOQUER L’INDICE
+Bu bölümün örnek atış rotasını gösterir. İpucu bu bölüm için kalıcı açılır.,Bu bölümün örnek atış rotasını gösterir. İpucu bu bölüm için kalıcı açılır.,Shows a sample shot path. The hint stays unlocked for this level.,Muestra una trayectoria de ejemplo. La pista queda desbloqueada para este nivel.,Mostra uma trajetória de exemplo. A dica fica desbloqueada para esta fase.,Zeigt eine Beispielroute. Der Hinweis bleibt für dieses Level freigeschaltet.,Affiche un exemple de trajectoire. L’indice reste débloqué pour ce niveau.
+BAKİYE: %d LUMA COIN,BAKİYE: %d LUMA COIN,BALANCE: %d LUMA COIN,SALDO: %d LUMA COIN,SALDO: %d LUMA COIN,GUTHABEN: %d LUMA COIN,SOLDE : %d LUMA COIN
+%d LUMA COIN İLE AÇ,%d LUMA COIN İLE AÇ,UNLOCK FOR %d LUMA COIN,DESBLOQUEAR POR %d LUMA COIN,DESBLOQUEAR POR %d LUMA COIN,FÜR %d LUMA COIN FREISCHALTEN,DÉBLOQUER POUR %d LUMA COIN
+BAKİYE YETERSİZ,BAKİYE YETERSİZ,NOT ENOUGH LUMA COIN,SALDO INSUFICIENTE,SALDO INSUFICIENTE,NICHT GENUG LUMA COIN,PAS ASSEZ DE LUMA COIN
+Yeni bölümleri ilk kez tamamlayarak Luma Coin kazanabilirsin.,Yeni bölümleri ilk kez tamamlayarak Luma Coin kazanabilirsin.,Complete new levels for the first time to earn Luma Coin.,Completa nuevos niveles por primera vez para ganar Luma Coin.,Conclua novas fases pela primeira vez para ganhar Luma Coin.,Schließe neue Levels erstmals ab und verdiene Luma Coin.,Terminez de nouveaux niveaux pour la première fois afin de gagner des Luma Coin.
+KAPAT,KAPAT,CLOSE,CERRAR,FECHAR,SCHLIESSEN,FERMER
+%d LUMA COIN,%d LUMA COIN,%d LUMA COIN,%d LUMA COIN,%d LUMA COIN,%d LUMA COIN,%d LUMA COIN
+İPUCU,İPUCU,HINT,PISTA,DICA,HINWEIS,INDICE
+İPUCU · %d,İPUCU · %d,HINT · %d,PISTA · %d,DICA · %d,HINWEIS · %d,INDICE · %d
+İPUCU HAZIR DEĞİL,İPUCU HAZIR DEĞİL,HINT NOT READY,PISTA NO DISPONIBLE,DICA INDISPONÍVEL,HINWEIS NICHT BEREIT,INDICE NON DISPONIBLE
+ÖNCE BLOKLARI KIR,ÖNCE BLOKLARI KIR,BREAK THE BLOCKS FIRST,ROMPE PRIMERO LOS BLOQUES,QUEBRE OS BLOCOS PRIMEIRO,ZUERST DIE BLÖCKE ZERSTÖREN,BRISEZ D’ABORD LES BLOCS
+ROTAYI TAKİP ET,ROTAYI TAKİP ET,FOLLOW THE PATH,SIGUE LA RUTA,SIGA A ROTA,FOLGE DER ROUTE,SUIVEZ LA TRAJECTOIRE
++%d LUMA COIN,+%d LUMA COIN,+%d LUMA COIN,+%d LUMA COIN,+%d LUMA COIN,+%d LUMA COIN,+%d LUMA COIN
+Nasıl yardım istersin?,Nasıl yardım istersin?,How do you want help?,¿Qué tipo de ayuda quieres?,Como você quer ajuda?,Welche Hilfe möchtest du?,Quel type d’aide souhaitez-vous ?
+KISA İPUCU,KISA İPUCU,QUICK HINT,PISTA RÁPIDA,DICA RÁPIDA,KURZER HINWEIS,INDICE RAPIDE
+Rotanın ilk hamlesini gösterir,Rotanın ilk hamlesini gösterir,Shows the first move of the route,Muestra el primer movimiento de la ruta,Mostra o primeiro movimento da rota,Zeigt den ersten Zug der Route,Affiche le premier mouvement de la trajectoire
+TAM ROTAYI AÇ,TAM ROTAYI AÇ,UNLOCK FULL ROUTE,DESBLOQUEAR RUTA COMPLETA,DESBLOQUEAR ROTA COMPLETA,VOLLSTÄNDIGE ROUTE FREISCHALTEN,DÉBLOQUER LA TRAJECTOIRE COMPLÈTE
+Bu bölüm için kalıcı açılır,Bu bölüm için kalıcı açılır,Unlocked permanently for this level,Se desbloquea permanentemente para este nivel,Desbloqueada permanentemente para esta fase,Dauerhaft für dieses Level freigeschaltet,Débloqué définitivement pour ce niveau
+Bakiye yetersiz,Bakiye yetersiz,Not enough coins,Monedas insuficientes,Moedas insuficientes,Nicht genug Münzen,Pas assez de pièces
+Bu denemede kullanıldı,Bu denemede kullanıldı,Used on this attempt,Usada en este intento,Usada nesta tentativa,In diesem Versuch verwendet,Utilisé pour cette tentative
+YAKINDA,YAKINDA,SOON,PRÓXIMAMENTE,EM BREVE,BALD,BIENTÔT
+ÜCRETSİZ,ÜCRETSİZ,FREE,GRATIS,GRÁTIS,KOSTENLOS,GRATUIT
+%d ◈,%d ◈,%d ◈,%d ◈,%d ◈,%d ◈,%d ◈
+İLK HAMLE,İLK HAMLE,FIRST MOVE,PRIMER MOVIMIENTO,PRIMEIRO MOVIMENTO,ERSTER ZUG,PREMIER MOUVEMENT
+DURAKLATILDI,DURAKLATILDI,PAUSED,EN PAUSA,PAUSADO,PAUSIERT,EN PAUSE
+DEVAM ET,DEVAM ET,RESUME,CONTINUAR,CONTINUAR,FORTSETZEN,REPRENDRE
+Gizlilik,Gizlilik,Privacy,Privacidad,Privacidade,Datenschutz,Confidentialité
+Gizlilik seçenekleri,Gizlilik seçenekleri,Privacy options,Opciones de privacidad,Opções de privacidade,Datenschutzoptionen,Options de confidentialité
+MAĞAZA,MAĞAZA,SHOP,TIENDA,LOJA,SHOP,BOUTIQUE
+SEÇİLİ,SEÇİLİ,SELECTED,SELECCIONADO,SELECIONADO,AUSGEWÄHLT,SÉLECTIONNÉ
+SAHİP,SAHİP,OWNED,EN PROPIEDAD,POSSUÍDO,IM BESITZ,POSSÉDÉ
+TOP,TOP,BALL,BOLA,BOLA,BALL,BALLE
+İZ,İZ,TRAIL,ESTELA,RASTRO,SPUR,TRAÎNÉE
+FIRLATICI,FIRLATICI,LAUNCHER,LANZADOR,LANÇADOR,WERFER,LANCEUR
+HEDEF EFEKTİ,HEDEF EFEKTİ,TARGET FX,EFECTO DEL OBJETIVO,EFEITO DO ALVO,ZIELEFFEKT,EFFET DE CIBLE
+PREMİUM,PREMİUM,PREMIUM,PRÉMIUM,PREMIUM,PREMIUM,PREMIUM
+REKLAMLARI KALDIR,REKLAMLARI KALDIR,REMOVE ADS,ELIMINAR ANUNCIOS,REMOVER ANÚNCIOS,WERBUNG ENTFERNEN,SUPPRIMER LES PUBLICITÉS
+Geçiş reklamlarını kalıcı olarak kapatır,Geçiş reklamlarını kalıcı olarak kapatır,Permanently disables interstitial ads,Desactiva permanentemente los anuncios intersticiales,Desativa permanentemente os anúncios intersticiais,Deaktiviert dauerhaft Vollbildwerbung,Désactive définitivement les publicités interstitielles
+AKTİF,AKTİF,ACTIVE,ACTIVO,ATIVO,AKTIV,ACTIF
+İŞLENİYOR...,İŞLENİYOR...,PROCESSING...,PROCESANDO...,PROCESSANDO...,WIRD VERARBEITET...,TRAITEMENT...
+SATIN AL,SATIN AL,PURCHASE,COMPRAR,COMPRAR,KAUFEN,ACHETER
+PLAY STORE'A BAĞLANILIYOR,PLAY STORE'A BAĞLANILIYOR,CONNECTING TO PLAY STORE,CONECTANDO CON PLAY STORE,CONECTANDO À PLAY STORE,VERBINDUNG ZUM PLAY STORE,CONNEXION AU PLAY STORE
+SATIN ALMALARI GERİ YÜKLE,SATIN ALMALARI GERİ YÜKLE,RESTORE PURCHASES,RESTAURAR COMPRAS,RESTAURAR COMPRAS,KÄUFE WIEDERHERSTELLEN,RESTAURER LES ACHATS
+REKLAMLAR KALDIRILDI,REKLAMLAR KALDIRILDI,ADS REMOVED,ANUNCIOS ELIMINADOS,ANÚNCIOS REMOVIDOS,WERBUNG ENTFERNT,PUBLICITÉS SUPPRIMÉES
+ÖDEME BEKLEMEDE,ÖDEME BEKLEMEDE,PAYMENT PENDING,PAGO PENDIENTE,PAGAMENTO PENDENTE,ZAHLUNG AUSSTEHEND,PAIEMENT EN ATTENTE
+PLAY STORE'A BAĞLANILAMADI,PLAY STORE'A BAĞLANILAMADI,COULD NOT CONNECT TO PLAY STORE,NO SE PUDO CONECTAR CON PLAY STORE,NÃO FOI POSSÍVEL CONECTAR À PLAY STORE,VERBINDUNG ZUM PLAY STORE FEHLGESCHLAGEN,IMPOSSIBLE DE SE CONNECTER AU PLAY STORE
+SATIN ALMA TAMAMLANAMADI,SATIN ALMA TAMAMLANAMADI,PURCHASE COULD NOT BE COMPLETED,NO SE PUDO COMPLETAR LA COMPRA,NÃO FOI POSSÍVEL CONCLUIR A COMPRA,KAUF KONNTE NICHT ABGESCHLOSSEN WERDEN,IMPOSSIBLE DE FINALISER L’ACHAT
+SATIN ALMA GERİ YÜKLENDİ,SATIN ALMA GERİ YÜKLENDİ,PURCHASE RESTORED,COMPRA RESTAURADA,COMPRA RESTAURADA,KAUF WIEDERHERGESTELLT,ACHAT RESTAURÉ
+AKTİF SATIN ALMA BULUNAMADI,AKTİF SATIN ALMA BULUNAMADI,NO ACTIVE PURCHASE FOUND,NO SE ENCONTRÓ NINGUNA COMPRA ACTIVA,NENHUMA COMPRA ATIVA ENCONTRADA,KEIN AKTIVER KAUF GEFUNDEN,AUCUN ACHAT ACTIF TROUVÉ
+GÜNLÜK CHALLENGE,GÜNLÜK CHALLENGE,DAILY CHALLENGE,DESAFÍO DIARIO,DESAFIO DIÁRIO,TÄGLICHE HERAUSFORDERUNG,DÉFI QUOTIDIEN
+Günün bölümü: %s,Günün bölümü: %s,Today's level: %s,Nivel del día: %s,Fase do dia: %s,Heutiges Level: %s,Niveau du jour : %s
+10. bölümü tamamlayınca açılır,10. bölümü tamamlayınca açılır,Unlocks after completing level 10,Se desbloquea al completar el nivel 10,Desbloqueia após concluir a fase 10,Wird nach Abschluss von Level 10 freigeschaltet,Se débloque après avoir terminé le niveau 10
+Bugünün ödülü alındı,Bugünün ödülü alındı,Today's reward claimed,Recompensa de hoy obtenida,Recompensa de hoje coletada,Heutige Belohnung abgeholt,Récompense du jour récupérée
+Tamamla ve +%d Luma Coin kazan,Tamamla ve +%d Luma Coin kazan,Complete it and earn +%d Luma Coin,Complétalo y gana +%d Luma Coin,Conclua e ganhe +%d Luma Coin,Abschließen und +%d Luma Coin verdienen,Terminez-le et gagnez +%d Luma Coin
+CHALLENGE'I OYNA,CHALLENGE'I OYNA,PLAY CHALLENGE,JUGAR DESAFÍO,JOGAR DESAFIO,HERAUSFORDERUNG SPIELEN,JOUER AU DÉFI
+GÜNLÜĞE DÖN,GÜNLÜĞE DÖN,BACK TO DAILY,VOLVER AL DIARIO,VOLTAR AO DIÁRIO,ZURÜCK ZUR TAGESÜBERSICHT,RETOUR AU QUOTIDIEN
+STREAK,STREAK,STREAK,RACHA,SEQUÊNCIA,SERIE,SÉRIE
+%d günlük seri · En iyi %d,%d günlük seri · En iyi %d,%d day streak · Best %d,Racha de %d días · Récord %d,Sequência de %d dias · Melhor %d,%d-Tage-Serie · Bestwert %d,Série de %d jours · Record %d
+%d GÜN,%d GÜN,%d DAYS,%d DÍAS,%d DIAS,%d TAGE,%d JOURS
+Seri günlük challenge tamamlayınca ilerler,Seri günlük challenge tamamlayınca ilerler,The streak grows when you complete the daily challenge,La racha aumenta al completar el desafío diario,A sequência aumenta ao concluir o desafio diário,Die Serie wächst mit jeder täglichen Herausforderung,La série augmente lorsque vous terminez le défi quotidien
+GÜNLÜK GÖREVLER,GÜNLÜK GÖREVLER,DAILY QUESTS,MISIONES DIARIAS,MISSÕES DIÁRIAS,TÄGLICHE AUFGABEN,QUÊTES QUOTIDIENNES
+8. bölümü tamamlayınca üç günlük görev açılır,8. bölümü tamamlayınca üç günlük görev açılır,Three daily quests unlock after completing level 8,Se desbloquean tres misiones diarias al completar el nivel 8,Três missões diárias são desbloqueadas após concluir a fase 8,Drei tägliche Aufgaben werden nach Level 8 freigeschaltet,Trois quêtes quotidiennes se débloquent après le niveau 8
+Üç görev ödülü alındı,Üç görev ödülü alındı,Three-quest reward claimed,Recompensa de las tres misiones obtenida,Recompensa das três missões coletada,Belohnung für drei Aufgaben abgeholt,Récompense des trois quêtes récupérée
+Tüm görevler tamamlandı · +%d Luma Coin,Tüm görevler tamamlandı · +%d Luma Coin,All quests complete · +%d Luma Coin,Todas las misiones completadas · +%d Luma Coin,Todas as missões concluídas · +%d Luma Coin,Alle Aufgaben abgeschlossen · +%d Luma Coin,Toutes les quêtes terminées · +%d Luma Coin
+Üçünü tamamla · +%d Luma Coin,Üçünü tamamla · +%d Luma Coin,Complete all three · +%d Luma Coin,Completa las tres · +%d Luma Coin,Conclua as três · +%d Luma Coin,Alle drei abschließen · +%d Luma Coin,Terminez les trois · +%d Luma Coin
+3 bölüm tamamla,3 bölüm tamamla,Complete 3 levels,Completa 3 niveles,Conclua 3 fases,3 Levels abschließen,Terminez 3 niveaux
+Bir bölümü tek atışta tamamla,Bir bölümü tek atışta tamamla,Complete a level in one shot,Completa un nivel de un tiro,Conclua uma fase com um lançamento,Ein Level mit einem Schuss abschließen,Terminez un niveau en un seul tir
+Toplam 25 sekme yap,Toplam 25 sekme yap,Make 25 bounces,Haz 25 rebotes,Faça 25 quicadas,25-mal abprallen,Effectuez 25 rebonds
+Bir bölümü 3 yıldızla tamamla,Bir bölümü 3 yıldızla tamamla,Complete a level with 3 stars,Completa un nivel con 3 estrellas,Conclua uma fase com 3 estrelas,Ein Level mit 3 Sternen abschließen,Terminez un niveau avec 3 étoiles
+Tam rota kullanmadan 3 bölüm tamamla,Tam rota kullanmadan 3 bölüm tamamla,Complete 3 levels without the full route,Completa 3 niveles sin usar la ruta completa,Conclua 3 fases sem usar a rota completa,3 Levels ohne vollständige Route abschließen,Terminez 3 niveaux sans la trajectoire complète
+Bir bonus bölüm dene,Bir bonus bölüm dene,Try a bonus level,Prueba un nivel de bonificación,Tente uma fase bônus,Ein Bonuslevel versuchen,Essayez un niveau bonus
+BAŞARILAR,BAŞARILAR,ACHIEVEMENTS,LOGROS,CONQUISTAS,ERFOLGE,SUCCÈS
+%d / %d başarı açıldı,%d / %d başarı açıldı,%d / %d achievements unlocked,%d / %d logros desbloqueados,%d / %d conquistas desbloqueadas,%d / %d Erfolge freigeschaltet,%d / %d succès débloqués
+AÇILDI,AÇILDI,UNLOCKED,DESBLOQUEADO,DESBLOQUEADA,FREIGESCHALTET,DÉBLOQUÉ
+Keskin Nişancı,Keskin Nişancı,Sharpshooter,Tirador de élite,Atirador de elite,Scharfschütze,Tireur d’élite
+10 farklı tamamlamayı tek atışta yap,10 farklı tamamlamayı tek atışta yap,Complete 10 different runs in one shot,Completa 10 recorridos distintos de un tiro,Conclua 10 percursos diferentes com um lançamento,10 verschiedene Läufe mit einem Schuss abschließen,Terminez 10 parcours différents en un seul tir
+Yüzlük Seri,Yüzlük Seri,Century Run,Racha centenaria,Sequência centenária,Hunderterserie,Série du siècle
+100 kampanya bölümünü tamamla,100 kampanya bölümünü tamamla,Complete 100 campaign levels,Completa 100 niveles de campaña,Conclua 100 fases da campanha,100 Kampagnenlevel abschließen,Terminez 100 niveaux de campagne
+Sekme Ustası,Sekme Ustası,Bounce Master,Maestro del rebote,Mestre da quicada,Abprallmeister,Maître du rebond
+Toplam 1000 sekme yap,Toplam 1000 sekme yap,Make 1000 bounces,Haz 1000 rebotes,Faça 1000 quicadas,1000-mal abprallen,Effectuez 1 000 rebonds
+Kusursuz Rota,Kusursuz Rota,Perfect Route,Ruta perfecta,Rota perfeita,Perfekte Route,Trajectoire parfaite
+25 farklı tamamlamada 3 yıldız kazan,25 farklı tamamlamada 3 yıldız kazan,Earn 3 stars on 25 different completions,Consigue 3 estrellas en 25 recorridos distintos,Obtenha 3 estrelas em 25 percursos diferentes,Bei 25 verschiedenen Abschlüssen 3 Sterne verdienen,Obtenez 3 étoiles sur 25 parcours différents
+Tüm Dünyalar,Tüm Dünyalar,All Worlds,Todos los mundos,Todos os mundos,Alle Welten,Tous les mondes
+Üç dünyanın tamamını aç,Üç dünyanın tamamını aç,Unlock all three worlds,Desbloquea los tres mundos,Desbloqueie os três mundos,Alle drei Welten freischalten,Débloquez les trois mondes
+BAŞARI AÇILDI: %s,BAŞARI AÇILDI: %s,ACHIEVEMENT UNLOCKED: %s,LOGRO DESBLOQUEADO: %s,CONQUISTA DESBLOQUEADA: %s,ERFOLG FREIGESCHALTET: %s,SUCCÈS DÉBLOQUÉ : %s

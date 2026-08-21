@@ -15,9 +15,16 @@ extends Button
 signal purchase_requested(item: CosmeticData)
 signal select_requested(item: CosmeticData)
 
-const PREVIEW_SIZE := 92.0
+## Urunun KENDISI kartin ana bilgisidir; 92 birimde kozmetikler kartin
+## icinde kaybolup adlarindan ayirt edilemiyordu. CosmeticPreview her seyi
+## min(size)/2 uzerinden olcekledigi icin tek sabit dort turu de (top, iz,
+## firlatici, efekt) ayni bounding box mantiginda birlikte buyutur.
+const PREVIEW_SIZE := 108.0
 const CARD_WIDTH := 180.0
-const CARD_HEIGHT := 224.0
+## Onizleme +16 birim buyudu; kartin da ~ayni kadar buyumesi gerekiyor,
+## yoksa ad/fiyat satirlari sikisir. Genislik DEGISMEDI - 2 sutunlu izgara
+## duzeni genislige bagli, yukseklige degil.
+const CARD_HEIGHT := 240.0
 
 
 func configure(item: CosmeticData, owned: bool, selected: bool, affordable: bool) -> void:

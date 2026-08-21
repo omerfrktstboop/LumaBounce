@@ -5,9 +5,10 @@
 ## Runtime contract
 
 - `show_rewarded(short_hint)` grants the first route move only after `earned`.
-- `show_rewarded(revive)` grants one extra ball once per failed attempt. Closing or failing the ad grants nothing.
-- `maybe_show_interstitial(level_complete)` runs only when the player requests the next level and only after `AdPolicy` accepts the completion candidate.
-- The first five normal completions are protected; later candidates follow the every-four, 180-second fullscreen cooldown, and 120-second rewarded suppression rules.
+- `request_interstitial(level_complete)` runs at the result transition after every third successful normal-level completion.
+- `request_interstitial(level_fail)` becomes eligible after 600 seconds of active failed-attempt playtime on the same normal level and runs only at a failure result transition.
+- Completion and failure candidates share a 180-second global cooldown. Unloaded/failed ads never block gameplay and keep the candidate for a later natural transition.
+- The completion counter survives sessions in `user://ad_policy_state.cfg`; failure playtime is session-only and resets on success or level change.
 - `remove_ads` disables interstitials but keeps voluntary rewarded offers.
 - Missing or unloaded ads return immediately without blocking play.
 
@@ -46,4 +47,4 @@ godot --headless --path . --script res://tools/check_analytics_phase10.gd
 godot --headless --path . --script res://tools/check_release_readiness.gd
 ```
 
-Before a production upload, verify the consent form, rewarded cancellation/failure, earned extra ball/hint, interstitial cadence, privacy-options entry point, purchase, pending purchase, acknowledgment, and restore on a physical Android license-test device. Do not click production ads during development.
+Before a production upload, verify the consent form, rewarded hint cancellation/failure/earned result, both interstitial paths and their shared cooldown, privacy-options entry point, purchase, pending purchase, acknowledgment, and restore on a physical Android license-test device. Do not click production ads during development.

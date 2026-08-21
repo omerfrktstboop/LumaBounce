@@ -109,7 +109,7 @@ focus_mode = 0
 theme_override_font_sizes/font_size = 34
 text = "OYNA"
 script = ExtResource("8_button")
-emphasis = 0
+emphasis = 2
 
 [node name="LevelsCard" type="Button" parent="SafeArea/Content/MainActions" unique_id=546547253]
 layout_mode = 2

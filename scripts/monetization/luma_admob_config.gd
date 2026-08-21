@@ -8,7 +8,6 @@ extends RefCounted
 
 const ANDROID_APP_ID := "ca-app-pub-4666663369729289~4144593249"
 
-const REWARDED_EXTRA_BALL := "ca-app-pub-4666663369729289/9720473697"
 const REWARDED_SHORT_HINT := "ca-app-pub-4666663369729289/3826129122"
 const INTERSTITIAL_LEVEL_TRANSITION := "ca-app-pub-4666663369729289/7804902588"
 
@@ -26,8 +25,6 @@ static func rewarded_unit_id(placement: StringName) -> String:
 	match placement:
 		MonetizationConfig.PLACEMENT_SHORT_HINT:
 			return REWARDED_SHORT_HINT
-		MonetizationConfig.PLACEMENT_REVIVE:
-			return REWARDED_EXTRA_BALL
 		_:
 			return ""
 
