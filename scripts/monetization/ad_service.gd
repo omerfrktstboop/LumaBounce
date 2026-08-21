@@ -11,6 +11,7 @@ var _provider: AdProvider
 var _policy: AdPolicy
 var _analytics: AnalyticsService
 var _initialized := false
+var _fullscreen_request_in_progress := false
 
 
 func configure(provider: AdProvider, policy: AdPolicy,
@@ -51,13 +52,13 @@ func show_rewarded(placement: StringName) -> int:
 		"placement": placement,
 		"provider": provider_name(),
 	})
-	if not is_rewarded_ready(placement):
+	if _fullscreen_request_in_progress or not is_rewarded_ready(placement):
 		return _finish_rewarded(placement, AdResult.Code.UNAVAILABLE)
+	_fullscreen_request_in_progress = true
 	var result := int(await _provider.show_rewarded(placement))
+	_fullscreen_request_in_progress = false
 	if result < AdResult.Code.EARNED or result > AdResult.Code.SKIPPED_POLICY:
 		result = AdResult.Code.FAILED
-	if AdResult.is_rewarded_impression(result) and _policy != null:
-		_policy.record_rewarded_shown()
 	return _finish_rewarded(placement, result)
 
 
@@ -79,23 +80,31 @@ func show_privacy_options() -> bool:
 	return bool(await _provider.show_privacy_options())
 
 
-func maybe_show_interstitial(context: StringName, is_candidate := true,
-		now_seconds := -1.0) -> int:
+func request_interstitial(context: StringName, now_seconds := -1.0) -> int:
 	await get_tree().process_frame
+	var is_candidate := _policy != null and _policy.has_interstitial_candidate(context)
 	if is_candidate:
 		_track(AnalyticsService.INTERSTITIAL_CANDIDATE, {
 			"context": context,
 		})
-	if _policy != null and not _policy.can_show_interstitial(
-			context, is_candidate, now_seconds):
+	if _fullscreen_request_in_progress:
+		_debug("Interstitial skipped: fullscreen busy")
+		return _finish_interstitial(context, AdResult.Code.SKIPPED_POLICY)
+	if _policy == null or not _policy.can_show_interstitial(context, now_seconds):
+		_debug("Interstitial skipped: %s" % _policy.last_skip_reason() \
+			if _policy != null else "policy unavailable")
 		return _finish_interstitial(context, AdResult.Code.SKIPPED_POLICY)
 	if not is_interstitial_ready():
+		_debug("Interstitial skipped: ad not loaded")
 		return _finish_interstitial(context, AdResult.Code.UNAVAILABLE)
+	_fullscreen_request_in_progress = true
 	var result := int(await _provider.show_interstitial(context))
+	_fullscreen_request_in_progress = false
 	if result < AdResult.Code.EARNED or result > AdResult.Code.SKIPPED_POLICY:
 		result = AdResult.Code.FAILED
 	if result == AdResult.Code.DISPLAYED and _policy != null:
-		_policy.record_interstitial_shown(now_seconds)
+		_policy.record_interstitial_shown(context, now_seconds)
+		_debug("Interstitial shown: %s" % context)
 	return _finish_interstitial(context, result)
 
 
@@ -126,3 +135,8 @@ func _finish_interstitial(context: StringName, result: int) -> int:
 func _track(event_name: StringName, properties: Dictionary) -> void:
 	if _analytics != null:
 		_analytics.track_event(event_name, properties)
+
+
+func _debug(message: String) -> void:
+	if _policy != null and _policy.debug_logging_enabled():
+		print("[ADS] %s" % message)

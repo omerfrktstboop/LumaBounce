@@ -10,8 +10,8 @@ extends Node2D
 ##
 ## Ekran baska bir sahne acmaz; yalnizca sinyal yayar, AppRoot karar verir.
 
-signal level_completed(level_id: int, stars: int, seconds: float, shots: int, revived: bool)
-signal level_failed(level_id: int, reason: String, revive_eligible: bool, shots: int)
+signal level_completed(level_id: int, stars: int, seconds: float, shots: int)
+signal level_failed(level_id: int, reason: String, shots: int, active_seconds: float)
 signal next_level_requested(level_id: int)
 signal level_select_requested()
 signal menu_requested()
@@ -25,8 +25,6 @@ signal block_mechanic_seen()
 ## KISA IPUCU istendi. Odulu veren AppRoot'tur (ileride odullu reklam
 ## servisi); Gameplay yalnizca ister ve grant_short_hint() ile sonucu alir.
 signal short_hint_requested()
-## Son hak bittiginde oyuncunun istegiyle +1 top odullu reklami.
-signal revive_requested()
 ## Retention sayaçlari icin hafif olay. Analytics'e gonderilmez; AppRoot bunu
 ## DailyStore/AchievementStore'a yazar.
 signal bounce_recorded()
@@ -60,8 +58,6 @@ signal bounce_recorded()
 ## yeniden kazanilir). Bu alan 0'dan buyuk yapilirsa kisa ipucu da Coin
 ## isteyen bir secenege donusur - urun karari degisirse tek satir yeter.
 @export var short_hint_cost := 2
-## REVIVE: reklam izlemeye alternatif olarak +1 top almanin Coin bedeli.
-@export var revive_coin_cost := 2
 ## Kisa ipucu rotanin en fazla bu kadarini gosterir.
 ##
 ## Ust sinir SART: bazi bolumlerde ilk sekme yolun cok ilerisindedir ve
@@ -198,10 +194,6 @@ var short_hint_enabled := false
 ## tam rotadir.
 var _short_hint_shown := false
 var _full_hint_used_this_attempt := false
-var _revive_used := false
-## Coin ile revive satin alma SURUYOR mu. Cift dokunusun ikinci Coin'i
-## harcamasini engelleyen kilit: harcamadan ONCE kalkar, islem bitince duser.
-var _revive_purchase_pending := false
 var _pending_luma_coin_reward := 0
 var _max_lives := 5
 var _lives_remaining := 0
@@ -231,6 +223,7 @@ var _attempt_timer_running := false
 var _level_active_start_msec := 0
 var _level_elapsed_seconds := 0.0
 var _playtest_timing_paused := false
+var _timing_pause_reasons := {}
 var _last_shot_power := 0.0
 var _last_shot_angle_deg := 0.0
 var _last_failure_reason := "-"
@@ -242,6 +235,7 @@ var _final_attempt_shots := 0
 ## Bolum bitti (hedef vuruldu veya haklar tukendi). Kronometre burada durur;
 ## sonuc karti ekranda beklerken sure ilerlemez.
 var _attempt_finished := false
+var _attempt_completed := false
 var _active_touch_index := -1
 var _touch_indices: Array[int] = []
 var _suppress_touch_until_release := false
@@ -444,8 +438,6 @@ func _connect_signals() -> void:
 	_intro_card.dismissed.connect(_on_intro_card_dismissed)
 	_result_panel.next_pressed.connect(_on_result_next)
 	_result_panel.retry_pressed.connect(_on_result_retry)
-	_result_panel.revive_pressed.connect(_on_result_revive)
-	_result_panel.revive_coin_pressed.connect(_on_result_revive_coin)
 	# Gameplay hicbir sahne acmaz; AppRoot mevcut fade gecisiyle karar verir.
 	_result_panel.level_select_pressed.connect(level_select_requested.emit)
 	_result_panel.menu_pressed.connect(menu_requested.emit)
@@ -479,7 +471,6 @@ func reset_shot() -> void:
 	_hint_waiting_for_blocks = false
 	_short_hint_shown = false
 	_full_hint_used_this_attempt = false
-	_revive_used = false
 	_pending_luma_coin_reward = 0
 	_hide_hint_status()
 	# Ipucu yalnizca bolum bastan baslarken geri gelir; basarisiz atistan
@@ -528,13 +519,13 @@ func _on_pause_pressed() -> void:
 	# Agaci duraklatmak topu, engelleri ve tweenleri BIRLIKTE durdurur.
 	# Kartin kendisi PROCESS_MODE_ALWAYS oldugu icin butonlari calisir kalir.
 	get_tree().paused = true
-	_set_playtest_timing_paused(true)
+	_set_playtest_timing_pause(&"manual", true)
 
 
 func _on_pause_resume() -> void:
 	_pause_card.close()
 	get_tree().paused = false
-	_set_playtest_timing_paused(false)
+	_set_playtest_timing_pause(&"manual", false)
 	if not _intro_card.is_open() and not _attempt_finished:
 		_launcher.enabled = _launcher_enabled_before_pause
 
@@ -544,14 +535,18 @@ func _on_pause_resume() -> void:
 func _on_pause_restart() -> void:
 	_pause_card.close()
 	get_tree().paused = false
-	_set_playtest_timing_paused(false)
+	_set_playtest_timing_pause(&"manual", false)
 	reset_shot()
 
 
 func set_app_paused(paused: bool) -> void:
-	_set_playtest_timing_paused(paused)
+	_set_playtest_timing_pause(&"application", paused)
 	if paused:
 		_cancel_pointer_state()
+
+
+func set_fullscreen_ad_active(active: bool) -> void:
+	_set_playtest_timing_pause(&"advertisement", active)
 
 
 ## ATIS SIFIRLAMA. Sadece topu ve hedefi baslangic durumuna dondurur; top
@@ -697,6 +692,7 @@ func _on_target_hit(_body: Node2D) -> void:
 	# Sure ve atis burada dondurulur: kart gecikmeli acilir ve ekranda
 	# beklerken kronometrenin islemesi yildizi haksiz yere dusururdu.
 	_freeze_attempt()
+	_attempt_completed = true
 
 	if playtest_stats != null:
 		playtest_stats.record_completion(
@@ -709,7 +705,7 @@ func _on_target_hit(_body: Node2D) -> void:
 
 	level_completed.emit(
 		level_data.level_id, stars, _final_attempt_seconds,
-		_final_attempt_shots, _revive_used)
+		_final_attempt_shots)
 	_open_success_panel(stars, new_record)
 
 
@@ -743,28 +739,15 @@ func _open_success_panel(stars: int, new_record: bool) -> void:
 ## Son top da kaybedildi. Yildiz GOSTERILMEZ - bolum tamamlanmadi.
 func _open_failure_panel() -> void:
 	_freeze_attempt()
+	_attempt_completed = false
 
 	var token := _shot_token
 	await get_tree().create_timer(result_delay, false).timeout
 	if token != _shot_token or not is_inside_tree():
 		return
-	var revive_eligible := (
-		not _revive_used
-		and ad_service != null
-		and ad_service.is_rewarded_ready(MonetizationConfig.PLACEMENT_REVIVE))
-	_result_panel.set_revive_offer_eligible(revive_eligible)
-	if revive_eligible and analytics != null:
-		analytics.track_event(AnalyticsService.REWARDED_OFFER, {
-			"level_id": level_data.level_id,
-			"placement": MonetizationConfig.PLACEMENT_REVIVE,
-		})
-	# COIN ALTERNATIFI: reklam hazir olmasa da (ya da hic olmasa da) oyuncu
-	# devam edebilmeli. Iki yol AYRI degerlendirilir; biri kapaliyken digeri
-	# acik kalabilir.
-	_result_panel.set_revive_coin_offer(_can_afford_coin_revive(), revive_coin_cost)
 	level_failed.emit(
-		level_data.level_id, _last_failure_reason, revive_eligible,
-		_final_attempt_shots)
+		level_data.level_id, _last_failure_reason, _final_attempt_shots,
+		_final_attempt_seconds)
 	_result_panel.show_failure(
 		failed_title, failed_subtitle, restart_label,
 		_final_attempt_seconds, _final_attempt_shots)
@@ -794,82 +777,16 @@ func _can_advance_to_next() -> bool:
 	return progress == null or progress.is_unlocked(next_id)
 
 
+func has_completed_result() -> bool:
+	return _attempt_finished and _attempt_completed
+
+
 ## Hem basaridaki "TEKRAR OYNA" hem basarisizliktaki "TEKRAR BASLA".
 ## Ayni reset mantigi ikinci kez yazilmaz: reset_shot() zaten haklari,
 ## atis sayacini, attempt zamanlayicisini, hedefi, topu, ipucunu ve
 ## retry pulse'ini sifirlar; panel de orada kapanir.
 func _on_result_retry() -> void:
 	reset_shot()
-
-
-func _on_result_revive() -> void:
-	if _revive_used or not _result_panel.is_revive_offer_eligible():
-		return
-	if ad_service == null or not ad_service.is_rewarded_ready(
-		MonetizationConfig.PLACEMENT_REVIVE):
-		_result_panel.set_revive_offer_eligible(false)
-		return
-	_result_panel.set_revive_offer_busy(true)
-	revive_requested.emit()
-
-
-## Coin ile devam etmenin kosullari. grant_extra_ball()'in on kosullariyla
-## AYNI olmali: harcadiktan sonra odulun verilememesi kabul edilemez.
-func _can_afford_coin_revive() -> bool:
-	return (
-		not _revive_used
-		and revive_coin_cost > 0
-		and wallet != null
-		and wallet.can_afford(revive_coin_cost))
-
-
-## 2 Coin ile +1 top. Reklamdan farkli olarak AppRoot'a ugramaz: ortada
-## reklam servisi yok, yalnizca cuzdan var - ve cuzdan kararlari (ipucu
-## satin alma gibi) zaten Gameplay'in icinde veriliyor.
-##
-## CIFT DUSMEZ: kilit harcamadan once kalkar. Odul herhangi bir sebeple
-## verilemezse Coin GERI IADE edilir - oyuncu alamadigi bir sey icin odemez.
-func _on_result_revive_coin() -> void:
-	if _revive_purchase_pending or not _can_afford_coin_revive():
-		return
-	if _lives_remaining > 0 or not _result_panel.visible:
-		return
-	_revive_purchase_pending = true
-	_result_panel.set_revive_offer_busy(true)
-	if not wallet.spend(revive_coin_cost):
-		_revive_purchase_pending = false
-		_result_panel.set_revive_offer_busy(false)
-		return
-	if not grant_extra_ball():
-		wallet.add(revive_coin_cost)
-		_result_panel.set_revive_offer_busy(false)
-	_revive_purchase_pending = false
-	_refresh_hint_hud()
-
-
-func set_revive_offer_busy(busy: bool) -> void:
-	_result_panel.set_revive_offer_busy(busy)
-
-
-## Odul callback'i yalnizca AppRoot'tan gelir. Deneme ve kirilmis bloklar
-## korunur; sadece tek top eklenir ve donmus kronometre kaldigi yerden devam eder.
-## Odul verildi mi. Coin yolu bu sonuca bakar: verilemediyse harcanan Coin
-## iade edilir (bkz. _on_result_revive_coin).
-func grant_extra_ball() -> bool:
-	if _revive_used or _lives_remaining > 0 or not _result_panel.visible:
-		return false
-	_revive_used = true
-	_result_panel.set_revive_offer_eligible(false)
-	_result_panel.set_revive_coin_offer(false, revive_coin_cost)
-	_result_panel.hide_result()
-	_lives_remaining = 1
-	_update_lives_hud()
-	_attempt_elapsed_seconds = _final_attempt_seconds
-	_attempt_active_start_msec = Time.get_ticks_msec()
-	_attempt_timer_running = true
-	_attempt_finished = false
-	_respawn_ball()
-	return true
 
 
 # --- Carpma geri bildirimi ---------------------------------------------------
@@ -1546,6 +1463,7 @@ func _start_playtest_timing() -> void:
 	_attempt_elapsed_seconds = 0.0
 	_level_active_start_msec = now
 	_attempt_active_start_msec = now
+	_timing_pause_reasons.clear()
 	_playtest_timing_paused = false
 
 
@@ -1558,6 +1476,7 @@ func _reset_attempt_timer() -> void:
 	_final_attempt_seconds = 0.0
 	_final_attempt_shots = 0
 	_attempt_finished = false
+	_attempt_completed = false
 
 
 ## Oyuncu ilk gecerli nisanini yaptigi anda kronometreyi baslatir. Deneme
@@ -1569,10 +1488,16 @@ func _start_attempt_timer() -> void:
 	_attempt_active_start_msec = Time.get_ticks_msec()
 
 
-func _set_playtest_timing_paused(paused: bool) -> void:
-	if paused == _playtest_timing_paused:
-		return
+func _set_playtest_timing_pause(reason: StringName, paused: bool) -> void:
+	var was_paused := not _timing_pause_reasons.is_empty()
 	if paused:
+		_timing_pause_reasons[reason] = true
+	else:
+		_timing_pause_reasons.erase(reason)
+	var is_paused := not _timing_pause_reasons.is_empty()
+	if was_paused == is_paused:
+		return
+	if is_paused:
 		_flush_playtest_time()
 		_playtest_timing_paused = true
 		return

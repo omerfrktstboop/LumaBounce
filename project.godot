@@ -49,7 +49,7 @@ enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg", "res://ad
 
 [internationalization]
 
-locale/translations=PackedStringArray("res://assets/i18n/ui.tr.translation", "res://assets/i18n/ui.en.translation", "res://assets/i18n/levels.tr.translation", "res://assets/i18n/levels.en.translation")
+locale/translations=PackedStringArray("res://assets/i18n/ui.tr.translation", "res://assets/i18n/ui.en.translation", "res://assets/i18n/ui.es.translation", "res://assets/i18n/ui.pt_BR.translation", "res://assets/i18n/ui.de.translation", "res://assets/i18n/ui.fr.translation", "res://assets/i18n/levels.tr.translation", "res://assets/i18n/levels.en.translation", "res://assets/i18n/levels.es.translation", "res://assets/i18n/levels.pt_BR.translation", "res://assets/i18n/levels.de.translation", "res://assets/i18n/levels.fr.translation")
 locale/fallback="tr"
 
 [layer_names]

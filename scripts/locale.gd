@@ -14,7 +14,7 @@ extends RefCounted
 ## degil, Turkce gorunuyor.
 
 ## Desteklenen diller. Sira ayarlar ekranindaki sirayla aynidir.
-const SUPPORTED: Array[String] = ["tr", "en"]
+const SUPPORTED: Array[String] = ["tr", "en", "es", "pt_BR", "de", "fr"]
 const DEFAULT := "tr"
 
 ## Dilin KENDI dilindeki adi - ayarlar ekraninda "English" yazar, "Ingilizce"
@@ -22,11 +22,15 @@ const DEFAULT := "tr"
 const DISPLAY_NAMES := {
 	"tr": "Türkçe",
 	"en": "English",
+	"es": "Español",
+	"pt_BR": "Português (Brasil)",
+	"de": "Deutsch",
+	"fr": "Français",
 }
 
 
 static func is_supported(code: String) -> bool:
-	return SUPPORTED.has(code)
+	return not _canonical_supported(code).is_empty()
 
 
 static func display_name(code: String) -> String:
@@ -36,14 +40,28 @@ static func display_name(code: String) -> String:
 ## Kaydedilmis/serbest bir kodu desteklenen bir dile indirger.
 ## Bos veya taninmayan deger sistem diline, o da desteklenmiyorsa DEFAULT'a duser.
 static func normalize(code: String) -> String:
-	var clean := code.strip_edges().to_lower()
-	if is_supported(clean):
-		return clean
+	var clean := code.strip_edges().replace("-", "_").to_lower()
+	var exact := _canonical_supported(clean)
+	if not exact.is_empty():
+		return exact
 	# "en_US" gibi bolge ekli kodlar da kabul edilir.
 	var language := clean.split("_")[0] if clean.contains("_") else clean
-	if is_supported(language):
-		return language
+	# Ilk surumde tek Portekizce ceviri Brezilya varyantidir. Genel "pt" ve
+	# diger bolge kodlari bos kalmak yerine bu eksiksiz pakete yonlendirilir.
+	if language == "pt":
+		return "pt_BR"
+	var base := _canonical_supported(language)
+	if not base.is_empty():
+		return base
 	return DEFAULT
+
+
+static func _canonical_supported(code: String) -> String:
+	var clean := code.strip_edges().replace("-", "_").to_lower()
+	for supported in SUPPORTED:
+		if supported.to_lower() == clean:
+			return supported
+	return ""
 
 
 ## Oyuncu henuz secim yapmadiginda kullanilacak dil: cihazin dili destekleniyorsa

@@ -65,7 +65,6 @@ var _editor_batch_context := {}
 ## Editorde duzenlenen sey bir resmi bolumden geldiyse onun numarasi, yoksa 0.
 var _editor_source_level_id := 0
 var _busy := false
-var _completion_interstitial_candidate := false
 var _completion_ad_in_progress := false
 var _active_daily_challenge := false
 var _analytics_session_active := false
@@ -274,7 +273,6 @@ func _connect_screen(screen: Node) -> void:
 		menu.levels_requested.connect(go_to_level_select)
 		menu.settings_requested.connect(go_to_settings)
 		menu.shop_requested.connect(go_to_shop)
-		menu.daily_requested.connect(go_to_retention)
 		return
 
 	var shop := screen as ShopScreen
@@ -310,7 +308,6 @@ func _connect_screen(screen: Node) -> void:
 		gameplay.obstacle_kind_seen.connect(_on_obstacle_kind_seen)
 		gameplay.block_mechanic_seen.connect(_on_block_mechanic_seen)
 		gameplay.short_hint_requested.connect(_on_short_hint_requested.bind(gameplay))
-		gameplay.revive_requested.connect(_on_revive_requested.bind(gameplay))
 		gameplay.level_failed.connect(_on_level_failed)
 		gameplay.bounce_recorded.connect(_on_bounce_recorded.bind(gameplay))
 		return
@@ -328,7 +325,6 @@ func _configure_main_menu(screen: Node) -> void:
 		# ozeti Magaza/Ayarlar'in zaten yaptigi gibi dogrudan okur.
 		menu.wallet = _wallet
 		menu.progress = _progress
-		menu.daily_store = _daily_store
 
 
 func _configure_level_select(screen: Node) -> void:
@@ -392,6 +388,7 @@ func _configure_gameplay(screen: Node, level_id: int) -> void:
 		gameplay.analytics = _analytics
 		gameplay.short_hint_enabled = _ad_service.is_rewarded_ready(
 			MonetizationConfig.PLACEMENT_SHORT_HINT)
+		_ad_policy.begin_level(LevelData.uid_for(level_id))
 		_analytics.track_event(AnalyticsService.LEVEL_START, {
 			"level_id": level_id,
 			"world": _world_key(level_id),
@@ -418,6 +415,7 @@ func _configure_daily_gameplay(screen: Node) -> void:
 	gameplay.daily_mode = true
 	gameplay.short_hint_enabled = _ad_service.is_rewarded_ready(
 		MonetizationConfig.PLACEMENT_SHORT_HINT)
+	_ad_policy.begin_level("daily:%s" % _daily_store.active_date)
 	_analytics.track_event(AnalyticsService.LEVEL_START, {
 		"level_id": level_id,
 		"world": _world_key(level_id),
@@ -437,7 +435,8 @@ func _setup_monetization() -> void:
 		analytics_provider = GameAnalyticsProvider.new()
 	_analytics.configure(analytics_provider, analytics_config)
 	_analytics.initialize()
-	_ad_policy = AdPolicy.new(_entitlements)
+	_ad_policy = AdPolicy.new(
+		_entitlements, MonetizationConfig.AD_POLICY_STATE_PATH)
 	_ad_service = AdService.new()
 	_ad_service.name = "AdService"
 	var provider: AdProvider = NoOpAdProvider.new()
@@ -484,28 +483,18 @@ func _on_short_hint_requested(gameplay: Gameplay) -> void:
 		return
 	if _ad_service == null:
 		return
+	gameplay.set_fullscreen_ad_active(true)
 	var result := int(await _ad_service.show_rewarded(
 		MonetizationConfig.PLACEMENT_SHORT_HINT))
-	if result != AdResult.Code.EARNED:
+	if gameplay == null or not is_instance_valid(gameplay):
 		return
-	if gameplay != null and is_instance_valid(gameplay) and gameplay.is_inside_tree():
+	gameplay.set_fullscreen_ad_active(false)
+	if result == AdResult.Code.EARNED and gameplay.is_inside_tree():
 		gameplay.grant_short_hint()
 
 
-func _on_revive_requested(gameplay: Gameplay) -> void:
-	if gameplay == null or not is_instance_valid(gameplay) or _ad_service == null:
-		return
-	var result := int(await _ad_service.show_rewarded(MonetizationConfig.PLACEMENT_REVIVE))
-	if not is_instance_valid(gameplay):
-		return
-	if result == AdResult.Code.EARNED:
-		gameplay.grant_extra_ball()
-	else:
-		gameplay.set_revive_offer_busy(false)
-
-
 func _on_level_completed(level_id: int, stars: int, seconds: float,
-		shots: int, revived: bool) -> void:
+		shots: int) -> void:
 	# Editorden test edilen bolum gercek ilerlemeye YAZILMAZ; henuz oyunun
 	# bir parcasi degil ve kaydi kirletmesi anlamsiz olurdu.
 	if _editor_level != null:
@@ -514,7 +503,7 @@ func _on_level_completed(level_id: int, stars: int, seconds: float,
 	var retention_snapshot := gameplay.get_retention_snapshot() if gameplay != null else {}
 	var full_hint_used := bool(retention_snapshot.get("full_hint_used", false))
 	if _active_daily_challenge:
-		_on_daily_completed(level_id, stars, seconds, shots, revived, full_hint_used,
+		_on_daily_completed(level_id, stars, seconds, shots, full_hint_used,
 			gameplay)
 		return
 	var first_clear := not _progress.is_completed(level_id)
@@ -526,7 +515,6 @@ func _on_level_completed(level_id: int, stars: int, seconds: float,
 		"shots": shots,
 		"first_clear": first_clear,
 		"is_bonus": LevelWorlds.is_bonus_id(level_id),
-		"revived": revived,
 	})
 	# "Ilk kez 3 yildiz" kaydetmeden ONCE olculmeli; set_level_stars_if_higher
 	# calistiktan sonra eski deger kaybolur.
@@ -543,11 +531,8 @@ func _on_level_completed(level_id: int, stars: int, seconds: float,
 			if rewarded_screen != null:
 				rewarded_screen.notify_luma_coin_reward(reward)
 
-	var candidate := _ad_policy.register_successful_completion(
-		_completed_normal_level_count(), not LevelWorlds.is_bonus_id(level_id))
-	_completion_interstitial_candidate = candidate
-	if gameplay != null:
-		gameplay.set_interstitial_candidate(candidate)
+	_ad_policy.register_successful_completion(
+		LevelData.uid_for(level_id), not LevelWorlds.is_bonus_id(level_id))
 	_record_meta_completion(
 		LevelData.uid_for(level_id), stars, shots, full_hint_used, gameplay)
 
@@ -559,11 +544,9 @@ func _on_next_level_requested(level_id: int) -> void:
 	if _completion_ad_in_progress:
 		return
 	_completion_ad_in_progress = true
-	var candidate := _completion_interstitial_candidate
-	_completion_interstitial_candidate = false
 	if _ad_service != null:
-		await _ad_service.maybe_show_interstitial(
-			MonetizationConfig.CONTEXT_LEVEL_COMPLETE, candidate)
+		await _ad_service.request_interstitial(
+			MonetizationConfig.CONTEXT_LEVEL_COMPLETE)
 	_completion_ad_in_progress = false
 	go_to_level(level_id)
 
@@ -576,10 +559,11 @@ func _completed_normal_level_count() -> int:
 	return count
 
 
-## Failure/retry akisinda interstitial CAGIRILMAZ. Bu sinyal yalnizca analytics
-## ve gelecekte ResultPanel'e eklenecek istege bagli revive teklifinin hook'udur.
-func _on_level_failed(level_id: int, reason: String, revive_eligible: bool,
-		shots: int) -> void:
+## Failure suresi yalnizca Gameplay'in pause/background hariç tuttugu aktif
+## deneme suresinden gelir. Reklam sonuc karti acildiktan sonraki dogal
+## geciste denenir; provider hazir degilse oyun akisi bekletilmez.
+func _on_level_failed(level_id: int, reason: String, shots: int,
+		active_seconds: float) -> void:
 	if _editor_level != null:
 		return
 	_analytics.track_event(AnalyticsService.LEVEL_FAIL, {
@@ -587,13 +571,17 @@ func _on_level_failed(level_id: int, reason: String, revive_eligible: bool,
 		"world": _world_key(level_id),
 		"reason": AnalyticsService.failure_reason(reason),
 		"shots_bucket": AnalyticsService.shots_bucket(shots),
-		"revive_eligible": revive_eligible,
 		"is_bonus": LevelWorlds.is_bonus_id(level_id),
 	})
+	var candidate := _ad_policy.register_failed_attempt(
+		LevelData.uid_for(level_id), active_seconds,
+		not _active_daily_challenge and not LevelWorlds.is_bonus_id(level_id))
+	if candidate and _ad_service != null:
+		await _ad_service.request_interstitial(MonetizationConfig.CONTEXT_LEVEL_FAIL)
 
 
 func _on_daily_completed(level_id: int, stars: int, seconds: float, shots: int,
-		revived: bool, full_hint_used: bool, gameplay: Gameplay) -> void:
+		full_hint_used: bool, gameplay: Gameplay) -> void:
 	_analytics.track_event(AnalyticsService.LEVEL_COMPLETE, {
 		"level_id": level_id,
 		"world": _world_key(level_id),
@@ -602,7 +590,6 @@ func _on_daily_completed(level_id: int, stars: int, seconds: float, shots: int,
 		"shots": shots,
 		"first_clear": not _daily_store.is_daily_claimed(),
 		"is_bonus": false,
-		"revived": revived,
 	})
 	var completion := _daily_store.complete_daily()
 	var reward := int(completion.get("reward", 0))
@@ -625,9 +612,6 @@ func _on_daily_completed(level_id: int, stars: int, seconds: float, shots: int,
 		})
 	_record_meta_completion(
 		"daily:%s" % _daily_store.active_date, stars, shots, full_hint_used, gameplay)
-	_completion_interstitial_candidate = false
-	if gameplay != null:
-		gameplay.set_interstitial_candidate(false)
 
 
 func _record_meta_completion(completion_key: String, stars: int, shots: int,
@@ -741,6 +725,7 @@ func _on_gameplay_menu_requested() -> void:
 	if _active_daily_challenge:
 		go_to_retention()
 		return
+	await _show_completion_interstitial_if_needed()
 	go_to_main_menu()
 
 
@@ -748,7 +733,21 @@ func _on_gameplay_level_select_requested() -> void:
 	if _active_daily_challenge:
 		go_to_retention()
 		return
+	await _show_completion_interstitial_if_needed()
 	go_to_level_select()
+
+
+func _show_completion_interstitial_if_needed() -> void:
+	var gameplay := _current as Gameplay
+	if gameplay == null or not gameplay.has_completed_result():
+		return
+	if _completion_ad_in_progress:
+		return
+	_completion_ad_in_progress = true
+	if _ad_service != null:
+		await _ad_service.request_interstitial(
+			MonetizationConfig.CONTEXT_LEVEL_COMPLETE)
+	_completion_ad_in_progress = false
 
 
 # --- Bolum editoru (yalnizca debug) -------------------------------------------

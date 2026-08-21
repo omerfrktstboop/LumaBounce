@@ -715,7 +715,7 @@ func _test_practice_mode() -> void:
 	# kopyasini degistirir ve test hicbir sey olcmemis olur.
 	var completed := [false]
 	gameplay.level_completed.connect(func(_id: int, _stars: int, _seconds: float,
-			_shots: int, _revived: bool) -> void: completed[0] = true)
+			_shots: int) -> void: completed[0] = true)
 	var target := gameplay.get_node("Target") as Target
 	ball.launch(Vector2.UP * 1000.0)
 	target.hit.emit(ball)
@@ -739,7 +739,7 @@ func _test_practice_mode() -> void:
 	await physics_frame
 	var normal_completed := [false]
 	normal.level_completed.connect(func(_id: int, _stars: int, _seconds: float,
-			_shots: int, _revived: bool) -> void: normal_completed[0] = true)
+			_shots: int) -> void: normal_completed[0] = true)
 	var normal_ball := normal.get_node("Ball") as Ball
 	normal_ball.launch(Vector2.UP * 1000.0)
 	(normal.get_node("Target") as Target).hit.emit(normal_ball)
@@ -1311,20 +1311,36 @@ func _test_locale() -> void:
 	print("--- Dil secimi ---")
 	var before := TranslationServer.get_locale()
 
-	_check("desteklenen diller", Locale.SUPPORTED, ["tr", "en"] as Array[String])
+	_check("desteklenen diller", Locale.SUPPORTED,
+		["tr", "en", "es", "pt_BR", "de", "fr"] as Array[String])
 	_check("tr destekleniyor", Locale.is_supported("tr"), true)
-	_check("taninmayan dil varsayilana duser", Locale.normalize("de"), "tr")
+	_check("taninmayan dil varsayilana duser", Locale.normalize("ja"), "tr")
 	_check("bos deger varsayilana duser", Locale.normalize(""), "tr")
 	_check("bolge ekli kod indirgenir", Locale.normalize("en_US"), "en")
 	_check("buyuk harf kabul edilir", Locale.normalize("EN"), "en")
+	_check("Ispanyolca bolge kodu indirgenir", Locale.normalize("es_MX"), "es")
+	_check("Portekizce Brezilya kodu korunur", Locale.normalize("pt-BR"), "pt_BR")
+	_check("genel Portekizce Brezilya paketine duser", Locale.normalize("pt"), "pt_BR")
 	# Dil kendi dilinde yazilir: dil secen oyuncu mevcut dili okuyamiyor olabilir.
 	_check("dil kendi adiyla gosterilir", Locale.display_name("en"), "English")
+	_check("Brezilya Portekizcesi kendi adiyla gosterilir",
+		Locale.display_name("pt_BR"), "Português (Brasil)")
 
 	Locale.apply("en")
 	_check("apply locale'i degistirir", Locale.current(), "en")
 	_check("ceviri uygulaniyor", TranslationServer.translate("OYNA"), "PLAY")
 	_check("zorluk etiketi cevriliyor",
 		TranslationServer.translate("KOLAY"), "EASY")
+	var locale_samples := {
+		"es": "JUGAR",
+		"pt_BR": "JOGAR",
+		"de": "SPIELEN",
+		"fr": "JOUER",
+	}
+	for code: String in locale_samples:
+		Locale.apply(code)
+		_check("%s arayuz cevirisi uygulanir" % code,
+			TranslationServer.translate("OYNA"), String(locale_samples[code]))
 
 	# BOS tercih = "oyuncu henuz secmedi" -> cihaz dili. "tr" secmis olmakla
 	# ayni sey DEGIL; ikisi karisirsa Ingilizce telefonda oyun Turkce acilir.
@@ -1345,6 +1361,8 @@ func _test_locale() -> void:
 func _test_translation_coverage() -> void:
 	print("")
 	print("--- Ceviri kapsami ---")
+	for csv_path in ["res://assets/i18n/ui.csv", "res://assets/i18n/levels.csv"]:
+		_check_translation_csv(csv_path)
 	var before := TranslationServer.get_locale()
 	Locale.apply("en")
 
@@ -1370,6 +1388,45 @@ func _test_translation_coverage() -> void:
 		TranslationServer.translate("BÖLÜM %d") % 7, "LEVEL 7")
 
 	TranslationServer.set_locale(before)
+
+
+func _check_translation_csv(path: String) -> void:
+	var file := FileAccess.open(path, FileAccess.READ)
+	_check("%s okunuyor" % path, file != null, true)
+	if file == null:
+		return
+	var expected := PackedStringArray(["keys", "tr", "en", "es", "pt_BR", "de", "fr"])
+	var header := file.get_csv_line()
+	_check("%s dil sutunlari eksiksiz" % path, header, expected)
+	var malformed: Array[int] = []
+	var blank: Array[String] = []
+	var broken_formats: Array[String] = []
+	var placeholder_regex := RegEx.new()
+	placeholder_regex.compile("%(?:\\.\\d+)?[dfs]")
+	var row_number := 1
+	while not file.eof_reached():
+		var values := file.get_csv_line()
+		row_number += 1
+		if values.size() == 1 and values[0].is_empty():
+			continue
+		if values.size() != expected.size():
+			malformed.append(row_number)
+			continue
+		for index in range(1, values.size()):
+			if values[index].strip_edges().is_empty():
+				blank.append("%d:%s" % [row_number, expected[index]])
+			var source_tokens: Array[String] = []
+			var translated_tokens: Array[String] = []
+			for match in placeholder_regex.search_all(values[0]):
+				source_tokens.append(match.get_string())
+			for match in placeholder_regex.search_all(values[index]):
+				translated_tokens.append(match.get_string())
+			if translated_tokens != source_tokens:
+				broken_formats.append("%d:%s" % [row_number, expected[index]])
+	_check("%s satir yapisi gecerli" % path, malformed, [] as Array[int])
+	_check("%s bos ceviri icermiyor" % path, blank, [] as Array[String])
+	_check("%s bicim yer tutuculari korunuyor" % path,
+		broken_formats, [] as Array[String])
 
 
 func _test_settings_screen() -> void:
@@ -1465,6 +1522,8 @@ func _test_faz9_tall_aspect() -> void:
 		home.set_deferred("size", size)
 		await process_frame
 		await process_frame
+		_check("%s: ev - gunluk butonu ana menude yok" % label,
+			home.find_child("DailyButton", true, false) == null, true)
 		var coin_chip := home.get_node("SafeArea/Content/TopAppBar/CoinChip") as Control
 		var settings_button := home.get_node(
 			"SafeArea/Content/TopAppBar/SettingsButton") as Control
@@ -1538,7 +1597,7 @@ func _test_faz9_tall_aspect() -> void:
 			language_dropdown != null, true)
 		if language_dropdown != null:
 			_check("%s: ayarlar - dil secenekleri eksiksiz" % label,
-				language_dropdown.item_count, 2)
+				language_dropdown.item_count, Locale.SUPPORTED.size())
 		root.remove_child(settings)
 		settings.free()
 		await process_frame

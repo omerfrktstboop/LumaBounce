@@ -519,7 +519,7 @@ func _read_shared(config: ConfigFile) -> void:
 	# dile dusurmez.
 	var raw_language: Variant = config.get_value(SECTION_SETTINGS, KEY_LANGUAGE, "")
 	if raw_language is String and Locale.is_supported(String(raw_language)):
-		language = String(raw_language)
+		language = Locale.normalize(String(raw_language))
 
 	var raw_shake: Variant = config.get_value(SECTION_SETTINGS, KEY_SHAKE_SCALE, 1.0)
 	if raw_shake is float or raw_shake is int:

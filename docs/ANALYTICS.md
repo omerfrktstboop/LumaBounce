@@ -68,7 +68,7 @@ persisted and the save schema remains unchanged.
 5. Store: shop open -> cosmetic purchase/select and remove-ads result.
 
 Validate staging events on a Play internal-test build, including app background /
-resume, offline provider failure, cancelled rewarded, first clear, revive, and
+resume, offline provider failure, cancelled rewarded, first clear, and
 purchase restore. Production dashboards must never contain debug build events.
 
 ```powershell

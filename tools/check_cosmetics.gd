@@ -36,14 +36,13 @@ func _run() -> void:
 	_test_applier_touches_no_physics()
 	await _test_gameplay_physics_unchanged()
 	await _test_shop_screen()
-	await _test_coin_revive()
 	for path in _paths:
 		_cleanup(path)
 	await _unregister_audio_manager()
 	# quit() HEMEN DONMEZ - SceneTree'ye istek birakir ve bu fonksiyon
 	# calismaya devam eder. return olmadan basarili kosu de FAIL basiyordu.
 	if _failures == 0:
-		print("PASS cosmetics: catalog, ownership, guards, persistence, physics, coin revive")
+		print("PASS cosmetics: catalog, ownership, guards, persistence, physics")
 		quit(0)
 		return
 	push_error("FAIL cosmetics: %d assertion(s)" % _failures)
@@ -303,62 +302,6 @@ func _test_shop_screen() -> void:
 
 	root.remove_child(shop)
 	shop.queue_free()
-	await process_frame
-
-
-## COIN ILE DEVAM ETME (revive): reklamin alternatifi.
-##
-## Korunan sozlesmeler:
-##   - bakiye yetmiyorsa teklif hic acilmaz ve Coin dusmez
-##   - cift dokunus IKINCI kez Coin dusurmez
-##   - odul verilemezse harcanan Coin IADE edilir
-func _test_coin_revive() -> void:
-	var wallet := WalletStore.load_from_path(_new_path("revive"))
-	var gameplay := (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
-	gameplay.set("level_data", load("res://levels/level_60.tres"))
-	gameplay.set("wallet", wallet)
-	root.add_child(gameplay)
-	await process_frame
-	await physics_frame
-
-	var cost := int(gameplay.get("revive_coin_cost"))
-	var panel := gameplay.get_node("HUD/ResultPanel")
-
-	# BAKIYE YETERSIZ: teklif kapali olmali.
-	wallet.balance = cost - 1
-	_check(not bool(gameplay.call("_can_afford_coin_revive")),
-		"coin revive is unavailable below the price")
-	gameplay.set("_lives_remaining", 0)
-	panel.call("show_failure", "BITTI", "", "TEKRAR", 10.0, 3)
-	await process_frame
-	var poor_balance := wallet.balance
-	gameplay.call("_on_result_revive_coin")
-	_check(wallet.balance == poor_balance, "unaffordable coin revive spends nothing")
-	_check(int(gameplay.call("get_debug_snapshot")["lives_remaining"]) == 0,
-		"unaffordable coin revive grants no ball")
-
-	# YETERLI BAKIYE: bir kez duser, top eklenir.
-	wallet.balance = cost + 5
-	var funded := wallet.balance
-	_check(bool(gameplay.call("_can_afford_coin_revive")),
-		"coin revive becomes available with enough balance")
-	panel.call("set_revive_coin_offer", true, cost)
-	gameplay.call("_on_result_revive_coin")
-	await process_frame
-	_check(wallet.balance == funded - cost, "coin revive spends exactly the price")
-	var after: Dictionary = gameplay.call("get_debug_snapshot")
-	_check(int(after["lives_remaining"]) == 1, "coin revive grants one extra ball")
-
-	# CIFT DOKUNUS: ikinci cagri hicbir sey yapmamali.
-	var after_first := wallet.balance
-	gameplay.call("_on_result_revive_coin")
-	gameplay.call("_on_result_revive_coin")
-	_check(wallet.balance == after_first, "double tap never charges a second coin")
-	_check(not bool(gameplay.call("_can_afford_coin_revive")),
-		"revive can only be used once per attempt")
-
-	root.remove_child(gameplay)
-	gameplay.queue_free()
 	await process_frame
 
 
