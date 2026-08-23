@@ -47,4 +47,6 @@ godot --headless --path . --script res://tools/check_analytics_phase10.gd
 godot --headless --path . --script res://tools/check_release_readiness.gd
 ```
 
+The privacy policy link lives in `LegalLinks` (`scripts/legal_links.gd`) and is rendered unconditionally in Settings > Gizlilik, above the UMP privacy-options row. It must not be gated on `AdService.is_privacy_options_available()`: the policy is a store requirement that still applies to players who bought `remove_ads` or whose region never shows a consent form. `check_release_readiness.gd::_check_privacy_policy_link()` blocks a release if the URL is missing/non-https or the row moves inside that condition.
+
 Before a production upload, verify the consent form, rewarded hint cancellation/failure/earned result, both interstitial paths and their shared cooldown, privacy-options entry point, purchase, pending purchase, acknowledgment, and restore on a physical Android license-test device. Do not click production ads during development.

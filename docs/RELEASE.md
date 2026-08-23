@@ -49,6 +49,7 @@ eşlenmelidir (Godot bunu otomatik okumaz).
 - [ ] Release filtresi yalnızca dev-only addonları dışlıyor; `addons/*` kullanılmıyor
 - [ ] AdMob v7 eklentisi etkin; debug APK yalnızca Google test reklam birimlerini kullanıyor
 - [ ] UMP formu ilk açılışta test edildi; Ayarlar'da gerekli kullanıcılara gizlilik seçenekleri görünüyor
+- [ ] Ayarlar > Gizlilik'te **gizlilik politikası** bağlantısı görünüyor ve tarayıcıda açılıyor (`LegalLinks.PRIVACY_POLICY_URL`); adres Play Console listelemesindekiyle aynı
 - [ ] `check_analytics_phase10.gd` geçiyor; production dashboard'da debug event yok
 - [ ] GameAnalytics etkinleştirilecekse `docs/ANALYTICS.md` uyumluluk karantinası çözüldü ve staging internal test tamamlandı
 - [ ] `godot_mcp_toolkit`, debug paneli, DBG rozeti ve level editor release paketinde yok

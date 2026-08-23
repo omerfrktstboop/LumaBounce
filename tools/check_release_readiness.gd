@@ -34,6 +34,7 @@ const GAMEANALYTICS_PLUGIN := "res://addons/GameAnalytics/plugin.cfg"
 const GAMEANALYTICS_QUARANTINE := "res://addons/GameAnalytics/GameAnalytics.gdextension.disabled"
 const GAMEANALYTICS_ACTIVE := "res://addons/GameAnalytics/GameAnalytics.gdextension"
 const ANALYTICS_PHASE10_CHECK := "res://tools/check_analytics_phase10.gd"
+const SETTINGS_SCREEN := "res://scripts/settings_screen.gd"
 
 const RELEASE_PRESET_NAME := "Android Release"
 const DEBUG_PRESET_NAME := "Android Debug"
@@ -87,6 +88,7 @@ func _run() -> void:
 	_check_admob_integration()
 	_check_billing_integration()
 	_check_analytics_integration()
+	_check_privacy_policy_link()
 	_check_gitignore()
 	_check_level_library()
 	_report()
@@ -226,6 +228,29 @@ func _check_project_settings() -> void:
 			_blockers.append("MCPRuntimeServer autoload var ama MCP export-strip plugin'i etkin degil.")
 		_notes.append("MCPRuntimeServer editor playtest autoload'u; release export plugin'i bake sirasinda kaldirir.")
 
+
+## Play Store, reklam ve uygulama ici satin alma iceren bir oyunda gizlilik
+## politikasini hem magaza listelemesinde hem UYGULAMA ICINDE erisilebilir
+## ister. Baglanti Ayarlar'da UMP form satirinin yaninda durdugu icin,
+## "form kullanilamiyor" kosuluna yanlislikla girmesi kolay bir hata - o
+## yuzden kosulsuz oldugu burada dogrulanir.
+func _check_privacy_policy_link() -> void:
+	var url := LegalLinks.PRIVACY_POLICY_URL.strip_edges()
+	if url.is_empty():
+		_blockers.append("LegalLinks.PRIVACY_POLICY_URL bos; magaza yayini reddedilir.")
+	elif not LegalLinks.is_openable(url):
+		_blockers.append("Gizlilik politikasi adresi https degil: '%s'." % url)
+	else:
+		_notes.append("Gizlilik politikasi baglantisi: %s" % url)
+
+	var settings_text := _read_text(SETTINGS_SCREEN)
+	var ump_gate := settings_text.find("is_privacy_options_available()")
+	var policy_row := settings_text.find("Gizlilik politikası")
+	if not settings_text.contains("LegalLinks.open_privacy_policy()"):
+		_blockers.append("Ayarlar ekraninda gizlilik politikasi baglantisi yok.")
+	elif ump_gate >= 0 and policy_row > ump_gate:
+		_blockers.append(
+			"Gizlilik politikasi satiri UMP form kosulunun icinde; her zaman gorunmeli.")
 
 func _check_release_debug_leakage() -> void:
 	var scene_text := _read_text(APP_ROOT_SCENE)

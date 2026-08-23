@@ -1450,6 +1450,17 @@ func _test_settings_screen() -> void:
 	var rows: Node = screen.get_node("SafeArea/Content/Scroll/Rows")
 	_check("ayar satirlari kuruldu", rows.get_child_count() >= 7, true)
 
+	# GIZLILIK POLITIKASI reklam SDK'sindan BAGIMSIZ olmali: bu ekrana test
+	# ortaminda ad_service enjekte edilmez, yani satir yalnizca UMP formu
+	# kullanilabilir oldugunda eklenseydi burada bulunamazdi. Magaza yayin
+	# sarti oldugu icin kosula baglanmasi bir regresyondur.
+	_check("gizlilik politikasi baglantisi her zaman gorunur",
+		_has_label_text(rows, "Gizlilik politikası"), true)
+	_check("gizlilik politikasi adresi https",
+		LegalLinks.is_openable(LegalLinks.PRIVACY_POLICY_URL), true)
+	_check("guvensiz sema disariya acilmaz",
+		LegalLinks.is_openable("javascript:alert(1)"), false)
+
 	# Dil degistirme: hem locale hem KAYIT guncellenmeli, yoksa secim
 	# uygulamayi kapatinca kaybolur.
 	screen.call("_on_language_chosen", 1)
@@ -1718,6 +1729,19 @@ func _test_library_bounds() -> void:
 
 
 # --- Yardimcilar ---------------------------------------------------------------
+
+## Kod ile uretilen satirlarda bir metnin VARLIGINI arar. Etiketler ham
+## (cevrilmemis) kaynak metni tutar - Godot cevirisi cizim aninda yapar -
+## bu yuzden arama dilden bagimsizdir.
+func _has_label_text(node: Node, text: String) -> bool:
+	var label := node as Label
+	if label != null and label.text == text:
+		return true
+	for child in node.get_children():
+		if _has_label_text(child, text):
+			return true
+	return false
+
 
 func _check(label: String, actual: Variant, expected: Variant) -> void:
 	if actual == expected:

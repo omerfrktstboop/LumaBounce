@@ -95,8 +95,14 @@ func _rebuild() -> void:
 	_add_action_row("Öğreticileri tekrar göster", _on_forget_mechanics, GlyphIcon.Glyph.HINT)
 	_add_action_row("İlerlemeyi sıfırla", _show_confirm, GlyphIcon.Glyph.RESTART)
 
+	# Gizlilik politikasi HER ZAMAN gorunur ve reklam SDK'sindan BAGIMSIZDIR:
+	# magaza yayin sarti, reklamlari kaldiran oyuncu icin de gecerli. Gizlilik
+	# SECENEKLERI (UMP formu) ise yalnizca saglayici gerekli gordugunde
+	# eklenir, bu yuzden kart artik kosulsuz acilir.
+	_begin_card("Gizlilik")
+	_add_action_row("Gizlilik politikası", _on_privacy_policy_pressed,
+		GlyphIcon.Glyph.INFO)
 	if ad_service != null and ad_service.is_privacy_options_available():
-		_begin_card("Gizlilik")
 		_add_action_row("Gizlilik seçenekleri", _on_privacy_options_pressed,
 			GlyphIcon.Glyph.LOCK)
 
@@ -415,6 +421,13 @@ func _on_aim_assist_toggled(enabled: bool) -> void:
 func _on_forget_mechanics() -> void:
 	progress.forget_seen_mechanics()
 	_rebuild()
+
+
+## Metin oyunun icinde degil, tarayicida acilir: politika metni magaza
+## listelemesiyle AYNI adresten gelmeli, yoksa uygulama guncellemeden
+## gecmedigi surece ikisi birbirinden ayrilir.
+func _on_privacy_policy_pressed() -> void:
+	LegalLinks.open_privacy_policy()
 
 
 func _on_privacy_options_availability_changed(_available: bool) -> void:
