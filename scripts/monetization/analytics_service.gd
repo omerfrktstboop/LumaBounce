@@ -11,8 +11,8 @@ const LEVEL_COMPLETE := &"level_complete"
 const LEVEL_FAIL := &"level_fail"
 const RESTART := &"restart"
 const HINT_OFFER_OPEN := &"hint_offer_open"
-const SHORT_HINT_REWARDED_EARNED := &"short_hint_rewarded_earned"
-const FULL_HINT_UNLOCK := &"full_hint_unlock"
+const SHORT_HINT_COIN_SPENT := &"short_hint_coin_spent"
+const FULL_HINT_REWARDED_EARNED := &"full_hint_rewarded_earned"
 const REWARDED_OFFER := &"rewarded_offer"
 const REWARDED_CLICK := &"rewarded_click"
 const REWARDED_RESULT := &"rewarded_result"
@@ -32,15 +32,16 @@ const STREAK_MILESTONE := &"streak_milestone"
 const ACHIEVEMENT_UNLOCK := &"achievement_unlock"
 
 # Onceki fazdaki adlari kullanan test/entegrasyonlar icin kaynak uyumlulugu.
-const HINT_SHORT_REQUESTED := REWARDED_CLICK
-const HINT_FULL_UNLOCKED := FULL_HINT_UNLOCK
+const HINT_SHORT_REQUESTED := SHORT_HINT_COIN_SPENT
+const HINT_FULL_UNLOCKED := FULL_HINT_REWARDED_EARNED
+const FULL_HINT_UNLOCK := FULL_HINT_REWARDED_EARNED
 const INTERSTITIAL_RESULT := INTERSTITIAL_FAILED
 const IAP_RESULT := REMOVE_ADS_PURCHASE_RESULT
 
 const NORMALIZED_EVENTS := [
 	SESSION_START, SESSION_END,
 	LEVEL_START, LEVEL_COMPLETE, LEVEL_FAIL, RESTART,
-	HINT_OFFER_OPEN, SHORT_HINT_REWARDED_EARNED, FULL_HINT_UNLOCK,
+	HINT_OFFER_OPEN, SHORT_HINT_COIN_SPENT, FULL_HINT_REWARDED_EARNED,
 	REWARDED_OFFER, REWARDED_CLICK, REWARDED_RESULT,
 	INTERSTITIAL_CANDIDATE, INTERSTITIAL_SHOWN, INTERSTITIAL_FAILED,
 	REMOVE_ADS_PURCHASE_RESULT,
@@ -57,9 +58,9 @@ const EVENT_FIELDS := {
 	LEVEL_COMPLETE: [&"level_id", &"world", &"stars", &"seconds_bucket", &"shots", &"first_clear", &"is_bonus"],
 	LEVEL_FAIL: [&"level_id", &"world", &"reason", &"shots_bucket", &"is_bonus"],
 	RESTART: [&"level_id", &"world", &"shots_bucket", &"source"],
-	HINT_OFFER_OPEN: [&"level_id", &"short_available", &"full_unlocked"],
-	SHORT_HINT_REWARDED_EARNED: [&"level_id", &"placement"],
-	FULL_HINT_UNLOCK: [&"level_id", &"cost"],
+	HINT_OFFER_OPEN: [&"level_id", &"short_affordable", &"full_available", &"full_unlocked"],
+	SHORT_HINT_COIN_SPENT: [&"level_id", &"cost"],
+	FULL_HINT_REWARDED_EARNED: [&"level_id", &"placement"],
 	REWARDED_OFFER: [&"level_id", &"placement"],
 	REWARDED_CLICK: [&"level_id", &"placement", &"provider"],
 	REWARDED_RESULT: [&"placement", &"provider", &"result"],

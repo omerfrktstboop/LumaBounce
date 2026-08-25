@@ -1,37 +1,56 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_gri32"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_i1ad7"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_5uij8"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_xm723"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_g785c"]
-script = ExtResource("2_i1ad7")
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("2")
 kind = 2
-position = Vector2(239.48143, 897.3073)
+position = Vector2(130.91348, 688.5816)
 size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = -116.0625
 
-[sub_resource type="Resource" id="Resource_s18hu"]
-script = ExtResource("3_5uij8")
-position = Vector2(284.28647, 606.31836)
-rotation_degrees = 37.127061462402345
-length = 360.0
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("2")
+kind = 1
+position = Vector2(576.5535, 410.48544)
+size = Vector2(68, 68)
+
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("2")
+position = Vector2(107.69417, 300.0607)
+inner_radius = 54.0
+
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("2")
+kind = 2
+position = Vector2(584.5154, 301.71024)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -116.0625
+
+[sub_resource type="Resource" id="Resource_krhwj"]
+script = ExtResource("3")
+position = Vector2(431.301, 495.56592)
+rotation_degrees = 11.127061462402343
+length = 380.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4_xm723")
+script = ExtResource("4")
 level_uid = "level_122"
 display_order = 122
-difficulty = 5
-hint_angle_degrees = 18.0
-hint_power = 1750.0
+difficulty = 3
+hint_angle_degrees = -16.0
+hint_power = 2050.0
 level_id = 122
 display_name = "Duvar Pervanesi"
 target_position = Vector2(289.01688, 236.08215)
-panels = Array[ExtResource("3_5uij8")]([SubResource("Resource_s18hu")])
-obstacles = Array[ExtResource("2_i1ad7")]([SubResource("Resource_g785c")])
+panels = Array[ExtResource("3")]([SubResource("Resource_krhwj")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui")])
 two_star_max_seconds = 136.0
 two_star_max_shots = 3
 three_star_max_seconds = 72.3

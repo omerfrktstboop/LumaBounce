@@ -1,51 +1,50 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_4xcy1"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_m7pos"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_71v1o"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_2p5iu"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_xiorv"]
-script = ExtResource("1_4xcy1")
-position = Vector2(360, 636.8053)
-rotation_degrees = 2.2084184
-size = Vector2(652, 34)
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("1")
+position = Vector2(115.63107, 448.8228)
+size = Vector2(100, 35)
 
-[sub_resource type="Resource" id="Resource_shkm7"]
-script = ExtResource("2_m7pos")
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("2")
 kind = 2
-position = Vector2(189.79956, 891.2845)
+position = Vector2(218.85297, 681.13885)
 size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = 93.75
 
-[sub_resource type="Resource" id="Resource_b0uj4"]
-script = ExtResource("2_m7pos")
-position = Vector2(601.0676, 842.8289)
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("2")
+position = Vector2(481.7958, 660.13477)
 rotation_degrees = 180.0
 size = Vector2(170, 28)
 inner_radius = 61.6
 
-[sub_resource type="Resource" id="Resource_c7atb"]
-script = ExtResource("3_71v1o")
-position = Vector2(431.54034, 470)
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("3")
+position = Vector2(398.99182, 466.21356)
 rotation_degrees = 6.184065
 length = 399.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4_2p5iu")
+script = ExtResource("4")
 level_uid = "level_105"
 display_order = 105
-difficulty = 4
-hint_angle_degrees = -26.0
-hint_power = 1850.0
+difficulty = 2
+hint_angle_degrees = 42.0
+hint_power = 2150.0
 level_id = 105
 display_name = "Çatlak Rotor"
 target_position = Vector2(234.26591, 242.29109)
-panels = Array[ExtResource("3_71v1o")]([SubResource("Resource_c7atb")])
-breakable_blocks = Array[ExtResource("1_4xcy1")]([SubResource("Resource_xiorv")])
-obstacles = Array[ExtResource("2_m7pos")]([SubResource("Resource_shkm7"), SubResource("Resource_b0uj4")])
+panels = Array[ExtResource("3")]([SubResource("Resource_m3uui")])
+breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
 left_wall_segments = Array[Vector2]([Vector2(-320, 539.51855), Vector2(705.28625, 1600)])
 two_star_max_seconds = 121.4
 two_star_max_shots = 5

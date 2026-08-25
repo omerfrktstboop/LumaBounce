@@ -121,6 +121,23 @@ func is_hint_unlocked(level_uid: String) -> bool:
 	return _hint_unlocks.has(level_uid.strip_edges())
 
 
+## Odullu reklam tamamlandiginda tam rota kilidini Coin harcamadan verir.
+## Tekrarlanan callback idempotenttir; mevcut bir kilit ikinci kez yazilmaz.
+func grant_hint_unlock(level_uid: String) -> bool:
+	var clean_uid := level_uid.strip_edges()
+	if clean_uid.is_empty():
+		return false
+	if is_hint_unlocked(clean_uid):
+		return true
+
+	_hint_unlocks[clean_uid] = true
+	if save() == OK:
+		return true
+
+	_hint_unlocks.erase(clean_uid)
+	return false
+
+
 ## Harcama ve kilit acma TEK save icinde yapilir. Ayni bolum ikinci kez
 ## acilirsa true doner ama bakiyeye dokunmaz; boylece cift dokunus ucret kesmez.
 func unlock_hint(level_uid: String, cost: int) -> bool:

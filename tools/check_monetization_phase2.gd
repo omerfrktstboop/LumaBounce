@@ -40,9 +40,9 @@ func _test_config_and_analytics_contract() -> void:
 	_check(is_equal_approx(MonetizationConfig.INTERSTITIAL_GLOBAL_COOLDOWN_SEC, 180.0),
 		"global interstitial cooldown is three minutes")
 	_check(MonetizationConfig.is_rewarded_placement(
-		MonetizationConfig.PLACEMENT_SHORT_HINT), "short hint is rewarded")
-	_check(LumaAdmobConfig.rewarded_unit_id(MonetizationConfig.PLACEMENT_SHORT_HINT)
-		== LumaAdmobConfig.TEST_REWARDED, "debug hint uses Google rewarded test unit")
+		MonetizationConfig.PLACEMENT_FULL_HINT), "full hint is rewarded")
+	_check(LumaAdmobConfig.rewarded_unit_id(MonetizationConfig.PLACEMENT_FULL_HINT)
+		== LumaAdmobConfig.TEST_REWARDED, "debug full hint uses Google rewarded test unit")
 	_check(LumaAdmobConfig.interstitial_unit_id() == LumaAdmobConfig.TEST_INTERSTITIAL,
 		"debug interstitial uses Google test unit")
 	var analytics := AnalyticsService.new(false, true)
@@ -180,15 +180,15 @@ func _test_rewarded_hint_only() -> void:
 		AnalyticsService.new(false, true))
 	root.add_child(service)
 	_check(service.initialize(), "mock provider initializes")
-	provider.set_rewarded_ready(MonetizationConfig.PLACEMENT_SHORT_HINT, true)
+	provider.set_rewarded_ready(MonetizationConfig.PLACEMENT_FULL_HINT, true)
 	provider.queue_rewarded_result(AdResult.Code.EARNED)
 	provider.queue_rewarded_result(AdResult.Code.CLOSED_WITHOUT_REWARD)
-	_check(int(await service.show_rewarded(MonetizationConfig.PLACEMENT_SHORT_HINT))
+	_check(int(await service.show_rewarded(MonetizationConfig.PLACEMENT_FULL_HINT))
 		== AdResult.Code.EARNED,
-		"TEST I: remove_ads owner may voluntarily earn rewarded hint")
-	_check(int(await service.show_rewarded(MonetizationConfig.PLACEMENT_SHORT_HINT))
+		"TEST I: remove_ads owner may voluntarily earn rewarded full hint")
+	_check(int(await service.show_rewarded(MonetizationConfig.PLACEMENT_FULL_HINT))
 		== AdResult.Code.CLOSED_WITHOUT_REWARD,
-		"cancelled rewarded hint grants no earned result")
+		"cancelled rewarded full hint grants no earned result")
 	_check(provider.rewarded_calls.size() == 2,
 		"rewarded is called only after explicit requests")
 	root.remove_child(service)
@@ -246,10 +246,10 @@ func _test_fullscreen_double_show_guard() -> void:
 	policy.reset_session_state()
 	for id in range(1, 4):
 		policy.register_successful_completion("level_%03d" % id)
-	provider.set_rewarded_ready(MonetizationConfig.PLACEMENT_SHORT_HINT, true)
+	provider.set_rewarded_ready(MonetizationConfig.PLACEMENT_FULL_HINT, true)
 	provider.queue_rewarded_result(AdResult.Code.EARNED)
 	var before := provider.interstitial_calls.size()
-	service.show_rewarded(MonetizationConfig.PLACEMENT_SHORT_HINT)
+	service.show_rewarded(MonetizationConfig.PLACEMENT_FULL_HINT)
 	service.request_interstitial(MonetizationConfig.CONTEXT_LEVEL_COMPLETE, 6000.0)
 	await process_frame
 	await process_frame

@@ -10,21 +10,18 @@ script = ExtResource("1")
 position = Vector2(378.4952, 430.31555)
 rotation_degrees = -90.0
 size = Vector2(140, 35)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("1")
 position = Vector2(653.18933, 155.61652)
 rotation_degrees = -90.0
 size = Vector2(140, 35)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("1")
 position = Vector2(439.8738, 213.64807)
 rotation_degrees = -90.0
 size = Vector2(140, 35)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("2")
@@ -32,44 +29,18 @@ kind = 1
 position = Vector2(191.84512, 516.2937)
 rotation_degrees = 15.0
 size = Vector2(64.36, 64.36)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-pulse_on_ratio = 0.667
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("2")
 kind = 1
 position = Vector2(364.2961, 621.95386)
-rotation_degrees = 0.0
 size = Vector2(68, 68)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-pulse_on_ratio = 0.667
 
 [sub_resource type="Resource" id="Resource_lgnf6"]
 script = ExtResource("2")
 kind = 1
 position = Vector2(516.48047, 92.3786)
-rotation_degrees = 0.0
 size = Vector2(68, 68)
-inner_radius = 42.0
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-pulse_on_ratio = 0.667
 
 [sub_resource type="Resource" id="Resource_lglry"]
 script = ExtResource("3")
@@ -82,26 +53,15 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_094"
 display_order = 94
-theme_id = ""
-difficulty = 4
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = -40.0
-hint_power = 2150.0
+difficulty = 2
+hint_angle_degrees = -28.0
+hint_power = 1750.0
 level_id = 94
 display_name = "Halka Tuzağı"
-launcher_position = Vector2(360, 1120)
 target_position = Vector2(609.2845, 408.0506)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_lglry")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
 obstacles = Array[ExtResource("2")]([SubResource("Resource_m3uui"), SubResource("Resource_krhwj"), SubResource("Resource_lgnf6")])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 111.9
 two_star_max_shots = 3
 three_star_max_seconds = 59.5
-three_star_max_shots = 2

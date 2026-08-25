@@ -22,9 +22,9 @@ signal obstacle_kind_seen(kind: int)
 ## Kirilabilir blok mekanigi ilk kez gosterildiginde yayilir - obstacle_kind_seen
 ## ile ayni yazma kurali (bkz. app_root.gd).
 signal block_mechanic_seen()
-## KISA IPUCU istendi. Odulu veren AppRoot'tur (ileride odullu reklam
-## servisi); Gameplay yalnizca ister ve grant_short_hint() ile sonucu alir.
-signal short_hint_requested()
+## TAM IPUCU istendi. Odullu reklam sonucunu AppRoot yonetir; Gameplay
+## yalnizca ister ve grant_full_hint() ile sonucu alir.
+signal full_hint_requested()
 ## Retention sayaçlari icin hafif olay. Analytics'e gonderilmez; AppRoot bunu
 ## DailyStore/AchievementStore'a yazar.
 signal bounce_recorded()
@@ -51,12 +51,9 @@ signal bounce_recorded()
 @export var tutorial_fade_time := 0.25
 
 @export_group("Luma Coin Ipucu")
-## TAM ROTA: bir bolumun ornek rotasini KALICI acma maliyeti.
-@export var hint_cost := 5
-## KISA IPUCU: rotanin yalnizca ilk parcasini gosterir. Bedeli odullu reklam
-## izlemektir; Luma Coin HARCAMAZ ve kalici unlock SAYILMAZ (her istendiginde
-## yeniden kazanilir). Bu alan 0'dan buyuk yapilirsa kisa ipucu da Coin
-## isteyen bir secenege donusur - urun karari degisirse tek satir yeter.
+## KISA IPUCU: rotanin yalnizca ilk parcasini gosterir. Luma Coin ile alinir,
+## kalici kilit SAYILMAZ; ayni bolum oturumundaki yeniden denemelerde tekrar
+## ucret istemez.
 @export var short_hint_cost := 2
 ## Kisa ipucu rotanin en fazla bu kadarini gosterir.
 ##
@@ -112,9 +109,11 @@ signal bounce_recorded()
 
 ## AppRoot tarafindan add_child'dan ONCE atanir.
 var level_data: LevelData
-## AppRoot tarafindan add_child'dan ONCE atanir; debug build disinda tum
-## kayit cagrilari sessizce hicbir sey yapmaz (bkz. PlaytestStats).
-var playtest_stats: PlaytestStats
+## AppRoot tarafindan add_child'dan ONCE atanir. Release filtresi debug
+## siniflarini paketten cikardigi icin release build'de null, debug build'de
+## dinamik yuklenen PlaytestStats ornegidir. Burada statik tip verilmemesi,
+## release parser'inin dislanmis debug sinifina baglanmasini engeller.
+var playtest_stats = null
 ## AppRoot tarafindan add_child'dan ONCE atanir. Buradan YALNIZCA onceki
 ## yildiz OKUNUR (yeni rekor tespiti icin); yazma islemi AppRoot'a aittir.
 var progress: ProgressStore
@@ -183,16 +182,21 @@ var _showing_block_intro := false
 var _launcher_enabled_before_intro := true
 var _launcher_enabled_before_hint := true
 var _launcher_enabled_before_pause := true
+enum HintKind { NONE, SHORT, FULL }
+
 var _hint_trace := PackedVector2Array()
-var _hint_waiting_for_blocks := false
-## Kisa ipucu su an verilebilir mi. AppRoot AdService hazirligindan enjekte eder;
+## Bloklar kirilinca otomatik acilacak ipucu turu. NONE ayni zamanda ustteki
+## ipucu simgesiyle bekleyen gosterimin iptal edildigi anlamina gelir.
+var _hint_waiting_for_blocks := HintKind.NONE
+## Tam ipucu reklami su an gosterilebilir mi. AppRoot AdService hazirligindan
+## enjekte eder;
 ## Gameplay NEDENINI bilmez - reklam servisi, abonelik ya da baska bir kosul
 ## olabilir. Boylece reklam SDK'si eklendiginde bu dosya degismez.
-var short_hint_enabled := false
-## Kisa ipucu SU ANKI denemede gosterildi mi. Kalici degildir: bolum
-## yeniden baslatilinca sifirlanir, cunku kalici olan tek sey satin alinan
-## tam rotadir.
-var _short_hint_shown := false
+var full_hint_enabled := false
+## Kisa ipucunun bu Gameplay/bolum oturumunda Coin'i odendi mi. Deneme
+## yeniden baslatilsa ve top haklari dolsa bile korunur; baska bolume
+## gecilince yeni Gameplay ornegiyle kendiliginden sifirlanir.
+var _short_hint_unlocked_for_level := false
 var _full_hint_used_this_attempt := false
 var _pending_luma_coin_reward := 0
 var _max_lives := 5
@@ -312,7 +316,9 @@ func _apply_level() -> void:
 
 	_build_panels()
 	_obstacles.build(level_data.obstacles)
-	_obstacles.reset_motion()
+	# Hareketli engeller bolum gorunur olur olmaz tek bir zaman cizelgesinde
+	# calisir. Atislar yalnizca topu etkiler; engel fazini baslatmaz/sifirlamaz.
+	_obstacles.start_motion()
 	_apply_level_header()
 	_pending_obstacle_intro_kinds = _newly_seen_obstacle_kinds()
 	_pending_block_intro = (not level_data.breakable_blocks.is_empty()
@@ -420,7 +426,8 @@ func _connect_signals() -> void:
 	_obstacles.hazard_triggered.connect(_on_hazard_triggered)
 	_ball.shot_failed.connect(_on_shot_failed)
 	_target.hit.connect(_on_target_hit)
-	# Ilk gecerli nisan hareketinde ipucunu sondur.
+	# Ilk gecerli nisan hareketi yalnizca kronometre/ogreticiyi tetikler;
+	# acilmis ipucu atis boyunca arka planda kalir.
 	_launcher.aim_updated.connect(_on_aim_updated)
 	# Tiklama sesini LumaButton'un kendisi calar (HUD butonlari da LumaIconButton).
 	# TEKRAR BASLA ve ANA MENU artik ust seritte DEGIL, duraklat kartinin
@@ -432,7 +439,7 @@ func _connect_signals() -> void:
 	_pause_card.level_select_requested.connect(level_select_requested.emit)
 	_pause_card.menu_requested.connect(menu_requested.emit)
 	_hint_button.pressed.connect(_on_hint_pressed)
-	_hint_card.purchase_requested.connect(_on_hint_purchase_requested)
+	_hint_card.full_hint_requested.connect(_on_full_hint_requested)
 	_hint_card.short_hint_requested.connect(_on_short_hint_requested)
 	_hint_card.dismissed.connect(_on_hint_card_dismissed)
 	_intro_card.dismissed.connect(_on_intro_card_dismissed)
@@ -468,8 +475,7 @@ func reset_shot() -> void:
 	_shots_this_attempt = 0
 	_reset_attempt_timer()
 	_hint_path.hide_path()
-	_hint_waiting_for_blocks = false
-	_short_hint_shown = false
+	_hint_waiting_for_blocks = HintKind.NONE
 	_full_hint_used_this_attempt = false
 	_pending_luma_coin_reward = 0
 	_hide_hint_status()
@@ -558,7 +564,6 @@ func _respawn_ball() -> void:
 	_launcher.cancel_aim()
 	_ball.reset_to(_launcher.get_spawn_position())
 	_target.reset()
-	_obstacles.reset_motion()
 	_clear_effects()
 	_hide_message()
 	_launcher.enabled = true
@@ -569,7 +574,6 @@ func _on_shot_fired(impulse: Vector2) -> void:
 	if not _ball.is_ready_to_launch():
 		return
 	_reaim_pending = false
-	_hint_path.hide_path()
 
 	_shots_this_attempt += 1
 	_last_shot_power = impulse.length()
@@ -583,7 +587,6 @@ func _on_shot_fired(impulse: Vector2) -> void:
 		inverse_lerp(_launcher.min_power, _launcher.max_power, impulse.length()), 0.0, 1.0))
 
 	_ball.launch(impulse)
-	_obstacles.start_motion()
 
 
 func _on_shot_failed(reason: String) -> void:
@@ -618,7 +621,6 @@ func _cancel_active_shot_for_reaim() -> void:
 	_ball.set_launcher_tension(
 		_launcher.get_power_ratio(), _launcher.get_aim_direction(),
 		_launcher.loaded_ball_pullback_distance)
-	_obstacles.reset_motion()
 	_clear_effects()
 	_hide_message()
 
@@ -656,6 +658,9 @@ func _consume_life() -> bool:
 ## Son top da bitti. Iki cagiran var (normal iska ve manuel iptal), bu yuzden
 ## ses + mesaj + sonuc karti tek yerde toplanir.
 func _handle_out_of_lives() -> void:
+	# Hak bittigi anda rota kapanir, fakat odenmis/acilmis hak silinmez.
+	# Sonuc kartindan tekrar baslatinca simgeye dokunmak rotayi ucretsiz acar.
+	_hide_hint_route()
 	# Sadece SON hak bitince duyulur; her sıradan iskada agir bir
 	# kaybetme sesi calmak yorucu olurdu.
 	AudioManager.play_failure()
@@ -671,8 +676,8 @@ func _on_target_hit(_body: Node2D) -> void:
 	if not _ball.is_flying():
 		return
 	_reaim_pending = false
+	_hide_hint_route()
 	_ball.stop()
-	_obstacles.stop_motion()
 	_launcher.enabled = false
 	# Kazanma anini ikincil vurgu (menekse) ile isaretle.
 	SparkBurst.burst(
@@ -857,9 +862,13 @@ func _on_block_broken(_at: Vector2) -> void:
 	# ama sekmenin kivilcimi ve titresimi aynen kalir.
 	AudioManager.play_block_break()
 	_shake.add_trauma(block_break_shake_trauma)
-	if _hint_waiting_for_blocks and _blocks.get_remaining_count() == 0:
-		_hint_waiting_for_blocks = false
-		_show_unlocked_hint.call_deferred()
+	if _hint_waiting_for_blocks != HintKind.NONE and _blocks.get_remaining_count() == 0:
+		var waiting_kind := _hint_waiting_for_blocks
+		_hint_waiting_for_blocks = HintKind.NONE
+		if waiting_kind == HintKind.SHORT:
+			_show_short_hint.call_deferred()
+		elif waiting_kind == HintKind.FULL:
+			_show_unlocked_hint.call_deferred()
 
 
 func _on_ball_bounced(at: Vector2, normal: Vector2, impact_speed: float) -> void:
@@ -1001,18 +1010,31 @@ func _refresh_hint_hud() -> void:
 	_coin_value.text = str(wallet.balance)
 	if not available:
 		return
-	# Rozet fiyati tasir; acilmis bolumde fiyat yoktur, bu yuzden gizlenir.
+	# Rozet Coin ile alinan kisa ipucunun fiyatini tasir. Tam rota acildiysa
+	# veya kisa ipucu bu bolum oturumunda odendiyse fiyat gosterilmez.
 	var unlocked := wallet.is_hint_unlocked(level_data.uid())
-	_hint_badge.visible = not unlocked
-	_hint_badge.text = str(hint_cost)
+	_hint_badge.visible = not unlocked and not _short_hint_unlocked_for_level
+	_hint_badge.text = str(short_hint_cost)
 	_hint_button.disabled = false
 
 
 func _on_hint_pressed() -> void:
 	if wallet == null or level_data == null or not level_data.has_hint() or practice_mode:
 		return
+	# Basari/son hak sonrasi sonuc akisi bitmeden rota yeniden acilamaz.
+	# "Tekrar oyna" reset_shot ile yeni denemeyi kurdugunda bu kilit kalkar.
+	if _attempt_finished or _lives_remaining <= 0:
+		return
+	# Ust simge ayni zamanda ac/kapat dugmesidir. Bloklar icin bekleyen bir
+	# ipucu da ikinci dokunusta iptal edilir.
+	if _hint_path.is_showing() or _hint_waiting_for_blocks != HintKind.NONE:
+		_hide_hint_route()
+		return
 	if wallet.is_hint_unlocked(level_data.uid()):
 		_show_unlocked_hint()
+		return
+	if _short_hint_unlocked_for_level:
+		_show_short_hint()
 		return
 	# Satin alma kartini acmadan once kayitli aci/gucun bu geometride gercekten
 	# hedefe gittigini dogrula. Bozuk/eski ipucu verisi icin Coin kesilmez.
@@ -1022,88 +1044,89 @@ func _on_hint_pressed() -> void:
 		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
 		return
 	if ad_service != null:
-		short_hint_enabled = ad_service.is_rewarded_ready(
-			MonetizationConfig.PLACEMENT_SHORT_HINT)
+		full_hint_enabled = ad_service.is_rewarded_ready(
+			MonetizationConfig.PLACEMENT_FULL_HINT)
 	if analytics != null:
 		analytics.track_event(AnalyticsService.HINT_OFFER_OPEN, {
 			"level_id": level_data.level_id,
-			"short_available": short_hint_enabled and not _short_hint_shown,
+			"short_affordable": wallet.can_afford(short_hint_cost),
+			"full_available": full_hint_enabled,
 			"full_unlocked": false,
 		})
-		if short_hint_enabled and not _short_hint_shown:
+		if full_hint_enabled:
 			analytics.track_event(AnalyticsService.REWARDED_OFFER, {
 				"level_id": level_data.level_id,
-				"placement": MonetizationConfig.PLACEMENT_SHORT_HINT,
+				"placement": MonetizationConfig.PLACEMENT_FULL_HINT,
 			})
 	_open_hint_card()
 	# Kart TEK basina acilir ve iki secenegi birden tasir; hangi secenegin
 	# etkin oldugunu kart degil BURASI belirler - urun kurallari (bakiye,
 	# ozellik bayragi, bu denemede kisa ipucu kullanildi mi) oyunun bilgisi.
 	_hint_card.show_options({
-		"full_cost": hint_cost,
 		"balance": wallet.balance,
-		"can_afford_full": wallet.can_afford(hint_cost),
 		"short_cost": short_hint_cost,
-		"short_enabled": short_hint_enabled and not _short_hint_shown,
-		"short_used": _short_hint_shown,
+		"can_afford_short": wallet.can_afford(short_hint_cost),
+		"short_used": _short_hint_unlocked_for_level,
+		"full_enabled": full_hint_enabled,
 	})
 
 
-## KISA IPUCU istendi. Gameplay odulu KENDISI vermez: karari veren AppRoot'tur
-## (ileride odullu reklam servisi). Boylece bu dosya hicbir reklam sinifini
-## tanimaz - mimari kural.
+## KISA IPUCU Coin ile bu bolum oturumu icin bir kez alinir. Bakiye yetersizse
+## reklam acilmaz; kart kapanir ve oyuncu tam ipucunun reklam secenegine yonlendirilir.
 func _on_short_hint_requested() -> void:
-	if not short_hint_enabled or _short_hint_shown:
-		return
-	_hint_card.close()
-	short_hint_requested.emit()
-
-
-## AppRoot odul kazanildiginda cagirir (reklam izlendi / bayrak acik).
-## Kalici DEGILDIR ve Coin harcamaz: yalnizca bu denemede rotanin basi gorunur.
-func grant_short_hint() -> void:
-	if level_data == null or not level_data.has_hint():
+	if wallet == null or level_data == null or _short_hint_unlocked_for_level:
 		return
 	if _blocks.get_remaining_count() > 0:
+		_hint_card.close()
 		_show_hint_status(tr("ÖNCE BLOKLARI KIR"), 2.8)
 		return
 	var trace := _build_short_hint_trace()
 	if trace.is_empty():
+		_hint_card.close()
 		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
 		return
-	_short_hint_shown = true
-	if analytics != null:
-		analytics.track_event(AnalyticsService.SHORT_HINT_REWARDED_EARNED, {
-			"level_id": level_data.level_id,
-			"placement": MonetizationConfig.PLACEMENT_SHORT_HINT,
-		})
-	_hint_path.show_path(trace)
-	_show_hint_status(tr("İLK HAMLE"), 2.2)
-	_refresh_hint_hud()
-
-
-func _on_hint_purchase_requested() -> void:
-	if wallet == null or level_data == null:
+	if not wallet.spend(short_hint_cost):
+		_hint_card.close()
+		_refresh_hint_hud()
+		_show_hint_status(tr("COIN YOK · REKLAM İZLE"), 2.8)
 		return
-	if not wallet.unlock_hint(level_data.uid(), hint_cost):
-		# Savunma amacli: "TAM ROTAYI AC" satiri zaten yalnizca bakiye
-		# yetiyorken tiklanabilir. Yine de yarisan bir harcama olursa karti
-		# guncel bakiyeyle yeniden cizeriz - Coin kesilmez.
-		_hint_card.show_options({
-			"full_cost": hint_cost,
-			"balance": wallet.balance,
-			"can_afford_full": false,
-			"short_cost": short_hint_cost,
-			"short_enabled": short_hint_enabled and not _short_hint_shown,
-			"short_used": _short_hint_shown,
-		})
-		return
-	_refresh_hint_hud()
 	_hint_card.close()
+	_short_hint_unlocked_for_level = true
 	if analytics != null:
-		analytics.track_event(AnalyticsService.FULL_HINT_UNLOCK, {
+		analytics.track_event(AnalyticsService.SHORT_HINT_COIN_SPENT, {
 			"level_id": level_data.level_id,
-			"cost": hint_cost,
+			"cost": short_hint_cost,
+		})
+	_show_short_hint()
+	_refresh_hint_hud()
+
+
+## TAM IPUCU odullu reklam ister. Coin veya bakiye kontrolu bu yolda yoktur.
+func _on_full_hint_requested() -> void:
+	if not full_hint_enabled:
+		return
+	_hint_card.close()
+	full_hint_requested.emit()
+
+
+## AppRoot yalnizca reklam odulu EARNED oldugunda cagirir. Tam rota Coin
+## harcamadan bu bolum icin kalici acilir.
+func grant_full_hint() -> void:
+	if wallet == null or level_data == null or not level_data.has_hint():
+		return
+	if _hint_trace.is_empty():
+		_hint_trace = _build_hint_trace()
+	if _hint_trace.is_empty():
+		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
+		return
+	if not wallet.grant_hint_unlock(level_data.uid()):
+		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
+		return
+	_refresh_hint_hud()
+	if analytics != null:
+		analytics.track_event(AnalyticsService.FULL_HINT_REWARDED_EARNED, {
+			"level_id": level_data.level_id,
+			"placement": MonetizationConfig.PLACEMENT_FULL_HINT,
 		})
 	_show_unlocked_hint()
 
@@ -1136,7 +1159,7 @@ func _show_unlocked_hint() -> void:
 	if wallet == null or not wallet.is_hint_unlocked(level_data.uid()):
 		return
 	if _blocks.get_remaining_count() > 0:
-		_hint_waiting_for_blocks = true
+		_hint_waiting_for_blocks = HintKind.FULL
 		_show_hint_status(tr("ÖNCE BLOKLARI KIR"), 2.8)
 		return
 	if _hint_trace.is_empty():
@@ -1144,10 +1167,32 @@ func _show_unlocked_hint() -> void:
 	if _hint_trace.is_empty():
 		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
 		return
-	_hint_waiting_for_blocks = false
+	_hint_waiting_for_blocks = HintKind.NONE
 	_hint_path.show_path(_hint_trace)
 	_full_hint_used_this_attempt = true
 	_show_hint_status(tr("ROTAYI TAKİP ET"), 2.2)
+
+
+func _show_short_hint() -> void:
+	if not _short_hint_unlocked_for_level:
+		return
+	if _blocks.get_remaining_count() > 0:
+		_hint_waiting_for_blocks = HintKind.SHORT
+		_show_hint_status(tr("ÖNCE BLOKLARI KIR"), 2.8)
+		return
+	var trace := _build_short_hint_trace()
+	if trace.is_empty():
+		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
+		return
+	_hint_waiting_for_blocks = HintKind.NONE
+	_hint_path.show_path(trace)
+	_show_hint_status(tr("İLK HAMLE"), 2.2)
+
+
+func _hide_hint_route() -> void:
+	_hint_path.hide_path()
+	_hint_waiting_for_blocks = HintKind.NONE
+	_hide_hint_status()
 
 
 func get_retention_snapshot() -> Dictionary:
@@ -1172,11 +1217,22 @@ func _build_hint_trace() -> PackedVector2Array:
 	var solver := LevelSolver.from_scenes()
 	var excluded := _blocks.get_body_rids()
 	excluded.append_array(_obstacles.get_solver_excluded_rids())
-	solver.bind_space(get_world_2d().direct_space_state, {}, level_data.obstacles)
+	var motion_time := _obstacles.get_motion_time()
+	solver.bind_space(get_world_2d().direct_space_state, {}, level_data.obstacles,
+		motion_time)
 	var direction := Vector2.UP.rotated(deg_to_rad(level_data.hint_angle_degrees))
 	var result := solver.simulate(
 		_launcher.get_spawn_position(), direction * level_data.hint_power,
 		level_data.target_position, _arena.get_play_rect(), excluded, true)
+	# Hareketli engeller kesintisiz aktigi icin kayitli cozum her fazda hedefe
+	# ulasmayabilir. Bu, ipucunun eksik oldugu anlamina gelmez: kayitli rota
+	# offline olarak bolum baslangic fazinda uretilmistir. Mevcut faz basarisizsa
+	# o dogrulanmis rotayi ciz; zamanlama bulmacasi yine oyuncuya kalir.
+	if not bool(result.get("hit", false)) and motion_time > 0.001:
+		solver.bind_space(get_world_2d().direct_space_state, {}, level_data.obstacles, 0.0)
+		result = solver.simulate(
+			_launcher.get_spawn_position(), direction * level_data.hint_power,
+			level_data.target_position, _arena.get_play_rect(), excluded, true)
 	if not bool(result.get("hit", false)):
 		push_warning("Gameplay: %s icin kayitli ipucu hedefe ulasmiyor." % level_data.uid())
 		return empty
@@ -1311,8 +1367,8 @@ func _show_tutorial() -> void:
 
 
 ## Oyuncu gercekten nisan almaya basladiginda (surukleme min esigi gecince)
-## iki sey olur: ipucu yumusakca cekilir ve deneme kronometresi baslar.
-## Ayni tetigi paylasmalari kasitli - oyuncu icin "artik oynuyorum" ani budur.
+## kronometre baslar ve ogretici kapanir. Acilmis ipucu bilerek kapanmaz:
+## oyuncu topu rota uzerine atarken cizgi arka planda kalir.
 ## Ekrana dokunmak degil, gercek bir nisan olusmasi araniyor; boylece
 ## yanlislikla degen bir parmak sureyi baslatmaz.
 func _on_aim_updated(power_ratio: float, direction: Vector2) -> void:
@@ -1320,8 +1376,6 @@ func _on_aim_updated(power_ratio: float, direction: Vector2) -> void:
 		_ball.set_launcher_tension(
 			power_ratio, direction, _launcher.loaded_ball_pullback_distance)
 	if _launcher.has_valid_aim():
-		_hint_path.hide_path()
-		_hint_waiting_for_blocks = false
 		_hide_hint_status()
 		_start_attempt_timer()
 		_dismiss_tutorial()
@@ -1450,6 +1504,7 @@ func get_debug_snapshot() -> Dictionary:
 		"hint_unlocked": (
 			wallet.is_hint_unlocked(level_data.uid()) if wallet != null and level_data != null
 			else false),
+		"short_hint_unlocked": _short_hint_unlocked_for_level,
 		"hint_visible": _hint_path.is_showing(),
 		"stats": stats,
 	}

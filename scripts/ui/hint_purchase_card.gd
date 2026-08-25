@@ -3,22 +3,23 @@ extends Control
 
 ## Ipucu karti: TEK acilista IKI secenek sunar.
 ##
-##   A) KISA IPUCU  - rotanin yalnizca ilk parcasi. Odullu reklam karsiligi;
-##                    Luma Coin harcamaz ve kalici acilim SAYILMAZ.
-##   B) TAM ROTA    - bolumun ornek atisinin tamami. Luma Coin ile alinir ve
+##   A) KISA IPUCU  - rotanin yalnizca ilk parcasi. Luma Coin ile alinir,
+##                    ayni bolum oturumundaki tekrar denemelerde ucret istemez
+##                    fakat kalici acilim SAYILMAZ.
+##   B) TAM ROTA    - bolumun ornek atisinin tamami. Odullu reklamla alinir ve
 ##                    o bolum icin KALICI acilir.
 ##
 ## KART KARAR VERMEZ. Hangi secenegin etkin oldugu (bakiye, ozellik bayragi,
-## bu denemede kisa ipucu kullanildi mi) Gameplay'in bilgisidir ve
+## bu bolum oturumunda kisa ipucu alindi mi) Gameplay'in bilgisidir ve
 ## [method show_options] ile veri olarak gelir. Kartin isi yalnizca sunmak.
 ## Bu ayrim onemli: aksi halde urun kurallari iki yere dagilirdi.
 ##
 ## GORSEL: buyuk gri kapsul YOK. Her secenek koyu lacivert bir satirdir,
-## kenari kendi vurgu renginde - kisa ipucu mor (ACCENT_ALT), tam rota cyan
-## (ACCENT). Renk secenegi ANLATIR: iki secenek ayni sey degildir.
+## kenari kendi vurgu renginde - Coin'li kisa ipucu altin (COIN), reklamli tam
+## rota cyan (ACCENT). Renk secenegi ANLATIR: iki secenek ayni sey degildir.
 
-signal purchase_requested()
 signal short_hint_requested()
+signal full_hint_requested()
 signal dismissed()
 
 @export var card_corner_radius := 30
@@ -45,7 +46,7 @@ func _ready() -> void:
 
 
 ## [param config] anahtarlari:
-##   full_cost, balance, can_afford_full, short_cost, short_enabled, short_used
+##   balance, short_cost, can_afford_short, short_used, full_enabled
 func show_options(config: Dictionary) -> void:
 	var balance := int(config.get("balance", 0))
 	_kicker.text = tr("İPUCU")
@@ -80,42 +81,39 @@ func close() -> void:
 # --- Secenek satirlari --------------------------------------------------------
 
 func _make_short_option(config: Dictionary) -> Button:
-	var enabled := bool(config.get("short_enabled", false))
 	var used := bool(config.get("short_used", false))
+	var affordable := bool(config.get("can_afford_short", false))
 	var cost := int(config.get("short_cost", 0))
+	var enabled := not used
 
-	var price := tr("ÜCRETSİZ") if cost <= 0 else tr("%d ◈") % cost
+	var price := tr("%d ◈") % cost
 	var note := ""
 	if used:
 		note = tr("Bu denemede kullanıldı")
-	elif not enabled:
-		# Ozellik bayragi kapali (odullu reklam henuz yok). Secenek GORUNUR
-		# kalir: oyuncu ne gelecegini bilsin, ama calismayan bir dugmeye
-		# basip hicbir sey olmamasiyla karsilasmasin.
-		note = tr("Yakında")
-		price = tr("YAKINDA")
+	elif not affordable:
+		note = tr("COIN YOK · REKLAM İZLE")
 
 	var row := _make_option_row(
-		GlyphIcon.Glyph.HINT, Palette.ACCENT_ALT,
+		GlyphIcon.Glyph.COIN, Palette.COIN,
 		tr("KISA İPUCU"), tr("Rotanın ilk hamlesini gösterir"), note, price,
-		enabled and not used)
+		enabled)
 	row.name = "ShortOption"
-	if enabled and not used:
+	if enabled:
 		row.pressed.connect(short_hint_requested.emit)
 	return row
 
 
 func _make_full_option(config: Dictionary) -> Button:
-	var cost := int(config.get("full_cost", 0))
-	var affordable := bool(config.get("can_afford_full", false))
-	var note := "" if affordable else tr("Bakiye yetersiz")
+	var enabled := bool(config.get("full_enabled", false))
+	var note := "" if enabled else tr("YAKINDA")
+	var price := tr("REKLAM İZLE") if enabled else tr("YAKINDA")
 	var row := _make_option_row(
-		GlyphIcon.Glyph.COIN, Palette.COIN,
+		GlyphIcon.Glyph.HINT, Palette.ACCENT,
 		tr("TAM ROTAYI AÇ"), tr("Bu bölüm için kalıcı açılır"), note,
-		tr("%d ◈") % cost, affordable)
+		price, enabled)
 	row.name = "FullOption"
-	if affordable:
-		row.pressed.connect(purchase_requested.emit)
+	if enabled:
+		row.pressed.connect(full_hint_requested.emit)
 	return row
 
 

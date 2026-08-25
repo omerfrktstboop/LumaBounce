@@ -13,19 +13,16 @@ extends RefCounted
 ## degildir. Boylece LEVEL_COUNT buyudugunde yeni bolumler kendiliginden son
 ## dunyaya girer ve burada hicbir sey degistirmek gerekmez.
 
-## Her girisin ilk bolumu, adi ve BONUS bolumleri.
-##
-## Bonus bolumler numara sirasinin DISINDA durur (151+): boylece bir dunyaya
-## normal bolum eklemek bonus numaralarini kaydirmaz ve kayitlar bozulmaz.
-## Ilk iki dunyanin sonunda iki, final dunyasinda bir bonus vardir.
+## Her girisin ilk bolumu, adi ve varsa BONUS bolumleri.
+## Bonus altyapisi korunur; mevcut 1-150 kampanyada bonus bolum yoktur.
 const WORLDS := [
-	{"name": "BAŞLANGIÇ", "first": 1, "bonus": [151, 152]},
-	{"name": "KİNETİK", "first": 51, "bonus": [153, 154]},
-	{"name": "FİNAL", "first": 101, "bonus": [155]},
+	{"name": "BAŞLANGIÇ", "first": 1, "bonus": []},
+	{"name": "KİNETİK", "first": 51, "bonus": []},
+	{"name": "FİNAL", "first": 101, "bonus": []},
 ]
 
-## Ilk bonus bolumun numarasi. Bundan kucuk her numara NORMAL bolumdur ve
-## dunyalarin normal araliklari bu sinira gore hesaplanir.
+## Gelecekte eklenecek ilk bonus icin ayrilan numara. Bundan kucuk her numara
+## NORMAL bolumdur ve dunyalarin normal araliklari bu sinira gore hesaplanir.
 const FIRST_BONUS_ID := 151
 
 ## Bonus bolumun acilmasi icin KENDI DUNYASINDAN gereken yildiz orani.

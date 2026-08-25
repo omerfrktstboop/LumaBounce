@@ -17,28 +17,24 @@ script = ExtResource("1")
 position = Vector2(425.0869, 482.65887)
 rotation_degrees = -1.5768733065472411
 size = Vector2(114.87229, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("1")
 position = Vector2(261.90204, 479.42224)
 rotation_degrees = 1.6850733126220705
 size = Vector2(114.87229, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("1")
 position = Vector2(131.6203, 454.87643)
 rotation_degrees = 1.3792779412384033
 size = Vector2(114.87229, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("1")
 position = Vector2(519.7448, 557.41595)
 rotation_degrees = 16.528286
 size = Vector2(118.97277, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_lgnf6"]
 script = ExtResource("3")
@@ -65,26 +61,17 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_049"
 display_order = 49
-theme_id = ""
 difficulty = 4
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = -8.0
-hint_power = 2000.0
+hint_angle_degrees = -6.0
+hint_power = 1850.0
 level_id = 49
 display_name = "Son Koridor"
 launcher_position = Vector2(362.9101, 1120)
 target_position = Vector2(293.95636, 240.70874)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_lgnf6"), SubResource("Resource_lglry"), SubResource("Resource_hp77n")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj")])
-obstacles = Array[ExtResource("2")]([])
 left_wall_segments = Array[Vector2]([Vector2(-320, 144.41418), Vector2(1023.6481, 1440)])
 right_wall_segments = Array[Vector2]([Vector2(-320, 249.62805), Vector2(970.8688, 1440)])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 129.0
 two_star_max_shots = 3
 three_star_max_seconds = 74.0
-three_star_max_shots = 2

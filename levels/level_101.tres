@@ -1,37 +1,44 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_swv52"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_wbxd4"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_143gu"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_5ihlf"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_caapr"]
-script = ExtResource("2_wbxd4")
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("2")
 kind = 2
-position = Vector2(560.0917, 520.1022)
+position = Vector2(141.32957, 404.61676)
 size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = -88.5
 
-[sub_resource type="Resource" id="Resource_o5s2g"]
-script = ExtResource("3_143gu")
-position = Vector2(257.15076, 831.0896)
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("3")
+position = Vector2(181.13136, 701.8784)
+rotation_degrees = 38.1032112121582
+length = 354.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("3")
+position = Vector2(540.8012, 441.85168)
 rotation_degrees = 38.1032112121582
 length = 354.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4_5ihlf")
+script = ExtResource("4")
 level_uid = "level_101"
 display_order = 101
-difficulty = 3
-hint_angle_degrees = -6.0
-hint_power = 2100.0
+difficulty = 2
+hint_angle_degrees = 36.0
+hint_power = 2050.0
 level_id = 101
 display_name = "Çark Girişi"
-target_position = Vector2(148.75069, 377.16425)
-panels = Array[ExtResource("3_143gu")]([SubResource("Resource_o5s2g")])
-obstacles = Array[ExtResource("2_wbxd4")]([SubResource("Resource_caapr")])
+target_position = Vector2(287.90118, 211.98218)
+panels = Array[ExtResource("3")]([SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m")])
 tutorial_text = "Dönen çarkın kolları arasındaki boşluğu zamanla."
 two_star_max_seconds = 117.9
 two_star_max_shots = 3

@@ -1,37 +1,44 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_lnplv"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_42ga0"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_3jjti"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_raxrx"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_1ak4b"]
-script = ExtResource("2_42ga0")
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("2")
 kind = 2
-position = Vector2(286.512, 472.56506)
+position = Vector2(470.6625, 412.92914)
 size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = 106.875
 
-[sub_resource type="Resource" id="Resource_ntdkt"]
-script = ExtResource("3_3jjti")
-position = Vector2(477.47632, 883.75226)
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("3")
+position = Vector2(232.1608, 846.8347)
+rotation_degrees = 13.361960792541504
+length = 311.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("3")
+position = Vector2(391.5152, 664.9028)
 rotation_degrees = 13.361960792541504
 length = 311.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4_raxrx")
+script = ExtResource("4")
 level_uid = "level_115"
 display_order = 115
-difficulty = 4
-hint_angle_degrees = -26.0
-hint_power = 1650.0
+difficulty = 1
+hint_angle_degrees = 40.0
+hint_power = 1950.0
 level_id = 115
 display_name = "Derin Devir"
-target_position = Vector2(501.8753, 403.8185)
-panels = Array[ExtResource("3_3jjti")]([SubResource("Resource_ntdkt")])
-obstacles = Array[ExtResource("2_42ga0")]([SubResource("Resource_1ak4b")])
+target_position = Vector2(180.1035, 351.28214)
+panels = Array[ExtResource("3")]([SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m")])
 left_wall_segments = Array[Vector2]([Vector2(-320, 730.539), Vector2(874.87604, 1600)])
 right_wall_segments = Array[Vector2]([Vector2(-320, 754.89856), Vector2(892.8511, 1600)])
 two_star_max_seconds = 129.9

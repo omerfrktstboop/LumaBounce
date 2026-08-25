@@ -10,28 +10,24 @@ script = ExtResource("1")
 position = Vector2(142.2173, 471.04294)
 rotation_degrees = -2.642867844436646
 size = Vector2(114.87229, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("1")
 position = Vector2(304.54404, 473.39392)
 rotation_degrees = 4.201074604307251
 size = Vector2(114.87229, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("1")
 position = Vector2(423.9424, 357.08795)
 rotation_degrees = -4.063692506652832
 size = Vector2(114.87229, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("1")
 position = Vector2(633.0459, 443.3237)
 rotation_degrees = -5.316378351699829
 size = Vector2(114.87229, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("1")
@@ -58,26 +54,17 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_050"
 display_order = 50
-theme_id = ""
-difficulty = 5
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = 4.0
-hint_power = 1550.0
+difficulty = 4
+hint_angle_degrees = -12.0
+hint_power = 1900.0
 level_id = 50
-display_name = "Blok Ustalığı"
+display_name = "Blok Labirenti"
 launcher_position = Vector2(385.17197, 1120)
 target_position = Vector2(476.88263, 247.41748)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_lgnf6"), SubResource("Resource_lglry")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj")])
-obstacles = Array[ExtResource("2")]([])
 left_wall_segments = Array[Vector2]([Vector2(-320, 194.90417), Vector2(734.3048, 1440)])
 right_wall_segments = Array[Vector2]([Vector2(-320, 222.71863), Vector2(881.28186, 1440)])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 132.0
 two_star_max_shots = 3
 three_star_max_seconds = 76.0
-three_star_max_shots = 2

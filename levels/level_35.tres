@@ -4,10 +4,9 @@
 [ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
 [ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
-
 [sub_resource type="Resource" id="Resource_ntj7m"]
 script = ExtResource("1")
-position = Vector2(192.376, 467.6)
+position = Vector2(128.37114, 530.5491)
 rotation_degrees = 0.0
 size = Vector2(112.5, 34)
 hit_points = 2
@@ -42,7 +41,7 @@ hit_points = 2
 
 [sub_resource type="Resource" id="Resource_lgnf6"]
 script = ExtResource("1")
-position = Vector2(223.858, 424.107)
+position = Vector2(380.9211, 597.33514)
 rotation_degrees = 0.0
 size = Vector2(153.3333, 34)
 hit_points = 2
@@ -66,7 +65,7 @@ script = ExtResource("4")
 level_uid = "level_035"
 display_order = 35
 theme_id = ""
-difficulty = 4
+difficulty = 2
 time_limit = 0.0
 is_bonus = false
 hint_angle_degrees = -34.0

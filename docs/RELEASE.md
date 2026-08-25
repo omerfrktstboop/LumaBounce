@@ -243,10 +243,10 @@ Portekizcesi, Almanca ve Fransızca**.
 | Dosya | İçerik |
 |---|---|
 | `ui.csv` | arayüz metinleri |
-| `levels.csv` | bölüm adları + öğretici metinleri (155 bölüm dosyası, 136 farklı ad) |
+| `levels.csv` | bölüm adları + öğretici metinleri (150 bölüm dosyası) |
 
 **Anahtar, Türkçe metnin kendisidir.** Bunun sebebi doğrudan bakım maliyeti:
-`LEVEL_042_NAME` gibi anahtarlar kullanılsaydı 155 bölüm dosyasının hepsine
+`LEVEL_042_NAME` gibi anahtarlar kullanılsaydı 150 bölüm dosyasının hepsine
 dokunmak gerekirdi ve `.tres` dosyaları insan tarafından okunamaz hale
 gelirdi. Bu şekilde çevirisi olmayan bir metin ekranda **boş değil, Türkçe**
 görünür.
@@ -299,18 +299,26 @@ kartı Google Play'in döndürdüğü yerelleştirilmiş fiyatı gösterir.
 
 ### Play Console manuel kurulumu
 
-1. **Para kazanma > Ürünler > Uygulama içi ürünler** altında `remove_ads`
-   ürününü oluştur ve etkinleştir.
-2. Ürünü tek seferlik/non-consumable davranışla yayınla; çoklu adet ve
-   consumable davranışı açma.
-3. Internal testing sürümünü oluştur, lisans test kullanıcılarını ekle ve
+1. Önce **Ayarlar > Ödeme profili** altında satıcı ödeme profilini oluştur ve
+   doğrulama/banka/vergi adımlarını tamamla.
+2. **Play ile para kazanma > Ürünler > Tek seferlik ürünler** altında ürün
+   kimliği tam olarak `remove_ads` olan ürünü oluştur.
+3. Ürüne en az bir satın alma seçeneği ekle: türü **Satın al (Buy)** olsun,
+   çoklu adet kapalı kalsın ve bölgesel fiyatları ayarlansın. Ürünü ve satın
+   alma seçeneğini **Etkin** duruma getir; abonelik, kiralama veya tüketilebilir
+   ürün oluşturma.
+4. Ürün adı/açıklaması zorunlu geçiş reklamlarının kaldırıldığını ve ödüllü
+   ipucu reklamlarının isteğe bağlı kaldığını açıkça belirtmeli.
+5. Internal testing sürümünü oluştur, lisans test kullanıcılarını ekle ve
    test cihazında Play Store'daki aynı Google hesabını kullan.
-4. Uygulamayı doğrudan APK ile değil internal test Play bağlantısından kur;
-   gerçek ürün sorgusu sideload build'de güvenilir şekilde test edilemez.
-5. Başarılı, iptal, `PENDING`, already-owned, yeniden kurulum/restore ve çevrimdışı
+6. Uçtan uca yayın doğrulamasında uygulamayı internal test Play bağlantısından
+   kur. Lisans test hesabı sideload geliştirme testine izin verse de Play
+   teslimatı ve imza zinciri yalnızca test kanalından doğrulanır.
+7. Başarılı, iptal, `PENDING`, already-owned, yeniden kurulum/restore ve çevrimdışı
    açılış senaryolarını dene. `PENDING` iken reklamlar kaldırılmamalıdır.
-6. Satın alma sonrası interstitial'ın kapandığını; kısa ipucu rewarded teklifinin
-   isteğe bağlı olarak kaldığını doğrula.
+8. Satın alma sonrası interstitial'ın kapandığını; kısa ipucunun yalnızca Coin
+	harcadığını, aynı bölümdeki tekrar denemede yeniden ücret istemediğini ve tam
+	rota rewarded teklifinin isteğe bağlı kaldığını doğrula.
 
 Kod testi:
 

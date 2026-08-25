@@ -7,21 +7,21 @@
 
 [sub_resource type="Resource" id="Resource_ntj7m"]
 script = ExtResource("3")
-position = Vector2(129.375, 386.6797)
+position = Vector2(251.04974, 536.71606)
 rotation_degrees = -10.0
 length = 190.0
 thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("3")
-position = Vector2(612.8125, 529.6582)
+position = Vector2(482.3998, 488.95428)
 rotation_degrees = -28.0
 length = 200.0
 thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("3")
-position = Vector2(459.78516, 440.4004)
+position = Vector2(200.0522, 232.62128)
 rotation_degrees = 20.0
 length = 180.0
 thickness = 26.0
@@ -37,12 +37,12 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_023"
 display_order = 23
-difficulty = 1
-hint_angle_degrees = 10.0
-hint_power = 2100.0
+difficulty = 2
+hint_angle_degrees = 20.0
+hint_power = 1700.0
 level_id = 23
 display_name = "Ritim Finali"
-target_position = Vector2(580, 320)
+target_position = Vector2(140.26697, 367.80338)
 target_scale = 0.956
 ball_scale = 0.78
 panels = Array[ExtResource("3")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui")])

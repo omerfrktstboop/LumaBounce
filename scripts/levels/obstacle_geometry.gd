@@ -73,7 +73,7 @@ static func dynamic_shapes(obstacles: Array[ObstacleData], seconds: float) -> Ar
 	return shapes
 
 
-## [param seconds] ATIS BASINDAN itibaren gecen sure.
+## [param seconds] Kesintisiz engel zaman cizelgesinde gecen sure.
 ##
 ## Zaman parametresi lazer icin eklendi: bomba ve hizlandirici her zaman
 ## tehlikeliyken lazer yalnizca isini ACIKKEN oldurur. Solver bu listeyi

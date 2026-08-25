@@ -1,45 +1,66 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_27581"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_d2g72"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_08wi1"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_hon7h"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_glcrv"]
-script = ExtResource("1_27581")
-position = Vector2(360, 377.18597)
-rotation_degrees = -2.3589065
-size = Vector2(652, 34)
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("1")
+position = Vector2(265.99512, 348.9078)
+size = Vector2(100, 35)
 hit_points = 2
 
-[sub_resource type="Resource" id="Resource_ve0qe"]
-script = ExtResource("2_d2g72")
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("1")
+position = Vector2(613.6893, 402.43927)
+size = Vector2(120, 35)
+
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("2")
 kind = 2
-position = Vector2(127.02959, 955.98834)
+position = Vector2(203.26746, 664.90826)
 size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = 109.5
 
-[sub_resource type="Resource" id="Resource_m1iyy"]
-script = ExtResource("3_08wi1")
-position = Vector2(444.9243, 724.11926)
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("2")
+position = Vector2(455.82523, 538.17957)
+inner_radius = 54.0
+
+[sub_resource type="Resource" id="Resource_krhwj"]
+script = ExtResource("2")
+kind = 1
+position = Vector2(300, 560)
+size = Vector2(68, 68)
+
+[sub_resource type="Resource" id="Resource_lgnf6"]
+script = ExtResource("3")
+position = Vector2(563.5409, 772.3959)
 rotation_degrees = -55.0
 length = 367.0
 thickness = 26.0
 
+[sub_resource type="Resource" id="Resource_lglry"]
+script = ExtResource("3")
+position = Vector2(271.09222, 790.40045)
+length = 280.0
+thickness = 26.0
+
 [resource]
-script = ExtResource("4_hon7h")
+script = ExtResource("4")
 level_uid = "level_117"
 display_order = 117
-difficulty = 4
-hint_angle_degrees = -38.0
-hint_power = 2050.0
+difficulty = 2
+hint_angle_degrees = 20.0
+hint_power = 1650.0
 level_id = 117
 display_name = "Zırhlı Rotor"
 target_position = Vector2(560.0987, 262.65265)
-panels = Array[ExtResource("3_08wi1")]([SubResource("Resource_m1iyy")])
-breakable_blocks = Array[ExtResource("1_27581")]([SubResource("Resource_glcrv")])
-obstacles = Array[ExtResource("2_d2g72")]([SubResource("Resource_ve0qe")])
+panels = Array[ExtResource("3")]([SubResource("Resource_lgnf6"), SubResource("Resource_lglry")])
+breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj")])
 left_wall_segments = Array[Vector2]([Vector2(-320, 509.80463), Vector2(666.8752, 1600)])
 two_star_max_seconds = 131.70000000000002
 two_star_max_shots = 5

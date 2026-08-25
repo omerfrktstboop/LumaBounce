@@ -13,12 +13,22 @@ func _initialize() -> void:
 
 func _run() -> void:
 	_register_audio_manager()
+	if "--motion-only" in OS.get_cmdline_user_args():
+		_test_laser_pulse()
+		await _test_gameplay_laser()
+		await _test_real_obstacle_motion()
+		await _test_gameplay_motion_is_shot_independent()
+		await _unregister_audio_manager()
+		print("ENGEL HAREKET TESTI: %d gecti, %d kaldi." % [_passed, _failed])
+		quit(0 if _failed == 0 else 1)
+		return
 	_test_data_and_geometry()
 	await _test_world_and_solver()
 	await _test_gameplay_bomb()
 	_test_laser_pulse()
 	await _test_gameplay_laser()
 	await _test_real_obstacle_motion()
+	await _test_gameplay_motion_is_shot_independent()
 	await _test_mechanic_intro_card()
 	_test_resource_roundtrip()
 	_test_ai_mapping()
@@ -75,18 +85,61 @@ func _test_real_obstacle_motion() -> void:
 	var wheel_node: LevelObstacle = field.get_obstacle_node(1)
 	var bar_root: Node2D = bar_node.get_node("MotionRoot")
 	var wheel_root: Node2D = wheel_node.get_node("MotionRoot")
-	var bar_start := bar_root.position
-	var wheel_start := wheel_root.rotation
+	var bar_phase_zero := bar_root.position
+	var wheel_phase_zero := wheel_root.rotation
 
 	for i in 30:
 		await physics_frame
 
 	_check("gercek kayan bariyer govdesi zamanla hareket ediyor",
-		bar_root.position.distance_to(bar_start) > 20.0, true)
+		bar_root.position.distance_to(bar_phase_zero) > 20.0, true)
 	_check("gercek donen cark govdesi zamanla donuyor",
-		not is_equal_approx(wheel_root.rotation, wheel_start), true)
+		not is_equal_approx(wheel_root.rotation, wheel_phase_zero), true)
+
+	# start_motion tekrar cagrilmasi (eski atis akisi) fazi sifirlamamali.
+	field.start_motion()
+	await physics_frame
+	_check("tekrar start kayan bariyer fazini sifirlamiyor",
+		bar_root.position.distance_to(bar_phase_zero) > 20.0, true)
+	_check("tekrar start cark fazini sifirlamiyor",
+		absf(angle_difference(wheel_phase_zero, wheel_root.rotation)) > 0.2, true)
 
 	holder.queue_free()
+	await process_frame
+
+
+## Gercek Gameplay akisi: engel bolum acilinca top henuz READY iken hareket
+## etmeli; atis ve top respawn'i ayni fazi kesintisiz surdurmeli.
+func _test_gameplay_motion_is_shot_independent() -> void:
+	var level := LevelData.new()
+	level.level_id = 1
+	level.launcher_position = Vector2(360.0, 1120.0)
+	level.target_position = Vector2(120.0, 260.0)
+	level.max_lives = 5
+	level.obstacles = [_mover(Vector2(360.0, 620.0))] as Array[ObstacleData]
+
+	var gameplay: Node = (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+	gameplay.level_data = level
+	get_root().add_child(gameplay)
+	await process_frame
+	var field := gameplay.get_node("Obstacles") as ObstacleField
+	var mover := field.get_obstacle_node(0)
+	var motion_root := mover.get_node("MotionRoot") as Node2D
+	var phase_zero := motion_root.position
+
+	for _frame in 30:
+		await physics_frame
+	_check("kayan engel atis beklerken hareket ediyor",
+		motion_root.position.distance_to(phase_zero) > 20.0, true)
+
+	gameplay.call("_on_shot_fired", Vector2(900.0, -300.0))
+	_check("atis kayan engel fazini sifirlamiyor",
+		motion_root.position.distance_to(phase_zero) > 20.0, true)
+	gameplay.call("_respawn_ball")
+	_check("top respawn kayan engel fazini sifirlamiyor",
+		motion_root.position.distance_to(phase_zero) > 20.0, true)
+
+	gameplay.queue_free()
 	await process_frame
 
 
@@ -529,7 +582,7 @@ func _test_official_obstacle_levels() -> void:
 	var laser_band_wheel_levels := 0
 	var laser_band_ring_levels := 0
 	var laser_band_bomb_levels := 0
-	# Bonus 151-155 normal kampanya faz kapilarinin disindadir.
+	# 126-150 final kampanya bandidir.
 	for level_id in range(126, 151):
 		var level := LevelLibrary.load_level(level_id)
 		laser_band_blocks += level.breakable_blocks.size()

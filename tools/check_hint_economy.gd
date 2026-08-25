@@ -15,8 +15,8 @@ func _initialize() -> void:
 func _run() -> void:
 	_register_audio_manager()
 	_test_wallet_contract()
-	_test_hint_coverage()
-	await _test_gameplay_purchase_flow()
+	await _test_hint_coverage()
+	await _test_full_hint_reward_flow()
 	await _test_short_hint()
 	await _test_broken_hint_never_charges()
 	await _test_hud_fits_tall_aspect()
@@ -25,7 +25,7 @@ func _run() -> void:
 		_cleanup_wallet(path)
 	await _unregister_audio_manager()
 	if _failures == 0:
-		print("PASS hint economy: wallet, unlock, two-option card, short hint, HUD, pause")
+		print("PASS hint economy: 150 valid routes, persistent display, retry entitlement, wallet, HUD, pause")
 		quit(0)
 	else:
 		push_error("FAIL hint economy: %d assertion(s)" % _failures)
@@ -37,33 +37,60 @@ func _test_wallet_contract() -> void:
 	var wallet := WalletStore.load_from_path(path)
 	_check(wallet.balance == CoinEconomy.STARTING_COINS,
 		"new wallet grants the configured starting balance")
-	_check(not wallet.unlock_hint("", 3), "empty level uid is rejected")
-	_check(wallet.unlock_hint("level_041", 3), "affordable hint unlock succeeds")
-	_check(wallet.balance == 0 and wallet.spent_total == 3, "unlock spends exactly once")
-	_check(wallet.unlock_hint("level_041", 3), "repeated unlock is idempotent")
-	_check(wallet.balance == 0 and wallet.spent_total == 3, "repeated unlock costs nothing")
-	_check(not wallet.unlock_hint("level_042", 3), "insufficient balance cannot unlock")
+	_check(not wallet.grant_hint_unlock(""), "empty level uid is rejected")
+	_check(wallet.grant_hint_unlock("level_041"), "rewarded hint unlock succeeds")
+	_check(wallet.balance == CoinEconomy.STARTING_COINS,
+		"rewarded hint unlock spends no Coin")
+	_check(wallet.grant_hint_unlock("level_041"), "repeated unlock is idempotent")
+	_check(wallet.balance == CoinEconomy.STARTING_COINS,
+		"repeated rewarded unlock still costs nothing")
 
 	var reloaded := WalletStore.load_from_path(path)
 	_check(reloaded.is_hint_unlocked("level_041"), "hint unlock survives reload")
-	_check(reloaded.balance == 0, "spent balance survives reload")
+	_check(reloaded.balance == CoinEconomy.STARTING_COINS,
+		"rewarded unlock leaves persisted balance unchanged")
 	reloaded.add(1)
-	_check(reloaded.balance == 1 and reloaded.earned_total == 1, "coin rewards are recorded")
+	_check(reloaded.balance == CoinEconomy.STARTING_COINS + 1
+		and reloaded.earned_total == 1, "coin rewards are recorded")
 
 
 func _test_hint_coverage() -> void:
 	var missing: Array[int] = []
-	# 1-150 ana kampanya, 151-155 bonus bolumlerdir.
+	var invalid: Array[int] = []
+	var solver := LevelSolver.from_scenes()
+	# Yalnizca aci/guc alaninin dolu olmasi yetmez. Kayitli atisi gercek
+	# LevelWorld ve LevelSolver ile oynatip rotanin cizilebilir oldugunu denetle.
 	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, LevelLibrary.last_level_id() + 1):
 		var level := load(LevelLibrary.level_path(level_id)) as LevelData
 		if level == null or not level.has_hint():
 			missing.append(level_id)
-	_check(missing.is_empty(), "all 150 campaign and 5 bonus levels have hint shots")
+			continue
+		var world := LevelWorld.new()
+		root.add_child(world)
+		world.build(level)
+		await physics_frame
+		await physics_frame
+		solver.bind_space(world.get_space(), world.get_block_rids(), world.get_obstacles())
+		var excluded := world.rids_for_state(world.get_all_broken_state())
+		var direction := Vector2.UP.rotated(deg_to_rad(level.hint_angle_degrees))
+		var result := solver.simulate(
+			solver.spawn_position(level.launcher_position), direction * level.hint_power,
+			level.target_position, world.get_play_rect(), excluded, true)
+		if not bool(result.get("hit", false)) \
+				or (result.get("trace_points", PackedVector2Array()) as PackedVector2Array).size() < 2:
+			invalid.append(level_id)
+		root.remove_child(world)
+		world.queue_free()
+		await process_frame
+	_check(missing.is_empty(), "all 150 campaign levels have hint shots")
+	_check(invalid.is_empty(), "all 150 campaign hint shots reach the target")
 	if not missing.is_empty():
 		push_error("Missing hint levels: %s" % str(missing))
+	if not invalid.is_empty():
+		push_error("Invalid hint levels: %s" % str(invalid))
 
 
-func _test_gameplay_purchase_flow() -> void:
+func _test_full_hint_reward_flow() -> void:
 	var path := _new_wallet_path("gameplay")
 	var wallet := WalletStore.load_from_path(path)
 	var level := load("res://levels/level_41.tres") as LevelData
@@ -88,12 +115,8 @@ func _test_gameplay_purchase_flow() -> void:
 	await physics_frame
 	await physics_frame
 
-	# Tam ipucu baslangic bakiyesinden PAHALI (bilerek: yeni oyuncu once
-	# kazanmali). Test fiyati oyundan okur ve cuzdani ona gore fonlar.
-	var cost := int(gameplay.get("hint_cost"))
-	wallet.add(cost)
-	var funded := wallet.balance
-	_check(funded >= cost, "wallet funded for one full-route unlock")
+	var initial_balance := wallet.balance
+	gameplay.set("full_hint_enabled", true)
 
 	var initial: Dictionary = gameplay.call("get_debug_snapshot")
 	_check(bool(initial["hint_available"]), "gameplay exposes available hint")
@@ -101,13 +124,17 @@ func _test_gameplay_purchase_flow() -> void:
 	gameplay.call("_on_hint_pressed")
 	_check((gameplay.get_node("HUD/HintPurchaseCard") as Control).visible,
 		"first tap opens purchase confirmation")
-	_check(wallet.balance == funded, "opening confirmation does not spend")
+	_check(wallet.balance == initial_balance, "opening hint choices does not spend")
+	var options := gameplay.get_node("HUD/HintPurchaseCard/CardCenter/Card/Margin/Rows/Options")
+	_check(not (options.get_node("FullOption") as Button).disabled,
+		"full route is available when rewarded ad is ready")
 
-	gameplay.call("_on_hint_purchase_requested")
-	var purchased: Dictionary = gameplay.call("get_debug_snapshot")
-	_check(wallet.balance == funded - cost, "confirmation spends exactly the cost")
-	_check(bool(purchased["hint_unlocked"]), "purchase permanently unlocks level hint")
-	_check(not bool(purchased["hint_visible"]), "block level waits before drawing final route")
+	gameplay.call("_on_full_hint_requested")
+	gameplay.call("grant_full_hint")
+	var rewarded: Dictionary = gameplay.call("get_debug_snapshot")
+	_check(wallet.balance == initial_balance, "rewarded full route spends no Coin")
+	_check(bool(rewarded["hint_unlocked"]), "reward permanently unlocks level hint")
+	_check(not bool(rewarded["hint_visible"]), "block level waits before drawing final route")
 
 	var blocks := gameplay.get_node("Blocks") as BreakableField
 	blocks.shatter_in_radius(Vector2(360.0, 640.0), 2000.0)
@@ -117,11 +144,14 @@ func _test_gameplay_purchase_flow() -> void:
 	var revealed: Dictionary = gameplay.call("get_debug_snapshot")
 	_check(bool(revealed["hint_visible"]),
 		"route appears after all blocks are broken")
+	gameplay.call("_on_shot_fired", Vector2(0.0, -1800.0))
+	_check(bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"full route remains visible while the ball is flying")
 
 	gameplay.call("reset_shot")
 	gameplay.call("_on_hint_pressed")
-	_check(wallet.balance == funded - cost,
-		"unlocked hint never charges again after restart")
+	_check(wallet.balance == initial_balance,
+		"unlocked rewarded hint never charges after restart")
 	_check(not (gameplay.get_node("HUD/HintPurchaseCard") as Control).visible,
 		"unlocked hint bypasses purchase modal")
 
@@ -130,11 +160,11 @@ func _test_gameplay_purchase_flow() -> void:
 	await process_frame
 
 
-## KISA IPUCU: bedava, kalici DEGIL, rotanin yalnizca bir parcasi.
+## KISA IPUCU: Coin ile bir kez alinir, bolum oturumunda yeniden denemelerde
+## korunur ve rotanin yalnizca bir parcasi olarak kalir.
 ##
-## Bu testin asil isi iki sozlesmeyi korumak: kisa ipucu Coin harcamamali ve
-## tam rotanin yerine gecmemeli. Ikisi de urun kararidir; kod onlari sessizce
-## kaybederse kimse fark etmez.
+## Bu testin asil isi uc sozlesmeyi korumak: kisa ipucu tam fiyatini harcar,
+## reklam istemez ve tam rotanin yerine gecmez.
 func _test_short_hint() -> void:
 	var path := _new_wallet_path("shorthint")
 	var wallet := WalletStore.load_from_path(path)
@@ -156,41 +186,28 @@ func _test_short_hint() -> void:
 
 	var card := gameplay.get_node("HUD/HintPurchaseCard") as Control
 
-	# Tam rota baslangic bakiyesinden pahali; "yeterli bakiye varken" iddiasi
-	# anlamli olsun diye cuzdan once fonlanir.
-	wallet.add(int(gameplay.get("hint_cost")))
-
-	# Ozellik bayragi KAPALI: secenek gorunur ama pasif olmali.
-	gameplay.set("short_hint_enabled", false)
+	var short_cost := int(gameplay.get("short_hint_cost"))
+	var balance_before := wallet.balance
+	gameplay.set("full_hint_enabled", false)
 	gameplay.call("_on_hint_pressed")
 	_check(card.visible, "hint tap opens the single two-option card")
 	var options := card.get_node("CardCenter/Card/Margin/Rows/Options")
 	_check(options.get_child_count() == 2, "card offers exactly two options")
 	_check(options.has_node("ShortOption"), "short option row exists")
 	_check(options.has_node("FullOption"), "full route row exists")
-	_check((options.get_node("ShortOption") as Button).disabled,
-		"short hint is disabled while the rewarded flag is off")
-	_check(not (options.get_node("FullOption") as Button).disabled,
-		"full route stays purchasable with enough balance")
-	gameplay.call("_on_short_hint_requested")
-	var short_before := wallet.balance
-	_check(wallet.balance == short_before, "disabled short hint spends nothing")
-	_check(not bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
-		"disabled short hint draws no route")
-	card.call("close")
-
-	# Bayrak ACIK: secenek etkinlesir ve odul verilince kisa rota cizilir.
-	gameplay.set("short_hint_enabled", true)
-	gameplay.call("_on_hint_pressed")
 	_check(not (options.get_node("ShortOption") as Button).disabled,
-		"short hint enables when the rewarded flag is on")
-	gameplay.call("grant_short_hint")
+		"short hint is available with enough Coin")
+	_check((options.get_node("FullOption") as Button).disabled,
+		"full route is disabled while rewarded ad is unavailable")
+	gameplay.call("_on_short_hint_requested")
 	var granted: Dictionary = gameplay.call("get_debug_snapshot")
-	_check(bool(granted["hint_visible"]), "granted short hint draws a route")
-	_check(wallet.balance == short_before,
-		"rewarded short hint never spends Luma Coin")
+	_check(bool(granted["hint_visible"]), "purchased short hint draws a route")
+	_check(wallet.balance == balance_before - short_cost,
+		"short hint spends exactly its Coin cost")
 	_check(not bool(granted["hint_unlocked"]),
 		"short hint is not a permanent unlock")
+	_check(bool(granted["short_hint_unlocked"]),
+		"short hint records a level-session entitlement")
 
 	# Kisa rota TAM rotadan gercekten kisa olmali - yoksa tam rotayi satin
 	# almanin bir anlami kalmaz.
@@ -202,14 +219,79 @@ func _test_short_hint() -> void:
 	_check(short_trace[0].is_equal_approx(full[0]),
 		"short trace starts at the same launch point")
 
-	# Ayni denemede ikinci kez verilmez.
+	# Ustteki ipucu simgesi rotayi kapatir; tekrar dokunmak Coin harcamadan acar.
+	var paid_balance := wallet.balance
 	gameplay.call("_on_hint_pressed")
-	_check((options.get_node("ShortOption") as Button).disabled,
-		"short hint cannot be claimed twice in one attempt")
-	card.call("close")
+	_check(not bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"top hint icon hides the visible route")
+	gameplay.call("_on_hint_pressed")
+	_check(bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"second icon tap reopens the paid short route")
+	_check(wallet.balance == paid_balance and not card.visible,
+		"reopening a short route neither charges Coin nor opens an offer")
+
+	# Atis baslayinca cizgi arka planda kalir; bolum tamamlaninca kapanir.
+	gameplay.call("_on_shot_fired", Vector2(0.0, -1800.0))
+	_check(bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"short route remains visible while the ball is flying")
+	gameplay.call("_on_target_hit", null)
+	_check(not bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"route hides when the level is completed")
+
+	# Yeniden deneme rotayi kapatir ama odenmis hakki korur. Bakiye artik
+	# yetersiz olsa bile simge ayni ipucunu ucretsiz acar.
+	gameplay.call("reset_shot")
+	_check(not bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"restart begins with the route hidden")
+	gameplay.call("_on_hint_pressed")
+	_check(bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"restart reopens the paid short route for free")
+	_check(wallet.balance == paid_balance and not card.visible,
+		"restart never repeats the Coin/ad offer for that short route")
+
+	# Son top hakki bittiginde rota kapanir. Sonuc kartindan tekrar baslatinca
+	# ayni oturum hakki bir kez daha ucretsiz kullanilir.
+	gameplay.set("_lives_remaining", 1)
+	gameplay.call("_consume_life")
+	_check(not bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"route hides as soon as all ball rights are exhausted")
+	gameplay.call("_on_hint_pressed")
+	_check(not bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"hint cannot reopen before the out-of-balls result is retried")
+	gameplay.call("reset_shot")
+	gameplay.call("_on_hint_pressed")
+	_check(bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"after out-of-balls retry the same short hint opens for free")
+	_check(wallet.balance == paid_balance and not card.visible,
+		"out-of-balls retry preserves the paid entitlement")
 
 	root.remove_child(gameplay)
 	gameplay.queue_free()
+	await process_frame
+
+	# Bolum ekranindan cikmak kisa ipucu oturum hakkini bitirir. Yeni Gameplay
+	# orneginde bakiye yetmiyorsa Coin kesilmez ve reklam yonlendirmesi gorunur.
+	var insufficient_gameplay := (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+	insufficient_gameplay.set("level_data", level)
+	insufficient_gameplay.set("wallet", wallet)
+	root.add_child(insufficient_gameplay)
+	await process_frame
+	await physics_frame
+	await physics_frame
+	var insufficient_balance := wallet.balance
+	_check(insufficient_balance < short_cost,
+		"fixture balance is insufficient in a new level session")
+	insufficient_gameplay.call("_on_hint_pressed")
+	insufficient_gameplay.call("_on_short_hint_requested")
+	_check(wallet.balance == insufficient_balance,
+		"insufficient short hint spends nothing")
+	_check(not bool(insufficient_gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"insufficient short hint draws no route")
+	var status := insufficient_gameplay.get_node("HUD/SafeArea/Root/HintStatus/Text") as Label
+	_check(status.text == tr("COIN YOK · REKLAM İZLE"),
+		"insufficient Coin shows the watch-ad guidance")
+	root.remove_child(insufficient_gameplay)
+	insufficient_gameplay.queue_free()
 	await process_frame
 
 

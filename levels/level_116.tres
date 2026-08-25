@@ -1,37 +1,54 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_4q58k"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_pfrn2"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_fn3ex"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_6eeev"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_cfig5"]
-script = ExtResource("2_pfrn2")
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("2")
 kind = 2
 position = Vector2(165.24597, 901.9476)
 size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = -108.1875
 
-[sub_resource type="Resource" id="Resource_43vbi"]
-script = ExtResource("3_fn3ex")
-position = Vector2(478.32715, 475.78394)
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("2")
+kind = 1
+position = Vector2(343.76215, 194.61166)
+size = Vector2(68, 68)
+
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("2")
+position = Vector2(265.48544, 365.04852)
+inner_radius = 63.0
+
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("2")
+kind = 2
+position = Vector2(360, 700)
+size = Vector2(150, 24)
+
+[sub_resource type="Resource" id="Resource_krhwj"]
+script = ExtResource("3")
+position = Vector2(561.7738, 514.5946)
 rotation_degrees = 50.519425010681154
 length = 255.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4_6eeev")
+script = ExtResource("4")
 level_uid = "level_116"
 display_order = 116
-difficulty = 4
-hint_angle_degrees = -48.0
-hint_power = 2150.0
+difficulty = 2
+hint_angle_degrees = -18.0
+hint_power = 1850.0
 level_id = 116
 display_name = "Sessiz Devir"
 target_position = Vector2(574.9557, 296.62457)
-panels = Array[ExtResource("3_fn3ex")]([SubResource("Resource_43vbi")])
-obstacles = Array[ExtResource("2_pfrn2")]([SubResource("Resource_cfig5")])
+panels = Array[ExtResource("3")]([SubResource("Resource_krhwj")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui")])
 two_star_max_seconds = 130.8
 two_star_max_shots = 3
 three_star_max_seconds = 69.5

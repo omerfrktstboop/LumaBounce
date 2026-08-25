@@ -72,9 +72,9 @@ func _run() -> void:
 	print("OZET yazilan=%d ipucusuz=%d" % [written, skipped.size()])
 	if not skipped.is_empty():
 		print("ipucu bulunamayan bolumler: %s" % str(skipped))
-	# Ipucu bulunamamasi bir HATA DEGILDIR (bkz. LevelData.has_hint): o
-	# bolumde ipucu tusu pasif gorunur. Bu yuzden cikis kodu her zaman 0.
-	quit(0)
+	# Yayina giren kampanyada ipucusuz bolum kabul edilmez. Arac CI/yerel
+	# kontrolde eksigi sessizce gecmesin diye basarisiz cikis kodu verir.
+	quit(0 if skipped.is_empty() else 1)
 
 
 func _compute(level_id: int) -> bool:
@@ -99,8 +99,13 @@ func _compute(level_id: int) -> bool:
 	var excluded: Array[RID] = []
 	if not level.breakable_blocks.is_empty():
 		excluded = _world.rids_for_state(_world.get_all_broken_state())
-	var scan := _solver.scan(
-		spawn, level.target_position, play_rect, excluded, ANGLE_STEP, POWER_STEP)
+	# Kaba izgara hizlidir; hic isabet yoksa LevelSolver ayni fizik cekirdeginde
+	# 1 derece/50 ve 0.5 derece/25 araliklarina iner. Boylece elle cozulebilen
+	# dar bir rota yalnizca iki derecelik orneklerin arasinda kaldi diye ipucu
+	# eksik birakilmaz.
+	var scan := await _solver.scan_for_solution_async(
+		spawn, level.target_position, play_rect, excluded,
+		ANGLE_STEP, POWER_STEP, 240)
 	var analysis := LevelSolver.analyse_robust(scan)
 
 	root.remove_child(_world)

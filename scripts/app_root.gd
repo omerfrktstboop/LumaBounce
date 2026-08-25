@@ -3,6 +3,7 @@ extends Node
 
 const DEBUG_PANEL_SCENE_PATH := "res://scenes/debug_panel.tscn"
 const LEVEL_EDITOR_SCENE_PATH := "res://scenes/level_editor.tscn"
+const PLAYTEST_STATS_SCRIPT_PATH := "res://scripts/debug/playtest_stats.gd"
 
 ## Uygulamanin giris noktasi: splash -> ana menu -> bolum secimi -> oynanis.
 ##
@@ -37,7 +38,10 @@ const LEVEL_EDITOR_SCENE_PATH := "res://scenes/level_editor.tscn"
 @onready var _fade: ColorRect = $FadeLayer/Fade
 
 var _progress: ProgressStore
-var _playtest_stats: PlaytestStats
+## Release filtresi scripts/debug klasorunu tamamen dislar. Bu nedenle bu alan
+## statik PlaytestStats tipi tasiyamaz; debug build'de dinamik yuklenir, release
+## build'de null kalir.
+var _playtest_stats = null
 var _wallet: WalletStore
 var _entitlements: EntitlementStore
 var _analytics: AnalyticsService
@@ -92,7 +96,7 @@ func _ready() -> void:
 	# Sarsinti tercihi de tek kisma noktasina aktarilir (bkz. screen_shake.gd);
 	# Haptics ile ayni desen.
 	ScreenShake.trauma_scale = _progress.shake_scale
-	_playtest_stats = PlaytestStats.load_from_disk()
+	_playtest_stats = _load_playtest_stats()
 	_start_analytics_session(&"launch")
 	_setup_debug_tools()
 	_connect_debug_panel()
@@ -104,6 +108,20 @@ func _ready() -> void:
 	_fade.visible = false
 	_fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_swap_to(splash_scene)
+
+
+## Debug-only sinifi release scriptlerinin statik bagimlilik agacina sokmadan
+## yukler. Android release export'u scripts/debug/* dosyalarini disladigi icin
+## PlaytestStats sinif adinin AppRoot imzasinda gecmesi bile parse hatasina yol
+## acardi ve ekranda yalnizca BackgroundLayer kalirdi.
+func _load_playtest_stats():
+	if not OS.is_debug_build() or OS.has_feature("production"):
+		return null
+	var stats_script := load(PLAYTEST_STATS_SCRIPT_PATH) as GDScript
+	if stats_script == null:
+		push_warning("AppRoot: playtest istatistikleri yuklenemedi.")
+		return null
+	return stats_script.call("load_from_disk")
 
 
 ## Gecis sirasinda hicbir girdi alttaki ekrana ulasmasin.
@@ -307,7 +325,7 @@ func _connect_screen(screen: Node) -> void:
 		gameplay.menu_requested.connect(_on_gameplay_menu_requested)
 		gameplay.obstacle_kind_seen.connect(_on_obstacle_kind_seen)
 		gameplay.block_mechanic_seen.connect(_on_block_mechanic_seen)
-		gameplay.short_hint_requested.connect(_on_short_hint_requested.bind(gameplay))
+		gameplay.full_hint_requested.connect(_on_full_hint_requested.bind(gameplay))
 		gameplay.level_failed.connect(_on_level_failed)
 		gameplay.bounce_recorded.connect(_on_bounce_recorded.bind(gameplay))
 		return
@@ -386,8 +404,8 @@ func _configure_gameplay(screen: Node, level_id: int) -> void:
 		gameplay.aim_assist = _progress.aim_assist
 		gameplay.ad_service = _ad_service
 		gameplay.analytics = _analytics
-		gameplay.short_hint_enabled = _ad_service.is_rewarded_ready(
-			MonetizationConfig.PLACEMENT_SHORT_HINT)
+		gameplay.full_hint_enabled = _ad_service.is_rewarded_ready(
+			MonetizationConfig.PLACEMENT_FULL_HINT)
 		_ad_policy.begin_level(LevelData.uid_for(level_id))
 		_analytics.track_event(AnalyticsService.LEVEL_START, {
 			"level_id": level_id,
@@ -413,8 +431,8 @@ func _configure_daily_gameplay(screen: Node) -> void:
 	gameplay.ad_service = _ad_service
 	gameplay.analytics = _analytics
 	gameplay.daily_mode = true
-	gameplay.short_hint_enabled = _ad_service.is_rewarded_ready(
-		MonetizationConfig.PLACEMENT_SHORT_HINT)
+	gameplay.full_hint_enabled = _ad_service.is_rewarded_ready(
+		MonetizationConfig.PLACEMENT_FULL_HINT)
 	_ad_policy.begin_level("daily:%s" % _daily_store.active_date)
 	_analytics.track_event(AnalyticsService.LEVEL_START, {
 		"level_id": level_id,
@@ -475,22 +493,22 @@ func _apply_background_theme() -> void:
 
 ## Kazanilan yildiz yalnizca oncekinden IYIYSE kaydedilir; eski 3, yeni 1
 ## ise kayit 3 kalir (bkz. ProgressStore.set_level_stars_if_higher).
-## Gameplay yalnizca "kisa ipucu istiyorum" der. Provider sonucu EARNED
-## degilse Coin/rota verilmez; unavailable durumda bir frame sonra normal oyun
-## devam eder. Gercek SDK adapteri bu fonksiyonun disina sizmaz.
-func _on_short_hint_requested(gameplay: Gameplay) -> void:
+## Gameplay yalnizca "tam ipucu istiyorum" der. Provider sonucu EARNED
+## degilse rota kilidi verilmez; unavailable durumda bir frame sonra normal
+## oyun devam eder. Gercek SDK adapteri bu fonksiyonun disina sizmaz.
+func _on_full_hint_requested(gameplay: Gameplay) -> void:
 	if gameplay == null or not is_instance_valid(gameplay):
 		return
 	if _ad_service == null:
 		return
 	gameplay.set_fullscreen_ad_active(true)
 	var result := int(await _ad_service.show_rewarded(
-		MonetizationConfig.PLACEMENT_SHORT_HINT))
+		MonetizationConfig.PLACEMENT_FULL_HINT))
 	if gameplay == null or not is_instance_valid(gameplay):
 		return
 	gameplay.set_fullscreen_ad_active(false)
 	if result == AdResult.Code.EARNED and gameplay.is_inside_tree():
-		gameplay.grant_short_hint()
+		gameplay.grant_full_hint()
 
 
 func _on_level_completed(level_id: int, stars: int, seconds: float,

@@ -13,8 +13,8 @@ extends RefCounted
 ## dokunmadan ceviri eklenebiliyor ve cevirisi olmayan bir metin ekranda bos
 ## degil, Turkce gorunuyor.
 
-## Desteklenen diller. Sira ayarlar ekranindaki sirayla aynidir.
-const SUPPORTED: Array[String] = ["tr", "en", "es", "pt_BR", "de", "fr"]
+## Desteklenen diller. Ayarlar ekraninda kendi adlarina gore alfabetiktir.
+const SUPPORTED: Array[String] = ["de", "en", "es", "fr", "pt_BR", "tr"]
 const DEFAULT := "tr"
 
 ## Dilin KENDI dilindeki adi - ayarlar ekraninda "English" yazar, "Ingilizce"

@@ -1,52 +1,87 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_ptxn7"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_ssjtb"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_d62wb"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_yhnpn"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_g4f8v"]
-script = ExtResource("1_ptxn7")
-position = Vector2(360, 376.5896)
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("1")
+position = Vector2(187.86404, 124.32019)
 rotation_degrees = 1.6788015
-size = Vector2(652, 34)
+size = Vector2(100, 20)
 hit_points = 2
 
-[sub_resource type="Resource" id="Resource_q7xjd"]
-script = ExtResource("2_ssjtb")
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("1")
+position = Vector2(390.90775, 310.14297)
+rotation_degrees = 1.6788015
+size = Vector2(100, 20)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("1")
+position = Vector2(262.13104, 323.68427)
+rotation_degrees = 1.6788015
+size = Vector2(100, 20)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("1")
+position = Vector2(156.07277, 442.77167)
+rotation_degrees = 1.6788015
+size = Vector2(100, 20)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_krhwj"]
+script = ExtResource("1")
+position = Vector2(381.398, 491.8105)
+rotation_degrees = 1.6788015
+size = Vector2(100, 20)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_lgnf6"]
+script = ExtResource("1")
+position = Vector2(545.5582, 499.67218)
+rotation_degrees = 1.6788015
+size = Vector2(100, 20)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_lglry"]
+script = ExtResource("2")
 kind = 2
-position = Vector2(125.52224, 911.0741)
+position = Vector2(372.8038, 167.04492)
 size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = 120.0
 
-[sub_resource type="Resource" id="Resource_xys6y"]
-script = ExtResource("2_ssjtb")
-position = Vector2(568.143, 745.2438)
+[sub_resource type="Resource" id="Resource_hp77n"]
+script = ExtResource("2")
+position = Vector2(527.29346, 761.8093)
 rotation_degrees = 180.0
 size = Vector2(170, 28)
-inner_radius = 56.0
+inner_radius = 62.0
 
-[sub_resource type="Resource" id="Resource_yq4ye"]
-script = ExtResource("3_d62wb")
-position = Vector2(415.31415, 514.748)
+[sub_resource type="Resource" id="Resource_1kj03"]
+script = ExtResource("3")
+position = Vector2(255.4112, 630.2334)
 rotation_degrees = 15.461833190917968
 length = 322.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4_yhnpn")
+script = ExtResource("4")
 level_uid = "level_125"
 display_order = 125
-difficulty = 5
-hint_angle_degrees = -36.0
-hint_power = 2100.0
+difficulty = 4
+hint_angle_degrees = -32.0
+hint_power = 2000.0
 level_id = 125
-display_name = "Çark Ustalığı"
-target_position = Vector2(586.8525, 289.13858)
-panels = Array[ExtResource("3_d62wb")]([SubResource("Resource_yq4ye")])
-breakable_blocks = Array[ExtResource("1_ptxn7")]([SubResource("Resource_g4f8v")])
-obstacles = Array[ExtResource("2_ssjtb")]([SubResource("Resource_q7xjd"), SubResource("Resource_xys6y")])
+display_name = "Çark Kavşağı"
+target_position = Vector2(570.25037, 172.70657)
+panels = Array[ExtResource("3")]([SubResource("Resource_1kj03")])
+breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj"), SubResource("Resource_lgnf6")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_lglry"), SubResource("Resource_hp77n")])
 left_wall_segments = Array[Vector2]([Vector2(-320, 623.9572), Vector2(755.2608, 1600)])
 right_wall_segments = Array[Vector2]([Vector2(-320, 765.7568), Vector2(885.8702, 1600)])
 two_star_max_seconds = 138.5

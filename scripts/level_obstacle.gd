@@ -53,8 +53,10 @@ func _physics_process(delta: float) -> void:
 
 
 func start_motion() -> void:
-	_elapsed = 0.0
-	apply_motion_time(0.0)
+	# Atislar bu metodu tekrar cagirsa bile mevcut faz korunur. Hareketin tek
+	# zaman cizelgesi bolum acildiginda baslar; topun durumu onu sifirlamaz.
+	if _running:
+		return
 	_running = true
 	set_physics_process(true)
 
@@ -69,6 +71,10 @@ func reset_motion() -> void:
 	_running = false
 	set_physics_process(false)
 	apply_motion_time(0.0)
+
+
+func get_motion_time() -> float:
+	return _elapsed
 
 
 func apply_motion_time(seconds: float) -> void:
@@ -386,8 +392,8 @@ func _build_pulse_laser() -> void:
 	_apply_laser_state(0.0)
 
 
-## [param seconds] atis basindan itibaren gecen sure - solver ile AYNI sifir
-## noktasi (bkz. ObstacleData.laser_is_active).
+## [param seconds] bolumdeki kesintisiz engel zaman cizelgesinde gecen sure.
+## Solver ipucu hesaplarken ayni fazi ObstacleField'dan alir.
 func _apply_laser_state(seconds: float) -> void:
 	if _laser_beam == null:
 		return

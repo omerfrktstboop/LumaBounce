@@ -92,8 +92,8 @@ func _rebuild() -> void:
 	_add_toggle_row("Nişan yardımı", progress.aim_assist, _on_aim_assist_toggled,
 		"Nişan izi uzun bölümlerde de tam görünür")
 	_add_divider()
-	_add_action_row("Öğreticileri tekrar göster", _on_forget_mechanics, GlyphIcon.Glyph.HINT)
-	_add_action_row("İlerlemeyi sıfırla", _show_confirm, GlyphIcon.Glyph.RESTART)
+	_add_action_row("İlerlemeyi sıfırla", _show_confirm, GlyphIcon.Glyph.RESTART,
+		64.0, "ProgressResetIcon")
 
 	# Gizlilik politikasi HER ZAMAN gorunur ve reklam SDK'sindan BAGIMSIZDIR:
 	# magaza yayin sarti, reklamlari kaldiran oyuncu icin de gecerli. Gizlilik
@@ -249,7 +249,8 @@ func _style_slider(slider: HSlider) -> void:
 
 
 func _add_action_row(label_text: String, handler: Callable,
-		glyph := GlyphIcon.Glyph.SETTINGS) -> void:
+		glyph := GlyphIcon.Glyph.SETTINGS, tile_width := 0.0,
+		tile_name := "") -> void:
 	var row := Button.new()
 	row.text = ""
 	row.focus_mode = Control.FOCUS_NONE
@@ -268,7 +269,10 @@ func _add_action_row(label_text: String, handler: Callable,
 	var tile := IconTile.new()
 	tile.glyph = glyph
 	tile.tile_size = 44.0
+	tile.tile_width = tile_width
 	tile.icon_inset = 10.0
+	if not tile_name.is_empty():
+		tile.name = tile_name
 	line.add_child(tile)
 
 	var label := Label.new()
@@ -416,11 +420,6 @@ func _on_shake_chosen(index: int) -> void:
 
 func _on_aim_assist_toggled(enabled: bool) -> void:
 	progress.set_aim_assist(enabled)
-
-
-func _on_forget_mechanics() -> void:
-	progress.forget_seen_mechanics()
-	_rebuild()
 
 
 ## Metin oyunun icinde degil, tarayicida acilir: politika metni magaza

@@ -208,7 +208,7 @@ func _on_initialization_completed(_status: InitializationStatus) -> void:
 	if _sdk_ready:
 		return
 	_sdk_ready = true
-	_queue_rewarded_load(MonetizationConfig.PLACEMENT_SHORT_HINT)
+	_queue_rewarded_load(MonetizationConfig.PLACEMENT_FULL_HINT)
 	_load_interstitial()
 	availability_changed.emit()
 

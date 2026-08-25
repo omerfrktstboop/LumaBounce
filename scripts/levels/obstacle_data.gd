@@ -165,9 +165,9 @@ func validate(index: int, play_rect := LevelData.DEFAULT_PLAY_RECT) -> PackedStr
 
 ## LAZER: verilen anda isin ACIK mi?
 ##
-## Zaman ATIS BASINDAN olculur (solver ile oynanis ayni sifir noktasini
-## kullanir - bkz. ObstacleField.start_motion). Aksi halde "editorde gecti,
-## oyunda carpti" olurdu.
+## Zaman bolumdeki kesintisiz engel zaman cizelgesinden olculur. Runtime
+## ipucu solver'i mevcut fazi offset olarak alir; offline solver 0 fazindan
+## baslar (bkz. ObstacleField.get_motion_time ve LevelSolver.bind_space).
 func laser_is_active(seconds: float) -> bool:
 	if kind != Kind.PULSE_LASER:
 		return false

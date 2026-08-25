@@ -9,6 +9,7 @@ extends SceneTree
 const EXPORT_PRESETS := "res://export_presets.cfg"
 const APP_ROOT_SCENE := "res://scenes/app_root.tscn"
 const APP_ROOT_SCRIPT := "res://scripts/app_root.gd"
+const GAMEPLAY_SCRIPT := "res://scripts/gameplay.gd"
 const DEBUG_PANEL_SCENE := "res://scenes/debug_panel.tscn"
 const DEBUG_PANEL_SCRIPT := "res://scripts/debug/debug_panel.gd"
 const GITIGNORE := "res://.gitignore"
@@ -40,7 +41,9 @@ const RELEASE_PRESET_NAME := "Android Release"
 const DEBUG_PRESET_NAME := "Android Debug"
 const EXPECTED_PACKAGE := "com.ofsgames.lumabounce"
 const EXPECTED_TARGET_SDK := 36
-const EXPECTED_ADMOB_APP_ID := "ca-app-pub-4666663369729289~4144593249"
+## Kapali test paketi gercek reklam isteyemez. 14 gunluk test bittiginde bu
+## beklentiyi de gercek uygulama kimligine geri alin.
+const EXPECTED_ADMOB_APP_ID := "ca-app-pub-3940256099942544~3347511713"
 const EXPECTED_ADMOB_DEBUG_SHA256 := "08a7889416d97fde91b170bf22dd66b850419e9439b4c737d48c0a339f90fc69"
 const EXPECTED_ADMOB_RELEASE_SHA256 := "86bd590dbf3721b26db51271c265581dd844e3e3ed784a93fd49c63e38191ae3"
 const MAX_ANDROID_VERSION_CODE := 2_100_000_000
@@ -48,6 +51,7 @@ const MAX_ANDROID_VERSION_CODE := 2_100_000_000
 const REQUIRED_RELEASE_EXCLUDES := [
 	"tools/*",
 	"tmp/*",
+	"assets/store/*",
 	"addons/godot_mcp_toolkit/*",
 	"scripts/debug/*",
 	"scripts/editor/*",
@@ -267,6 +271,17 @@ func _check_release_debug_leakage() -> void:
 	if not app_root_text.contains("OS.has_feature(\"production\")"):
 		_blockers.append("AppRoot production feature guard'i yok.")
 
+	# scripts/debug/* release paketinden cikarilir. Export disi bir class_name'i
+	# runtime scriptinde statik tip veya statik cagri olarak kullanmak GDScript
+	# parser'ini dusurur; AppRoot kurulamadigi icin yalnizca kok arka plan gorunur.
+	for runtime_script in [APP_ROOT_SCRIPT, GAMEPLAY_SCRIPT]:
+		var runtime_text := _read_text(runtime_script)
+		for forbidden_reference in [": PlaytestStats", "PlaytestStats."]:
+			if runtime_text.contains(forbidden_reference):
+				_blockers.append(
+					"Release runtime scripti dislanmis PlaytestStats sinifina statik bagli: %s"
+					% runtime_script)
+
 	var debug_scene_text := _read_text(DEBUG_PANEL_SCENE)
 	if not debug_scene_text.contains("text = \"DBG\""):
 		_warnings.append("DBG regression fixture'i debug_panel.tscn icinde bulunamadi.")
@@ -294,12 +309,21 @@ func _check_admob_integration() -> void:
 	if export_config.load(ADMOB_EXPORT_CONFIG) != OK:
 		_blockers.append("AdMob android_export.cfg okunamadi.")
 	else:
+		if bool(export_config.get_value("General", "is_real", true)):
+			_blockers.append("Kapali test paketinde AdMob General/is_real=false olmali.")
 		for section in ["Debug", "Release"]:
 			var app_id := String(export_config.get_value(section, "app_id", ""))
 			if app_id != EXPECTED_ADMOB_APP_ID:
 				_blockers.append("AdMob %s app_id hatali: '%s'." % [section, app_id])
 
 	var provider_text := _read_text(ADMOB_PROVIDER)
+	var admob_config_text := _read_text(ADMOB_CONFIG)
+	if not admob_config_text.contains("static func production_ads_enabled() -> bool:\n") \
+			or not admob_config_text.contains("\treturn false"):
+		_blockers.append("Kapali test paketinde production AdMob secimi devre disi degil.")
+	if not admob_config_text.contains("return TEST_REWARDED") \
+			or not admob_config_text.contains("return TEST_INTERSTITIAL"):
+		_blockers.append("Kapali test paketinde Google demo reklam birimleri zorunlu degil.")
 	if provider_text.find("update_consent_info") < 0:
 		_blockers.append("AdMob provider her acilista UMP consent bilgisini guncellemiyor.")
 	if provider_text.find("update_consent_info") > provider_text.find("_admob.initialize()"):

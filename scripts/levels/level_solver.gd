@@ -68,6 +68,9 @@ var _block_index: Dictionary = {}
 var _obstacles: Array[ObstacleData] = []
 var _hazard_shape_cache: Dictionary = {}
 var _dynamic_shape_cache: Dictionary = {}
+## Runtime ipucunda engeller atistan once de hareket ettigi icin simulasyonun
+## baslangici bolumde gecmis olan sure kadar kaydirilir. Offline dogrulamada 0.
+var _time_offset_seconds := 0.0
 
 
 ## Sabitleri gercek sahnelerden okur. Dugumler agaca EKLENMEZ - export
@@ -105,10 +108,11 @@ static func from_scenes() -> LevelSolver:
 ## Hangi fizik uzayinda calisilacagi ve o uzaydaki kirilabilir bloklarin
 ## kimligi. [param block_rids] bos verilebilir (bloksuz bolum).
 func bind_space(space: PhysicsDirectSpaceState2D, block_rids: Dictionary = {},
-		obstacles: Array[ObstacleData] = []) -> void:
+		obstacles: Array[ObstacleData] = [], time_offset_seconds: float = 0.0) -> void:
 	_space = space
 	_block_index = block_rids
 	_obstacles.assign(obstacles)
+	_time_offset_seconds = maxf(time_offset_seconds, 0.0)
 	# Tehlikeler artik kare basina hesaplanir (lazer zamanla yanip soner);
 	# onbellek _hazard_shape_cache icinde tutulur.
 	_hazard_shape_cache.clear()
@@ -329,8 +333,10 @@ func _scan_cell(state: Dictionary, ai: int, pi: int, spawn: Vector2,
 ## bulmasi beklenen "ana rota"dir. Cok sekmeli saglam hucreler genelde
 ## topun ortalikta dolasip sansla hedefe girdigi rotalardir.
 static func analyse_robust(scan_result: Dictionary) -> Dictionary:
-	var angles: Array[float] = scan_result["angles"]
-	var powers: Array[float] = scan_result["powers"]
+	var angles: Array[float] = []
+	angles.assign(scan_result["angles"])
+	var powers: Array[float] = []
+	powers.assign(scan_result["powers"])
 	var hits: Array = scan_result["hits"]
 	var bounce_counts: Array = scan_result["bounces"]
 
@@ -840,7 +846,7 @@ func _cast_with_obstacles(from: Vector2, motion: Vector2,
 func _hazard_shapes_for_frame(frame_index: int) -> Array[Dictionary]:
 	if _hazard_shape_cache.has(frame_index):
 		return _hazard_shape_cache[frame_index]
-	var seconds := float(frame_index + 1) / PHYSICS_FPS
+	var seconds := _time_offset_seconds + float(frame_index + 1) / PHYSICS_FPS
 	var shapes := ObstacleGeometry.hazard_shapes(_obstacles, seconds)
 	_hazard_shape_cache[frame_index] = shapes
 	return shapes
@@ -849,9 +855,9 @@ func _hazard_shapes_for_frame(frame_index: int) -> Array[Dictionary]:
 func _dynamic_shapes_for_frame(frame_index: int) -> Array[Dictionary]:
 	if _dynamic_shape_cache.has(frame_index):
 		return _dynamic_shape_cache[frame_index]
-	# ObstacleField top firlatildiktan sonraki ilk fizik karesinde once
-	# ilerler (priority -10), sonra Ball hareket eder. Solver ayni zamani alir.
-	var seconds := float(frame_index + 1) / PHYSICS_FPS
+	# ObstacleField fizik karesinde ilerler, sonra Ball hareket eder. Runtime
+	# ipucunda bolum fazi offset olarak eklenir; offline dogrulamada offset 0'dir.
+	var seconds := _time_offset_seconds + float(frame_index + 1) / PHYSICS_FPS
 	var shapes := ObstacleGeometry.dynamic_shapes(_obstacles, seconds)
 	_dynamic_shape_cache[frame_index] = shapes
 	return shapes

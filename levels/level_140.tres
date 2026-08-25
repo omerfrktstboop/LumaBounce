@@ -1,52 +1,50 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_avbew"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_vgblw"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_yp3wg"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_cwj1x"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_petxs"]
-script = ExtResource("2_vgblw")
-kind = 5
-position = Vector2(553.0405, 942.3489)
-size = Vector2(310.5, 14)
-motion_period = 2.38
-phase_degrees = 271.44214
-pulse_on_ratio = 0.5775
-
-[sub_resource type="Resource" id="Resource_3o071"]
-script = ExtResource("2_vgblw")
-position = Vector2(181.1312, 850.95074)
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("2")
+position = Vector2(595.74286, 183.59637)
 rotation_degrees = 180.0
 size = Vector2(170, 28)
 inner_radius = 58.4
 
-[sub_resource type="Resource" id="Resource_jxdie"]
-script = ExtResource("3_yp3wg")
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("2")
+kind = 3
+position = Vector2(527.8397, 655.65533)
+size = Vector2(190, 34)
+travel_distance = 180.0
+
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("3")
 position = Vector2(192.7633, 718.40857)
 rotation_degrees = 21.50680751800537
 length = 259.0
 thickness = 26.0
 
-[sub_resource type="Resource" id="Resource_e8s1e"]
-script = ExtResource("3_yp3wg")
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("3")
 position = Vector2(293.32477, 470)
 rotation_degrees = -6.068281078338623
 length = 413.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4_cwj1x")
+script = ExtResource("4")
 level_uid = "level_140"
 display_order = 140
-difficulty = 4
-hint_angle_degrees = 16.0
-hint_power = 1700.0
+difficulty = 2
+hint_angle_degrees = 14.0
+hint_power = 1650.0
 level_id = 140
 display_name = "Dönen Işık"
 target_position = Vector2(316.58652, 261.6754)
-panels = Array[ExtResource("3_yp3wg")]([SubResource("Resource_jxdie"), SubResource("Resource_e8s1e")])
-obstacles = Array[ExtResource("2_vgblw")]([SubResource("Resource_petxs"), SubResource("Resource_3o071")])
+panels = Array[ExtResource("3")]([SubResource("Resource_bi0i1"), SubResource("Resource_m3uui")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2")])
 left_wall_segments = Array[Vector2]([Vector2(-320, 616.16907), Vector2(761.89087, 1600)])
 right_wall_segments = Array[Vector2]([Vector2(-320, 714.69495), Vector2(852.0352, 1600)])
 two_star_max_seconds = 151.4

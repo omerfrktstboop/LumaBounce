@@ -1,44 +1,52 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_sdcck"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_123fj"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_oygva"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_w4o0r"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_1bsgs"]
-script = ExtResource("2_123fj")
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("2")
 kind = 2
-position = Vector2(345.7383, 904.1832)
+position = Vector2(267.31598, 437.50854)
 size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = -92.4375
 
-[sub_resource type="Resource" id="Resource_e3pct"]
-script = ExtResource("2_123fj")
-position = Vector2(207.7714, 401.7694)
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("2")
+position = Vector2(166.92188, 255.9927)
 rotation_degrees = 180.0
 size = Vector2(170, 28)
 inner_radius = 61.88
 
-[sub_resource type="Resource" id="Resource_mnmln"]
-script = ExtResource("3_oygva")
-position = Vector2(401.58197, 708.2235)
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("2")
+kind = 2
+position = Vector2(368.56357, 644.62994)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -92.4375
+
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("3")
+position = Vector2(553.83923, 596.0512)
 rotation_degrees = -45.066826820373535
 length = 327.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4_w4o0r")
+script = ExtResource("4")
 level_uid = "level_104"
 display_order = 104
-difficulty = 4
-hint_angle_degrees = 24.0
-hint_power = 2000.0
+difficulty = 2
+hint_angle_degrees = -42.0
+hint_power = 2050.0
 level_id = 104
 display_name = "Kenar Çarkı"
 target_position = Vector2(520.4062, 238.34462)
-panels = Array[ExtResource("3_oygva")]([SubResource("Resource_mnmln")])
-obstacles = Array[ExtResource("2_123fj")]([SubResource("Resource_1bsgs"), SubResource("Resource_e3pct")])
+panels = Array[ExtResource("3")]([SubResource("Resource_m3uui")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
 two_star_max_seconds = 120.5
 two_star_max_shots = 3
 three_star_max_seconds = 64.10000000000001

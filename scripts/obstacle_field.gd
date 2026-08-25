@@ -4,7 +4,8 @@ extends Node2D
 ## LevelData.obstacles dizisini runtime veya editor onizlemesine kurar.
 ##
 ## Zamanlama (start/stop/reset_motion) her LevelObstacle'a YONLENDIRILIR - kendi
-## _elapsed sayacini burada tutmuyoruz. Sebep: Godot 4.7.1'de sync_to_physics=true
+## _elapsed sayacini burada tutmuyoruz. start_motion idempotenttir: atis gibi
+## tekrar cagiran olaylar mevcut fazi sifirlamaz. Sebep: Godot 4.7.1'de sync_to_physics=true
 ## + gercek CollisionShape2D'si olan bir AnimatableBody2D, pozisyonu yazan dugum
 ## TORUNU ise (bu dugum -> LevelObstacle -> govde, iki seviye) yazimlari sessizce
 ## yok sayiyor; ayni govde DOGRUDAN COCUK olarak yazilirsa (LevelObstacle kendi
@@ -55,6 +56,13 @@ func reset_motion() -> void:
 	for obstacle in _nodes:
 		if is_instance_valid(obstacle):
 			obstacle.reset_motion()
+
+
+func get_motion_time() -> float:
+	for obstacle in _nodes:
+		if is_instance_valid(obstacle):
+			return obstacle.get_motion_time()
+	return 0.0
 
 
 func get_obstacle_node(index: int) -> LevelObstacle:

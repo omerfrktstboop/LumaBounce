@@ -24,14 +24,12 @@ script = ExtResource("1")
 position = Vector2(464.8413, 507.64844)
 rotation_degrees = 6.6522856
 size = Vector2(107.12393, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("1")
 position = Vector2(633.2154, 526.1328)
 rotation_degrees = -1.1343818
 size = Vector2(107.12393, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("3")
@@ -50,7 +48,6 @@ thickness = 26.0
 [sub_resource type="Resource" id="Resource_lglry"]
 script = ExtResource("3")
 position = Vector2(429.90234, 617.8906)
-rotation_degrees = 0.0
 length = 180.0
 thickness = 26.0
 
@@ -58,26 +55,17 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_044"
 display_order = 44
-theme_id = ""
-difficulty = 4
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = 4.0
-hint_power = 1650.0
+difficulty = 3
+hint_angle_degrees = -24.0
+hint_power = 1700.0
 level_id = 44
 display_name = "Ters Kilit"
 launcher_position = Vector2(329.7327, 1120)
 target_position = Vector2(488.88657, 285.10907)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_krhwj"), SubResource("Resource_lgnf6"), SubResource("Resource_lglry")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui")])
-obstacles = Array[ExtResource("2")]([])
 left_wall_segments = Array[Vector2]([Vector2(-320, 566.20386), Vector2(711.4077, 1600)])
 right_wall_segments = Array[Vector2]([Vector2(-320, 600.34814), Vector2(787.4584, 1600)])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 114.0
 two_star_max_shots = 3
 three_star_max_seconds = 64.0
-three_star_max_shots = 2

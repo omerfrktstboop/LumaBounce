@@ -10,22 +10,13 @@ script = ExtResource("1")
 position = Vector2(157.14844, 574.3164)
 rotation_degrees = -12.0
 size = Vector2(220, 35)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("2")
-kind = 0
-position = Vector2(571.2093, 426.24628)
+position = Vector2(386.62186, 490.61523)
 rotation_degrees = 180.0
 size = Vector2(180, 28)
 inner_radius = 68.32
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-pulse_on_ratio = 0.667
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("3")
@@ -36,7 +27,7 @@ thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("3")
-position = Vector2(511.16986, 300.0)
+position = Vector2(511.16986, 300)
 rotation_degrees = 52.14458045959473
 length = 318.0
 thickness = 26.0
@@ -52,26 +43,16 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_059"
 display_order = 59
-theme_id = ""
-difficulty = 4
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = 20.0
-hint_power = 1550.0
+difficulty = 3
+hint_angle_degrees = 34.0
+hint_power = 2150.0
 level_id = 59
 display_name = "Dar Yörünge"
-launcher_position = Vector2(360, 1120)
 target_position = Vector2(121.33002, 304.21796)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m")])
 obstacles = Array[ExtResource("2")]([SubResource("Resource_wvjk2")])
-left_wall_segments = Array[Vector2]([])
 right_wall_segments = Array[Vector2]([Vector2(-320, 692.0179), Vector2(833.34235, 1600)])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 81.9
 two_star_max_shots = 3
 three_star_max_seconds = 43.6
-three_star_max_shots = 2

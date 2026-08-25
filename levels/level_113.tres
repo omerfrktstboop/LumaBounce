@@ -1,37 +1,51 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_m4esx"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_75i4k"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_jw7db"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_ge6fa"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_b8k3j"]
-script = ExtResource("2_75i4k")
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("1")
+position = Vector2(518.0826, 552.90045)
+size = Vector2(180, 35)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("2")
 kind = 2
-position = Vector2(328.9543, 473.4805)
+position = Vector2(467.23102, 420.4708)
 size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = 104.25
 
-[sub_resource type="Resource" id="Resource_jgpl8"]
-script = ExtResource("3_jw7db")
-position = Vector2(352.55548, 723.7973)
-rotation_degrees = 47.48163661956787
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("2")
+kind = 1
+position = Vector2(325.9952, 335.70383)
+size = Vector2(68, 68)
+
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("3")
+position = Vector2(200.73508, 639.0764)
+rotation_degrees = 35.48163661956787
 length = 367.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4_ge6fa")
+script = ExtResource("4")
 level_uid = "level_113"
 display_order = 113
-difficulty = 4
-hint_angle_degrees = -36.0
-hint_power = 2050.0
+difficulty = 3
+hint_angle_degrees = 18.0
+hint_power = 1850.0
 level_id = 113
 display_name = "Sıkışık Pervane"
 target_position = Vector2(132.25763, 266.13962)
-panels = Array[ExtResource("3_jw7db")]([SubResource("Resource_jgpl8")])
-obstacles = Array[ExtResource("2_75i4k")]([SubResource("Resource_b8k3j")])
+panels = Array[ExtResource("3")]([SubResource("Resource_m3uui")])
+breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 420), Vector2(860, 1440)])
 two_star_max_seconds = 128.20000000000002
 two_star_max_shots = 3
 three_star_max_seconds = 68.2

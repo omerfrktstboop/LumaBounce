@@ -17,43 +17,30 @@ script = ExtResource("1")
 position = Vector2(309.26123, 700.80804)
 rotation_degrees = -1.2547178
 size = Vector2(150.96553, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("1")
 position = Vector2(443.50574, 613.4319)
 rotation_degrees = -4.5821056
 size = Vector2(150.96553, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("1")
 position = Vector2(610.5172, 645.4319)
 rotation_degrees = -3.3192172
 size = Vector2(150.96553, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("1")
 position = Vector2(593.1552, 504.1505)
-rotation_degrees = 0.0
 size = Vector2(140, 35)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_lgnf6"]
 script = ExtResource("2")
-kind = 0
 position = Vector2(589.43524, 934.153)
 rotation_degrees = 180.0
 size = Vector2(180, 28)
 inner_radius = 60.55
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-pulse_on_ratio = 0.667
 
 [sub_resource type="Resource" id="Resource_lglry"]
 script = ExtResource("3")
@@ -66,25 +53,16 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_073"
 display_order = 73
-theme_id = ""
-difficulty = 4
-time_limit = 0.0
-is_bonus = false
+difficulty = 2
 hint_angle_degrees = 18.0
-hint_power = 1650.0
+hint_power = 1800.0
 level_id = 73
 display_name = "Zırhlı Geçit"
-launcher_position = Vector2(360, 1120)
 target_position = Vector2(119.81883, 467.6955)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_lglry")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj")])
 obstacles = Array[ExtResource("2")]([SubResource("Resource_lgnf6")])
 left_wall_segments = Array[Vector2]([Vector2(-320, 501.8741), Vector2(645.85986, 1600)])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 93.9
 two_star_max_shots = 5
 three_star_max_seconds = 50.0

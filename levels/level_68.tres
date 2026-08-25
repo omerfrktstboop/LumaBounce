@@ -7,18 +7,10 @@
 
 [sub_resource type="Resource" id="Resource_ntj7m"]
 script = ExtResource("2")
-kind = 0
 position = Vector2(344.18396, 331.50928)
 rotation_degrees = 180.0
 size = Vector2(180, 28)
 inner_radius = 63.325
-spoke_count = 6
-angular_speed_degrees = 55.0
-motion_direction_degrees = 0.0
-travel_distance = 110.0
-motion_period = 2.8
-phase_degrees = 0.0
-pulse_on_ratio = 0.667
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("3")
@@ -30,7 +22,6 @@ thickness = 26.0
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("3")
 position = Vector2(171.18932, 214.017)
-rotation_degrees = 0.0
 length = 280.0
 thickness = 26.0
 
@@ -38,26 +29,16 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_068"
 display_order = 68
-theme_id = ""
-difficulty = 4
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = -42.0
-hint_power = 2000.0
+difficulty = 3
+hint_angle_degrees = -26.0
+hint_power = 1500.0
 level_id = 68
 display_name = "Kırık Yay"
-launcher_position = Vector2(360, 1120)
 target_position = Vector2(538.5264, 395.16107)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
-breakable_blocks = Array[ExtResource("1")]([])
 obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m")])
 left_wall_segments = Array[Vector2]([Vector2(-320, 600), Vector2(1000, 1440)])
 right_wall_segments = Array[Vector2]([Vector2(-320, 785.9898), Vector2(934.0102, 1600)])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 89.60000000000001
 two_star_max_shots = 3
 three_star_max_seconds = 47.7
-three_star_max_shots = 2

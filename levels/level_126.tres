@@ -1,38 +1,36 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_w7adl"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_pj0bf"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_53wiq"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_x1mxu"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_4gqsl"]
-script = ExtResource("2_pj0bf")
-kind = 5
-position = Vector2(230.34785, 404.75714)
-size = Vector2(283.2, 14)
-motion_period = 2.632
-phase_degrees = 185.43285
-pulse_on_ratio = 0.546
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("2")
+kind = 3
+position = Vector2(525.36414, 556.1651)
+size = Vector2(190, 34)
+travel_distance = 100.0
 
-[sub_resource type="Resource" id="Resource_m6327"]
-script = ExtResource("3_53wiq")
-position = Vector2(368.8029, 607.4274)
-rotation_degrees = -30.058471870422366
-length = 313.0
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("3")
+position = Vector2(197.7592, 647.18463)
+rotation_degrees = -26.05847187042237
+length = 373.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4_x1mxu")
+script = ExtResource("4")
 level_uid = "level_126"
 display_order = 126
-difficulty = 3
-hint_angle_degrees = -38.0
+difficulty = 2
+hint_angle_degrees = 10.0
 hint_power = 2050.0
 level_id = 126
 display_name = "Lazer Girişi"
-target_position = Vector2(541.4881, 234.06166)
-panels = Array[ExtResource("3_53wiq")]([SubResource("Resource_m6327")])
-obstacles = Array[ExtResource("2_pj0bf")]([SubResource("Resource_4gqsl")])
+target_position = Vector2(271.7065, 219.38933)
+panels = Array[ExtResource("3")]([SubResource("Resource_wvjk2")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m")])
 tutorial_text = "Lazer sönükken atışını çizginin ötesine geçir."
 two_star_max_seconds = 139.4
 two_star_max_shots = 3

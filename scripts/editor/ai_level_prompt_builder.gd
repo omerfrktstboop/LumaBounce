@@ -47,7 +47,7 @@ static func build_messages(options: Dictionary, blueprint_count: int, json_fallb
 		"En fazla %d panel ve %d kirilabilir blok kullan." % [AILevelContract.MAX_PANELS, AILevelContract.MAX_BLOCKS],
 		"En fazla %d yeni engel kullan. metal_ring ortasi gecilebilir kati halka; bomb temasta atisi bitiren tehlike; rotating_wheel fiziksel kollu cark; moving_bar gidip gelen kati bariyerdir." % AILevelContract.MAX_OBSTACLES,
 		"Halka icin width dis captir ve inner_radius delik yaricapidir. Carkta width cap, height kol kalinligidir. Kayan engelde width/height bariyer boyutudur.",
-		"Cark ve kayan engel her atista faz sifirdan baslar; speed, period, travel_distance ve phase alanlarini rota icin anlamli sec.",
+		"Cark, kayan engel ve lazer bolum acildigindan itibaren atislardan bagimsiz surekli hareket eder; speed, period, travel_distance ve phase alanlarini oyuncunun zamanlayabilecegi adil bir rota icin sec.",
 		"Yalnizca mechanics listesindeki mekanikleri kullan: panel yoksa panels bos, kirilabilir blok yoksa blocks bos, wall_gap yoksa iki duvar gap'i de disabled olmali.",
 		"obstacles dizisinde yalnizca mechanics icinde adi bulunan engel kind degerlerini kullan; secilmeyen engel turunu ekleme.",
 		"Tek hassas veya lucky-shot rota kabul edilmez. Geometri okunabilir ve adil olmali.",

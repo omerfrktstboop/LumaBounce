@@ -5,7 +5,7 @@ extends RefCounted
 ## Provider adapterleri bu placement/context adlarini SDK birimlerine cevirir;
 ## Gameplay veya AppRoot gercek reklam birimi kimligi bilmez.
 
-const PLACEMENT_SHORT_HINT := &"short_hint"
+const PLACEMENT_FULL_HINT := &"full_hint"
 
 const PRODUCT_REMOVE_ADS := &"remove_ads"
 
@@ -19,4 +19,4 @@ const AD_POLICY_STATE_PATH := "user://ad_policy_state.cfg"
 
 
 static func is_rewarded_placement(placement: StringName) -> bool:
-	return placement == PLACEMENT_SHORT_HINT
+	return placement == PLACEMENT_FULL_HINT

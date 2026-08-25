@@ -8,28 +8,22 @@
 [sub_resource type="Resource" id="Resource_ntj7m"]
 script = ExtResource("1")
 position = Vector2(90.29297, 562.28516)
-rotation_degrees = 0.0
 size = Vector2(92.5, 34)
 hit_points = 2
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("1")
 position = Vector2(225.80078, 563.8086)
-rotation_degrees = 0.0
 size = Vector2(92.5, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("1")
 position = Vector2(361.3086, 567.99805)
-rotation_degrees = 0.0
 size = Vector2(92.5, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("1")
 position = Vector2(643.9453, 561.1426)
-rotation_degrees = 0.0
 size = Vector2(92.5, 34)
 hit_points = 2
 
@@ -44,26 +38,14 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_030"
 display_order = 30
-theme_id = ""
 difficulty = 3
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = -6.0
-hint_power = 2000.0
+hint_angle_degrees = -22.0
+hint_power = 2100.0
 level_id = 30
 display_name = "Çatlak Kilit"
-launcher_position = Vector2(360, 1120)
 target_position = Vector2(110.546875, 343.6914)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_krhwj")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui")])
-obstacles = Array[ExtResource("2")]([])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 84.0
 two_star_max_shots = 3
 three_star_max_seconds = 55.0
-three_star_max_shots = 2

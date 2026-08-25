@@ -1,43 +1,55 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_rtyjr"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_sntrn"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_k24im"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_0ej10"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_8rx5g"]
-script = ExtResource("2_sntrn")
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("2")
 kind = 2
-position = Vector2(399.67236, 467.38208)
+position = Vector2(337.852, 288.94763)
 size = Vector2(120, 20)
 spoke_count = 5
 angular_speed_degrees = 95.0625
 
-[sub_resource type="Resource" id="Resource_b6j2x"]
-script = ExtResource("2_sntrn")
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("2")
 kind = 1
-position = Vector2(603.1332, 559.5556)
+position = Vector2(298.61862, 503.70605)
 size = Vector2(78.69, 78.69)
 
-[sub_resource type="Resource" id="Resource_rjp72"]
-script = ExtResource("3_k24im")
-position = Vector2(412.3325, 778.8503)
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("2")
+position = Vector2(614.3446, 401.01944)
+inner_radius = 54.0
+
+[sub_resource type="Resource" id="Resource_m3uui"]
+script = ExtResource("3")
+position = Vector2(182.3082, 607.042)
 rotation_degrees = 2.883775520324707
 length = 271.0
 thickness = 26.0
 
+[sub_resource type="Resource" id="Resource_krhwj"]
+script = ExtResource("3")
+position = Vector2(478.61655, 686.7476)
+rotation_degrees = -90.0
+length = 280.0
+thickness = 26.0
+
 [resource]
-script = ExtResource("4_0ej10")
+script = ExtResource("4")
 level_uid = "level_106"
 display_order = 106
-difficulty = 4
-hint_angle_degrees = -36.0
-hint_power = 2000.0
+difficulty = 2
+hint_angle_degrees = 34.0
+hint_power = 1700.0
 level_id = 106
 display_name = "Mayın Dişlisi"
-target_position = Vector2(421.3299, 299.31027)
-panels = Array[ExtResource("3_k24im")]([SubResource("Resource_rjp72")])
-obstacles = Array[ExtResource("2_sntrn")]([SubResource("Resource_8rx5g"), SubResource("Resource_b6j2x")])
+target_position = Vector2(131.88817, 440.82727)
+panels = Array[ExtResource("3")]([SubResource("Resource_m3uui"), SubResource("Resource_krhwj")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1")])
 right_wall_segments = Array[Vector2]([Vector2(-320, 661.8528), Vector2(795.3992, 1600)])
 two_star_max_seconds = 122.2
 two_star_max_shots = 3

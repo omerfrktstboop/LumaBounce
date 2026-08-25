@@ -19,6 +19,7 @@ extends SceneTree
 ##
 ## Kullanim:
 ##   godot --headless --path . --script res://tools/check_blocks_and_gate.gd
+##   godot --headless --path . --script res://tools/check_blocks_and_gate.gd -- --campaign-metadata-only
 
 const SAVE_PATH := "user://save.cfg"
 const BACKUP_PATH := "user://save.cfg.verifybak"
@@ -36,6 +37,15 @@ func _initialize() -> void:
 
 func _run() -> void:
 	await physics_frame
+	if "--campaign-metadata-only" in OS.get_cmdline_user_args():
+		_test_level_worlds()
+		_test_locale()
+		_test_translation_coverage()
+		_test_library_limits()
+		print("")
+		print("KAMPANYA METAVERİ SONUCU: %d geçti, %d kaldı." % [_passed, _failed])
+		quit(0 if _failed == 0 else 1)
+		return
 	_backup_save()
 	_register_audio_manager()
 
@@ -1221,13 +1231,13 @@ func _test_level_worlds() -> void:
 	_check("2. dunya 100'de biter", LevelWorlds.last_level(1), 100)
 	_check("3. dunya 101'de baslar", LevelWorlds.first_level(2), 101)
 	_check("son dunya 150'de biter", LevelWorlds.last_level(2), 150)
-	_check("dunya normal bolum sayilari toplami 150",
+	_check("dunya bolum sayilari toplami 150",
 		LevelWorlds.level_count(0) + LevelWorlds.level_count(1) + LevelWorlds.level_count(2),
-		LevelWorlds.FIRST_BONUS_ID - LevelLibrary.FIRST_LEVEL_ID)
-	_check("toplam bes bonus bolum",
+		LevelLibrary.LEVEL_COUNT)
+	_check("bonus bolum yok",
 		LevelWorlds.bonus_ids(0).size() + LevelWorlds.bonus_ids(1).size()
-			+ LevelWorlds.bonus_ids(2).size(), 5)
-	_check("final bonusu 155", LevelWorlds.bonus_ids(2), [155])
+			+ LevelWorlds.bonus_ids(2).size(), 0)
+	_check("151 gecersiz", LevelLibrary.is_valid_id(151), false)
 
 	_check("bolum 1 -> dunya 0", LevelWorlds.index_for_level(1), 0)
 	_check("bolum 50 -> dunya 0", LevelWorlds.index_for_level(50), 0)
@@ -1312,7 +1322,7 @@ func _test_locale() -> void:
 	var before := TranslationServer.get_locale()
 
 	_check("desteklenen diller", Locale.SUPPORTED,
-		["tr", "en", "es", "pt_BR", "de", "fr"] as Array[String])
+		["de", "en", "es", "fr", "pt_BR", "tr"] as Array[String])
 	_check("tr destekleniyor", Locale.is_supported("tr"), true)
 	_check("taninmayan dil varsayilana duser", Locale.normalize("ja"), "tr")
 	_check("bos deger varsayilana duser", Locale.normalize(""), "tr")
@@ -1342,6 +1352,23 @@ func _test_locale() -> void:
 		_check("%s arayuz cevirisi uygulanir" % code,
 			TranslationServer.translate("OYNA"), String(locale_samples[code]))
 
+	var difficulty_keys: Array[String] = ["KOLAY", "ORTA", "ZOR", "COK ZOR", "USTA"]
+	var difficulty_samples := {
+		"tr": ["KOLAY", "ORTA", "ZOR", "ÇOK ZOR", "USTA"],
+		"en": ["EASY", "MEDIUM", "HARD", "VERY HARD", "MASTER"],
+		"es": ["FÁCIL", "MEDIO", "DIFÍCIL", "MUY DIFÍCIL", "MAESTRO"],
+		"pt_BR": ["FÁCIL", "MÉDIO", "DIFÍCIL", "MUITO DIFÍCIL", "MESTRE"],
+		"de": ["LEICHT", "MITTEL", "SCHWER", "SEHR SCHWER", "MEISTER"],
+		"fr": ["FACILE", "MOYEN", "DIFFICILE", "TRÈS DIFFICILE", "MAÎTRE"],
+	}
+	for code: String in difficulty_samples:
+		Locale.apply(code)
+		var expected_labels: Array = difficulty_samples[code]
+		for index in difficulty_keys.size():
+			_check("%s zorluk etiketi %s" % [code, difficulty_keys[index]],
+				TranslationServer.translate(difficulty_keys[index]),
+				String(expected_labels[index]))
+
 	# BOS tercih = "oyuncu henuz secmedi" -> cihaz dili. "tr" secmis olmakla
 	# ayni sey DEGIL; ikisi karisirsa Ingilizce telefonda oyun Turkce acilir.
 	Locale.apply_saved("")
@@ -1368,17 +1395,25 @@ func _test_translation_coverage() -> void:
 
 	var missing_names: Array[int] = []
 	var missing_hints: Array[int] = []
+	var invalid_difficulties: Array[int] = []
+	var mastery_names: Array[int] = []
 	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, LevelLibrary.last_level_id() + 1):
 		var level := LevelLibrary.load_level(level_id)
 		var name_text := level.display_name.strip_edges()
 		if not name_text.is_empty() and TranslationServer.translate(name_text) == name_text:
 			missing_names.append(level_id)
+		if level.difficulty < 1 or level.difficulty > 5:
+			invalid_difficulties.append(level_id)
+		if "ustalık" in name_text.to_lower():
+			mastery_names.append(level_id)
 		var hint := level.tutorial_text.strip_edges()
 		if not hint.is_empty() and TranslationServer.translate(hint) == hint:
 			missing_hints.append(level_id)
 
 	_check("her bolum adinin Ingilizcesi var", missing_names, [] as Array[int])
 	_check("her ogretici metnin Ingilizcesi var", missing_hints, [] as Array[int])
+	_check("150 bolumun zorluk kademesi gecerli", invalid_difficulties, [] as Array[int])
+	_check("bolum adlarinda ustalik kalibi yok", mastery_names, [] as Array[int])
 
 	# Bicimlendirilen metinler: kalibin kendisi cevrilmeli, cunku otomatik
 	# ceviri hazir metni ("BÖLÜM 5") arar ve bulamaz.
@@ -1449,6 +1484,22 @@ func _test_settings_screen() -> void:
 	# yuzden dogrudan cocuk sayisi eskisinden (>8 duz satir) cok daha kucuk.
 	var rows: Node = screen.get_node("SafeArea/Content/Scroll/Rows")
 	_check("ayar satirlari kuruldu", rows.get_child_count() >= 7, true)
+	var language_dropdown := screen.find_child(
+		"LanguageDropdown", true, false) as LumaDropdown
+	var visible_languages: Array[String] = []
+	if language_dropdown != null:
+		for i in language_dropdown.item_count:
+			visible_languages.append(language_dropdown.get_item_text(i))
+	_check("diller alfabetik sirada", visible_languages,
+		["Deutsch", "English", "Español", "Français",
+			"Português (Brasil)", "Türkçe"] as Array[String])
+	_check("ogretici sifirlama satiri kaldirildi",
+		_has_label_text(rows, "Öğreticileri tekrar göster"), false)
+	var reset_icon := screen.find_child("ProgressResetIcon", true, false) as IconTile
+	_check("ilerleme sifirlama ikonu var", reset_icon != null, true)
+	if reset_icon != null:
+		_check("ilerleme sifirlama ikonu yatay genis",
+			reset_icon.custom_minimum_size, Vector2(64.0, 44.0))
 
 	# GIZLILIK POLITIKASI reklam SDK'sindan BAGIMSIZ olmali: bu ekrana test
 	# ortaminda ad_service enjekte edilmez, yani satir yalnizca UMP formu
@@ -1618,10 +1669,10 @@ func _test_faz9_tall_aspect() -> void:
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
-func _test_library_bounds() -> void:
+func _test_library_limits() -> void:
 	print("")
 	print("--- LevelLibrary sinirlari ---")
-	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 155)
+	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 150)
 	_check("has_next(20)", LevelLibrary.has_next(20), true)
 	_check("has_next(24)", LevelLibrary.has_next(24), true)
 	_check("has_next(25)", LevelLibrary.has_next(25), true)
@@ -1632,7 +1683,11 @@ func _test_library_bounds() -> void:
 	_check("has_next(125)", LevelLibrary.has_next(125), true)
 	_check("has_next(149)", LevelLibrary.has_next(149), true)
 	_check("has_next(150)", LevelLibrary.has_next(150), false)
-	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 475)
+	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 450)
+
+
+func _test_library_bounds() -> void:
+	_test_library_limits()
 
 	# 1-50: elle tasarlanmis kutuphane. 26 tek kolay blok tanitimidir; 27-50
 	# onceki panel/duvar bilgisini bloklarla birlikte kullanir.
@@ -1684,7 +1739,7 @@ func _test_library_bounds() -> void:
 	# 101-125 CARK BANDI: yalnizca 101 okunakli tanitimdir; sonraki bolumler
 	# carki onceki halka/mayin, panel, duvar boslugu ve aralikli blok kapilariyla
 	# birlestirir. Her bolumde cark kalir, hareketli bar kampanyaya girmez.
-	var wheel_block_levels := [105, 108, 111, 114, 117, 120, 123, 125]
+	var wheel_block_levels := [105, 111, 112, 113, 114, 117, 120, 123, 125]
 	for id in range(101, 126):
 		var level := LevelLibrary.load_level(id)
 		_check("bolum %d yukleniyor" % id, level.level_id, id)

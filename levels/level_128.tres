@@ -1,45 +1,44 @@
 [gd_resource type="Resource" script_class="LevelData" format=3]
 
-[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_5iuu8"]
-[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_wsphi"]
-[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_55fmg"]
-[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_pqao2"]
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4"]
 
-[sub_resource type="Resource" id="Resource_l6aom"]
-script = ExtResource("2_wsphi")
-kind = 5
-position = Vector2(603.9295, 403.39606)
-size = Vector2(287.1, 14)
-motion_period = 2.596
-phase_degrees = 163.10892
-pulse_on_ratio = 0.5505
-
-[sub_resource type="Resource" id="Resource_lofht"]
-script = ExtResource("2_wsphi")
-position = Vector2(171.99442, 411.9394)
+[sub_resource type="Resource" id="Resource_ntj7m"]
+script = ExtResource("2")
+position = Vector2(179.42163, 384.96124)
 rotation_degrees = 180.0
 size = Vector2(170, 28)
 inner_radius = 61.28
 
-[sub_resource type="Resource" id="Resource_d1ga4"]
-script = ExtResource("3_55fmg")
-position = Vector2(244.2055, 642.7886)
+[sub_resource type="Resource" id="Resource_wvjk2"]
+script = ExtResource("2")
+kind = 3
+position = Vector2(560.8981, 400.49756)
+size = Vector2(190, 34)
+travel_distance = 100.0
+
+[sub_resource type="Resource" id="Resource_bi0i1"]
+script = ExtResource("3")
+position = Vector2(257.7492, 569.90015)
 rotation_degrees = -13.301659
 length = 403.0
 thickness = 26.0
 
 [resource]
-script = ExtResource("4_pqao2")
+script = ExtResource("4")
 level_uid = "level_128"
 display_order = 128
-difficulty = 4
-hint_angle_degrees = 14.0
-hint_power = 1750.0
+difficulty = 2
+hint_angle_degrees = 12.0
+hint_power = 1800.0
 level_id = 128
 display_name = "Işık Aralığı"
-target_position = Vector2(346.8465, 291.38538)
-panels = Array[ExtResource("3_55fmg")]([SubResource("Resource_d1ga4")])
-obstacles = Array[ExtResource("2_wsphi")]([SubResource("Resource_l6aom"), SubResource("Resource_lofht")])
+target_position = Vector2(138.23, 162.64752)
+target_scale = 0.8
+panels = Array[ExtResource("3")]([SubResource("Resource_bi0i1")])
+obstacles = Array[ExtResource("2")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2")])
 right_wall_segments = Array[Vector2]([Vector2(-320, 585.046), Vector2(710.0901, 1600)])
 two_star_max_seconds = 141.1
 two_star_max_shots = 3

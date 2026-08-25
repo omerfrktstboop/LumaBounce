@@ -39,7 +39,7 @@ game for staging; the build dimension is also suffixed with `-staging` or
 |---|---|---|
 | Session | `session_start`, `session_end` | build/environment/provider, duration bucket, reason |
 | Level | `level_start`, `level_complete`, `level_fail`, `restart` | level, world, bonus, stars, seconds/shots buckets, first clear, fail reason |
-| Hint/rewarded | `hint_offer_open`, `short_hint_rewarded_earned`, `full_hint_unlock`, `rewarded_offer`, `rewarded_click`, `rewarded_result` | level, placement, provider, result, Coin cost |
+| Hint/rewarded | `hint_offer_open`, `short_hint_coin_spent`, `full_hint_rewarded_earned`, `rewarded_offer`, `rewarded_click`, `rewarded_result` | level, placement, provider, result, Coin cost |
 | Interstitial | `interstitial_candidate`, `interstitial_shown`, `interstitial_failed` | context, provider, bounded reason |
 | Commerce | `remove_ads_purchase_result`, `shop_open`, `cosmetic_purchase`, `cosmetic_select` | product/cosmetic, action/result, kind, price/balance |
 | Daily hooks | `daily_open`, `daily_complete`, `quest_complete`, `streak_milestone` | day, reward, quest enum, streak bucket |

@@ -20,21 +20,21 @@ thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("3")
-position = Vector2(229.0039, 529.7461)
+position = Vector2(216.98933, 570.9233)
 rotation_degrees = -8.0
 length = 190.0
 thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("3")
-position = Vector2(463.75, 412.93945)
-rotation_degrees = 18.0
+position = Vector2(435.13348, 450.3302)
+rotation_degrees = -72.0
 length = 150.0
 thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("3")
-position = Vector2(170.50781, 325.9961)
+position = Vector2(250.02237, 342.08835)
 length = 280.0
 thickness = 26.0
 
@@ -42,8 +42,8 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_019"
 display_order = 19
-difficulty = 1
-hint_angle_degrees = -2.0
+difficulty = 2
+hint_angle_degrees = 10.0
 hint_power = 2150.0
 level_id = 19
 display_name = "Çift Sekme"
