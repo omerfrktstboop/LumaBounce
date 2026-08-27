@@ -12,6 +12,10 @@ extends MarginContainer
 
 ## Guvenli alandan bagimsiz, her zaman uygulanan temel bosluk (x = yatay, y = dikey).
 @export var base_padding := Vector2(28.0, 24.0)
+## Tablet ve yatay pencerelerde metin, kart ve HUD elemanlarinin tum ekrana
+## gerilmesini engeller. Arka plan tam ekran kalir; etkilesimli icerik ortalanir.
+## 960, Godot'un dikey tabletler icin onerilen 3:4 referans genisligidir.
+@export_range(0.0, 4096.0, 1.0) var max_content_width := 960.0
 
 
 func _ready() -> void:
@@ -21,10 +25,17 @@ func _ready() -> void:
 
 func _apply_margins() -> void:
 	var insets := _safe_area_insets()
-	add_theme_constant_override("margin_left", int(base_padding.x + insets.x))
+	var center_inset := centering_inset(get_viewport_rect().size.x, max_content_width)
+	add_theme_constant_override("margin_left", int(base_padding.x + insets.x + center_inset))
 	add_theme_constant_override("margin_top", int(base_padding.y + insets.y))
-	add_theme_constant_override("margin_right", int(base_padding.x + insets.z))
+	add_theme_constant_override("margin_right", int(base_padding.x + insets.z + center_inset))
 	add_theme_constant_override("margin_bottom", int(base_padding.y + insets.w))
+
+
+static func centering_inset(viewport_width: float, content_width: float) -> float:
+	if content_width <= 0.0:
+		return 0.0
+	return maxf((viewport_width - content_width) * 0.5, 0.0)
 
 
 ## (sol, ust, sag, alt) inset'leri viewport birimlerinde dondurur.

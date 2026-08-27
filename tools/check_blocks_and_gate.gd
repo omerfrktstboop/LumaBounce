@@ -107,6 +107,12 @@ func _test_responsive_layout() -> void:
 		ProjectSettings.get_setting("display/window/stretch/mode", ""), "canvas_items")
 	_check("uzun ve genis ekranlar siyah barsiz genisler",
 		ProjectSettings.get_setting("display/window/stretch/aspect", ""), "expand")
+	_check("telefon tablet ve katlanabilirlerde tum yonler destekleniyor",
+		ProjectSettings.get_setting("display/window/handheld/orientation", -1), 6)
+	_check("genis ekranda icerik 960 birimde ortalaniyor",
+		SafeAreaMargin.centering_inset(1280.0, 960.0), 160.0)
+	_check("telefon genisliginde ek ortalama boslugu yok",
+		SafeAreaMargin.centering_inset(720.0, 960.0), 0.0)
 
 	# Tum ana ekranlar referans viewport'u doldurmali. `expand`, cihazin
 	# en-boy oranina gore bu rect'i uzatir; tam rect anchor'i olmayan bir kok

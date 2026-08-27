@@ -6,7 +6,7 @@
 extends EditorPlugin
 
 const PLUGIN_NAME: String = "AdmobPlugin"
-const ANDROID_DEPENDENCIES: Array = [ "androidx.appcompat:appcompat:1.7.1", "androidx.lifecycle:lifecycle-process:2.8.3", "com.google.android.gms:play-services-ads:24.9.0" ]
+const ANDROID_DEPENDENCIES: Array = [ "androidx.appcompat:appcompat:1.7.1", "androidx.lifecycle:lifecycle-process:2.8.3", "com.google.android.gms:play-services-ads:25.4.0" ]
 const IOS_PLATFORM_VERSION: String = "14.3"
 const IOS_FRAMEWORKS: Array = [ "Foundation.framework", "AppTrackingTransparency.framework" ]
 const IOS_EMBEDDED_FRAMEWORKS: Array = [  ]

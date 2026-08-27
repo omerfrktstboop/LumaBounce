@@ -25,7 +25,7 @@ func _run() -> void:
 	await _test_privacy_options()
 	_cleanup_paths()
 	if _failures == 0:
-		print("PASS monetization: 3-completion cadence, failure timer, cooldown, hint, remove_ads")
+		print("PASS monetization: 5-completion cadence, failure timer, cooldown, hint, remove_ads")
 		quit(0)
 	else:
 		push_error("FAIL monetization: %d assertion(s)" % _failures)
@@ -33,8 +33,8 @@ func _run() -> void:
 
 
 func _test_config_and_analytics_contract() -> void:
-	_check(MonetizationConfig.COMPLETIONS_PER_INTERSTITIAL == 3,
-		"completion interval is three")
+	_check(MonetizationConfig.COMPLETIONS_PER_INTERSTITIAL == 5,
+		"completion interval is five")
 	_check(is_equal_approx(MonetizationConfig.FAILURE_INTERSTITIAL_INTERVAL_SEC, 600.0),
 		"failure interval is ten minutes")
 	_check(is_equal_approx(MonetizationConfig.INTERSTITIAL_GLOBAL_COOLDOWN_SEC, 180.0),
@@ -71,10 +71,14 @@ func _test_completion_cadence_and_persistence() -> void:
 	policy = _policy(path)
 	_check(int(policy.debug_snapshot()["successful_completion_count"]) == 2,
 		"completion count survives session reload")
-	_check(policy.register_successful_completion("level_003"),
-		"TEST A: third completion becomes eligible")
+	_check(not policy.register_successful_completion("level_003"),
+		"TEST A: third completion shows no ad")
+	_check(not policy.register_successful_completion("level_004"),
+		"TEST A: fourth completion shows no ad")
+	_check(policy.register_successful_completion("level_005"),
+		"TEST A: fifth completion becomes eligible")
 	_check(policy.has_interstitial_candidate(MonetizationConfig.CONTEXT_LEVEL_COMPLETE),
-		"third completion candidate remains pending")
+		"fifth completion candidate remains pending")
 	var reloaded := _policy(path)
 	_check(bool(reloaded.debug_snapshot()["completion_pending"]),
 		"pending completion survives restart without auto-show")
@@ -116,7 +120,7 @@ func _test_failure_playtime() -> void:
 
 func _test_global_cooldown_and_priority() -> void:
 	var policy := _policy()
-	for id in range(1, 4):
+	for id in range(1, 6):
 		policy.register_successful_completion("level_%03d" % id)
 	_check(policy.can_show_interstitial(MonetizationConfig.CONTEXT_LEVEL_COMPLETE, 1000.0),
 		"eligible completion can show")
@@ -129,7 +133,7 @@ func _test_global_cooldown_and_priority() -> void:
 	_check(policy.can_show_interstitial(MonetizationConfig.CONTEXT_LEVEL_FAIL, 1180.0),
 		"TEST G: candidate is allowed when cooldown expires")
 	policy.reset_session_state()
-	for id in range(1, 4):
+	for id in range(1, 6):
 		policy.register_successful_completion("level_%03d" % id)
 	policy.register_failed_attempt("level_020", 600.0)
 	policy.record_interstitial_shown(MonetizationConfig.CONTEXT_LEVEL_FAIL, 2000.0)
@@ -141,7 +145,7 @@ func _test_global_cooldown_and_priority() -> void:
 func _test_remove_ads_policy() -> void:
 	var entitlements := EntitlementStore.new("user://unused_monetization.cfg")
 	var policy := AdPolicy.new(entitlements, "", false)
-	for id in range(1, 4):
+	for id in range(1, 6):
 		policy.register_successful_completion("level_%03d" % id)
 	entitlements.remove_ads = true
 	_check(not policy.can_show_interstitial(
@@ -198,7 +202,7 @@ func _test_rewarded_hint_only() -> void:
 
 func _test_interstitial_service() -> void:
 	var policy := _policy()
-	for id in range(1, 4):
+	for id in range(1, 6):
 		policy.register_successful_completion("level_%03d" % id)
 	var provider := MockAdProvider.new()
 	var service := AdService.new()
@@ -226,7 +230,7 @@ func _test_interstitial_service() -> void:
 
 func _test_fullscreen_double_show_guard() -> void:
 	var policy := _policy()
-	for id in range(1, 4):
+	for id in range(1, 6):
 		policy.register_successful_completion("level_%03d" % id)
 	var provider := MockAdProvider.new()
 	provider.set_interstitial_ready(true)
@@ -244,7 +248,7 @@ func _test_fullscreen_double_show_guard() -> void:
 	_check(provider.interstitial_calls.size() == 1,
 		"duplicate callbacks cannot double-show an interstitial")
 	policy.reset_session_state()
-	for id in range(1, 4):
+	for id in range(1, 6):
 		policy.register_successful_completion("level_%03d" % id)
 	provider.set_rewarded_ready(MonetizationConfig.PLACEMENT_FULL_HINT, true)
 	provider.queue_rewarded_result(AdResult.Code.EARNED)

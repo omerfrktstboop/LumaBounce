@@ -16,6 +16,7 @@ const GITIGNORE := "res://.gitignore"
 const MCP_EXPORT_STRIP := "res://addons/godot_mcp_toolkit/core/export_strip.gd"
 const ANDROID_GRADLE_BUILD := "res://android/build/build.gradle"
 const ADMOB_PLUGIN := "res://addons/AdmobPlugin/plugin.cfg"
+const ADMOB_EXPORT_PLUGIN := "res://addons/AdmobPlugin/AdmobPlugin.gd"
 const ADMOB_EXPORT_CONFIG := "res://addons/AdmobPlugin/android_export.cfg"
 const ADMOB_DEBUG_AAR := "res://addons/AdmobPlugin/bin/debug/AdmobPlugin-debug.aar"
 const ADMOB_RELEASE_AAR := "res://addons/AdmobPlugin/bin/release/AdmobPlugin-release.aar"
@@ -44,8 +45,9 @@ const EXPECTED_TARGET_SDK := 36
 ## Kapali test paketi gercek reklam isteyemez. 14 gunluk test bittiginde bu
 ## beklentiyi de gercek uygulama kimligine geri alin.
 const EXPECTED_ADMOB_APP_ID := "ca-app-pub-3940256099942544~3347511713"
-const EXPECTED_ADMOB_DEBUG_SHA256 := "08a7889416d97fde91b170bf22dd66b850419e9439b4c737d48c0a339f90fc69"
-const EXPECTED_ADMOB_RELEASE_SHA256 := "86bd590dbf3721b26db51271c265581dd844e3e3ed784a93fd49c63e38191ae3"
+const EXPECTED_ADMOB_ANDROID_SDK := "com.google.android.gms:play-services-ads:25.4.0"
+const EXPECTED_ADMOB_DEBUG_SHA256 := "ade2c426419f57185a9981d912fb164b1954e0c2541be15e9da8a28fa353e64b"
+const EXPECTED_ADMOB_RELEASE_SHA256 := "1077a544f7dacafb28dc2d8c3a3a5f4cd3fb2caa88c970ee12ce0c584f1455c4"
 const MAX_ANDROID_VERSION_CODE := 2_100_000_000
 
 const REQUIRED_RELEASE_EXCLUDES := [
@@ -216,6 +218,12 @@ func _check_project_settings() -> void:
 	elif declared != GameVersion.GAME:
 		_warnings.append("application/config/version='%s' != GameVersion.GAME='%s'."
 			% [declared, GameVersion.GAME])
+	if int(ProjectSettings.get_setting("display/window/handheld/orientation", -1)) != 6:
+		_blockers.append(
+			"Android yon ayari sensor degil; Play buyuk ekranlarda tum yonleri desteklemeyi istiyor.")
+	if String(ProjectSettings.get_setting("display/window/stretch/mode", "")) != "canvas_items" \
+			or String(ProjectSettings.get_setting("display/window/stretch/aspect", "")) != "expand":
+		_blockers.append("Buyuk ekran destegi icin canvas_items + expand olceklemesi korunmali.")
 
 	if not FileAccess.file_exists(ANDROID_GRADLE_BUILD):
 		_blockers.append(
@@ -295,7 +303,7 @@ func _check_release_debug_leakage() -> void:
 
 
 func _check_admob_integration() -> void:
-	for path in [ADMOB_PLUGIN, ADMOB_EXPORT_CONFIG, ADMOB_DEBUG_AAR, ADMOB_RELEASE_AAR,
+	for path in [ADMOB_PLUGIN, ADMOB_EXPORT_PLUGIN, ADMOB_EXPORT_CONFIG, ADMOB_DEBUG_AAR, ADMOB_RELEASE_AAR,
 			ADMOB_PROVIDER, ADMOB_CONFIG]:
 		if not FileAccess.file_exists(path):
 			_blockers.append("AdMob entegrasyon dosyasi yok: %s" % path)
@@ -318,6 +326,9 @@ func _check_admob_integration() -> void:
 
 	var provider_text := _read_text(ADMOB_PROVIDER)
 	var admob_config_text := _read_text(ADMOB_CONFIG)
+	var admob_export_plugin_text := _read_text(ADMOB_EXPORT_PLUGIN)
+	if not admob_export_plugin_text.contains(EXPECTED_ADMOB_ANDROID_SDK):
+		_blockers.append("AdMob Android SDK guncel degil; beklenen %s." % EXPECTED_ADMOB_ANDROID_SDK)
 	if not admob_config_text.contains("static func production_ads_enabled() -> bool:\n") \
 			or not admob_config_text.contains("\treturn false"):
 		_blockers.append("Kapali test paketinde production AdMob secimi devre disi degil.")
