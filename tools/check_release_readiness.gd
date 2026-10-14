@@ -42,9 +42,8 @@ const RELEASE_PRESET_NAME := "Android Release"
 const DEBUG_PRESET_NAME := "Android Debug"
 const EXPECTED_PACKAGE := "com.ofsgames.lumabounce"
 const EXPECTED_TARGET_SDK := 36
-## Kapali test paketi gercek reklam isteyemez. 14 gunluk test bittiginde bu
-## beklentiyi de gercek uygulama kimligine geri alin.
-const EXPECTED_ADMOB_APP_ID := "ca-app-pub-3940256099942544~3347511713"
+const EXPECTED_ADMOB_DEBUG_APP_ID := "ca-app-pub-3940256099942544~3347511713"
+const EXPECTED_ADMOB_RELEASE_APP_ID := "ca-app-pub-4666663369729289~4144593249"
 const EXPECTED_ADMOB_ANDROID_SDK := "com.google.android.gms:play-services-ads:25.4.0"
 const EXPECTED_ADMOB_DEBUG_SHA256 := "ade2c426419f57185a9981d912fb164b1954e0c2541be15e9da8a28fa353e64b"
 const EXPECTED_ADMOB_RELEASE_SHA256 := "1077a544f7dacafb28dc2d8c3a3a5f4cd3fb2caa88c970ee12ce0c584f1455c4"
@@ -61,6 +60,7 @@ const REQUIRED_RELEASE_EXCLUDES := [
 	"scenes/level_editor.tscn",
 	"test107.gd",
 	"test_level.gd",
+	"mcp_out.json",
 ]
 const TRACKED_SIGNING_KEYS := [
 	"keystore/release",
@@ -317,24 +317,35 @@ func _check_admob_integration() -> void:
 	if export_config.load(ADMOB_EXPORT_CONFIG) != OK:
 		_blockers.append("AdMob android_export.cfg okunamadi.")
 	else:
-		if bool(export_config.get_value("General", "is_real", true)):
-			_blockers.append("Kapali test paketinde AdMob General/is_real=false olmali.")
-		for section in ["Debug", "Release"]:
-			var app_id := String(export_config.get_value(section, "app_id", ""))
-			if app_id != EXPECTED_ADMOB_APP_ID:
-				_blockers.append("AdMob %s app_id hatali: '%s'." % [section, app_id])
+		if not bool(export_config.get_value("General", "is_real", false)):
+			_blockers.append("Release AdMob General/is_real=true olmali.")
+		var debug_app_id := String(export_config.get_value("Debug", "app_id", ""))
+		if debug_app_id != EXPECTED_ADMOB_DEBUG_APP_ID:
+			_blockers.append("AdMob Debug app_id hatali: '%s'." % debug_app_id)
+		var release_app_id := String(export_config.get_value("Release", "app_id", ""))
+		if release_app_id != EXPECTED_ADMOB_RELEASE_APP_ID:
+			_blockers.append("AdMob Release app_id hatali: '%s'." % release_app_id)
 
 	var provider_text := _read_text(ADMOB_PROVIDER)
 	var admob_config_text := _read_text(ADMOB_CONFIG)
 	var admob_export_plugin_text := _read_text(ADMOB_EXPORT_PLUGIN)
 	if not admob_export_plugin_text.contains(EXPECTED_ADMOB_ANDROID_SDK):
 		_blockers.append("AdMob Android SDK guncel degil; beklenen %s." % EXPECTED_ADMOB_ANDROID_SDK)
-	if not admob_config_text.contains("static func production_ads_enabled() -> bool:\n") \
-			or not admob_config_text.contains("\treturn false"):
-		_blockers.append("Kapali test paketinde production AdMob secimi devre disi degil.")
-	if not admob_config_text.contains("return TEST_REWARDED") \
-			or not admob_config_text.contains("return TEST_INTERSTITIAL"):
-		_blockers.append("Kapali test paketinde Google demo reklam birimleri zorunlu degil.")
+	if not admob_config_text.contains(
+			'return OS.has_feature("production") and not OS.is_debug_build()'):
+		_blockers.append("Canli AdMob secimi production ve non-debug build'e bagli degil.")
+	for required in ["LIVE_ANDROID_APP_ID", "LIVE_REWARDED", "LIVE_INTERSTITIAL",
+			"TEST_ANDROID_APP_ID", "TEST_REWARDED", "TEST_INTERSTITIAL"]:
+		if not admob_config_text.contains(required):
+			_blockers.append("AdMob kimlik ayrimi eksik: %s." % required)
+	if not provider_text.contains("android_debug_application_id = LumaAdmobConfig.TEST_ANDROID_APP_ID") \
+			or not provider_text.contains(
+				"android_real_application_id = LumaAdmobConfig.LIVE_ANDROID_APP_ID"):
+		_blockers.append("AdMob provider debug ve release uygulama kimliklerini ayirmiyor.")
+	if not admob_export_plugin_text.contains("_is_debug_export = is_debug") \
+			or not admob_export_plugin_text.contains(
+				"_export_config.debug_application_id if _is_debug_export"):
+		_blockers.append("AdMob export plugin'i debug APK manifestinde demo uygulama kimligini secmiyor.")
 	if provider_text.find("update_consent_info") < 0:
 		_blockers.append("AdMob provider her acilista UMP consent bilgisini guncellemiyor.")
 	if provider_text.find("update_consent_info") > provider_text.find("_admob.initialize()"):

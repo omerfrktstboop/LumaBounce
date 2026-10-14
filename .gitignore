@@ -41,3 +41,15 @@ builds/
 
 # Yerel arastirma/inceleme ciktilari; export paketine de alinmaz.
 tmp/
+scratchpad/
+
+# Godot Android build sablonu: Project > Install Android Build Template ile
+# yeniden kurulur. Icindeki motor AAR'lari GitHub'in 100 MB sinirini asar ve
+# Gradle ciktilari ~1 GB tutar (Godot'un varsayilan .gitignore'u da dislar).
+/android/
+
+# Yerel editor/ajan durumu ve kok dizindeki gecici loglar
+.idea/
+.codex-remote-attachments/
+.claude/settings.local.json
+/*.log

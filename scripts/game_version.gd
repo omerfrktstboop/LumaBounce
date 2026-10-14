@@ -24,7 +24,9 @@ const GAME := "1.0.0"
 ## okunur ve makul bir varsayilana duser (dil bos = cihaz dili). Numara yine
 ## de artirildi, cunku surumun anlami "bu kaydi hangi alan kumesini bilen
 ## surum yazdi" - eski bir surum yeni kaydi actiginda bunu gorebilmeli.
-const SAVE_SCHEMA := 2
+## 3: review oturum sayacı ve son deneme zamanı eklendi. Eski kayıtlarda
+## ikisi de sıfır varsayılır; ilerleme dönüşümü gerekmez.
+const SAVE_SCHEMA := 3
 const CONTENT := 1
 
 

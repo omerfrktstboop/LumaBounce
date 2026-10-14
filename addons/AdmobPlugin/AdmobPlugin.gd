@@ -42,6 +42,7 @@ class AndroidExportPlugin extends EditorExportPlugin:
 
 	var _plugin_name = PLUGIN_NAME
 	var _export_config: AdmobAndroidExportConfig
+	var _is_debug_export := false
 
 
 	func _supports_platform(platform: EditorExportPlatform) -> bool:
@@ -61,6 +62,7 @@ class AndroidExportPlugin extends EditorExportPlugin:
 
 	func _export_begin(features: PackedStringArray, is_debug: bool, path: String, flags: int) -> void:
 		if _supports_platform(get_export_platform()):
+			_is_debug_export = is_debug
 			_export_config = AdmobAndroidExportConfig.new()
 			if not _export_config.export_config_file_exists() or _export_config.load_export_config_from_file() != OK:
 				_export_config.load_export_config_from_node()
@@ -97,8 +99,8 @@ class AndroidExportPlugin extends EditorExportPlugin:
 		var __contents: String
 
 		if _export_config:
-			__contents = APP_ID_META_TAG % (_export_config.real_application_id if _export_config.is_real \
-				else _export_config.debug_application_id )
+			__contents = APP_ID_META_TAG % (_export_config.debug_application_id if _is_debug_export \
+				else _export_config.real_application_id)
 		else:
 			GmpLogger.log_warn("Export config not found for %s!" % _plugin_name)
 			__contents = ""

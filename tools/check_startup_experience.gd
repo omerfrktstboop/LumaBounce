@@ -6,9 +6,9 @@ extends SceneTree
 ## ambient_loop'un yeniden autoplay ile baglanmasini engeller.
 
 const PROJECT_ICON := "res://assets/icons/luma_bounce_icon.png"
-const ANDROID_MAIN_ICON := "res://assets/icons/luma_bounce_icon_192.png"
-const ANDROID_FOREGROUND := "res://assets/icons/luma_bounce_adaptive_foreground.png"
-const ANDROID_BACKGROUND := "res://assets/icons/luma_bounce_adaptive_background.png"
+const ANDROID_MAIN_ICON := "res://assets/icons/luma_bounce_icon_v2_192.png"
+const ANDROID_FOREGROUND := "res://assets/icons/luma_bounce_adaptive_foreground_v2_inset.png"
+const ANDROID_BACKGROUND := "res://assets/icons/luma_bounce_adaptive_background_v2.png"
 
 var _passed := 0
 var _failed := 0

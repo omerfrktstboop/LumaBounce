@@ -28,6 +28,7 @@ signal full_hint_requested()
 ## Retention sayaçlari icin hafif olay. Analytics'e gonderilmez; AppRoot bunu
 ## DailyStore/AchievementStore'a yazar.
 signal bounce_recorded()
+signal first_shot_tutorial_finished(skipped: bool)
 
 @export var completed_title := "BÖLÜM TAMAMLANDI"
 @export var failed_title := "BÖLÜM BAŞARISIZ"
@@ -129,6 +130,10 @@ var analytics: AnalyticsService
 ## acilmaz, haklar tukenmez, ilerleme yazilmaz. Amac bolumu degerlendirmek
 ## degil, geometriyi istedigin kadar denemek.
 var practice_mode := false
+## Settings replay never writes campaign progress or rewards.
+var tutorial_replay := false
+var _tutorial_session := false
+var _tutorial_pointer := Vector2.ZERO
 ## Daily challenge campaign progression'ina yazilmaz ve sonuc kartinin ana
 ## eylemi sonraki bolum yerine retention ekranina doner.
 var daily_mode := false
@@ -148,6 +153,7 @@ var aim_assist := false
 @onready var _shake: ScreenShake = $ShakeCamera
 @onready var _message: Label = $HUD/SafeArea/Root/Message
 @onready var _tutorial: Label = $HUD/SafeArea/Root/TutorialLabel
+@onready var _first_shot: FirstShotTutorial = $HUD/SafeArea/Root/FirstShotTutorial
 @onready var _intro_card: MechanicIntroCard = $HUD/MechanicIntroCard
 @onready var _level_title: Label = $HUD/SafeArea/Root/LevelHeader/LevelTitle
 @onready var _level_subtitle: Label = $HUD/SafeArea/Root/LevelHeader/LevelSubtitle
@@ -253,6 +259,7 @@ func _ready() -> void:
 	_sync_tuning()
 	_connect_signals()
 	get_viewport().size_changed.connect(_position_shake_camera)
+	get_viewport().size_changed.connect(_on_tutorial_viewport_resized)
 	_position_shake_camera()
 	_input_blockers.append(_pause_button)
 	_input_blockers.append(_pause_card)
@@ -263,6 +270,50 @@ func _ready() -> void:
 	if playtest_stats != null:
 		playtest_stats.record_entry(level_data.level_id)
 	reset_shot()
+	_tutorial_session = tutorial_replay or (not practice_mode and not daily_mode \
+		and level_data.level_id == LevelLibrary.FIRST_LEVEL_ID \
+		and progress != null and progress.needs_first_shot_tutorial())
+	_first_shot.finished.connect(_on_first_shot_finished)
+	if _tutorial_session and not _intro_card.is_open():
+		_start_first_shot_tutorial()
+
+
+func _process(_delta: float) -> void:
+	if _first_shot.is_active():
+		var ball_at := get_canvas_transform() * _launcher.get_spawn_position()
+		_first_shot.set_markers(ball_at, _tutorial_pointer)
+
+
+func _on_tutorial_viewport_resized() -> void:
+	if is_first_shot_tutorial_active():
+		# Screen rotation invalidates the previous finger/canvas coordinates.
+		_cancel_pointer_state()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and is_node_ready() and tutorial_replay:
+		_apply_level_header()
+
+
+func _start_first_shot_tutorial() -> void:
+	_tutorial.hide()
+	_first_shot.start()
+	_tutorial_pointer = get_canvas_transform() * _launcher.get_spawn_position()
+	_hint_button.disabled = true
+
+
+func is_first_shot_tutorial_active() -> bool:
+	return _first_shot != null and _first_shot.is_active()
+
+
+func suppress_engagement_prompts() -> bool:
+	return tutorial_replay or _tutorial_session
+
+
+func _on_first_shot_finished(skipped: bool) -> void:
+	_cancel_pointer_state()
+	_hint_button.disabled = false
+	first_shot_tutorial_finished.emit(skipped)
 
 
 func _exit_tree() -> void:
@@ -366,6 +417,10 @@ func _build_panels() -> void:
 ## Uzun ekranlarda ust tarafta olusan bosluga bolum kimligi ve editorun
 ## hesapladigi zorluk tier'i gelir; bolum adi HUD'da tekrarlanmaz.
 func _apply_level_header() -> void:
+	if tutorial_replay:
+		_level_title.text = tr("HOW_TO_PLAY")
+		_level_subtitle.hide()
+		return
 	# tr() BICIMLENDIRMEDEN ONCE: Control'un otomatik cevirisi hazir metni
 	# arar, yani "BÖLÜM 5" tabloda bulunamaz. Cevrilmesi gereken KALIPTIR.
 	_level_title.text = tr(level_title_format) % level_data.level_id
@@ -416,6 +471,7 @@ func _position_shake_camera() -> void:
 
 
 func _connect_signals() -> void:
+	_launcher.aim_started.connect(_first_shot.aim_started)
 	_launcher.shot_fired.connect(_on_shot_fired)
 	_launcher.aim_cancelled.connect(_on_aim_cancelled)
 	_launcher.power_step_crossed.connect(_on_power_step_crossed)
@@ -567,12 +623,14 @@ func _respawn_ball() -> void:
 	_clear_effects()
 	_hide_message()
 	_launcher.enabled = true
+	_first_shot.ball_ready()
 
 
 func _on_shot_fired(impulse: Vector2) -> void:
 	# Ayni anda yalnizca bir top aktif olabilir.
 	if not _ball.is_ready_to_launch():
 		return
+	_first_shot.shot_fired()
 	_reaim_pending = false
 
 	_shots_this_attempt += 1
@@ -645,7 +703,7 @@ func _cancel_active_shot_for_reaim() -> void:
 ## geometriyi denemektir, ve dorduncu atista basarisizlik karti acilan bir
 ## test araci ise yaramaz.
 func _consume_life() -> bool:
-	if practice_mode:
+	if practice_mode or is_first_shot_tutorial_active():
 		return false
 	_lives_remaining = maxi(_lives_remaining - 1, 0)
 	_update_lives_hud()
@@ -675,6 +733,9 @@ func _update_lives_hud() -> void:
 func _on_target_hit(_body: Node2D) -> void:
 	if not _ball.is_flying():
 		return
+	# Successful early shots also demonstrate understanding of the controls.
+	if is_first_shot_tutorial_active():
+		_first_shot.finish(false)
 	_reaim_pending = false
 	_hide_hint_route()
 	_ball.stop()
@@ -961,6 +1022,9 @@ func _cancel_pointer_state() -> void:
 
 
 func _pointer_pressed(viewport_position: Vector2) -> void:
+	if _first_shot.blocks_pointer(viewport_position):
+		return
+	_tutorial_pointer = viewport_position
 	# Dokunma olaylari HUD tarafindan yutulmaz; UI alanlarini elle disla.
 	if _result_panel.visible:
 		return
@@ -969,6 +1033,9 @@ func _pointer_pressed(viewport_position: Vector2) -> void:
 			return
 
 	var world_position := _to_world(viewport_position)
+	if is_first_shot_tutorial_active() and _ball.is_ready_to_launch() \
+			and world_position.distance_to(_launcher.get_spawn_position()) > reaim_touch_radius:
+		return
 	if _ball.is_ready_to_launch():
 		_launcher.begin_aim(world_position)
 		return
@@ -982,6 +1049,7 @@ func _pointer_pressed(viewport_position: Vector2) -> void:
 
 
 func _pointer_moved(viewport_position: Vector2) -> void:
+	_tutorial_pointer = viewport_position
 	_launcher.update_aim(_to_world(viewport_position))
 	if _reaim_pending and _launcher.has_valid_aim():
 		_cancel_active_shot_for_reaim()
@@ -1019,6 +1087,8 @@ func _refresh_hint_hud() -> void:
 
 
 func _on_hint_pressed() -> void:
+	if is_first_shot_tutorial_active():
+		return
 	if wallet == null or level_data == null or not level_data.has_hint() or practice_mode:
 		return
 	# Basari/son hak sonrasi sonuc akisi bitmeden rota yeniden acilamaz.
@@ -1356,6 +1426,9 @@ func _show_message(text: String) -> void:
 ## --- Ipucu -------------------------------------------------------------------
 
 func _show_tutorial() -> void:
+	if is_first_shot_tutorial_active():
+		_tutorial.hide()
+		return
 	if _tutorial_tween != null and _tutorial_tween.is_valid():
 		_tutorial_tween.kill()
 	_tutorial_dismissed = false
@@ -1372,6 +1445,7 @@ func _show_tutorial() -> void:
 ## Ekrana dokunmak degil, gercek bir nisan olusmasi araniyor; boylece
 ## yanlislikla degen bir parmak sureyi baslatmaz.
 func _on_aim_updated(power_ratio: float, direction: Vector2) -> void:
+	_first_shot.aim_updated(_launcher.has_valid_aim(), power_ratio)
 	if _ball.is_ready_to_launch():
 		_ball.set_launcher_tension(
 			power_ratio, direction, _launcher.loaded_ball_pullback_distance)
@@ -1382,6 +1456,7 @@ func _on_aim_updated(power_ratio: float, direction: Vector2) -> void:
 
 
 func _on_aim_cancelled() -> void:
+	_first_shot.aim_cancelled()
 	_ball.reset_launcher_tension()
 
 
@@ -1451,6 +1526,9 @@ func _on_intro_card_dismissed() -> void:
 		_show_next_intro_card()
 		return
 	_launcher.enabled = _launcher_enabled_before_intro
+	if _tutorial_session and not _first_shot.is_active() \
+			and (tutorial_replay or progress.needs_first_shot_tutorial()):
+		_start_first_shot_tutorial()
 
 
 func _hide_message() -> void:

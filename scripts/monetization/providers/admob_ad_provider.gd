@@ -44,8 +44,8 @@ func initialize() -> bool:
 	_admob = Admob.new()
 	_admob.name = "AdmobRuntime"
 	_admob.is_real = LumaAdmobConfig.production_ads_enabled()
-	_admob.android_debug_application_id = LumaAdmobConfig.ANDROID_APP_ID
-	_admob.android_real_application_id = LumaAdmobConfig.ANDROID_APP_ID
+	_admob.android_debug_application_id = LumaAdmobConfig.TEST_ANDROID_APP_ID
+	_admob.android_real_application_id = LumaAdmobConfig.LIVE_ANDROID_APP_ID
 	_admob.max_ad_content_rating = AdmobConfig.ContentRating.G
 	_admob.remove_interstitial_ads_after_displayed = true
 	_connect_admob_signals()
@@ -115,6 +115,10 @@ func show_privacy_options() -> bool:
 	_privacy_request_active = true
 	_admob.show_privacy_options_form()
 	return bool(await _privacy_options_completed)
+
+
+func is_fullscreen_busy() -> bool:
+	return _fullscreen_busy or _consent_flow_active or _privacy_request_active
 
 
 func _connect_admob_signals() -> void:

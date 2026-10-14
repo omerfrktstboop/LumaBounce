@@ -80,6 +80,11 @@ func show_privacy_options() -> bool:
 	return bool(await _provider.show_privacy_options())
 
 
+func has_active_fullscreen_flow() -> bool:
+	return _fullscreen_request_in_progress \
+		or (_provider != null and _provider.is_fullscreen_busy())
+
+
 func request_interstitial(context: StringName, now_seconds := -1.0) -> int:
 	await get_tree().process_frame
 	var is_candidate := _policy != null and _policy.has_interstitial_candidate(context)

@@ -1,0 +1,38 @@
+plugins {
+    id 'com.android.library' version '8.6.1'
+}
+
+android {
+    namespace 'com.ofsgames.lumabounce.review'
+    compileSdk 36
+
+    defaultConfig {
+        minSdk 24
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    compileOnly files('../../android/build/libs/debug/godot-lib.template_debug.aar')
+    compileOnly 'com.google.android.play:review:2.0.2'
+}
+
+tasks.register('installPluginAars') {
+    dependsOn 'assembleDebug', 'assembleRelease'
+    doLast {
+        copy {
+            from layout.buildDirectory.file('outputs/aar/LumaReviewPlugin-debug.aar')
+            into '../../addons/LumaReviewPlugin/bin/debug'
+            rename { 'LumaReviewPlugin-debug.aar' }
+        }
+        copy {
+            from layout.buildDirectory.file('outputs/aar/LumaReviewPlugin-release.aar')
+            into '../../addons/LumaReviewPlugin/bin/release'
+            rename { 'LumaReviewPlugin-release.aar' }
+        }
+    }
+}

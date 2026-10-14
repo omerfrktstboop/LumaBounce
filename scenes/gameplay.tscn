@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3]
+[gd_scene load_steps=25 format=3]
 
 [ext_resource type="Script" path="res://scripts/gameplay.gd" id="1_gameplay"]
 [ext_resource type="Script" path="res://scripts/arena.gd" id="2_arena"]
@@ -22,6 +22,7 @@
 [ext_resource type="PackedScene" path="res://scenes/hint_purchase_card.tscn" id="21_hint_card"]
 [ext_resource type="Script" path="res://scripts/ui/glyph_icon.gd" id="22_glyph"]
 [ext_resource type="PackedScene" path="res://scenes/pause_card.tscn" id="23_pause_card"]
+[ext_resource type="PackedScene" path="res://scenes/first_shot_tutorial.tscn" id="24_first_shot"]
 
 [sub_resource type="StyleBoxFlat" id="CoinChipStyle"]
 content_margin_left = 12.0
@@ -500,3 +501,5 @@ script = ExtResource("11_button")
 [node name="HintPurchaseCard" parent="HUD" instance=ExtResource("21_hint_card")]
 
 [node name="PauseCard" parent="HUD" instance=ExtResource("23_pause_card")]
+
+[node name="FirstShotTutorial" parent="HUD/SafeArea/Root" instance=ExtResource("24_first_shot")]

@@ -44,3 +44,7 @@ func is_privacy_options_available() -> bool:
 func show_privacy_options() -> bool:
 	await get_tree().process_frame
 	return false
+
+
+func is_fullscreen_busy() -> bool:
+	return false

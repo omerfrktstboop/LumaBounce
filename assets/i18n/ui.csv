@@ -172,3 +172,20 @@ BAŞLANGIÇ,BAŞLANGIÇ,START,INICIO,INÍCIO,START,DÉBUT
 KİNETİK,KİNETİK,KINETIC,CINÉTICO,CINÉTICO,KINETIK,CINÉTIQUE
 FİNAL,FİNAL,FINAL,FINAL,FINAL,FINALE,FINALE
 Yeni Engel,Yeni Engel,New Obstacle,Nuevo obstáculo,Novo obstáculo,Neues Hindernis,Nouvel obstacle
+HOW_TO_PLAY,Nasıl oynanır?,How to play,Cómo jugar,Como jogar,So wird gespielt,Comment jouer
+İLK ATIŞ · %d/4,İLK ATIŞ · %d/4,FIRST SHOT · %d/4,PRIMER TIRO · %d/4,PRIMEIRO TIRO · %d/4,ERSTER SCHUSS · %d/4,PREMIER TIR · %d/4
+FIRST_SHOT_SKIP,Atla,Skip,Omitir,Pular,Überspringen,Passer
+FIRST_SHOT_TOUCH,Topa dokun ve parmağını basılı tut.,Touch the ball and hold.,Toca la bola y mantén pulsado.,Toque na bola e mantenha pressionado.,Berühre den Ball und halte ihn gedrückt.,Touche la balle et maintiens le doigt appuyé.
+FIRST_SHOT_DRAG,Parmağını aşağı sürükle. Noktalı çizgi atış yönünü gösterir.,Drag down. The dotted line shows your aim.,Arrastra hacia abajo. La línea de puntos muestra la dirección.,Arraste para baixo. A linha pontilhada mostra a direção.,Ziehe nach unten. Die gepunktete Linie zeigt die Schussrichtung.,Glisse vers le bas. Les pointillés indiquent la direction du tir.
+FIRST_SHOT_POWER,Bırakmadan biraz daha uzağa veya yakına sürükle. Güç çubuğunu izle.,Keep holding and drag a little farther or closer. Watch the power meter.,"Sin soltar, arrastra un poco más lejos o más cerca. Mira la barra de potencia.","Sem soltar, arraste um pouco mais longe ou mais perto. Observe a barra de força.",Ziehe etwas weiter weg oder näher heran. Beobachte dabei die Kraftanzeige.,"Sans relâcher, éloigne ou rapproche un peu le doigt. Observe la jauge de puissance."
+FIRST_SHOT_RELEASE,Hazırsın! Topu fırlatmak için parmağını kaldır.,Ready! Lift your finger to launch the ball.,¡Listo! Levanta el dedo para lanzar la bola.,Pronto! Levante o dedo para lançar a bola.,"Bereit! Lass los, um den Ball abzufeuern.",Prêt ! Lève le doigt pour lancer la balle.
+FIRST_SHOT_FLIGHT,Topu izle. Iskalarsan birlikte tekrar deneyebiliriz.,"Watch the ball. If you miss, we can try again.","Mira la bola. Si fallas, podemos intentarlo de nuevo.","Observe a bola. Se errar, podemos tentar de novo.","Beobachte den Ball. Wenn du verfehlst, versuchen wir es erneut.","Observe la balle. Si tu rates, nous pouvons réessayer."
+SUPPORT,Destek,Support,Ayuda,Suporte,Hilfe,Assistance
+RATE_GAME,Oyunu değerlendir,Rate the game,Valora el juego,Avalie o jogo,Spiel bewerten,Évaluer le jeu
+SEND_FEEDBACK,Geri bildirim gönder,Send feedback,Enviar comentarios,Enviar feedback,Feedback senden,Envoyer un avis
+EXTERNAL_LINK_FAILED,Bağlantı açılamadı. Lütfen cihaz ayarlarını kontrol et.,The link could not be opened. Check your device settings.,No se pudo abrir el enlace. Comprueba los ajustes del dispositivo.,Não foi possível abrir o link. Verifique as configurações do dispositivo.,Der Link konnte nicht geöffnet werden. Prüfe deine Geräteeinstellungen.,Impossible d’ouvrir le lien. Vérifiez les réglages de votre appareil.
+LumaBounce geri bildirim - %s,LumaBounce geri bildirim - %s,LumaBounce feedback - %s,Comentarios sobre LumaBounce - %s,Feedback do LumaBounce - %s,LumaBounce-Feedback - %s,Avis sur LumaBounce - %s
+FEEDBACK_EMAIL_GREETING,Merhaba LumaBounce ekibi,Hello LumaBounce team,Hola equipo de LumaBounce,Olá equipe do LumaBounce,Hallo LumaBounce-Team,Bonjour l’équipe LumaBounce
+FEEDBACK_EMAIL_PROMPT,Geri bildirimim:,My feedback:,Mis comentarios:,Meu feedback:,Mein Feedback :,Mon avis :
+Sürüm: %s,Sürüm: %s,Version: %s,Versión: %s,Versão: %s,Version: %s,Version : %s
+Bölüm: %d,Bölüm: %d,Level: %d,Nivel: %d,Fase: %d,Level: %d,Niveau : %d

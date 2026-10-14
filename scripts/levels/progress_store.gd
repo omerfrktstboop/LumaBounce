@@ -46,6 +46,10 @@ const KEY_HAPTICS_ENABLED := "haptics_enabled"
 const KEY_LANGUAGE := "language"
 const KEY_SHAKE_SCALE := "shake_scale"
 const KEY_AIM_ASSIST := "aim_assist"
+const KEY_FIRST_SHOT_TUTORIAL := "first_shot_tutorial_version"
+const FIRST_SHOT_TUTORIAL_VERSION := 1
+const KEY_REVIEW_SESSION_COUNT := "review_session_count"
+const KEY_LAST_REVIEW_ATTEMPT_UNIX := "last_review_attempt_unix"
 
 ## NORMAL bir bolumun azami yildizi. Bonus bolumler daha fazla verir, bu
 ## yuzden yildiz SINIRLAMASI ve TOPLAMLARI bu sabite degil bolumun kendi
@@ -65,6 +69,11 @@ var seen_obstacle_kinds: Array[int] = []
 ## Kirilabilir blok mekanigi (tur degil, tek mekanik) daha once gorulmus mu -
 ## bkz. Gameplay._pending_block_intro.
 var seen_block_mechanic := false
+var first_shot_tutorial_version := 0
+## Review uygunluğu için yalnızca kaba sayaçlar tutulur. Oyuncunun puan verip
+## vermediği Play API tarafından bildirilmez ve burada tahmin edilmez.
+var review_session_count := 0
+var last_review_attempt_unix := 0
 ## Dokunsal geri bildirim (titresim) acik mi. Titresim bazi oyuncular icin
 ## rahatsiz edicidir ve pilden yer; kapatilabilir olmali. Tek okuma noktasi
 ## Haptics.enabled'dir - AppRoot bu degeri oraya aktarir.
@@ -125,6 +134,9 @@ func save() -> void:
 	config.set_value(SECTION, KEY_LAST_COMPLETED_UID, _last_completed_uid())
 	config.set_value(SECTION, KEY_SEEN_OBSTACLE_KINDS, seen_obstacle_kinds)
 	config.set_value(SECTION, KEY_SEEN_BLOCK_MECHANIC, seen_block_mechanic)
+	config.set_value(SECTION_SETTINGS, KEY_FIRST_SHOT_TUTORIAL, first_shot_tutorial_version)
+	config.set_value(SECTION_SETTINGS, KEY_REVIEW_SESSION_COUNT, review_session_count)
+	config.set_value(SECTION_SETTINGS, KEY_LAST_REVIEW_ATTEMPT_UNIX, last_review_attempt_unix)
 	config.set_value(SECTION_SETTINGS, KEY_HAPTICS_ENABLED, haptics_enabled)
 	config.set_value(SECTION_SETTINGS, KEY_LANGUAGE, language)
 	config.set_value(SECTION_SETTINGS, KEY_SHAKE_SCALE, shake_scale)
@@ -344,11 +356,32 @@ func mark_completed(level_id: int) -> void:
 	save()
 
 
-## Yalnizca ILERLEMEYI sifirlar. [code][settings][/code] bolumunun tamami
-## (dil, titresim, sarsinti, nisan yardimi) bilerek KORUNUR: bunlar oyuncu
-## tercihidir, kazanilmis ilerleme degil. "Bastan basla" diyen oyuncunun
-## oyunu anlamadigi bir dile donmesi ya da kapattigi titresimin geri gelmesi
-## kabul edilemez.
+## Only new campaign players are automatically shown the first-shot tutorial.
+func needs_first_shot_tutorial() -> bool:
+	return first_shot_tutorial_version < FIRST_SHOT_TUTORIAL_VERSION \
+		and completed_levels.is_empty() and highest_unlocked_level == LevelLibrary.FIRST_LEVEL_ID
+
+
+func finish_first_shot_tutorial() -> void:
+	if first_shot_tutorial_version >= FIRST_SHOT_TUTORIAL_VERSION:
+		return
+	first_shot_tutorial_version = FIRST_SHOT_TUTORIAL_VERSION
+	save()
+
+
+func record_review_session() -> void:
+	review_session_count = mini(review_session_count + 1, 2147483647)
+	save()
+
+
+func mark_review_attempt(now_unix: int) -> void:
+	if now_unix <= 0:
+		return
+	last_review_attempt_unix = now_unix
+	save()
+
+
+## Reset campaign progress while retaining settings and tutorial completion.
 func reset() -> void:
 	highest_unlocked_level = LevelLibrary.FIRST_LEVEL_ID
 	completed_levels.clear()
@@ -490,6 +523,20 @@ func _migrate_from_v0(config: ConfigFile) -> void:
 ## Semadan BAGIMSIZ alanlar: her iki surumde de ayni bicimde tutulur, bu
 ## yuzden goc yolundan ayri okunur.
 func _read_shared(config: ConfigFile) -> void:
+	# A readable existing save predates the tutorial if the key is absent.
+	# Keep existing players' flow; replay remains available from Settings.
+	var raw_tutorial: Variant = config.get_value(SECTION_SETTINGS,
+		KEY_FIRST_SHOT_TUTORIAL, FIRST_SHOT_TUTORIAL_VERSION)
+	if raw_tutorial is int:
+		first_shot_tutorial_version = maxi(0, raw_tutorial)
+	var raw_review_sessions: Variant = config.get_value(
+		SECTION_SETTINGS, KEY_REVIEW_SESSION_COUNT, 0)
+	if raw_review_sessions is int or raw_review_sessions is float:
+		review_session_count = maxi(0, int(raw_review_sessions))
+	var raw_review_attempt: Variant = config.get_value(
+		SECTION_SETTINGS, KEY_LAST_REVIEW_ATTEMPT_UNIX, 0)
+	if raw_review_attempt is int or raw_review_attempt is float:
+		last_review_attempt_unix = maxi(0, int(raw_review_attempt))
 	# Eski kayitlarda bu anahtar yok - bos dizi kalir, yani hicbir tur
 	# gorulmemis (o bolumlere tekrar girildiginde tanitim toast'i bir kez
 	# daha gorunur; kayit dosyasi ile bolum icerigi arasindaki tek makul

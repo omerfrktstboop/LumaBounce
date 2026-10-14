@@ -20,7 +20,7 @@ Araç hiçbir şeyi değiştirmez, yalnızca raporlar. `BLOKER` varsa çıkış 
 | Alan | Anlamı | Ne zaman artar |
 |---|---|---|
 | `GameVersion.GAME` | Mağaza sürümü (semver) | Her yayında |
-| `GameVersion.SAVE_SCHEMA` | Kayıt **dosya yapısı** (şu an **2**) | Yalnızca kayıt alanları değişince |
+| `GameVersion.SAVE_SCHEMA` | Kayıt **dosya yapısı** (şu an **3**) | Yalnızca kayıt alanları değişince |
 | `GameVersion.CONTENT` | Bölüm/içerik paketi | Yeni bölüm/tema eklenince |
 
 `SAVE_SCHEMA` bilerek ayrıdır: oyun 20 kez güncellense de kayıt yapısı
@@ -47,7 +47,10 @@ eşlenmelidir (Godot bunu otomatik okumaz).
 - [ ] `export_format=1` (AAB) ve `use_gradle_build=true`
 - [ ] `res://android/build` Gradle şablonu kurulu
 - [ ] Release filtresi yalnızca dev-only addonları dışlıyor; `addons/*` kullanılmıyor
-- [ ] AdMob v7 eklentisi etkin; debug APK yalnızca Google test reklam birimlerini kullanıyor
+- [ ] AdMob v7 eklentisi etkin; release AAB gerçek uygulama/reklam birimlerini,
+  debug APK ise yalnızca Google demo kimliklerini kullanıyor
+- [ ] LumaReviewPlugin etkin; release paketi Play Review bağımlılığını ve Godot
+  v2 eklenti metadata'sını içeriyor
 - [ ] UMP formu ilk açılışta test edildi; Ayarlar'da gerekli kullanıcılara gizlilik seçenekleri görünüyor
 - [ ] Ayarlar > Gizlilik'te **gizlilik politikası** bağlantısı görünüyor ve tarayıcıda açılıyor (`LegalLinks.PRIVACY_POLICY_URL`); adres Play Console listelemesindekiyle aynı
 - [ ] `check_analytics_phase10.gd` geçiyor; production dashboard'da debug event yok
@@ -76,11 +79,14 @@ toplu olarak dışlanmaz**; gelecekte AdMob ve Google Play Billing runtime plugi
 
 ### 3.1 MANUEL: SDK, JDK ve Gradle şablonu
 
+Bu bilgisayardaki hazır kurulum ve imzalı build komutları için
+[LOCAL_ANDROID_BUILD.md](LOCAL_ANDROID_BUILD.md) dosyasına bakın.
+
 1. Android Studio SDK Manager ile `platforms;android-36`, güncel Platform-Tools,
    Build-Tools ve Command-line Tools kur.
 2. Godot'ta `Editor → Editor Settings → Export → Android` altında `Java SDK Path`
    (JDK 17) ve `Android SDK Path` alanlarını ayarla.
-3. Godot 4.7.1 ile eşleşen tam export template paketini kur. Paket
+3. Godot 4.7.2 ile eşleşen export template paketini kur. Paket
    `android_source.zip` içermelidir.
 4. `Project → Install Android Build Template...` ile `res://android/build`
    oluştur. Bu adım AAB ve sonraki AdMob/Billing pluginleri için gereklidir.
@@ -151,6 +157,11 @@ yedeklenmez, yoksa kurtarma şansı yok olurdu.
 Dosyadaki `save_schema_version` okunur. Anahtar yoksa kayıt şema 0'dır
 (uid öncesi, tamsayı anahtarlı) ve `_migrate_from_v0()` ile okunur; ilk
 `save()` dosyayı yeni şemada yazar. Göç kayıpsızdır ve oyuncu fark etmez.
+
+Şema 3, ayarlar bölümüne `review_session_count` ve
+`last_review_attempt_unix` alanlarını ekler. Eski kayıtlarda ikisi de sıfır
+varsayılır. İlerleme sıfırlama bu kaba uygunluk sayaçlarını korur; uygulama
+oyuncunun puan verip vermediğini kaydetmez.
 
 İleri sürümden gelen kayıt (oyuncu eski sürüme döndü) **silinmez**: bilinen
 alanlar okunur, bilinmeyenlere dokunulmaz.

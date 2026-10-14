@@ -1156,6 +1156,10 @@ func _test_level_select() -> void:
 
 	var grid := select.get_node(
 		"SafeArea/Content/PageClip/GridScroll/GridHolder/Grid") as GridContainer
+	var level_scroll := select.get_node(
+		"SafeArea/Content/PageClip/GridScroll") as ScrollContainer
+	_check("bolum listesi dokunmatik tiklama payi kullaniyor",
+		level_scroll.scroll_deadzone >= 12, true)
 	# Artik TEK SAYFA cizilir: 125 butonun tamami degil, acik dunyanin
 	# bolumleri. Oyuncu 21. bolumde oldugu icin 1. dunya (1-50) acilir.
 	_check("acilan dunya oyuncunun bulundugu dunya", select.get("_world"), 0)
@@ -1177,6 +1181,8 @@ func _test_level_select() -> void:
 
 	var unlocked := grid.get_node("Level20") as Button
 	_check("bolum 20 acik", unlocked.disabled, false)
+	_check("bolum dugmesi dokunmatik kaydirmayi ust kapsayiciya geciriyor",
+		unlocked.mouse_filter, Control.MOUSE_FILTER_PASS)
 	_check("acik butonda kilit isareti yok", unlocked.has_node("LockMark"), false)
 	_check("acik butonda yildiz satiri var", unlocked.has_node("Stars"), true)
 	_check("buton dunyasinin rengini tasir",
@@ -1767,7 +1773,7 @@ func _test_library_bounds() -> void:
 
 	# 126-150 LAZER BANDI: yalnizca 126 okunakli tanitimdir. Lazer her bolumde
 	# kalir; cark, halka, mayin, duvar boslugu ve bloklar yeniden kullanilir.
-	var laser_block_levels := [130, 133, 136, 139, 142, 145, 148, 150]
+	var laser_block_levels := [130, 133, 136, 139, 142, 145, 148, 149]
 	for id in range(126, 151):
 		var level := LevelLibrary.load_level(id)
 		_check("bolum %d yukleniyor" % id, level.level_id, id)

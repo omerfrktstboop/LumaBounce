@@ -331,6 +331,11 @@ func _make_level_button(level_id: int) -> LumaButton:
 	button.corner_radius = 28
 	button.content_margin = Vector2(10.0, 10.0)
 	button.focus_mode = Control.FOCUS_NONE
+	# Mobilde dikey kaydirma bir bolum dugmesinin uzerinde baslayabilmeli.
+	# PASS, dugmenin normal dokunusunu korurken olayi GridScroll'a da tasir;
+	# _on_level_pressed asagidaki scroll guard ile kaydirma sonu yanlis acilisi
+	# engeller.
+	button.mouse_filter = Control.MOUSE_FILTER_PASS
 	button.disabled = not unlocked
 	button.accent_override = accent
 	button.surface_override = LevelWorlds.theme_for_index(_world).SURFACE

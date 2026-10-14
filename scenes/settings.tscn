@@ -75,6 +75,7 @@ layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 3
+scroll_deadzone = 16
 
 [node name="Rows" type="VBoxContainer" parent="SafeArea/Content/Scroll"]
 layout_mode = 2

@@ -25,6 +25,9 @@ extends Control
 ## tercihlerini silmez.
 
 signal menu_requested()
+signal tutorial_requested()
+signal rate_requested()
+signal feedback_requested()
 ## Dil degisti - AppRoot'un acik olan diger ekranlari (ana menu) yeniden
 ## kurmasi icin. Ekran kendi basina baska bir ekrani tazeleyemez.
 signal language_changed(code: String)
@@ -44,7 +47,12 @@ const SHAKE_CHOICES := [
 
 const ROW_HEIGHT := 76.0
 
+## Bir kaydirma hareketi dugmenin uzerinde bittiginde Button ayni release'i
+## tiklama sanmasin. LevelSelect ile ayni kisa koruma araligini kullanir.
+@export var scroll_guard_msec := 220
+
 @onready var _rows: VBoxContainer = $SafeArea/Content/Scroll/Rows
+@onready var _scroll: ScrollContainer = $SafeArea/Content/Scroll
 @onready var _back_button: Button = $SafeArea/Content/BackButton
 @onready var _header_back_button: Button = $SafeArea/Content/Header/HeaderBackButton
 @onready var _confirm_layer: Control = $ConfirmLayer
@@ -54,6 +62,9 @@ const ROW_HEIGHT := 76.0
 ## _rebuild() sirasinda "su an hangi kartin icine ekleniyoruz" durumu.
 ## _begin_card() acar, satir eklemeleri buraya gider.
 var _current_card_body: VBoxContainer
+var _link_status: Label
+var _link_status_tween: Tween
+var _last_scroll_msec := -100000
 
 
 func _ready() -> void:
@@ -63,6 +74,7 @@ func _ready() -> void:
 	_header_back_button.pressed.connect(menu_requested.emit)
 	_confirm_button.pressed.connect(_on_reset_confirmed)
 	_cancel_button.pressed.connect(_hide_confirm)
+	_scroll.get_v_scroll_bar().value_changed.connect(_on_scrolled)
 	if ad_service != null:
 		ad_service.privacy_options_availability_changed.connect(
 			_on_privacy_options_availability_changed)
@@ -91,9 +103,18 @@ func _rebuild() -> void:
 	_add_choice_row("Ekran sarsıntısı", _shake_labels(), _shake_index(), _on_shake_chosen)
 	_add_toggle_row("Nişan yardımı", progress.aim_assist, _on_aim_assist_toggled,
 		"Nişan izi uzun bölümlerde de tam görünür")
+	_add_action_row(tr("HOW_TO_PLAY"), tutorial_requested.emit, GlyphIcon.Glyph.INFO,
+		64.0, "TutorialReplayIcon")
 	_add_divider()
 	_add_action_row("İlerlemeyi sıfırla", _show_confirm, GlyphIcon.Glyph.RESTART,
 		64.0, "ProgressResetIcon")
+
+	_begin_card(tr("SUPPORT"))
+	_add_action_row(tr("RATE_GAME"), rate_requested.emit, GlyphIcon.Glyph.CHECK,
+		64.0, "RateGameIcon")
+	_add_action_row(tr("SEND_FEEDBACK"), feedback_requested.emit, GlyphIcon.Glyph.INFO,
+		64.0, "SendFeedbackIcon")
+	_add_link_status()
 
 	# Gizlilik politikasi HER ZAMAN gorunur ve reklam SDK'sindan BAGIMSIZDIR:
 	# magaza yayin sarti, reklamlari kaldiran oyuncu icin de gecerli. Gizlilik
@@ -107,6 +128,32 @@ func _rebuild() -> void:
 			GlyphIcon.Glyph.LOCK)
 
 	_add_info_row(GameVersion.describe())
+
+
+func _add_link_status() -> void:
+	_link_status = Label.new()
+	_link_status.name = "ExternalLinkStatus"
+	_link_status.visible = false
+	_link_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_link_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_link_status.add_theme_font_size_override("font_size", UIMetrics.FONT_SUPPORTING)
+	_link_status.add_theme_color_override("font_color", Palette.HAZARD_CORE)
+	_link_status.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_current_card_body.add_child(_link_status)
+
+
+func show_external_link_error() -> void:
+	if _link_status == null or not is_instance_valid(_link_status):
+		return
+	if _link_status_tween != null and _link_status_tween.is_valid():
+		_link_status_tween.kill()
+	_link_status.text = tr("EXTERNAL_LINK_FAILED")
+	_link_status.modulate.a = 1.0
+	_link_status.show()
+	_link_status_tween = create_tween()
+	_link_status_tween.tween_interval(3.5)
+	_link_status_tween.tween_property(_link_status, "modulate:a", 0.0, 0.35)
+	_link_status_tween.tween_callback(_link_status.hide)
 
 
 ## Yeni bir kart PANELI acar; sonraki _add_*_row cagrilari bu kartin
@@ -185,7 +232,11 @@ func _add_toggle_row(label_text: String, value: bool, handler: Callable,
 		hint := "") -> void:
 	var toggle := ToggleSwitch.new()
 	toggle.value = value
+	_enable_parent_touch_scroll(toggle)
 	toggle.value_changed.connect(func(new_value: bool) -> void:
+		if _scroll_guard_active():
+			_rebuild()
+			return
 		handler.call(new_value)
 		_rebuild())
 	_add_row(label_text, toggle, hint)
@@ -198,6 +249,7 @@ func _add_dropdown_row(label_text: String, labels: Array, selected: int,
 	var dropdown := LumaDropdown.new()
 	dropdown.name = "LanguageDropdown"
 	dropdown.setup(labels, selected)
+	_enable_parent_touch_scroll(dropdown)
 	dropdown.item_selected.connect(func(index: int) -> void:
 		handler.call(index)
 		_rebuild())
@@ -211,7 +263,11 @@ func _add_choice_row(label_text: String, labels: Array, selected: int,
 		handler: Callable, hint := "") -> void:
 	var control := SegmentedControl.new()
 	control.setup(labels, selected)
+	_enable_parent_touch_scroll(control)
 	control.value_changed.connect(func(index: int) -> void:
+		if _scroll_guard_active():
+			_rebuild()
+			return
 		handler.call(index)
 		_rebuild())
 	_add_row(label_text, control, hint)
@@ -255,10 +311,14 @@ func _add_action_row(label_text: String, handler: Callable,
 	row.text = ""
 	row.focus_mode = Control.FOCUS_NONE
 	row.custom_minimum_size = Vector2(0.0, ROW_HEIGHT)
+	_enable_parent_touch_scroll(row)
 	var empty := StyleBoxEmpty.new()
 	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
 		row.add_theme_stylebox_override(state, empty)
-	row.pressed.connect(handler)
+	row.pressed.connect(func() -> void:
+		if _scroll_guard_active():
+			return
+		handler.call())
 
 	var line := HBoxContainer.new()
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -293,6 +353,25 @@ func _add_action_row(label_text: String, handler: Callable,
 	line.add_child(chevron)
 
 	_current_card_body.add_child(row)
+
+
+## ScrollContainer, STOP kullanan bir alt kontrolden baslayan dokunmatik
+## suruklemeyi goremez. Ayar dugmelerini PASS yapmak hem normal tiklamayi
+## korur hem de dikey hareketi ustteki ScrollContainer'a ulastirir.
+func _enable_parent_touch_scroll(control: Control) -> void:
+	control.mouse_filter = Control.MOUSE_FILTER_PASS
+	for child in control.get_children():
+		var child_control := child as Control
+		if child_control != null:
+			_enable_parent_touch_scroll(child_control)
+
+
+func _on_scrolled(_value: float) -> void:
+	_last_scroll_msec = Time.get_ticks_msec()
+
+
+func _scroll_guard_active() -> bool:
+	return Time.get_ticks_msec() - _last_scroll_msec < scroll_guard_msec
 
 
 ## Surum satiri kendi kucuk, basliksiz kartinda durur (diger kartlar gibi bir

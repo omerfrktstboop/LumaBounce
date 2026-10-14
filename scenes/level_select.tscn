@@ -114,6 +114,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 horizontal_scroll_mode = 0
+scroll_deadzone = 16
 
 [node name="GridHolder" type="CenterContainer" parent="SafeArea/Content/PageClip/GridScroll"]
 layout_mode = 2

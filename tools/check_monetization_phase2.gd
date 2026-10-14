@@ -45,6 +45,20 @@ func _test_config_and_analytics_contract() -> void:
 		== LumaAdmobConfig.TEST_REWARDED, "debug full hint uses Google rewarded test unit")
 	_check(LumaAdmobConfig.interstitial_unit_id() == LumaAdmobConfig.TEST_INTERSTITIAL,
 		"debug interstitial uses Google test unit")
+	var admob_config_source := FileAccess.get_file_as_string(
+		"res://scripts/monetization/luma_admob_config.gd")
+	_check(admob_config_source.contains(
+		'return OS.has_feature("production") and not OS.is_debug_build()'),
+		"live ads require production and a non-debug build")
+	_check(admob_config_source.contains("LIVE_ANDROID_APP_ID")
+		and admob_config_source.contains("LIVE_REWARDED")
+		and admob_config_source.contains("LIVE_INTERSTITIAL"),
+		"release AdMob IDs are configured separately from demo IDs")
+	var provider_source := FileAccess.get_file_as_string(
+		"res://scripts/monetization/providers/admob_ad_provider.gd")
+	_check(provider_source.contains("android_debug_application_id = LumaAdmobConfig.TEST_ANDROID_APP_ID")
+		and provider_source.contains("android_real_application_id = LumaAdmobConfig.LIVE_ANDROID_APP_ID"),
+		"provider keeps debug and release application IDs separate")
 	var analytics := AnalyticsService.new(false, true)
 	_check(analytics.track_event(AnalyticsService.INTERSTITIAL_SHOWN, {
 		"context": MonetizationConfig.CONTEXT_LEVEL_COMPLETE,

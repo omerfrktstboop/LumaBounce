@@ -48,6 +48,7 @@ var _analytics: AnalyticsService
 var _ad_policy: AdPolicy
 var _ad_service: AdService
 var _purchase_service: PurchaseService
+var _review_service: ReviewService
 var _daily_store: DailyStore
 var _achievement_store: AchievementStore
 ## Bu iki kaynak ana sahnenin bagimliligi degildir. Yalnizca debug template
@@ -84,6 +85,7 @@ func _ready() -> void:
 	_daily_store = DailyStore.load_from_disk()
 	_achievement_store = AchievementStore.load_from_disk()
 	_setup_monetization()
+	_setup_engagement()
 	_apply_achievement_unlocks(_achievement_store.sync_campaign(_progress), null)
 	# Titresim tercihi tek okuma noktasina (Haptics) aktarilir; boylece
 	# cagiranlarin ProgressStore'a erisimi olmasi gerekmez (bkz. haptics.gd).
@@ -194,6 +196,30 @@ func go_to_settings() -> void:
 	await _transition(settings_scene, _configure_settings)
 
 
+func go_to_tutorial() -> void:
+	_active_daily_challenge = false
+	await _transition(gameplay_scene, _configure_tutorial, LevelLibrary.FIRST_LEVEL_ID)
+
+
+func _configure_tutorial(screen: Node) -> void:
+	var gameplay := screen as Gameplay
+	if gameplay == null:
+		return
+	gameplay.level_data = LevelLibrary.load_level(LevelLibrary.FIRST_LEVEL_ID)
+	gameplay.progress = _progress
+	gameplay.practice_mode = true
+	gameplay.tutorial_replay = true
+	gameplay.aim_assist = true
+
+
+func _on_first_shot_tutorial_finished(_skipped: bool, gameplay: Gameplay) -> void:
+	if gameplay.tutorial_replay:
+		# Defer until the current launcher/target signal has finished dispatching.
+		go_to_settings.call_deferred()
+	else:
+		_progress.finish_first_shot_tutorial()
+
+
 func go_to_retention() -> void:
 	_active_daily_challenge = false
 	await _transition(retention_scene, _configure_retention)
@@ -301,6 +327,9 @@ func _connect_screen(screen: Node) -> void:
 	var settings := screen as SettingsScreen
 	if settings != null:
 		settings.menu_requested.connect(go_to_main_menu)
+		settings.tutorial_requested.connect(go_to_tutorial)
+		settings.rate_requested.connect(_on_rate_requested)
+		settings.feedback_requested.connect(_on_feedback_requested)
 		return
 
 	var retention := screen as RetentionScreen
@@ -317,6 +346,8 @@ func _connect_screen(screen: Node) -> void:
 
 	var gameplay := screen as Gameplay
 	if gameplay != null:
+		gameplay.first_shot_tutorial_finished.connect(
+			_on_first_shot_tutorial_finished.bind(gameplay))
 		gameplay.level_completed.connect(_on_level_completed)
 		gameplay.next_level_requested.connect(_on_next_level_requested)
 		gameplay.level_select_requested.connect(_on_gameplay_level_select_requested)
@@ -475,6 +506,36 @@ func _setup_monetization() -> void:
 	_purchase_service.initialize()
 
 
+func _setup_engagement() -> void:
+	_review_service = ReviewService.new()
+	_review_service.name = "ReviewService"
+	var provider: ReviewProvider = NoOpReviewProvider.new()
+	if OS.get_name() == "Android" and Engine.has_singleton(
+			AndroidReviewProvider.PLUGIN_SINGLETON_NAME):
+		provider = AndroidReviewProvider.new()
+	_review_service.configure(provider, _progress)
+	add_child(_review_service)
+	_review_service.initialize()
+	_review_service.record_session()
+
+
+func _on_rate_requested() -> void:
+	if not EngagementLinks.open_store_page():
+		_show_settings_link_error()
+
+
+func _on_feedback_requested() -> void:
+	var level_id := _progress.get_resume_level_id() if _progress != null else 0
+	if not EngagementLinks.open_feedback_draft(level_id):
+		_show_settings_link_error()
+
+
+func _show_settings_link_error() -> void:
+	var settings := _current as SettingsScreen
+	if settings != null:
+		settings.show_external_link_error()
+
+
 ## Oynanisin arkasindaki "derin uzay" katmani temanin murekkep rengini takip
 ## eder, boylece bant degisimi yalnizca vurgu renginde degil ZEMINDE de
 ## gorunur - tema degisiminin fark edilmesini saglayan asil sey budur.
@@ -498,6 +559,8 @@ func _apply_background_theme() -> void:
 ## oyun devam eder. Gercek SDK adapteri bu fonksiyonun disina sizmaz.
 func _on_full_hint_requested(gameplay: Gameplay) -> void:
 	if gameplay == null or not is_instance_valid(gameplay):
+		return
+	if gameplay.is_first_shot_tutorial_active() or gameplay.tutorial_replay:
 		return
 	if _ad_service == null:
 		return
@@ -556,13 +619,18 @@ func _on_level_completed(level_id: int, stars: int, seconds: float,
 
 
 func _on_next_level_requested(level_id: int) -> void:
+	var gameplay := _current as Gameplay
+	if gameplay != null and gameplay.suppress_engagement_prompts():
+		go_to_level(level_id)
+		return
 	if _active_daily_challenge:
 		go_to_retention()
 		return
 	if _completion_ad_in_progress:
 		return
 	_completion_ad_in_progress = true
-	if _ad_service != null:
+	var review_attempted := await _request_review_if_eligible(gameplay)
+	if not review_attempted and _ad_service != null:
 		await _ad_service.request_interstitial(
 			MonetizationConfig.CONTEXT_LEVEL_COMPLETE)
 	_completion_ad_in_progress = false
@@ -582,6 +650,9 @@ func _completed_normal_level_count() -> int:
 ## geciste denenir; provider hazir degilse oyun akisi bekletilmez.
 func _on_level_failed(level_id: int, reason: String, shots: int,
 		active_seconds: float) -> void:
+	var gameplay := _current as Gameplay
+	if gameplay != null and gameplay.suppress_engagement_prompts():
+		return
 	if _editor_level != null:
 		return
 	_analytics.track_event(AnalyticsService.LEVEL_FAIL, {
@@ -670,6 +741,8 @@ func _claim_quest_reward(gameplay: Gameplay) -> void:
 
 
 func _on_bounce_recorded(gameplay: Gameplay) -> void:
+	if gameplay.tutorial_replay:
+		return
 	if _editor_level != null:
 		return
 	if _progress.is_completed(DailyStore.QUESTS_UNLOCK_LEVEL):
@@ -737,6 +810,10 @@ func _on_block_mechanic_seen() -> void:
 
 
 func _on_gameplay_menu_requested() -> void:
+	var gameplay := _current as Gameplay
+	if gameplay != null and gameplay.tutorial_replay:
+		go_to_settings()
+		return
 	if _editor_level != null:
 		go_to_editor(_editor_level, _editor_source_level_id)
 		return
@@ -748,6 +825,10 @@ func _on_gameplay_menu_requested() -> void:
 
 
 func _on_gameplay_level_select_requested() -> void:
+	var gameplay := _current as Gameplay
+	if gameplay != null and gameplay.tutorial_replay:
+		go_to_settings()
+		return
 	if _active_daily_challenge:
 		go_to_retention()
 		return
@@ -759,13 +840,27 @@ func _show_completion_interstitial_if_needed() -> void:
 	var gameplay := _current as Gameplay
 	if gameplay == null or not gameplay.has_completed_result():
 		return
+	if gameplay.suppress_engagement_prompts():
+		return
 	if _completion_ad_in_progress:
 		return
 	_completion_ad_in_progress = true
-	if _ad_service != null:
+	var review_attempted := await _request_review_if_eligible(gameplay)
+	if not review_attempted and _ad_service != null:
 		await _ad_service.request_interstitial(
 			MonetizationConfig.CONTEXT_LEVEL_COMPLETE)
 	_completion_ad_in_progress = false
+
+
+func _request_review_if_eligible(gameplay: Gameplay) -> bool:
+	if gameplay == null or not gameplay.has_completed_result():
+		return false
+	if gameplay.suppress_engagement_prompts() or _review_service == null:
+		return false
+	var blocked := (_purchase_service != null and _purchase_service.is_busy()) \
+		or (_ad_service != null and _ad_service.has_active_fullscreen_flow())
+	var result := int(await _review_service.request_if_eligible(blocked))
+	return result == ReviewService.Result.ATTEMPTED
 
 
 # --- Bolum editoru (yalnizca debug) -------------------------------------------
