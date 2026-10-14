@@ -231,3 +231,21 @@ level resources to clear the recorded 37/3 baseline failures.
   remains `07:88:66:AD:6E:C0:1B:FA:D6:E2:7E:67:49:EF:1F:F8:6A:5E:F7:B7:8B:2A:A5:70:B0:1E:BE:1C:20:06:0C:C9`.
 - Release content scan found no `mcp_out`, debug panel, level editor or MCP toolkit
   entries. No Play Store upload was performed.
+
+## Version 11 builds (PRİZMA world, 200 levels)
+- 2026-10-14, branch `feat/world4-portal`. Adds the portal mechanic and levels
+  151-200 (commits `34effa7`, `ab420cf`). Both presets are at `versionCode=11`;
+  display version remains 1.0.0, `GameVersion.CONTENT=2`.
+- Signed release: `builds/lumabounce-release-v11.aab` (34,528,625 bytes), SHA-256
+  `34B23D010F47BA1ADCB8187E5C25E59FCBB07A11E23978EC6581B40F47637F7F`.
+  Bundletool validate and `jarsigner -verify` pass; manifest is
+  `com.ofsgames.lumabounce`, versionCode 11, minSdk 24, targetSdk 36, real AdMob
+  app ID, AdmobPlugin/GodotGooglePlayBilling/LumaReviewPlugin v2 metadata. Signer
+  SHA-256 unchanged (`07:88:...:0C:C9`). Contains all 50 new level resources and
+  `portal.wav`; no dev-only entries.
+- Debug: `builds/lumabounce-debug-v11.apk` (90,401,582 bytes), SHA-256
+  `A0D856DF2B5DEB5ECB4A973914AFE3EC3CF1F7532A4E89FCD15EB3039F3B1D37`. APK
+  Signature Scheme v2, `zipalign -c -P 16 4` passes, Google demo AdMob app ID.
+- Not done: physical-device test of v11 and Play upload.
+- Executable bundletool lives at `scratchpad/bundletool-all-1.18.3.jar`; the
+  Gradle-cache bundletool jars are libraries without a main class.
