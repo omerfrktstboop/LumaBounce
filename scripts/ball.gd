@@ -19,6 +19,10 @@ signal bounced(bounce_position: Vector2, normal: Vector2, impact_speed: float)
 signal surface_touched(collider: Object, at: Vector2, normal: Vector2)
 ## Atis basarisiz bitti: "out_of_bounds" veya "settled".
 signal shot_failed(reason: String)
+## Top bir portal girisine dalip cikisindan cikti. Yalnizca geri bildirim
+## icindir (efekt, ses, titresim); kararlari gameplay.gd verir.
+## [param spent] true ise bu atisin isinlanma hakki bitti.
+signal teleported(from_position: Vector2, to_position: Vector2, spent: bool)
 
 enum State {
 	READY,   ## Firlaticida bekliyor.
@@ -91,6 +95,9 @@ enum State {
 
 ## Oyun alani; gameplay.gd tarafindan atanir. Bos birakilirsa viewport kullanilir.
 var play_bounds := Rect2()
+## Bolumun portal ciftleri; gameplay.gd atar. Yalnizca VERIDIR - isinlanma
+## LevelSolver ile ayni fonksiyonla hesaplanir (ObstacleData.first_portal_entry).
+var portals: Array[ObstacleData] = []
 
 var state: State = State.READY
 
@@ -100,6 +107,7 @@ var state: State = State.READY
 
 var _shell: Node2D
 var _settle_timer := 0.0
+var _teleports_this_shot := 0
 var _squash_tween: Tween
 var _trail_tween: Tween
 ## Yumusatilmis hiz orani (0..1). Ham hiz her sekmede aniden degistigi icin
@@ -131,6 +139,7 @@ func reset_to(spawn_position: Vector2) -> void:
 	velocity = Vector2.ZERO
 	global_position = spawn_position
 	_settle_timer = 0.0
+	_teleports_this_shot = 0
 	_stop_squash()
 	reset_launcher_tension()
 	_clear_trail()
@@ -157,6 +166,7 @@ func launch(impulse: Vector2) -> void:
 	velocity = impulse.limit_length(max_speed)
 	state = State.FLYING
 	_settle_timer = 0.0
+	_teleports_this_shot = 0
 	_clear_trail()
 	set_physics_process(true)
 
@@ -220,7 +230,12 @@ func _physics_process(delta: float) -> void:
 func _move_and_bounce(delta: float) -> void:
 	var motion := velocity * delta
 	for _step in max_bounces_per_step:
+		var segment_start := global_position
 		var collision := move_and_collide(motion)
+		# Portal, bu parcadaki carpismadan ONCE gelir: top portala dalmissa
+		# parcanin sonundaki temas hic yasanmamistir (LevelSolver ayni sira).
+		if _try_teleport(segment_start, global_position):
+			return
 		if collision == null:
 			return
 		var normal := collision.get_normal()
@@ -239,6 +254,28 @@ func _move_and_bounce(delta: float) -> void:
 		if impact_speed >= min_impact_for_feedback:
 			bounced.emit(collision.get_position(), normal, impact_speed)
 			_play_squash(normal)
+
+
+## Hareket parcasi bir portal girisine daldiysa topu cikisin merkezine
+## tasir ve hizi cikisin donusune gore cevirir (buyukluk korunur). Karenin
+## kalan hareketi bu karede uygulanmaz - LevelSolver da ayni sekilde keser.
+func _try_teleport(from: Vector2, to: Vector2) -> bool:
+	if portals.is_empty() \
+			or _teleports_this_shot >= ObstacleData.PORTAL_MAX_TELEPORTS_PER_SHOT:
+		return false
+	var entry := ObstacleData.first_portal_entry(portals, from, to)
+	if entry.is_empty():
+		return false
+	var portal := portals[int(entry["index"])]
+	var entry_point := from.lerp(to, float(entry["fraction"]))
+	_teleports_this_shot += 1
+	global_position = portal.exit_position
+	velocity = portal.portal_exit_velocity(velocity)
+	# Iz kopar: yoksa Line2D girisle cikis arasinda ekrani boydan boya cizerdi.
+	_clear_trail()
+	teleported.emit(entry_point, portal.exit_position,
+		_teleports_this_shot >= ObstacleData.PORTAL_MAX_TELEPORTS_PER_SHOT)
+	return true
 
 
 ## Yuzeyden yeterince ayrilmayi garanti eder; titreyip yapismayi onler.

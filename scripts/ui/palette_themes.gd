@@ -63,6 +63,32 @@ static func theme_c() -> PaletteTheme:
 	return t
 
 
+## 151-200 (PRİZMA): limon yesili vurgu, NOTR GRAFIT zemin.
+##
+## Onceki uc dunyanin vurgulari (camgobegi, turuncu, mor) ve dunyadan bagimsiz
+## HAZARD (pembe-kirmizi) / COIN (altin) disinda kalan tek guclu ton limondur.
+## Bu bandin portallari camgobegi giris / turuncu cikis kullanir; vurgu bu
+## ikisinden biri olsaydi top ve hedef portallarla karisirdi. Zemin bilerek
+## renksizdir ki portal renkleri ve limon vurgu ayni ekranda yarismasin.
+## Ikincil vurgu varsayilan menekse: "isabet" her dunyada ayni okunur.
+static func theme_d() -> PaletteTheme:
+	var t := PaletteTheme.new()
+	t.INK_TOP = Color("15191f")
+	t.INK_MID = Color("1a2027")
+	t.INK_BOTTOM = Color("1f262e")
+	t.SURFACE = Color("2a333d")
+	t.SURFACE_EDGE = Color("3a4652")
+	t.SURFACE_LIGHT = Color("52606e")
+	t.FRAME = Color("323c47")
+	t.SURFACE_PANEL = Color("434e5a")
+	t.ACCENT = Color("b8f05a")
+	t.ACCENT_DIM = Color("7fb22e")
+	t.ACCENT_CORE = Color("f5ffe6")
+	t.ACCENT_ALT = Color("c07dff")
+	t.ACCENT_ALT_CORE = Color("f6ecff")
+	return t
+
+
 ## Bant sinirlari BURADA DEGIL, LevelWorlds'te tanimlidir. Sebep: ayni sinirlar
 ## bolum secim ekranindaki sayfalari da belirliyor ve ikisi ayni olmak zorunda -
 ## oyuncu 51. bolume gectiginde hem oyunun rengi degismeli hem de listede yeni

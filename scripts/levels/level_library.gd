@@ -22,19 +22,21 @@ const PATH_FORMAT := "res://levels/level_%02d.tres"
 ## kendi kilidini acmaya katkida bulunamaz.
 ##
 ## Kapilar her DUNYA GECISINDE durur: 21 (ilk bandin ortasi - oyuncuyu geri
-## donup yildiz toplamaya alistiran giris kapisi), sonra 51 ve 101, yani yeni
-## bir dunyaya ve yeni bir mekanik grubuna gecerken.
+## donup yildiz toplamaya alistiran giris kapisi), sonra 51, 101 ve 151, yani
+## yeni bir dunyaya ve yeni bir mekanik grubuna gecerken.
 ##
 ## Esikler ayni ORANDADIR: onundeki bolumlerin toplam yildizinin ucte ikisi.
 ##   21  -> 1-20'den   40 / 60
 ##   51  -> 1-50'den  100 / 150
 ##   101 -> 1-100'den 200 / 300
+##   151 -> 1-150'den 300 / 450
 ## Oran sabit tutuldu ki bant uzadikca kapinin zorlugu kaymasin.
 const LEVEL_21_REQUIRED_STARS := 40
 const STAR_GATES := {
 	21: LEVEL_21_REQUIRED_STARS,
 	51: 100,
 	101: 200,
+	151: 300,
 }
 
 

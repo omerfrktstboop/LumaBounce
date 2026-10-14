@@ -21,11 +21,15 @@ var _nodes: Array[LevelObstacle] = []
 
 func build(obstacles: Array[ObstacleData]) -> void:
 	clear()
+	var portal_pairs := 0
 	for data in obstacles:
 		if data == null:
 			continue
 		var obstacle := LevelObstacle.new()
 		obstacle.setup(data, preview_only)
+		if data.kind == ObstacleData.Kind.PORTAL:
+			obstacle.portal_pair = portal_pairs
+			portal_pairs += 1
 		obstacle.hazard_triggered.connect(hazard_triggered.emit)
 		add_child(obstacle)
 		_nodes.append(obstacle)
@@ -65,6 +69,13 @@ func get_motion_time() -> float:
 	return 0.0
 
 
+## Atisin isinlanma hakki bittiginde (veya yeni atista) tum portallar.
+func set_portals_spent(spent: bool) -> void:
+	for obstacle in _nodes:
+		if is_instance_valid(obstacle):
+			obstacle.set_portal_spent(spent)
+
+
 func get_obstacle_node(index: int) -> LevelObstacle:
 	return _nodes[index] if index >= 0 and index < _nodes.size() else null
 
@@ -73,6 +84,12 @@ func set_obstacle_position(index: int, value: Vector2) -> void:
 	var obstacle := get_obstacle_node(index)
 	if obstacle != null:
 		obstacle.set_data_position(value)
+
+
+func set_portal_exit(index: int, value: Vector2) -> void:
+	var obstacle := get_obstacle_node(index)
+	if obstacle != null:
+		obstacle.set_portal_exit(value)
 
 
 ## LevelSolver hareketli/tehlikeli engelleri ObstacleData'dan kendi zaman

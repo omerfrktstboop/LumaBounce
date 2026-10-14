@@ -68,6 +68,7 @@ func _run() -> void:
 	_test_level_worlds()
 	_test_star_gate()
 	_test_save_schema_and_migration()
+	_test_unlock_after_campaign_growth()
 	_test_locale()
 	_test_translation_coverage()
 	await _test_settings_screen()
@@ -1236,20 +1237,38 @@ func _test_level_select() -> void:
 func _test_level_worlds() -> void:
 	print("")
 	print("--- Bolum dunyalari ---")
-	_check("uc dunya", LevelWorlds.count(), 3)
+	# 151-200 icerigi parca parca eklenir: PRİZMA ancak ilk bolumu geldiginde
+	# sayilir, bu yuzden beklenti LEVEL_COUNT'a gore kurulur.
+	var has_prism := LevelLibrary.LEVEL_COUNT >= 151
+	_check("dunya sayisi icerige gore", LevelWorlds.count(), 4 if has_prism else 3)
 	_check("1. dunya 1'de baslar", LevelWorlds.first_level(0), 1)
 	_check("1. dunya 50'de biter", LevelWorlds.last_level(0), 50)
 	_check("2. dunya 51'de baslar", LevelWorlds.first_level(1), 51)
 	_check("2. dunya 100'de biter", LevelWorlds.last_level(1), 100)
 	_check("3. dunya 101'de baslar", LevelWorlds.first_level(2), 101)
-	_check("son dunya 150'de biter", LevelWorlds.last_level(2), 150)
-	_check("dunya bolum sayilari toplami 150",
-		LevelWorlds.level_count(0) + LevelWorlds.level_count(1) + LevelWorlds.level_count(2),
-		LevelLibrary.LEVEL_COUNT)
-	_check("bonus bolum yok",
-		LevelWorlds.bonus_ids(0).size() + LevelWorlds.bonus_ids(1).size()
-			+ LevelWorlds.bonus_ids(2).size(), 0)
-	_check("151 gecersiz", LevelLibrary.is_valid_id(151), false)
+	_check("3. dunya 150'de biter", LevelWorlds.last_level(2), 150)
+	_check("3. dunyanin adi ZAMAN", LevelWorlds.WORLDS[2]["name"], "ZAMAN")
+	_check("4. dunya PRİZMA 151'de baslar",
+		[LevelWorlds.WORLDS[3]["name"], LevelWorlds.WORLDS[3]["first"]], ["PRİZMA", 151])
+	var world_total := 0
+	var bonus_total := 0
+	for i in LevelWorlds.count():
+		world_total += LevelWorlds.level_count(i)
+		bonus_total += LevelWorlds.bonus_ids(i).size()
+	_check("dunya bolum sayilari toplami LEVEL_COUNT", world_total, LevelLibrary.LEVEL_COUNT)
+	_check("bonus bolum yok", bonus_total, 0)
+	_check("bonus numarasi kampanyanin ardinda",
+		LevelWorlds.FIRST_BONUS_ID > LevelLibrary.last_level_id(), true)
+	_check("son bolumden sonrasi gecersiz",
+		LevelLibrary.is_valid_id(LevelLibrary.last_level_id() + 1), false)
+	if has_prism:
+		_check("bolum 151 -> dunya 3", LevelWorlds.index_for_level(151), 3)
+		_check("PRİZMA son bolume kadar uzanir", LevelWorlds.last_level(3),
+			LevelLibrary.last_level_id())
+		_check("150 ve 151 farkli tema",
+			PaletteThemes.for_level(150).ACCENT != PaletteThemes.for_level(151).ACCENT, true)
+	else:
+		_check("icerigi olmayan PRİZMA sekme olarak sayilmaz", LevelWorlds.count(), 3)
 
 	_check("bolum 1 -> dunya 0", LevelWorlds.index_for_level(1), 0)
 	_check("bolum 50 -> dunya 0", LevelWorlds.index_for_level(50), 0)
@@ -1258,6 +1277,16 @@ func _test_level_worlds() -> void:
 	_check("bolum 101 -> dunya 2", LevelWorlds.index_for_level(101), 2)
 	_check("bolum 125 -> dunya 2", LevelWorlds.index_for_level(125), 2)
 	_check("bolum 150 -> dunya 2", LevelWorlds.index_for_level(150), 2)
+
+	# PRİZMA vurgusu onceki dunyalarla ve dunyadan bagimsiz tehlike/para
+	# renkleriyle karismamali.
+	var prism := PaletteThemes.theme_d().ACCENT
+	var taken := [PaletteThemes.theme_a().ACCENT, PaletteThemes.theme_b().ACCENT,
+		PaletteThemes.theme_c().ACCENT, Palette.HAZARD, Palette.COIN]
+	_check("PRİZMA vurgusu ayirt edilebilir", taken.has(prism), false)
+	_check("PRİZMA tehlike/para renklerini ezmiyor",
+		[PaletteThemes.theme_d().HAZARD, PaletteThemes.theme_d().COIN],
+		[PaletteTheme.new().HAZARD, PaletteTheme.new().COIN])
 
 	# Tema ile dunya AYNI kaynaktan gelmeli.
 	_check("50 ve 51 farkli tema",
@@ -1325,6 +1354,37 @@ func _test_star_gate() -> void:
 	_check("kayitli deger korunuyor", record.get_level_stars(21), 2)
 	_check("daha iyi sonuc kaydediliyor", record.set_level_stars_if_higher(21, 3), true)
 	_check("yeni rekor yaziliyor", record.get_level_stars(21), 3)
+
+	# Her dunya gecisindeki kapi ayni oranda: onundeki yildizlarin ucte ikisi.
+	for gate in [51, 101, 151]:
+		_check("%d kapisi onundeki yildizlarin 2/3'u" % gate,
+			LevelLibrary.required_stars_for(gate),
+			int(round((gate - 1) * LevelData.NORMAL_MAX_STARS * 2.0 / 3.0)))
+
+
+## Kampanya uzayinca eski son bolumu bitirmis oyuncu kilitli kalmamali. Eski
+## kodda son bolumu bitirmek highest'i ilerletmiyordu (has_next false), yani
+## kayitta "highest = son bolum" kaliyordu; uzama sonrasi bunu taklit ederiz.
+func _test_unlock_after_campaign_growth() -> void:
+	print("")
+	print("--- Kampanya uzayinca kilit ---")
+	_delete_save_files()
+	var stale := ConfigFile.new()
+	stale.set_value(ProgressStore.SECTION_META, ProgressStore.KEY_SCHEMA_VERSION,
+		GameVersion.SAVE_SCHEMA)
+	stale.set_value("progress", ProgressStore.KEY_HIGHEST, 10)
+	var uids := PackedStringArray()
+	for id in range(1, 11):
+		uids.append(LevelData.uid_for(id))
+	stale.set_value("progress", ProgressStore.KEY_COMPLETED_UIDS, uids)
+	stale.save(ProgressStore.SAVE_PATH)
+
+	var loaded := ProgressStore.load_from_disk()
+	_check("tamamlanan son bolumun ardindaki acildi", loaded.highest_unlocked_level, 11)
+	_check("11 oynanabilir", loaded.is_unlocked(11), true)
+	_check("12 hala kilitli", loaded.is_unlocked(12), false)
+	_delete_save_files()
+	_check("yeni oyuncu yine yalnizca 1'de", ProgressStore.load_from_disk().highest_unlocked_level, 1)
 
 
 ## Dil secimi: normalizasyon, cihaz dili ve "henuz secilmedi" ayrimi.

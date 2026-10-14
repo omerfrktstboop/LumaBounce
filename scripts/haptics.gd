@@ -20,6 +20,9 @@ extends RefCounted
 const HIT_TARGET_MSEC := 90
 const HIT_HAZARD_MSEC := 34
 const HIT_BLOCK_MSEC := 12
+## Portaldan gecis: sekmeden belirgin, tehlikeden kisa - "bir sey oldu ama
+## kotu degil".
+const PORTAL_MSEC := 18
 ## Sekme darbesi carpma siddetine gore bu araliga olceklenir (bkz. bounce()).
 const BOUNCE_MIN_MSEC := 6
 const BOUNCE_MAX_MSEC := 26

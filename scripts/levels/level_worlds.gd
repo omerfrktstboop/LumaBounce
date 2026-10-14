@@ -14,24 +14,36 @@ extends RefCounted
 ## dunyaya girer ve burada hicbir sey degistirmek gerekmez.
 
 ## Her girisin ilk bolumu, adi ve varsa BONUS bolumleri.
-## Bonus altyapisi korunur; mevcut 1-150 kampanyada bonus bolum yoktur.
+## Bonus altyapisi korunur; kampanyada bonus bolum yoktur.
+##
+## 3. dunya eskiden "FİNAL"di; 151-200 eklenince final olmaktan cikti ve
+## mekaniklerine (cark, kayan bariyer, lazer) gore "ZAMAN" oldu.
 const WORLDS := [
 	{"name": "BAŞLANGIÇ", "first": 1, "bonus": []},
 	{"name": "KİNETİK", "first": 51, "bonus": []},
-	{"name": "FİNAL", "first": 101, "bonus": []},
+	{"name": "ZAMAN", "first": 101, "bonus": []},
+	{"name": "PRİZMA", "first": 151, "bonus": []},
 ]
 
 ## Gelecekte eklenecek ilk bonus icin ayrilan numara. Bundan kucuk her numara
 ## NORMAL bolumdur ve dunyalarin normal araliklari bu sinira gore hesaplanir.
-const FIRST_BONUS_ID := 151
+## Planlanan kampanya sonunun (200) hemen ardindadir.
+const FIRST_BONUS_ID := 201
 
 ## Bonus bolumun acilmasi icin KENDI DUNYASINDAN gereken yildiz orani.
 ## Ikinci bonus birincisinden daha yuksek bir esik ister.
 const BONUS_GATE_RATIOS := [0.80, 0.90]
 
 
+## Kutuphanede henuz hic bolumu olmayan dunya sayilmaz. Boylece bir dunya
+## WORLDS'e icerigi gelmeden eklenebilir ve bolum secim ekraninda bos bir
+## sekme olarak gorunmez.
 static func count() -> int:
-	return WORLDS.size()
+	var available := 0
+	for world in WORLDS:
+		if int(world["first"]) <= LevelLibrary.last_level_id():
+			available += 1
+	return maxi(available, 1)
 
 
 static func first_level(index: int) -> int:
@@ -124,7 +136,9 @@ static func theme_for_index(index: int) -> PaletteTheme:
 			return PaletteThemes.theme_a()
 		1:
 			return PaletteThemes.theme_b()
-	return PaletteThemes.theme_c()
+		2:
+			return PaletteThemes.theme_c()
+	return PaletteThemes.theme_d()
 
 
 ## Dunyanin vurgu rengi. Bolum secim ekrani butonlari ve sekmeleri bununla

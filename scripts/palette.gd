@@ -73,6 +73,15 @@ static var HAZARD := Color("ff667d")
 static var HAZARD_DARK := Color("63364a")
 static var HAZARD_CORE := Color("ffe2e7")
 
+## PORTAL: giris mavi, cikis turuncu. HAZARD/COIN gibi dunyadan BAGIMSIZ ve
+## apply_theme bunlara dokunmaz: giris ile cikisin anlami hicbir dunyada
+## yer degistirmemeli. Renk tek isaret degildir - giriste ice, cikista disa
+## donen oklar da cizilir (bkz. LevelObstacle._build_portal).
+static var PORTAL_IN := Color("4cc9ff")
+static var PORTAL_IN_CORE := Color("e6f8ff")
+static var PORTAL_OUT := Color("ff9d4d")
+static var PORTAL_OUT_CORE := Color("fff1e3")
+
 # --- Metin ---
 static var TEXT := Color("e9f2ff")
 static var TEXT_DIM := Color("93a7c9")

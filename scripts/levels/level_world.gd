@@ -122,6 +122,11 @@ func set_obstacle_position(index: int, value: Vector2) -> void:
 		_obstacle_field.set_obstacle_position(index, value)
 
 
+func set_portal_exit(index: int, value: Vector2) -> void:
+	if _obstacle_field != null:
+		_obstacle_field.set_portal_exit(index, value)
+
+
 ## Bit maskesindeki tuketilmis can katmanlarinin RID'leri. Simulasyon bunlari
 ## sorgudan dislar; dunya yeniden kurulmadan hasar atislar arasinda korunur.
 func rids_for_state(state: int) -> Array[RID]:

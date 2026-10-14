@@ -367,6 +367,14 @@ func _apply_level() -> void:
 
 	_build_panels()
 	_obstacles.build(level_data.obstacles)
+	# Portallar fizik govdesi degil veridir: top isinlanmayi, kilavuz durma
+	# noktasini ayni ObstacleData listesinden hesaplar (LevelSolver gibi).
+	var portals: Array[ObstacleData] = []
+	for data in level_data.obstacles:
+		if data != null and data.kind == ObstacleData.Kind.PORTAL:
+			portals.append(data)
+	_ball.portals = portals
+	_launcher.portals = portals
 	# Hareketli engeller bolum gorunur olur olmaz tek bir zaman cizelgesinde
 	# calisir. Atislar yalnizca topu etkiler; engel fazini baslatmaz/sifirlamaz.
 	_obstacles.start_motion()
@@ -477,6 +485,7 @@ func _connect_signals() -> void:
 	_launcher.power_step_crossed.connect(_on_power_step_crossed)
 	_ball.bounced.connect(_on_ball_bounced)
 	_ball.surface_touched.connect(_on_surface_touched)
+	_ball.teleported.connect(_on_ball_teleported)
 	_blocks.block_broken.connect(_on_block_broken)
 	_blocks.block_damaged.connect(_on_block_damaged)
 	_obstacles.hazard_triggered.connect(_on_hazard_triggered)
@@ -621,6 +630,7 @@ func _respawn_ball() -> void:
 	_ball.reset_to(_launcher.get_spawn_position())
 	_target.reset()
 	_clear_effects()
+	_obstacles.set_portals_spent(false)
 	_hide_message()
 	_launcher.enabled = true
 	_first_shot.ball_ready()
@@ -947,6 +957,20 @@ func _on_ball_bounced(at: Vector2, normal: Vector2, impact_speed: float) -> void
 	AudioManager.play_bounce(impact_speed)
 	if not practice_mode:
 		bounce_recorded.emit()
+
+
+## Portal gecisi: giriste mavi, cikista turuncu kivilcim - goz topu girdigi
+## yerden ciktigi yere takip edebilsin. Sarsinti yok: isinlanma bir darbe
+## degildir.
+func _on_ball_teleported(from_position: Vector2, to_position: Vector2, spent: bool) -> void:
+	SparkBurst.burst(_effects, from_position, Vector2.UP, 0.7,
+		Palette.PORTAL_IN, Palette.PORTAL_IN_CORE, spark_count, spark_length, 360.0)
+	SparkBurst.burst(_effects, to_position, Vector2.UP, 0.7,
+		Palette.PORTAL_OUT, Palette.PORTAL_OUT_CORE, spark_count, spark_length, 360.0)
+	Haptics.pulse(Haptics.PORTAL_MSEC)
+	AudioManager.play_portal()
+	if spent:
+		_obstacles.set_portals_spent(true)
 
 
 func _clear_effects() -> void:

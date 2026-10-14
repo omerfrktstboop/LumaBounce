@@ -9,6 +9,12 @@ extends Node2D
 @export var marker_spacing := 76.0
 @export var pulse_speed := 2.4
 
+## Ardisik iki nokta arasi bundan uzunsa top portaldan isinlanmistir: solver
+## karede en fazla 50 px ilerler (3000 px/sn, 60 FPS), carpisma noktalari da
+## arada kalir. Cizgi orada kesilir, yoksa ekrani boydan boya kesen sahte bir
+## rota cizilirdi.
+const TELEPORT_GAP := 75.0
+
 var _points := PackedVector2Array()
 var _pulse_time := 0.0
 
@@ -48,14 +54,22 @@ func _draw() -> void:
 	if _points.size() < 2:
 		return
 	var pulse := (sin(_pulse_time) + 1.0) * 0.5
-	draw_polyline(_points, Color(Palette.ACCENT, 0.18 + pulse * 0.08), glow_width, true)
-	draw_polyline(_points, Color(Palette.ACCENT_CORE, 0.78 + pulse * 0.18), core_width, true)
+	for run in split_at_teleports(_points):
+		if run.size() < 2:
+			continue
+		draw_polyline(run, Color(Palette.ACCENT, 0.18 + pulse * 0.08), glow_width, true)
+		draw_polyline(run, Color(Palette.ACCENT_CORE, 0.78 + pulse * 0.18), core_width, true)
 
 	var distance_since_marker := 0.0
 	for i in range(1, _points.size()):
 		var from := _points[i - 1]
 		var to := _points[i]
 		var segment := from.distance_to(to)
+		if segment > TELEPORT_GAP:
+			# Isinlanma: giris ve cikis noktalarini portal renkleriyle isaretle.
+			draw_circle(from, 9.0, Color(Palette.PORTAL_IN, 0.9), false, 3.0, true)
+			draw_circle(to, 9.0, Color(Palette.PORTAL_OUT, 0.9), false, 3.0, true)
+			continue
 		while distance_since_marker + segment >= marker_spacing:
 			var needed := marker_spacing - distance_since_marker
 			var marker := from.lerp(to, needed / maxf(segment, 0.001))
@@ -67,6 +81,20 @@ func _draw() -> void:
 
 	draw_circle(_points[0], 10.0, Color(Palette.ACCENT, 0.28), false, 3.0, true)
 	draw_circle(_points[-1], 14.0 + pulse * 2.0, Color(Palette.ACCENT_CORE, 0.9), false, 3.0, true)
+
+
+## Rotayi portal isinlanmalarindan (TELEPORT_GAP) parcalara boler.
+static func split_at_teleports(points: PackedVector2Array) -> Array[PackedVector2Array]:
+	var runs: Array[PackedVector2Array] = []
+	var current := PackedVector2Array()
+	for i in points.size():
+		if i > 0 and points[i - 1].distance_to(points[i]) > TELEPORT_GAP:
+			runs.append(current)
+			current = PackedVector2Array()
+		current.append(points[i])
+	if not current.is_empty():
+		runs.append(current)
+	return runs
 
 
 ## Solver her uc fizik karesinde bir nokta verir. Cizgi icin birbirine cok

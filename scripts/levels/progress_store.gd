@@ -463,6 +463,20 @@ func _read(config: ConfigFile) -> void:
 		_read_v1(config)
 
 	_read_shared(config)
+	_unlock_after_last_completed()
+
+
+## Kampanya uzadiginda eski son bolumu bitirmis oyuncu kilitli kalmamali:
+## o bolumu bitirdiginde has_next() false oldugu icin highest ilerlememisti
+## (150'yi bitiren oyuncu 151 gelince 150'de takili kalirdi). Tamamlanan en
+## yuksek bolumun ardindaki her yuklemede sirali olarak acik sayilir; yildiz
+## kapisi yine is_unlocked() icinde ayrica denetlenir.
+func _unlock_after_last_completed() -> void:
+	if completed_levels.is_empty():
+		return
+	var last_done: int = completed_levels.max()
+	if LevelLibrary.has_next(last_done):
+		highest_unlocked_level = maxi(highest_unlocked_level, last_done + 1)
 
 
 ## Sema 1: bolumler uid ile anilir.

@@ -13,8 +13,16 @@ const HAZARD_LAYER := 8
 const LASER_IDLE_SCALE := 0.22
 const LASER_IDLE_ALPHA := 0.34
 
+## PORTAL: cikis halkasindaki ok donus hizi (derece/sn). Yalnizca gorsel.
+const PORTAL_SPIN_DEGREES := 70.0
+## PORTAL: atis basina isinlanma hakki bitince portal bu kadar soluklasir.
+const PORTAL_SPENT_ALPHA := 0.32
+
 var data: ObstacleData
 var preview_only := false
+## PORTAL: bu cift bolumdeki kacinci portal (0'dan). Iki cift ayni renkleri
+## kullandigi icin eslesme halkalardaki nokta sayisiyla okunur.
+var portal_pair := 0
 
 var _motion_root: Node2D
 var _visual: Node2D
@@ -22,6 +30,8 @@ var _laser_beam: Node2D
 var _laser_core: Node2D
 var _laser_glow: Node2D
 var _path_visual: Node2D
+var _portal_in_swirl: Node2D
+var _portal_out_swirl: Node2D
 
 var _elapsed := 0.0
 var _running := false
@@ -83,6 +93,9 @@ func apply_motion_time(seconds: float) -> void:
 	if data.kind == ObstacleData.Kind.PULSE_LASER:
 		_apply_laser_state(seconds)
 		return
+	if data.kind == ObstacleData.Kind.PORTAL:
+		_apply_portal_spin(seconds)
+		return
 	if seconds == 0.0 and _visual != null:
 		_visual.show()
 	_motion_root.position = data.motion_position(seconds) - data.position
@@ -94,7 +107,30 @@ func set_data_position(value: Vector2) -> void:
 		return
 	data.position = value
 	position = value
+	# Portal cikisi dunyada YERINDE kalir; gorseli girise gore konumlandigi
+	# icin yeniden kurulur.
+	if data.kind == ObstacleData.Kind.PORTAL:
+		_rebuild_portal_visual()
 	apply_motion_time(0.0)
+
+
+## Editor: portal cikisini tasir.
+func set_portal_exit(value: Vector2) -> void:
+	if data == null or data.kind != ObstacleData.Kind.PORTAL:
+		return
+	data.exit_position = value
+	_rebuild_portal_visual()
+
+
+func _rebuild_portal_visual() -> void:
+	if _visual == null:
+		return
+	for child in _visual.get_children():
+		_visual.remove_child(child)
+		child.queue_free()
+	_portal_in_swirl = null
+	_portal_out_swirl = null
+	_build_portal()
 
 
 func _build() -> void:
@@ -120,6 +156,8 @@ func _build() -> void:
 			_build_speed_boost()
 		ObstacleData.Kind.PULSE_LASER:
 			_build_pulse_laser()
+		ObstacleData.Kind.PORTAL:
+			_build_portal()
 
 
 func _make_motion_root() -> Node2D:
@@ -127,6 +165,10 @@ func _make_motion_root() -> Node2D:
 			ObstacleData.Kind.PULSE_LASER]:
 		return Node2D.new()
 	match data.kind:
+		ObstacleData.Kind.PORTAL:
+			# Portal carpismaz: isinlanmayi Ball ve LevelSolver ayni veriden
+			# hesaplar. Bir fizik govdesi olsaydi top portala carpip sekerdi.
+			return Node2D.new()
 		ObstacleData.Kind.BOMB, ObstacleData.Kind.SPEED_BOOST, ObstacleData.Kind.PULSE_LASER:
 			var area := Area2D.new()
 			area.collision_layer = HAZARD_LAYER
@@ -430,3 +472,134 @@ func _on_speed_boost_body_entered(body: Node2D) -> void:
 	if body.is_in_group("ball") and _visual.visible:
 		_visual.hide()
 		hazard_triggered.emit("speed_boost", global_position)
+
+
+## PORTAL: bir cift halka - giris (bu dugumun konumu) ve cikis (exit_position).
+##
+## GORSEL SOZLESME: giris MAVI ve oklari ICE doner, cikis TURUNCU ve oklari
+## DISA doner. Renk tek basina yetmez (renk korlugu): ok yonu ayni bilgiyi
+## sekille de verir. Iki halka arasindaki soluk noktali cizgi eslesmeyi
+## gosterir; bolumde iki cift varsa nokta sayisi (1 veya 2) hangi girisin
+## hangi cikisa gittigini ayirir. Yon ceviren cikista ortada bir donus oku
+## cizilir.
+func _build_portal() -> void:
+	var radius := data.outer_radius()
+	var exit_offset := data.exit_position - data.position
+	_build_portal_link(exit_offset, radius)
+
+	var entry := Node2D.new()
+	entry.name = "PortalEntry"
+	_visual.add_child(entry)
+	_portal_in_swirl = _build_portal_ring(entry, radius, Palette.PORTAL_IN,
+		Palette.PORTAL_IN_CORE, true)
+
+	var exit := Node2D.new()
+	exit.name = "PortalExit"
+	exit.position = exit_offset
+	_visual.add_child(exit)
+	_portal_out_swirl = _build_portal_ring(exit, radius, Palette.PORTAL_OUT,
+		Palette.PORTAL_OUT_CORE, false)
+	if not is_zero_approx(data.exit_turn_degrees):
+		exit.add_child(_portal_turn_glyph(radius * 0.26, data.exit_turn_degrees))
+	_apply_portal_spin(0.0)
+
+
+## Tek halka: koyu kuyu + yumusak hale + parlak kenar + donen oklar + cift
+## noktalari. Donen ok grubunu dondurur.
+func _build_portal_ring(parent: Node2D, radius: float, color: Color, core: Color,
+		inward: bool) -> Node2D:
+	parent.add_child(ShapeBuilder.make_polygon(
+		ShapeBuilder.circle(radius * 0.94, 36), Color(Palette.INK_TOP, 0.88)))
+	parent.add_child(_circle_line(radius, 12.0, Color(color, 0.16), 40))
+	parent.add_child(_circle_line(radius, 4.0, color, 40))
+
+	var swirl := Node2D.new()
+	swirl.name = "Swirl"
+	parent.add_child(swirl)
+	# Uc DOLU ok ucu: giriste ucu merkeze, cikista disariya bakar. Ince "V"
+	# cizgiler donerken kose isaretine benziyordu. Ucgen bilerek UZUN ve DAR:
+	# eskenara yakin bir ucgen 120 derece dondurulunce kendisiyle ayni gorunur
+	# ve uc ok da ayni yone bakiyor gibi okunur. Oklar merkezden uzak tutulur
+	# ki cikistaki donus oku (merkezde) ile ust uste binmesin.
+	for i in 3:
+		var along := Vector2.RIGHT.rotated(TAU * float(i) / 3.0 - PI * 0.5)
+		var across := along.orthogonal()
+		var tip := along * radius * (0.30 if inward else 0.86)
+		var base := along * radius * (0.72 if inward else 0.44)
+		var half_width := radius * 0.13
+		swirl.add_child(ShapeBuilder.make_polygon(PackedVector2Array([
+			tip, base + across * half_width, base - across * half_width,
+		]), core))
+
+	# Cift noktalari halkanin ustunde, yan yana.
+	var dots := portal_pair + 1
+	for i in dots:
+		var offset_x := (float(i) - float(dots - 1) * 0.5) * 12.0
+		parent.add_child(ShapeBuilder.make_polygon(
+			ShapeBuilder.circle(4.0, 12, Vector2(offset_x, -radius - 12.0)), core))
+	return swirl
+
+
+## Giris ile cikis arasi soluk noktali bag. Halkalarin icine nokta konmaz.
+func _build_portal_link(exit_offset: Vector2, radius: float) -> void:
+	var length := exit_offset.length()
+	if length <= radius * 2.0:
+		return
+	var direction := exit_offset / length
+	var spacing := 22.0
+	var travelled := radius + 14.0
+	while travelled < length - radius - 14.0:
+		var t := travelled / length
+		var color := Palette.PORTAL_IN.lerp(Palette.PORTAL_OUT, t)
+		_visual.add_child(ShapeBuilder.make_polygon(
+			ShapeBuilder.circle(2.2, 8, direction * travelled), Color(color, 0.30)))
+		travelled += spacing
+
+
+## Yon ceviren cikis: donus miktari kadar yay + ok ucu. Pozitif aci saat
+## yonunde (ekranda y asagi oldugu icin Vector2.rotated ile ayni yon).
+func _portal_turn_glyph(radius: float, turn_degrees: float) -> Node2D:
+	var glyph := Node2D.new()
+	glyph.name = "TurnGlyph"
+	var sweep := deg_to_rad(clampf(absf(turn_degrees), 0.0, 180.0))
+	var direction := signf(turn_degrees) if not is_zero_approx(turn_degrees) else 1.0
+	var start := -PI * 0.5 - direction * sweep * 0.5
+	var points := PackedVector2Array()
+	var steps := 14
+	for i in steps + 1:
+		var angle := start + direction * sweep * float(i) / float(steps)
+		points.append(Vector2.RIGHT.rotated(angle) * radius)
+	var arc := Line2D.new()
+	arc.points = points
+	arc.width = 3.5
+	arc.default_color = Palette.PORTAL_OUT_CORE
+	arc.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	arc.joint_mode = Line2D.LINE_JOINT_ROUND
+	arc.antialiased = true
+	glyph.add_child(arc)
+	var end := points[points.size() - 1]
+	var tangent := (end - points[points.size() - 2]).normalized()
+	var side := tangent.orthogonal()
+	glyph.add_child(ShapeBuilder.make_polygon(PackedVector2Array([
+		end + tangent * 7.0,
+		end - tangent * 3.0 + side * 6.0,
+		end - tangent * 3.0 - side * 6.0,
+	]), Palette.PORTAL_OUT_CORE))
+	return glyph
+
+
+## Oklarin donusu yalnizca gorseldir ve bolum zaman cizelgesine baglidir;
+## ayni anda acilan iki bolum ayni gorunur (determinizm, bkz. CLAUDE.md).
+func _apply_portal_spin(seconds: float) -> void:
+	var angle := deg_to_rad(PORTAL_SPIN_DEGREES * seconds)
+	if _portal_in_swirl != null:
+		_portal_in_swirl.rotation = angle
+	if _portal_out_swirl != null:
+		_portal_out_swirl.rotation = -angle
+
+
+## Atisin isinlanma hakki bitince portal soluklasir; yeni atista geri gelir.
+func set_portal_spent(spent: bool) -> void:
+	if data == null or data.kind != ObstacleData.Kind.PORTAL or _visual == null:
+		return
+	_visual.modulate.a = PORTAL_SPENT_ALPHA if spent else 1.0

@@ -45,6 +45,9 @@ const BLOCK_HITS := [
 ]
 ## Dagilan mavi tugla bu anda geri gelir (efekti bitsin diye kisa bir gecikme).
 const BLUE_RESPAWN_AT := 2.2
+## Portal gosteriminde giris ve cikis halkalarinin sahnedeki yeri.
+const PORTAL_DEMO_ENTRY := Vector2(86.0, 150.0)
+const PORTAL_DEMO_EXIT := Vector2(306.0, 110.0)
 
 @export var card_corner_radius := 30
 @export var pop_time := 0.26
@@ -180,6 +183,8 @@ func _obstacle_title(kind: ObstacleData.Kind) -> String:
 			return "Hızlandırıcı"
 		ObstacleData.Kind.PULSE_LASER:
 			return "Lazer Bariyer"
+		ObstacleData.Kind.PORTAL:
+			return "Portal"
 	return "Yeni Engel"
 
 
@@ -197,6 +202,8 @@ func _obstacle_description(kind: ObstacleData.Kind) -> String:
 			return "İçinden geçen top hızlanır."
 		ObstacleData.Kind.PULSE_LASER:
 			return "Işın aralıklarla yanar. Yanmadan hemen önce parlar; sönük olduğu anda geç."
+		ObstacleData.Kind.PORTAL:
+			return "Top mavi halkaya dalarsa turuncu halkadan aynı hızla, aynı yöne çıkar."
 	return ""
 
 
@@ -264,6 +271,12 @@ func _preview_data(kind: ObstacleData.Kind) -> ObstacleData:
 			data.size = Vector2(300.0, 14.0)
 			data.motion_period = 2.6
 			data.pulse_on_ratio = 0.55
+		ObstacleData.Kind.PORTAL:
+			# Giris solda altta, cikis sagda yukarida: top "bir yerden girip
+			# baska yerden cikiyor" tek bakista okunsun.
+			data.position = PORTAL_DEMO_ENTRY
+			data.exit_position = PORTAL_DEMO_EXIT
+			data.size = Vector2(76.0, 76.0)
 	return data
 
 
@@ -355,6 +368,36 @@ func _advance_obstacle_demo() -> void:
 			_demo_speed_boost()
 		ObstacleData.Kind.PULSE_LASER:
 			_demo_laser()
+		ObstacleData.Kind.PORTAL:
+			_demo_portal()
+
+
+## Portal: top alttan mavi girise yukselir ve icine dalar (kuculur), turuncu
+## cikistan ayni yone, yukari dogru cikar. Ogretilen kural: yon ve hiz korunur.
+func _demo_portal() -> void:
+	var period := 3.0
+	var t := fmod(_time, period)
+	_ball.modulate.a = 1.0
+	if t < 0.9:
+		_ball.scale = Vector2.ONE
+		_ball.position = Vector2(PORTAL_DEMO_ENTRY.x,
+			lerpf(STAGE_SIZE.y + 20.0, PORTAL_DEMO_ENTRY.y, t / 0.9))
+	elif t < 1.15:
+		# Dalis: girisin merkezinde kuculup kaybolur.
+		_ball.position = PORTAL_DEMO_ENTRY
+		_ball.scale = Vector2.ONE * (1.0 - (t - 0.9) / 0.25)
+	elif t < 1.35:
+		# Cikis: turuncu halkanin merkezinde buyuyerek belirir.
+		_ball.position = PORTAL_DEMO_EXIT
+		_ball.scale = Vector2.ONE * ((t - 1.15) / 0.2)
+	elif t < 2.2:
+		_ball.scale = Vector2.ONE
+		_ball.position = Vector2(PORTAL_DEMO_EXIT.x,
+			lerpf(PORTAL_DEMO_EXIT.y, 20.0, (t - 1.35) / 0.85))
+	else:
+		_ball.scale = Vector2.ONE
+		_ball.position = Vector2(PORTAL_DEMO_EXIT.x, 20.0)
+		_ball.modulate.a = 1.0 - clampf((t - 2.2) / 0.4, 0.0, 1.0)
 
 
 ## Halka: iki asamali dongu. Once ORTADAN gecer (acik), sonra KENARA carpip

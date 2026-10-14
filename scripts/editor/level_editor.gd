@@ -95,6 +95,9 @@ var _launcher_preview: Node2D
 
 var _selection := Selection.NONE
 var _selected_index := -1
+## Secili engel bir portalsa ve CIKIS halkasina dokunulduysa true: surukleme
+## girisi degil cikisi tasir.
+var _portal_exit_selected := false
 var _dragging := false
 var _drag_offset := Vector2.ZERO
 var _active_touch := -1
@@ -201,6 +204,8 @@ func _connect_buttons() -> void:
 		_on_add_obstacle.bind(ObstacleData.Kind.MOVING_BAR))
 	get_node(rows + "ObstacleRow/AddLaser").pressed.connect(
 		_on_add_obstacle.bind(ObstacleData.Kind.PULSE_LASER))
+	get_node(rows + "ObstacleRow/AddPortal").pressed.connect(
+		_on_add_obstacle.bind(ObstacleData.Kind.PORTAL))
 
 	get_node(rows + "TuneRow/AMinus").pressed.connect(_on_tune.bind(0, -1))
 	get_node(rows + "TuneRow/APlus").pressed.connect(_on_tune.bind(0, 1))
@@ -298,6 +303,10 @@ func _selection_text() -> String:
 					return "Lazer %d - A: dongu %.1fsn  B: boy %.0f  kalinlik %.0f" % [
 						_selected_index + 1, obstacle.motion_period, obstacle.size.x,
 						obstacle.size.y]
+				ObstacleData.Kind.PORTAL:
+					return "Portal %d (%s) - A: cikis donusu %.0f°  B: cap %.0f" % [
+						_selected_index + 1, "cikis" if _is_portal_exit_drag() else "giris",
+						obstacle.exit_turn_degrees, obstacle.size.x]
 			return obstacle.display_name()
 		Selection.TARGET:
 			return "Hedef — A: boyut %.0f%%  sürükle: (%.0f, %.0f)" % [
@@ -401,12 +410,21 @@ func _select_at(world: Vector2) -> void:
 			best_selection = Selection.BLOCK
 			best_index = i
 
+	var best_is_portal_exit := false
 	for i in level.obstacles.size():
 		var distance := world.distance_to(level.obstacles[i].position)
 		if distance < best_distance:
 			best_distance = distance
 			best_selection = Selection.OBSTACLE
 			best_index = i
+			best_is_portal_exit = false
+		if level.obstacles[i].kind == ObstacleData.Kind.PORTAL:
+			var exit_distance := world.distance_to(level.obstacles[i].exit_position)
+			if exit_distance < best_distance:
+				best_distance = exit_distance
+				best_selection = Selection.OBSTACLE
+				best_index = i
+				best_is_portal_exit = true
 
 	var target_distance := world.distance_to(level.target_position)
 	if target_distance < best_distance:
@@ -421,6 +439,15 @@ func _select_at(world: Vector2) -> void:
 
 	_selection = best_selection
 	_selected_index = best_index
+	_portal_exit_selected = best_is_portal_exit and best_selection == Selection.OBSTACLE
+
+
+## Surukleme bir portalin CIKISINI mi tasiyor? Bayrak tek basina yetmez:
+## secim baska yoldan (ekleme/silme) degismis olabilir.
+func _is_portal_exit_drag() -> bool:
+	return _portal_exit_selected and _selection == Selection.OBSTACLE \
+		and _selected_index >= 0 and _selected_index < level.obstacles.size() \
+		and level.obstacles[_selected_index].kind == ObstacleData.Kind.PORTAL
 
 
 func _selection_is_movable() -> bool:
@@ -436,6 +463,8 @@ func _selected_position() -> Vector2:
 		Selection.BLOCK:
 			return level.breakable_blocks[_selected_index].position
 		Selection.OBSTACLE:
+			if _is_portal_exit_drag():
+				return level.obstacles[_selected_index].exit_position
 			return level.obstacles[_selected_index].position
 		Selection.TARGET:
 			return level.target_position
@@ -456,8 +485,12 @@ func _set_selected_position(value: Vector2) -> void:
 			level.breakable_blocks[_selected_index].position = value
 			_world.set_block_position(_selected_index, value)
 		Selection.OBSTACLE:
-			level.obstacles[_selected_index].position = value
-			_world.set_obstacle_position(_selected_index, value)
+			if _is_portal_exit_drag():
+				level.obstacles[_selected_index].exit_position = value
+				_world.set_portal_exit(_selected_index, value)
+			else:
+				level.obstacles[_selected_index].position = value
+				_world.set_obstacle_position(_selected_index, value)
 		Selection.TARGET:
 			level.target_position = value
 			_target_preview.position = value
@@ -517,9 +550,17 @@ func _on_add_obstacle(kind: ObstacleData.Kind) -> void:
 			obstacle.size = Vector2(280.0, 14.0)
 			obstacle.motion_period = 3.0
 			obstacle.pulse_on_ratio = 0.667
+		ObstacleData.Kind.PORTAL:
+			obstacle.size = Vector2(96.0, 96.0)
+			# Cikis girisin ustunde ama dogrulamanin en az 220 sinirindan uzakta.
+			var rect := _world.get_play_rect()
+			obstacle.exit_position = Vector2(
+				clampf(720.0 - obstacle.position.x, rect.position.x + 60.0, rect.end.x - 60.0),
+				clampf(obstacle.position.y - 320.0, rect.position.y + 60.0, rect.end.y - 60.0))
 	level.obstacles.append(obstacle)
 	_selection = Selection.OBSTACLE
 	_selected_index = level.obstacles.size() - 1
+	_portal_exit_selected = false
 	_status_text = ""
 	_rebuild()
 
@@ -767,6 +808,15 @@ func _tune_obstacle(obstacle: ObstacleData, axis: int, direction: int) -> void:
 			else:
 				obstacle.size.x = clampf(
 					obstacle.size.x + SIZE_STEP * direction, 90.0, 460.0)
+		ObstacleData.Kind.PORTAL:
+			# A cikis donusunu dik acilarla dondurur (0 -> 90 -> 180 -> -90),
+			# B halka capini ayarlar (dogrulama: yaricap 36-64).
+			if axis == 0:
+				var turned := wrapf(obstacle.exit_turn_degrees + 90.0 * direction, -180.0, 180.0)
+				obstacle.exit_turn_degrees = 180.0 if is_equal_approx(turned, -180.0) else turned
+			else:
+				var diameter := clampf(obstacle.size.x + 8.0 * direction, 72.0, 128.0)
+				obstacle.size = Vector2(diameter, diameter)
 
 
 func _tune_wall(axis: int, direction: int) -> void:

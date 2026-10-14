@@ -53,6 +53,7 @@ const SOUND_FILES := {
 	"restart": "restart.wav",
 	"splash_bounce": "splash_bounce.wav",
 	"logo_reveal": "logo_reveal.wav",
+	"portal": "portal.wav",
 }
 
 var _streams: Dictionary = {}
@@ -129,6 +130,11 @@ func play_block_break() -> void:
 
 func play_target_hit() -> void:
 	_play_sfx("target_hit", 0.0)
+
+
+## Portal gecisi. Isinlanma bir temas degil, sekme cooldown'una dokunmaz.
+func play_portal() -> void:
+	_play_sfx("portal", -3.0)
 
 
 ## Sonuc paneli acilirken. target_hit'ten ~0.75 sn sonra geldigi icin

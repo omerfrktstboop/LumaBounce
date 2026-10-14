@@ -27,6 +27,8 @@ func _run() -> void:
 	await _test_gameplay_bomb()
 	_test_laser_pulse()
 	await _test_gameplay_laser()
+	await _test_portal()
+	await _test_gameplay_portal()
 	await _test_real_obstacle_motion()
 	await _test_gameplay_motion_is_shot_independent()
 	await _test_mechanic_intro_card()
@@ -168,7 +170,8 @@ func _test_mechanic_intro_card() -> void:
 	# Her engel turu icin: kart acilmali, baslik/aciklama dolmali ve sahnede
 	# gercek bir gosterim (engel + top) kurulmali.
 	for kind in [ObstacleData.Kind.METAL_RING, ObstacleData.Kind.BOMB,
-			ObstacleData.Kind.ROTATING_WHEEL, ObstacleData.Kind.MOVING_BAR]:
+			ObstacleData.Kind.ROTATING_WHEEL, ObstacleData.Kind.MOVING_BAR,
+			ObstacleData.Kind.PORTAL]:
 		card.call("show_obstacle", kind)
 		await process_frame
 		var title: Label = card.get_node("CardCenter/Card/Margin/Rows/Title")
@@ -409,6 +412,21 @@ func _test_resource_roundtrip() -> void:
 	_check("lazer fazi korundu", laser_back.obstacles[0].phase_degrees, 137.0)
 	_check("geri yuklenen lazer ayni ritmi veriyor",
 		laser_back.obstacles[0].laser_is_active(1.1), laser.laser_is_active(1.1))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+	# Portalin cikis alanlari diske gidip gelmeli; biri kaybolursa top
+	# kaydedilen bolumde baska bir yerden cikar.
+	var portal_level := LevelData.new()
+	var portal := _portal(Vector2(240.0, 820.0), Vector2(520.0, 430.0))
+	portal.exit_turn_degrees = -90.0
+	portal_level.obstacles = [portal] as Array[ObstacleData]
+	_check("portal kaydi", ResourceSaver.save(portal_level, path), OK)
+	var portal_back := ResourceLoader.load(
+		path, "LevelData", ResourceLoader.CACHE_MODE_IGNORE) as LevelData
+	_check("portal turu korundu", portal_back.obstacles[0].kind, ObstacleData.Kind.PORTAL)
+	_check("portal cikisi korundu", portal_back.obstacles[0].exit_position,
+		Vector2(520.0, 430.0))
+	_check("portal donusu korundu", portal_back.obstacles[0].exit_turn_degrees, -90.0)
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
@@ -671,6 +689,164 @@ func _wheel(at: Vector2) -> ObstacleData:
 	data.spoke_count = 6
 	data.angular_speed_degrees = 55.0
 	return data
+
+
+func _portal(entry: Vector2, exit: Vector2) -> ObstacleData:
+	var data := ObstacleData.new()
+	data.kind = ObstacleData.Kind.PORTAL
+	data.position = entry
+	data.exit_position = exit
+	data.size = Vector2(96.0, 96.0)
+	return data
+
+
+## PORTAL: veri kurallari, isinlanma kesisimi ve cevrimdisi cozucu.
+func _test_portal() -> void:
+	var portal := _portal(Vector2(360.0, 760.0), Vector2(180.0, 520.0))
+	_check("portal verisi gecerli", portal.validate(0).is_empty(), true)
+	_check("portal kimligi gidip donuyor",
+		ObstacleData.from_kind_id(portal.kind_id()), ObstacleData.Kind.PORTAL)
+	_check("lazer kimligi gidip donuyor",
+		ObstacleData.from_kind_id("pulse_laser"), ObstacleData.Kind.PULSE_LASER)
+	_check("giris-cikis cok yakin reddediliyor", _portal(
+		Vector2(360.0, 760.0), Vector2(360.0, 600.0)).validate(0).is_empty(), false)
+	var odd_turn := _portal(Vector2(360.0, 760.0), Vector2(180.0, 520.0))
+	odd_turn.exit_turn_degrees = 45.0
+	_check("dik olmayan cikis donusu reddediliyor", odd_turn.validate(0).is_empty(), false)
+	var tiny := _portal(Vector2(360.0, 760.0), Vector2(180.0, 520.0))
+	tiny.size = Vector2(60.0, 60.0)
+	_check("tetigi toptan kucuk portal reddediliyor", tiny.validate(0).is_empty(), false)
+	_check("portal carpisma sekli uretmiyor",
+		ObstacleGeometry.all_shapes([portal], 0.0).is_empty(), true)
+
+	# Tetik yaricapi 48 * 0.75 = 36: dikey parca y=796'da daireye girer.
+	var portals: Array[ObstacleData] = [portal]
+	var through := ObstacleData.first_portal_entry(
+		portals, Vector2(360.0, 900.0), Vector2(360.0, 700.0))
+	_check("portala dalan parca bulunuyor", through.is_empty(), false)
+	_check("dalis orani tetik dairesinde",
+		is_equal_approx(float(through.get("fraction", -1.0)), 0.52), true)
+	# x farki 40: gorunen halkaya (48) degiyor ama tetige (36) girmiyor.
+	_check("kenardan siyiran parca isinlanmiyor", ObstacleData.first_portal_entry(
+		portals, Vector2(400.0, 900.0), Vector2(400.0, 700.0)).is_empty(), true)
+	_check("icinden baslayan parca hemen isinlaniyor", float(ObstacleData.first_portal_entry(
+		portals, Vector2(360.0, 760.0), Vector2(360.0, 740.0)).get("fraction", -1.0)), 0.0)
+	var turned := _portal(Vector2(360.0, 760.0), Vector2(180.0, 520.0))
+	turned.exit_turn_degrees = 90.0
+	_check("90 derece cikis yukariyi saga ceviriyor",
+		turned.portal_exit_velocity(Vector2(0.0, -100.0)).is_equal_approx(Vector2(100.0, 0.0)),
+		true)
+
+	var holder := Node2D.new()
+	get_root().add_child(holder)
+	var world := LevelWorld.new()
+	holder.add_child(world)
+	var level := LevelData.new()
+	level.obstacles = [portal] as Array[ObstacleData]
+	world.build(level)
+	await physics_frame
+	await physics_frame
+	var solver := LevelSolver.from_scenes()
+	solver.bind_space(world.get_space(), world.get_block_rids(), world.get_obstacles())
+	var no_rids: Array[RID] = []
+	# Duz yukari atis girise dalar, cikistan yukari devam edip hedefi vurur.
+	var result := solver.simulate(Vector2(360.0, 1050.0), Vector2.UP * 1600.0,
+		Vector2(180.0, 300.0), world.get_play_rect(), no_rids, true)
+	_check("solver portal uzerinden isabeti goruyor", bool(result["hit"]), true)
+	_check("solver tek isinlanma sayiyor", int(result["teleports"]), 1)
+	_check("ipucu izi isinlanmada iki parcaya bolunuyor",
+		HintPath.split_at_teleports(result["trace_points"]).size(), 2)
+	var miss := solver.simulate(Vector2(560.0, 1050.0), Vector2.UP * 1600.0,
+		Vector2(180.0, 300.0), world.get_play_rect(), no_rids, false)
+	_check("portala girmeyen atis isinlanmiyor", int(miss["teleports"]), 0)
+	_check("portala girmeyen atis hedefi kaciriyor", bool(miss["hit"]), false)
+	holder.queue_free()
+	await process_frame
+
+	# Dongu korumasi: cikis girisin ustunde, top dusup tekrar tekrar girer.
+	var loop_holder := Node2D.new()
+	get_root().add_child(loop_holder)
+	var loop_world := LevelWorld.new()
+	loop_holder.add_child(loop_world)
+	var loop_level := LevelData.new()
+	loop_level.obstacles = [
+		_portal(Vector2(360.0, 900.0), Vector2(360.0, 600.0))] as Array[ObstacleData]
+	loop_world.build(loop_level)
+	await physics_frame
+	await physics_frame
+	solver.bind_space(loop_world.get_space(), loop_world.get_block_rids(),
+		loop_world.get_obstacles())
+	var looped := solver.simulate(Vector2(360.0, 1050.0), Vector2.UP * 800.0,
+		Vector2(120.0, 260.0), loop_world.get_play_rect(), no_rids, false)
+	_check("dongude isinlanma atis basina sinirli", int(looped["teleports"]),
+		ObstacleData.PORTAL_MAX_TELEPORTS_PER_SHOT)
+	_check("sinirdan sonra atis zaman asimina dusmuyor",
+		String(looped.get("reason", "")) != "timeout", true)
+	loop_holder.queue_free()
+	await process_frame
+
+
+## PORTAL eslesme testi: gercek Ball ile LevelSolver AYNI dunyada ayni atisi
+## yapar. Isinlanma sayisi, dalis noktasi ve sonuc ayni olmali; kaysalar
+## "editorde gecti, oyunda gecmedi" olurdu.
+func _test_gameplay_portal() -> void:
+	var level := LevelData.new()
+	level.level_id = 1
+	level.launcher_position = Vector2(360.0, 1120.0)
+	level.target_position = Vector2(180.0, 300.0)
+	level.max_lives = 5
+	level.obstacles = [
+		_portal(Vector2(360.0, 760.0), Vector2(180.0, 520.0))] as Array[ObstacleData]
+	var gameplay: Node = (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+	gameplay.level_data = level
+	get_root().add_child(gameplay)
+	await process_frame
+	await physics_frame
+
+	var ball := gameplay.get_node("Ball") as Ball
+	var launcher := gameplay.get_node("Launcher") as Launcher
+	var arena := gameplay.get_node("Arena")
+	var events := {"teleports": 0, "entry": Vector2.ZERO, "hits": 0}
+	ball.teleported.connect(func(from: Vector2, _to: Vector2, _spent: bool) -> void:
+		if int(events["teleports"]) == 0:
+			events["entry"] = from
+		events["teleports"] = int(events["teleports"]) + 1)
+	gameplay.get_node("Target").hit.connect(func(_body: Node2D) -> void:
+		events["hits"] = int(events["hits"]) + 1)
+
+	# Nisan kilavuzu portal girisinde durmali.
+	launcher.set("_direction", Vector2.UP)
+	launcher.set("_power_ratio", 1.0)
+	var dots: PackedVector2Array = launcher.call("_build_guide_dots")
+	var last_dot := launcher.to_global(dots[dots.size() - 1])
+	_check("kilavuz portal girisinde bitiyor",
+		absf(last_dot.y - (760.0 + 36.0)) < 2.0, true)
+
+	var solver := LevelSolver.from_scenes()
+	solver.bind_space(gameplay.get_world_2d().direct_space_state, {}, level.obstacles, 0.0)
+	var no_rids: Array[RID] = []
+	var expected := solver.simulate(launcher.get_spawn_position(), Vector2.UP * 1600.0,
+		level.target_position, arena.get_play_rect(), no_rids, true)
+	var solver_entry := Vector2.ZERO
+	var trace: PackedVector2Array = expected["trace_points"]
+	for i in range(1, trace.size()):
+		if trace[i - 1].distance_to(trace[i]) > HintPath.TELEPORT_GAP:
+			solver_entry = trace[i - 1]
+			break
+
+	gameplay.call("_on_shot_fired", Vector2.UP * 1600.0)
+	for _frame in 150:
+		await physics_frame
+		if int(events["hits"]) > 0:
+			break
+	_check("oyunda isinlanma sayisi solver ile ayni",
+		int(events["teleports"]), int(expected["teleports"]))
+	_check("oyunda sonuc solver ile ayni (isabet)",
+		int(events["hits"]) > 0, bool(expected["hit"]))
+	_check("dalis noktasi solver ile ayni (2 px)",
+		(events["entry"] as Vector2).distance_to(solver_entry) < 2.0, true)
+	gameplay.queue_free()
+	await process_frame
 
 
 func _mover(at: Vector2) -> ObstacleData:

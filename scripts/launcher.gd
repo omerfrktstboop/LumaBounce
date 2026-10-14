@@ -62,6 +62,9 @@ const MAX_BOUNCES_PER_TICK := 6
 ## Bolum ilerledikce gameplay tarafindan 1.0'dan 0.5'e indirilir. Yalnizca
 ## gorunen nokta sayisini/mesafeyi etkiler; hesaplanan impuls degismez.
 var guide_visibility_ratio := 1.0
+## Bolumun portal ciftleri; gameplay.gd atar. Kilavuz bir portal girisinde
+## DURUR: topun nereden cikacagini dusunmek bulmacanin kendisidir.
+var portals: Array[ObstacleData] = []
 
 @export_group("Gorunum")
 @export var accent := Palette.ACCENT
@@ -307,6 +310,11 @@ func _build_guide_dots() -> PackedVector2Array:
 			# Dictionary degerleri Variant doner; ternary/aritmetikte tip
 			# belirsizligi olusmasin diye acikca Vector2/float'a sabitlenir.
 			var segment_end: Vector2 = hit["position"] if has_hit else (point + motion)
+			var portal_entry := ObstacleData.first_portal_entry(
+				portals, to_global(point), to_global(segment_end))
+			if not portal_entry.is_empty():
+				# Kilavuz portala kadar cizilir ve orada biter.
+				segment_end = point.lerp(segment_end, float(portal_entry["fraction"]))
 			var segment_length := point.distance_to(segment_end)
 
 			while next_dot <= travelled + segment_length:
@@ -318,6 +326,10 @@ func _build_guide_dots() -> PackedVector2Array:
 
 			travelled += segment_length
 			point = segment_end
+			if not portal_entry.is_empty():
+				# Son nokta tam portal kenarinda: kilavuzun nerede bittigi net okunsun.
+				dots.append(point)
+				return dots
 
 			if travelled >= total_length:
 				return dots

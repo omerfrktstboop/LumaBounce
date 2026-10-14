@@ -66,6 +66,10 @@ var _ball_shape: CircleShape2D
 ## her can icin ayni geometride ayri bir RID/bit kullanir.
 var _block_index: Dictionary = {}
 var _obstacles: Array[ObstacleData] = []
+## _obstacles icindeki portallar - isinlanma her parcada denetlendigi icin ayri tutulur.
+var _portals: Array[ObstacleData] = []
+## Son simulate() cagrisindaki isinlanma sayisi; sonucun "teleports" alani.
+var _sim_teleports := 0
 var _hazard_shape_cache: Dictionary = {}
 var _dynamic_shape_cache: Dictionary = {}
 ## Runtime ipucunda engeller atistan once de hareket ettigi icin simulasyonun
@@ -112,6 +116,10 @@ func bind_space(space: PhysicsDirectSpaceState2D, block_rids: Dictionary = {},
 	_space = space
 	_block_index = block_rids
 	_obstacles.assign(obstacles)
+	_portals.clear()
+	for data in _obstacles:
+		if data != null and data.kind == ObstacleData.Kind.PORTAL:
+			_portals.append(data)
 	_time_offset_seconds = maxf(time_offset_seconds, 0.0)
 	# Tehlikeler artik kare basina hesaplanir (lazer zamanla yanip soner);
 	# onbellek _hazard_shape_cache icinde tutulur.
@@ -665,6 +673,7 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 	var collision_points: Array[Dictionary] = []
 	var broken_order := PackedInt32Array()
 	var ignored_hazards: Array = []
+	_sim_teleports = 0
 	if capture_trace:
 		trace_points.append(pos)
 		trace_bounces.append(0)
@@ -677,6 +686,23 @@ func simulate(start: Vector2, impulse: Vector2, target_position: Vector2,
 
 		for _step in MAX_SUBSTEPS:
 			var hit := _cast_with_obstacles(pos, motion, ignored, frame_index, ignored_hazards)
+			# PORTAL: Ball._move_and_bounce ile ayni sira - parca (temasa kadar)
+			# bir girise dalmissa temas yasanmaz; top cikistan cikar ve karenin
+			# kalan hareketi kesilir.
+			if not _portals.is_empty() \
+					and _sim_teleports < ObstacleData.PORTAL_MAX_TELEPORTS_PER_SHOT:
+				var reach := 1.0 if hit.is_empty() else float(hit["fraction"])
+				var entry := ObstacleData.first_portal_entry(
+					_portals, pos, pos + motion * reach)
+				if not entry.is_empty():
+					var portal := _portals[int(entry["index"])]
+					_sim_teleports += 1
+					if capture_trace:
+						trace_points.append(pos + motion * reach * float(entry["fraction"]))
+						trace_bounces.append(bounces)
+					pos = portal.exit_position
+					vel = portal.portal_exit_velocity(vel)
+					break
 			if hit.is_empty():
 				pos += motion
 				break
@@ -772,7 +798,8 @@ func _simulation_result(hit: bool, reason: String, bounces: int, broken: int,
 		trace_bounces: PackedInt32Array,
 		collision_points: Array[Dictionary], broken_order: PackedInt32Array,
 		capture_trace: bool) -> Dictionary:
-	var result := {"hit": hit, "bounces": bounces, "broken": broken}
+	var result := {"hit": hit, "bounces": bounces, "broken": broken,
+		"teleports": _sim_teleports}
 	if not hit:
 		result["reason"] = reason
 	if capture_trace:

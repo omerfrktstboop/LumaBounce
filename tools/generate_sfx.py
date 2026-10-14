@@ -228,6 +228,18 @@ def build_block_break(rng: random.Random) -> Signal:
     return mix((shards, 1.0, 0.0), (grit, 0.34, 0.0))
 
 
+def build_portal(rng: random.Random) -> Signal:
+    """Portal gecisi: girise inen kisa 'vuu' + cikista yukselen cam tini.
+
+    Iki yarisi bilerek ayri: duyulan sey "bir yere girdi, baska yerden cikti".
+    """
+    dive = sweep(1250.0, 380.0, 0.13, curve=0.7, decay=10.0, attack=0.004)
+    rise = sweep(420.0, 1180.0, 0.16, curve=1.4, decay=12.0, attack=0.006)
+    chime = glass(1567.98, 0.22, decay=16.0, attack=0.003)
+    air = noise_layer(0.24, rng, lowpass_hz=3800.0, highpass_hz=700.0, decay=14.0, attack=0.02)
+    return mix((dive, 0.70, 0.0), (rise, 0.62, 0.10), (chime, 0.30, 0.14), (air, 0.18, 0.0))
+
+
 def build_target_hit() -> Signal:
     """Parlak, tatmin edici cam cinlamasi (E6 + B6 - temiz beslik)."""
     low = glass(1318.5, 0.42, decay=9.0, attack=0.003)
@@ -327,6 +339,7 @@ def main() -> None:
         # kaydirir ve degismemis dosyalari gereksiz yere yeniden yazardi.
         finish("block_break.wav", build_block_break(rng), peak=0.62, fade_out=0.03),
         finish("ambient_loop.wav", build_ambient_loop(rng), peak=0.45, fade_out=0.01),
+        finish("portal.wav", build_portal(rng), peak=0.58, fade_out=0.04),
     ]
 
     for path in written:

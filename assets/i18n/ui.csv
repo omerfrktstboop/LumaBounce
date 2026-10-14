@@ -71,6 +71,8 @@ Nişan izi uzun bölümlerde de tam görünür,Nişan izi uzun bölümlerde de t
 Sekme ve çarpmalarda titreşim,Sekme ve çarpmalarda titreşim,Vibration on bounces and impacts,Vibración en rebotes e impactos,Vibração em quicadas e impactos,Vibration bei Abprallern und Treffern,Vibration lors des rebonds et des impacts
 Lazer Bariyer,Lazer Bariyer,Pulse Laser,Láser pulsante,Laser pulsante,Impulslaser,Laser à impulsions
 Lazer bariyer,Lazer bariyer,Pulse laser,Láser pulsante,Laser pulsante,Impulslaser,Laser à impulsions
+Portal,Portal,Portal,Portal,Portal,Portal,Portail
+"Top mavi halkaya dalarsa turuncu halkadan aynı hızla, aynı yöne çıkar.","Top mavi halkaya dalarsa turuncu halkadan aynı hızla, aynı yöne çıkar.","If the ball dives into the blue ring, it comes out of the orange ring at the same speed, in the same direction.","Si la bola entra en el anillo azul, sale por el naranja con la misma velocidad y en la misma dirección.","Se a bola entrar no anel azul, ela sai pelo laranja com a mesma velocidade e na mesma direção.","Taucht der Ball in den blauen Ring, kommt er mit gleichem Tempo und in gleicher Richtung aus dem orangen Ring.","Si la balle plonge dans l’anneau bleu, elle ressort de l’anneau orange à la même vitesse, dans la même direction."
 Işın aralıklarla yanar. Yanmadan hemen önce parlar; sönük olduğu anda geç.,Işın aralıklarla yanar. Yanmadan hemen önce parlar; sönük olduğu anda geç.,The beam fires in bursts. It glows just before igniting — cross while it is dark.,El rayo se activa por intervalos. Brilla justo antes de encenderse; cruza cuando esté apagado.,O feixe dispara em intervalos. Ele brilha pouco antes de acender; passe enquanto estiver apagado.,Der Strahl feuert in Intervallen. Kurz davor leuchtet er auf; quere ihn im dunklen Moment.,Le rayon s’active par intermittence. Il brille juste avant; traversez lorsqu’il est éteint.
 LUMA COIN,LUMA COIN,LUMA COIN,LUMA COIN,LUMA COIN,LUMA COIN,LUMA COIN
 İPUCUYU AÇ,İPUCUYU AÇ,UNLOCK HINT,DESBLOQUEAR PISTA,DESBLOQUEAR DICA,HINWEIS FREISCHALTEN,DÉBLOQUER L’INDICE
@@ -170,7 +172,8 @@ Toplarını ve izlerini özelleştir,Toplarını ve izlerini özelleştir,Custom
 %d / %d yıldız,%d / %d yıldız,%d / %d stars,%d / %d estrellas,%d / %d estrelas,%d / %d Sterne,%d / %d étoiles
 BAŞLANGIÇ,BAŞLANGIÇ,START,INICIO,INÍCIO,START,DÉBUT
 KİNETİK,KİNETİK,KINETIC,CINÉTICO,CINÉTICO,KINETIK,CINÉTIQUE
-FİNAL,FİNAL,FINAL,FINAL,FINAL,FINALE,FINALE
+ZAMAN,ZAMAN,TIMING,RITMO,RITMO,TAKT,RYTHME
+PRİZMA,PRİZMA,PRISM,PRISMA,PRISMA,PRISMA,PRISME
 Yeni Engel,Yeni Engel,New Obstacle,Nuevo obstáculo,Novo obstáculo,Neues Hindernis,Nouvel obstacle
 HOW_TO_PLAY,Nasıl oynanır?,How to play,Cómo jugar,Como jogar,So wird gespielt,Comment jouer
 İLK ATIŞ · %d/4,İLK ATIŞ · %d/4,FIRST SHOT · %d/4,PRIMER TIRO · %d/4,PRIMEIRO TIRO · %d/4,ERSTER SCHUSS · %d/4,PREMIER TIR · %d/4
