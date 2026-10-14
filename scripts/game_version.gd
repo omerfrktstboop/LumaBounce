@@ -27,7 +27,8 @@ const GAME := "1.0.0"
 ## 3: review oturum sayacı ve son deneme zamanı eklendi. Eski kayıtlarda
 ## ikisi de sıfır varsayılır; ilerleme dönüşümü gerekmez.
 const SAVE_SCHEMA := 3
-const CONTENT := 1
+## 2: 151-200 PRİZMA dunyasi (portal) eklendi.
+const CONTENT := 2
 
 
 ## "1.0.0 (icerik 1)" - hata raporlarinda ve debug panelinde gosterilir.

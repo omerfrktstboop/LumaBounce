@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_ignmd"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_obsky"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_jar1h"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_ougse"]
+
+[sub_resource type="Resource" id="Resource_8fhdn"]
+script = ExtResource("2_obsky")
+kind = 6
+position = Vector2(177.63332, 754.7508)
+size = Vector2(94, 94)
+exit_position = Vector2(585.06274, 302.95477)
+
+[sub_resource type="Resource" id="Resource_3mtud"]
+script = ExtResource("3_jar1h")
+position = Vector2(407, 624)
+rotation_degrees = -1.9
+length = 291.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_vldbw"]
+script = ExtResource("3_jar1h")
+position = Vector2(416, 737)
+rotation_degrees = -18.9
+length = 241.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_f3box"]
+script = ExtResource("3_jar1h")
+position = Vector2(529, 897)
+rotation_degrees = -7.9
+length = 264.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_ougse")
+level_uid = "level_157"
+display_order = 157
+difficulty = 4
+hint_angle_degrees = -20.0
+hint_power = 1050.0
+level_id = 157
+display_name = "Duvar Ardı"
+target_position = Vector2(421, 443)
+panels = Array[ExtResource("3_jar1h")]([SubResource("Resource_3mtud"), SubResource("Resource_vldbw"), SubResource("Resource_f3box")])
+obstacles = Array[ExtResource("2_obsky")]([SubResource("Resource_8fhdn")])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

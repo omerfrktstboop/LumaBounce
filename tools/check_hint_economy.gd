@@ -25,7 +25,8 @@ func _run() -> void:
 		_cleanup_wallet(path)
 	await _unregister_audio_manager()
 	if _failures == 0:
-		print("PASS hint economy: 150 valid routes, persistent display, retry entitlement, wallet, HUD, pause")
+		print("PASS hint economy: %d valid routes, persistent display, retry entitlement, wallet, HUD, pause"
+			% LevelLibrary.LEVEL_COUNT)
 		quit(0)
 	else:
 		push_error("FAIL hint economy: %d assertion(s)" % _failures)
@@ -82,8 +83,9 @@ func _test_hint_coverage() -> void:
 		root.remove_child(world)
 		world.queue_free()
 		await process_frame
-	_check(missing.is_empty(), "all 150 campaign levels have hint shots")
-	_check(invalid.is_empty(), "all 150 campaign hint shots reach the target")
+	_check(missing.is_empty(), "all %d campaign levels have hint shots" % LevelLibrary.LEVEL_COUNT)
+	_check(invalid.is_empty(),
+		"all %d campaign hint shots reach the target" % LevelLibrary.LEVEL_COUNT)
 	if not missing.is_empty():
 		push_error("Missing hint levels: %s" % str(missing))
 	if not invalid.is_empty():

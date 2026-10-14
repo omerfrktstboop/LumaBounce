@@ -1226,6 +1226,13 @@ func _test_level_select() -> void:
 	_check("son dunyanin son normal bolumu 150",
 		grid.get_child(grid.get_child_count() - 1).name,
 		"Level%d" % LevelWorlds.last_level(2))
+	if LevelWorlds.count() > 3:
+		var prism_tab := select.find_child("Tab3", true, false) as Button
+		_check("PRİZMA sekmesi var", prism_tab != null and prism_tab.text == "PRİZMA", true)
+		select.call("_show_world", 3, 1)
+		_check("PRİZMA sayfasi 151 ile basliyor", grid.get_child(0).name, "Level151")
+		_check("PRİZMA sayfasi tum bolumlerini ciziyor", grid.get_child_count(),
+			LevelWorlds.level_count(3))
 
 	root.remove_child(select)
 	select.free()
@@ -1744,7 +1751,7 @@ func _test_faz9_tall_aspect() -> void:
 func _test_library_limits() -> void:
 	print("")
 	print("--- LevelLibrary sinirlari ---")
-	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 150)
+	_check("LEVEL_COUNT", LevelLibrary.LEVEL_COUNT, 200)
 	_check("has_next(20)", LevelLibrary.has_next(20), true)
 	_check("has_next(24)", LevelLibrary.has_next(24), true)
 	_check("has_next(25)", LevelLibrary.has_next(25), true)
@@ -1754,8 +1761,11 @@ func _test_library_limits() -> void:
 	_check("has_next(50)", LevelLibrary.has_next(50), true)
 	_check("has_next(125)", LevelLibrary.has_next(125), true)
 	_check("has_next(149)", LevelLibrary.has_next(149), true)
-	_check("has_next(150)", LevelLibrary.has_next(150), false)
-	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 450)
+	# 150 artik son bolum degil: PRİZMA (151-200) onun ardindan gelir.
+	_check("has_next(150)", LevelLibrary.has_next(150), true)
+	_check("has_next(199)", LevelLibrary.has_next(199), true)
+	_check("has_next(200)", LevelLibrary.has_next(200), false)
+	_check("azami yildiz", ProgressStore.new().get_max_available_stars(), 600)
 
 
 func _test_library_bounds() -> void:
@@ -1849,6 +1859,28 @@ func _test_library_bounds() -> void:
 				ObstacleData.Kind.ROTATING_WHEEL,
 				ObstacleData.Kind.PULSE_LASER], true)
 		_check("bolum %d lazer iceriyor" % id, has_laser, true)
+		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
+			level.three_star_max_shots <= level.max_lives, true)
+		_check("bolum %d: 2-yildiz atis <= max_lives" % id,
+			level.two_star_max_shots <= level.max_lives, true)
+
+	# 151-200 PRİZMA: elle duzenlenecek taslaklar, bu yuzden sozlesme bilerek
+	# gevsek. Her bolum yuklenir/dogrulanir ve engel tasir; 151-175 portal
+	# bandidir. Hizlandirici yoktur: blok kirma etkisini LevelSolver simule
+	# etmez, ona dayanan bir rota cevrimdisi dogrulanamaz.
+	for id in range(151, LevelLibrary.last_level_id() + 1):
+		var level := LevelLibrary.load_level(id)
+		_check("bolum %d yukleniyor" % id, level.level_id, id)
+		_check("bolum %d dogrulamadan geciyor" % id, level.validate().size(), 0)
+		_check("bolum %d engel iceriyor" % id, level.obstacles.is_empty(), false)
+		var has_portal := false
+		var has_boost := false
+		for obstacle in level.obstacles:
+			has_portal = has_portal or obstacle.kind == ObstacleData.Kind.PORTAL
+			has_boost = has_boost or obstacle.kind == ObstacleData.Kind.SPEED_BOOST
+		_check("bolum %d hizlandirici kullanmiyor" % id, has_boost, false)
+		if id <= 175:
+			_check("bolum %d portal iceriyor" % id, has_portal, true)
 		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
 			level.three_star_max_shots <= level.max_lives, true)
 		_check("bolum %d: 2-yildiz atis <= max_lives" % id,

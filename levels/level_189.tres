@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_h4sex"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_f4j6c"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_qh6cx"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_im1nl"]
+
+[sub_resource type="Resource" id="Resource_ocu5v"]
+script = ExtResource("1_h4sex")
+position = Vector2(360, 661.67474)
+rotation_degrees = -1.8484509
+size = Vector2(652, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_3j0en"]
+script = ExtResource("2_f4j6c")
+kind = 5
+position = Vector2(455.52298, 864.99384)
+size = Vector2(306.16666, 14)
+motion_period = 2.42
+phase_degrees = 35.38031
+pulse_on_ratio = 0.5725
+
+[sub_resource type="Resource" id="Resource_jt6k0"]
+script = ExtResource("2_f4j6c")
+kind = 2
+position = Vector2(519.939, 343.8123)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 106.25
+
+[sub_resource type="Resource" id="Resource_xc7ke"]
+script = ExtResource("3_qh6cx")
+position = Vector2(465, 483)
+rotation_degrees = 2.0
+length = 399.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_im1nl")
+level_uid = "level_189"
+display_order = 189
+difficulty = 4
+hint_angle_degrees = -34.0
+hint_power = 2200.0
+level_id = 189
+display_name = "Kırık Prizma"
+target_position = Vector2(251, 276)
+panels = Array[ExtResource("3_qh6cx")]([SubResource("Resource_xc7ke")])
+breakable_blocks = Array[ExtResource("1_h4sex")]([SubResource("Resource_ocu5v")])
+obstacles = Array[ExtResource("2_f4j6c")]([SubResource("Resource_3j0en"), SubResource("Resource_jt6k0")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 732.4676), Vector2(893.03705, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 5
+three_star_max_seconds = 85.0
+three_star_max_shots = 4

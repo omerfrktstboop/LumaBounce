@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_yce76"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_ga137"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_p0sx2"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_muqnr"]
+
+[sub_resource type="Resource" id="Resource_82uri"]
+script = ExtResource("2_ga137")
+kind = 5
+position = Vector2(305.6148, 563.3524)
+size = Vector2(280.16666, 14)
+motion_period = 2.66
+phase_degrees = 261.91193
+pulse_on_ratio = 0.5425
+
+[sub_resource type="Resource" id="Resource_m7thg"]
+script = ExtResource("2_ga137")
+kind = 5
+position = Vector2(555.33057, 804.226)
+size = Vector2(280.16666, 14)
+motion_period = 2.66
+phase_degrees = 81.91193
+pulse_on_ratio = 0.5425
+
+[sub_resource type="Resource" id="Resource_lwv5x"]
+script = ExtResource("2_ga137")
+kind = 6
+position = Vector2(133.61334, 904.74756)
+size = Vector2(92, 92)
+exit_position = Vector2(255.60785, 302.51193)
+
+[sub_resource type="Resource" id="Resource_po0d0"]
+script = ExtResource("3_p0sx2")
+position = Vector2(244, 855)
+rotation_degrees = 28.8
+length = 371.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_muqnr")
+level_uid = "level_177"
+display_order = 177
+difficulty = 4
+hint_angle_degrees = -50.0
+hint_power = 1000.0
+level_id = 177
+display_name = "Sıralı Işın"
+target_position = Vector2(144, 419)
+panels = Array[ExtResource("3_p0sx2")]([SubResource("Resource_po0d0")])
+obstacles = Array[ExtResource("2_ga137")]([SubResource("Resource_82uri"), SubResource("Resource_m7thg"), SubResource("Resource_lwv5x")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 677.19403), Vector2(848.8625, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

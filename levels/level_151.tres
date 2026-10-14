@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_p7v71"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_t6cqp"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_p3kaf"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_3iyo1"]
+
+[sub_resource type="Resource" id="Resource_gm5ec"]
+script = ExtResource("2_t6cqp")
+kind = 6
+position = Vector2(315.7433, 807.4688)
+size = Vector2(98, 98)
+exit_position = Vector2(481.17056, 553.6061)
+
+[sub_resource type="Resource" id="Resource_npc8d"]
+script = ExtResource("3_p3kaf")
+position = Vector2(489, 689)
+rotation_degrees = -17.7
+length = 259.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_3iyo1")
+level_uid = "level_151"
+display_order = 151
+difficulty = 3
+hint_angle_degrees = -18.0
+hint_power = 2150.0
+level_id = 151
+display_name = "Işık Geçidi"
+target_position = Vector2(370, 238)
+panels = Array[ExtResource("3_p3kaf")]([SubResource("Resource_npc8d")])
+obstacles = Array[ExtResource("2_t6cqp")]([SubResource("Resource_gm5ec")])
+tutorial_text = "Topu mavi portala gönder; turuncu portaldan aynı yöne çıkar."
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

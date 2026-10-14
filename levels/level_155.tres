@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_qghix"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_7o61x"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_opj0f"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_48qp2"]
+
+[sub_resource type="Resource" id="Resource_mxotj"]
+script = ExtResource("2_7o61x")
+kind = 6
+position = Vector2(476.05096, 761.7004)
+size = Vector2(96, 96)
+exit_position = Vector2(165.24628, 272.03107)
+
+[sub_resource type="Resource" id="Resource_g7lqr"]
+script = ExtResource("3_opj0f")
+position = Vector2(255, 483)
+rotation_degrees = -2.0
+length = 399.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_48qp2")
+level_uid = "level_155"
+display_order = 155
+difficulty = 3
+hint_angle_degrees = 14.0
+hint_power = 1150.0
+level_id = 155
+display_name = "Geçit Sırrı"
+target_position = Vector2(469, 276)
+panels = Array[ExtResource("3_opj0f")]([SubResource("Resource_g7lqr")])
+obstacles = Array[ExtResource("2_7o61x")]([SubResource("Resource_mxotj")])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

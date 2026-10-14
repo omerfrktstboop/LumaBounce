@@ -1,0 +1,61 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_qp7tr"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_o03m4"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_mdte1"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_ib05c"]
+
+[sub_resource type="Resource" id="Resource_j3wp2"]
+script = ExtResource("1_qp7tr")
+position = Vector2(360, 614.22375)
+rotation_degrees = 0.3101592
+size = Vector2(652, 34)
+
+[sub_resource type="Resource" id="Resource_gwsys"]
+script = ExtResource("2_o03m4")
+kind = 6
+position = Vector2(564.4739, 767.3155)
+size = Vector2(86, 86)
+exit_position = Vector2(324.51016, 484.13922)
+
+[sub_resource type="Resource" id="Resource_i61bb"]
+script = ExtResource("2_o03m4")
+kind = 6
+position = Vector2(122.56392, 769.1753)
+size = Vector2(86, 86)
+exit_position = Vector2(551.67676, 443.19122)
+exit_turn_degrees = -90.0
+
+[sub_resource type="Resource" id="Resource_mema2"]
+script = ExtResource("2_o03m4")
+position = Vector2(224.21768, 932.6918)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 56.8
+
+[sub_resource type="Resource" id="Resource_k7a4d"]
+script = ExtResource("3_mdte1")
+position = Vector2(327, 820)
+rotation_degrees = 26.7
+length = 286.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_ib05c")
+level_uid = "level_175"
+display_order = 175
+difficulty = 5
+hint_angle_degrees = 46.0
+hint_power = 2100.0
+level_id = 175
+display_name = "Geçit Ustalığı"
+target_position = Vector2(412, 355)
+panels = Array[ExtResource("3_mdte1")]([SubResource("Resource_k7a4d")])
+breakable_blocks = Array[ExtResource("1_qp7tr")]([SubResource("Resource_j3wp2")])
+obstacles = Array[ExtResource("2_o03m4")]([SubResource("Resource_gwsys"), SubResource("Resource_i61bb"), SubResource("Resource_mema2")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 632.3545), Vector2(815.4608, 1600)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 607.9081), Vector2(736.9509, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 5
+three_star_max_seconds = 85.0
+three_star_max_shots = 4

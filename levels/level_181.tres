@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_6v1h3"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_85smf"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_0jilk"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_bcf88"]
+
+[sub_resource type="Resource" id="Resource_7ulgy"]
+script = ExtResource("1_6v1h3")
+position = Vector2(192.68196, 674.98303)
+rotation_degrees = -4.364539
+size = Vector2(317.36392, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_2cfjr"]
+script = ExtResource("1_6v1h3")
+position = Vector2(527.31805, 706.98303)
+rotation_degrees = 3.0870056
+size = Vector2(317.36392, 34)
+
+[sub_resource type="Resource" id="Resource_0r7wq"]
+script = ExtResource("2_85smf")
+kind = 6
+position = Vector2(589.9863, 614.08215)
+size = Vector2(90, 90)
+exit_position = Vector2(341.93063, 412.0216)
+
+[sub_resource type="Resource" id="Resource_s1g1t"]
+script = ExtResource("3_0jilk")
+position = Vector2(476, 855)
+rotation_degrees = -28.8
+length = 371.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_bcf88")
+level_uid = "level_181"
+display_order = 181
+difficulty = 4
+hint_angle_degrees = -68.0
+hint_power = 1950.0
+level_id = 181
+display_name = "Zırhlı Koridor"
+target_position = Vector2(576, 419)
+panels = Array[ExtResource("3_0jilk")]([SubResource("Resource_s1g1t")])
+breakable_blocks = Array[ExtResource("1_6v1h3")]([SubResource("Resource_7ulgy"), SubResource("Resource_2cfjr")])
+obstacles = Array[ExtResource("2_85smf")]([SubResource("Resource_0r7wq")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 611.366), Vector2(729.48425, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 5
+three_star_max_seconds = 85.0
+three_star_max_shots = 4

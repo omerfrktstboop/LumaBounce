@@ -1,0 +1,55 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_pe2u6"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_rkap2"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_hivvm"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_7l0av"]
+
+[sub_resource type="Resource" id="Resource_gm5ol"]
+script = ExtResource("1_pe2u6")
+position = Vector2(360, 463.37546)
+rotation_degrees = -3.8159883
+size = Vector2(652, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_pxj1b"]
+script = ExtResource("2_rkap2")
+kind = 5
+position = Vector2(598.3579, 954.3512)
+size = Vector2(304, 14)
+motion_period = 2.44
+phase_degrees = 83.108406
+pulse_on_ratio = 0.57
+
+[sub_resource type="Resource" id="Resource_88kfl"]
+script = ExtResource("2_rkap2")
+kind = 2
+position = Vector2(230.56085, 576.91705)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 105.0
+
+[sub_resource type="Resource" id="Resource_anfy2"]
+script = ExtResource("3_hivvm")
+position = Vector2(369, 660)
+rotation_degrees = -43.0
+length = 327.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_7l0av")
+level_uid = "level_188"
+display_order = 188
+difficulty = 4
+hint_angle_degrees = -36.0
+hint_power = 2000.0
+level_id = 188
+display_name = "Işın Çarkı"
+target_position = Vector2(491, 233)
+panels = Array[ExtResource("3_hivvm")]([SubResource("Resource_anfy2")])
+breakable_blocks = Array[ExtResource("1_pe2u6")]([SubResource("Resource_gm5ol")])
+obstacles = Array[ExtResource("2_rkap2")]([SubResource("Resource_pxj1b"), SubResource("Resource_88kfl")])
+two_star_max_seconds = 160.0
+two_star_max_shots = 5
+three_star_max_seconds = 85.0
+three_star_max_shots = 4

@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_jre4m"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_ji65b"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_o87pg"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_dykmf"]
+
+[sub_resource type="Resource" id="Resource_sexgn"]
+script = ExtResource("2_ji65b")
+kind = 6
+position = Vector2(209.07343, 893.67566)
+size = Vector2(94, 94)
+exit_position = Vector2(441.82373, 516.84015)
+
+[sub_resource type="Resource" id="Resource_eblda"]
+script = ExtResource("3_o87pg")
+position = Vector2(476, 855)
+rotation_degrees = -28.8
+length = 371.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_dykmf")
+level_uid = "level_158"
+display_order = 158
+difficulty = 4
+hint_angle_degrees = -68.0
+hint_power = 2150.0
+level_id = 158
+display_name = "Eğik Kapı"
+target_position = Vector2(576, 419)
+panels = Array[ExtResource("3_o87pg")]([SubResource("Resource_eblda")])
+obstacles = Array[ExtResource("2_ji65b")]([SubResource("Resource_sexgn")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 662.32043), Vector2(791.9767, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

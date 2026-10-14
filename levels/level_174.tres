@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_d87d8"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_0u8b7"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_ylmgg"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_qg70u"]
+
+[sub_resource type="Resource" id="Resource_3kuqd"]
+script = ExtResource("2_0u8b7")
+kind = 6
+position = Vector2(496.32498, 766.2087)
+size = Vector2(86, 86)
+exit_position = Vector2(298.45264, 454.80707)
+
+[sub_resource type="Resource" id="Resource_1yjj6"]
+script = ExtResource("2_0u8b7")
+kind = 6
+position = Vector2(241.05707, 838.77295)
+size = Vector2(86, 86)
+exit_position = Vector2(525.0332, 366.4521)
+exit_turn_degrees = -90.0
+
+[sub_resource type="Resource" id="Resource_dwt66"]
+script = ExtResource("2_0u8b7")
+kind = 2
+position = Vector2(496.84204, 906.61176)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 114.375
+
+[sub_resource type="Resource" id="Resource_gfegn"]
+script = ExtResource("3_ylmgg")
+position = Vector2(316, 679)
+rotation_degrees = 51.6
+length = 367.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_qg70u")
+level_uid = "level_174"
+display_order = 174
+difficulty = 5
+hint_angle_degrees = -20.0
+hint_power = 1650.0
+level_id = 174
+display_name = "Kapı Labirenti"
+target_position = Vector2(144, 257)
+panels = Array[ExtResource("3_ylmgg")]([SubResource("Resource_gfegn")])
+obstacles = Array[ExtResource("2_0u8b7")]([SubResource("Resource_3kuqd"), SubResource("Resource_1yjj6"), SubResource("Resource_dwt66")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 520.7745), Vector2(686.71106, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

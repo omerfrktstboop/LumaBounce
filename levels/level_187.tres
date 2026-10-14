@@ -1,0 +1,56 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_xahmy"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_wc86o"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_r00kl"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_7v234"]
+
+[sub_resource type="Resource" id="Resource_5eq6k"]
+script = ExtResource("1_xahmy")
+position = Vector2(360, 394.65326)
+rotation_degrees = -3.239156
+size = Vector2(652, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_ac7h0"]
+script = ExtResource("2_wc86o")
+kind = 5
+position = Vector2(173.20369, 870.9452)
+size = Vector2(301.83334, 14)
+motion_period = 2.46
+phase_degrees = 308.01974
+pulse_on_ratio = 0.5675
+
+[sub_resource type="Resource" id="Resource_rng33"]
+script = ExtResource("2_wc86o")
+kind = 2
+position = Vector2(254.83224, 609.7351)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 103.75
+
+[sub_resource type="Resource" id="Resource_bygwc"]
+script = ExtResource("3_r00kl")
+position = Vector2(470, 576)
+rotation_degrees = -41.6
+length = 360.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_7v234")
+level_uid = "level_187"
+display_order = 187
+difficulty = 4
+hint_angle_degrees = -38.0
+hint_power = 2150.0
+level_id = 187
+display_name = "Dönen Kale"
+target_position = Vector2(421, 269)
+panels = Array[ExtResource("3_r00kl")]([SubResource("Resource_bygwc")])
+breakable_blocks = Array[ExtResource("1_xahmy")]([SubResource("Resource_5eq6k")])
+obstacles = Array[ExtResource("2_wc86o")]([SubResource("Resource_ac7h0"), SubResource("Resource_rng33")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 525.4024), Vector2(685.27765, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 5
+three_star_max_seconds = 85.0
+three_star_max_shots = 4

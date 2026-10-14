@@ -310,6 +310,9 @@ func _create_scan_state(angle_step: float, power_step: float) -> Dictionary:
 		"bounces": bounce_counts,
 		"total": angles.size() * powers.size(),
 		"hit_count": 0,
+		## Portaldan gecerek isabet eden hucre sayisi: portal bolumlerinde
+		## portalin cozumun parcasi mi yoksa sus mu oldugunu olcer.
+		"teleport_hits": 0,
 		"min_bounces": 999,
 		"reasons": {"settled": 0, "oob": 0, "timeout": 0},
 		"reached": {},
@@ -328,6 +331,8 @@ func _scan_cell(state: Dictionary, ai: int, pi: int, spawn: Vector2,
 	if did_hit:
 		state["hit_count"] = int(state["hit_count"]) + 1
 		state["min_bounces"] = mini(int(state["min_bounces"]), int(result["bounces"]))
+		if int(result.get("teleports", 0)) > 0:
+			state["teleport_hits"] = int(state["teleport_hits"]) + 1
 	else:
 		var reason: String = result["reason"]
 		state["reasons"][reason] = int(state["reasons"].get(reason, 0)) + 1

@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_muoon"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_gyl6n"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_2xlkx"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_hp8dd"]
+
+[sub_resource type="Resource" id="Resource_rrsr2"]
+script = ExtResource("1_muoon")
+position = Vector2(192.48357, 657.90564)
+rotation_degrees = -0.76021385
+size = Vector2(316.96713, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_fwfnq"]
+script = ExtResource("1_muoon")
+position = Vector2(527.5164, 689.90564)
+rotation_degrees = 4.653331
+size = Vector2(316.96713, 34)
+
+[sub_resource type="Resource" id="Resource_7mw5b"]
+script = ExtResource("2_gyl6n")
+kind = 6
+position = Vector2(125.376884, 567.3023)
+size = Vector2(90, 90)
+exit_position = Vector2(511.73575, 441.6267)
+
+[sub_resource type="Resource" id="Resource_xa460"]
+script = ExtResource("3_2xlkx")
+position = Vector2(206, 812)
+rotation_degrees = 23.6
+length = 384.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_hp8dd")
+level_uid = "level_185"
+display_order = 185
+difficulty = 4
+hint_angle_degrees = 18.0
+hint_power = 1650.0
+level_id = 185
+display_name = "Tuğla Kapanı"
+target_position = Vector2(422, 267)
+panels = Array[ExtResource("3_2xlkx")]([SubResource("Resource_xa460")])
+breakable_blocks = Array[ExtResource("1_muoon")]([SubResource("Resource_rrsr2"), SubResource("Resource_fwfnq")])
+obstacles = Array[ExtResource("2_gyl6n")]([SubResource("Resource_7mw5b")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 743.49725), Vector2(880.57965, 1600)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 734.85846), Vector2(895.22766, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 5
+three_star_max_seconds = 85.0
+three_star_max_shots = 4

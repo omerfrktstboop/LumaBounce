@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_85lnm"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_mfwcg"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_1piiu"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_b2xx5"]
+
+[sub_resource type="Resource" id="Resource_o0wvs"]
+script = ExtResource("2_mfwcg")
+kind = 6
+position = Vector2(498.91382, 786.1217)
+size = Vector2(86, 86)
+exit_position = Vector2(285.50476, 625.00024)
+exit_turn_degrees = -90.0
+
+[sub_resource type="Resource" id="Resource_r50kr"]
+script = ExtResource("2_mfwcg")
+kind = 6
+position = Vector2(129.47482, 599.3535)
+size = Vector2(86, 86)
+exit_position = Vector2(255.72478, 309.35242)
+exit_turn_degrees = -90.0
+
+[sub_resource type="Resource" id="Resource_di1fj"]
+script = ExtResource("3_1piiu")
+position = Vector2(513, 525)
+rotation_degrees = 51.1
+length = 255.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_b2xx5")
+level_uid = "level_192"
+display_order = 192
+difficulty = 4
+hint_angle_degrees = -34.0
+hint_power = 1950.0
+level_id = 192
+display_name = "İkiz Döngü"
+target_position = Vector2(550, 291)
+panels = Array[ExtResource("3_1piiu")]([SubResource("Resource_di1fj")])
+obstacles = Array[ExtResource("2_mfwcg")]([SubResource("Resource_o0wvs"), SubResource("Resource_r50kr")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 642.0395), Vector2(772.6165, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

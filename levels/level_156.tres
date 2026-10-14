@@ -1,0 +1,37 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_2in5l"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_6qv6s"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_d3061"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_177fp"]
+
+[sub_resource type="Resource" id="Resource_mcwcy"]
+script = ExtResource("2_6qv6s")
+kind = 6
+position = Vector2(171.32664, 806.4487)
+size = Vector2(94, 94)
+exit_position = Vector2(507.731, 534.6545)
+
+[sub_resource type="Resource" id="Resource_6q76h"]
+script = ExtResource("3_d3061")
+position = Vector2(393, 820)
+rotation_degrees = -26.7
+length = 286.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_177fp")
+level_uid = "level_156"
+display_order = 156
+difficulty = 4
+hint_angle_degrees = -42.0
+hint_power = 2150.0
+level_id = 156
+display_name = "Sekmeli Geçit"
+target_position = Vector2(308, 355)
+panels = Array[ExtResource("3_d3061")]([SubResource("Resource_6q76h")])
+obstacles = Array[ExtResource("2_6qv6s")]([SubResource("Resource_mcwcy")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 676.2159), Vector2(797.7918, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

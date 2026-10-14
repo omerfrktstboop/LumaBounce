@@ -1,0 +1,48 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_plqjb"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_qmbxj"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_1sakv"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_awbyn"]
+
+[sub_resource type="Resource" id="Resource_2d1wg"]
+script = ExtResource("2_qmbxj")
+kind = 5
+position = Vector2(131.52258, 582.1521)
+size = Vector2(282.33334, 14)
+motion_period = 2.64
+phase_degrees = 284.27032
+pulse_on_ratio = 0.5449999999999999
+
+[sub_resource type="Resource" id="Resource_5p2gb"]
+script = ExtResource("2_qmbxj")
+kind = 5
+position = Vector2(584.7573, 793.90796)
+size = Vector2(282.33334, 14)
+motion_period = 2.64
+phase_degrees = 104.270325
+pulse_on_ratio = 0.5449999999999999
+
+[sub_resource type="Resource" id="Resource_e0mb1"]
+script = ExtResource("3_1sakv")
+position = Vector2(404, 679)
+rotation_degrees = -51.6
+length = 367.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_awbyn")
+level_uid = "level_178"
+display_order = 178
+difficulty = 4
+hint_angle_degrees = -40.0
+hint_power = 2100.0
+level_id = 178
+display_name = "Işık Perdesi"
+target_position = Vector2(576, 257)
+panels = Array[ExtResource("3_1sakv")]([SubResource("Resource_e0mb1")])
+obstacles = Array[ExtResource("2_qmbxj")]([SubResource("Resource_2d1wg"), SubResource("Resource_5p2gb")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 801.90295), Vector2(918.09705, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_wu4os"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_4tt46"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_bo257"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_ht7jv"]
+
+[sub_resource type="Resource" id="Resource_ahpui"]
+script = ExtResource("2_4tt46")
+kind = 6
+position = Vector2(174.24516, 873.4359)
+size = Vector2(88, 88)
+exit_position = Vector2(514.1135, 372.2032)
+
+[sub_resource type="Resource" id="Resource_pcjgf"]
+script = ExtResource("2_4tt46")
+kind = 6
+position = Vector2(340.97546, 773.62463)
+size = Vector2(88, 88)
+exit_position = Vector2(557.772, 606.5637)
+
+[sub_resource type="Resource" id="Resource_2f7gi"]
+script = ExtResource("3_bo257")
+position = Vector2(415.7985, 840.754)
+rotation_degrees = -26.9180757522583
+length = 245.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_ouct3"]
+script = ExtResource("3_bo257")
+position = Vector2(264.08145, 570.26624)
+rotation_degrees = -2.0022500991821293
+length = 369.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_ht7jv")
+level_uid = "level_191"
+display_order = 191
+difficulty = 4
+hint_angle_degrees = -44.0
+hint_power = 1100.0
+level_id = 191
+display_name = "Çifte Ritim"
+target_position = Vector2(248.09782, 362.6772)
+panels = Array[ExtResource("3_bo257")]([SubResource("Resource_2f7gi"), SubResource("Resource_ouct3")])
+obstacles = Array[ExtResource("2_4tt46")]([SubResource("Resource_ahpui"), SubResource("Resource_pcjgf")])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

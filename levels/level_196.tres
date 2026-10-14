@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_g54l1"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_4rvxt"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_w6784"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_k4njp"]
+
+[sub_resource type="Resource" id="Resource_m2w2r"]
+script = ExtResource("2_4rvxt")
+kind = 6
+position = Vector2(124.496765, 800.8292)
+size = Vector2(86, 86)
+exit_position = Vector2(540.5824, 563.0514)
+
+[sub_resource type="Resource" id="Resource_wlcr4"]
+script = ExtResource("2_4rvxt")
+kind = 5
+position = Vector2(584.28564, 822.4768)
+size = Vector2(321.33334, 14)
+motion_period = 2.28
+phase_degrees = 40.48378
+pulse_on_ratio = 0.59
+
+[sub_resource type="Resource" id="Resource_b0p8q"]
+script = ExtResource("3_w6784")
+position = Vector2(236, 522)
+rotation_degrees = 31.1
+length = 272.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_bo4ox"]
+script = ExtResource("3_w6784")
+position = Vector2(185, 668)
+rotation_degrees = 23.7
+length = 311.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_k4njp")
+level_uid = "level_196"
+display_order = 196
+difficulty = 5
+hint_angle_degrees = -44.0
+hint_power = 2150.0
+level_id = 196
+display_name = "Son Kırılma"
+target_position = Vector2(214, 327)
+panels = Array[ExtResource("3_w6784")]([SubResource("Resource_b0p8q"), SubResource("Resource_bo4ox")])
+obstacles = Array[ExtResource("2_4rvxt")]([SubResource("Resource_m2w2r"), SubResource("Resource_wlcr4")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 420.3355), Vector2(579.6645, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

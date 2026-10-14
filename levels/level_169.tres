@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_jk001"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_mrcph"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_78b6i"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_n5ir0"]
+
+[sub_resource type="Resource" id="Resource_msx2c"]
+script = ExtResource("2_mrcph")
+kind = 6
+position = Vector2(139.53915, 575.30457)
+size = Vector2(88, 88)
+exit_position = Vector2(442.1432, 501.0152)
+exit_turn_degrees = -90.0
+
+[sub_resource type="Resource" id="Resource_ttadh"]
+script = ExtResource("2_mrcph")
+kind = 2
+position = Vector2(168.37445, 745.86237)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 105.0
+
+[sub_resource type="Resource" id="Resource_34tbi"]
+script = ExtResource("3_78b6i")
+position = Vector2(288, 601)
+rotation_degrees = 47.4
+length = 275.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_6tvbv"]
+script = ExtResource("3_78b6i")
+position = Vector2(545, 617)
+rotation_degrees = -11.7
+length = 267.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_n5ir0")
+level_uid = "level_169"
+display_order = 169
+difficulty = 4
+hint_angle_degrees = -16.0
+hint_power = 1900.0
+level_id = 169
+display_name = "Ters Çıkış"
+target_position = Vector2(266, 370)
+panels = Array[ExtResource("3_78b6i")]([SubResource("Resource_34tbi"), SubResource("Resource_6tvbv")])
+obstacles = Array[ExtResource("2_mrcph")]([SubResource("Resource_msx2c"), SubResource("Resource_ttadh")])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

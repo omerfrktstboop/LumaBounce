@@ -1,0 +1,52 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_tqrgg"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_kjoao"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_7tv1d"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_tug8h"]
+
+[sub_resource type="Resource" id="Resource_584xj"]
+script = ExtResource("1_tqrgg")
+position = Vector2(193.89502, 416.4706)
+rotation_degrees = 4.1062346
+size = Vector2(319.79004, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_eo1id"]
+script = ExtResource("1_tqrgg")
+position = Vector2(526.105, 384.4706)
+rotation_degrees = 2.4302034
+size = Vector2(319.79004, 34)
+
+[sub_resource type="Resource" id="Resource_vxs4s"]
+script = ExtResource("2_kjoao")
+kind = 6
+position = Vector2(594.40247, 786.80615)
+size = Vector2(90, 90)
+exit_position = Vector2(416.69775, 590.05676)
+
+[sub_resource type="Resource" id="Resource_q3hox"]
+script = ExtResource("3_7tv1d")
+position = Vector2(513, 525)
+rotation_degrees = 51.1
+length = 255.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_tug8h")
+level_uid = "level_184"
+display_order = 184
+difficulty = 4
+hint_angle_degrees = -38.0
+hint_power = 2050.0
+level_id = 184
+display_name = "Kırık Geçit"
+target_position = Vector2(550, 291)
+panels = Array[ExtResource("3_7tv1d")]([SubResource("Resource_q3hox")])
+breakable_blocks = Array[ExtResource("1_tqrgg")]([SubResource("Resource_584xj"), SubResource("Resource_eo1id")])
+obstacles = Array[ExtResource("2_kjoao")]([SubResource("Resource_vxs4s")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 432.01584), Vector2(567.98413, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 5
+three_star_max_seconds = 85.0
+three_star_max_shots = 4

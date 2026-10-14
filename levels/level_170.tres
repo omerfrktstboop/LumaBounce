@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_pgi3i"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_si85u"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_jxpku"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_en314"]
+
+[sub_resource type="Resource" id="Resource_sqhm1"]
+script = ExtResource("2_si85u")
+kind = 6
+position = Vector2(519.70404, 751.8613)
+size = Vector2(88, 88)
+exit_position = Vector2(284.28522, 350.37408)
+
+[sub_resource type="Resource" id="Resource_prb0p"]
+script = ExtResource("3_jxpku")
+position = Vector2(255, 483)
+rotation_degrees = -2.0
+length = 399.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_en314")
+level_uid = "level_170"
+display_order = 170
+difficulty = 4
+hint_angle_degrees = 18.0
+hint_power = 1100.0
+level_id = 170
+display_name = "Zamanlı Geçit"
+target_position = Vector2(469, 276)
+panels = Array[ExtResource("3_jxpku")]([SubResource("Resource_prb0p")])
+obstacles = Array[ExtResource("2_si85u")]([SubResource("Resource_sqhm1")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 741.3578), Vector2(864.73303, 1600)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 661.0362), Vector2(785.7524, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

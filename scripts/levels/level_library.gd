@@ -8,8 +8,8 @@ extends RefCounted
 ## bos/bozuk bir bolumle acilmaz.
 
 const FIRST_LEVEL_ID := 1
-## Ana kampanyadaki toplam bolum sayisi.
-const LEVEL_COUNT := 150
+## Ana kampanyadaki toplam bolum sayisi. 151-200 PRİZMA dunyasidir.
+const LEVEL_COUNT := 200
 const PATH_FORMAT := "res://levels/level_%02d.tres"
 
 ## Yildiz kapilari: bolum_id -> o bolumun acilmasi icin gereken yildiz sayisi.

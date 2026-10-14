@@ -1,0 +1,51 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_3takc"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_vn546"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_huqwf"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_x6ek5"]
+
+[sub_resource type="Resource" id="Resource_h4g8d"]
+script = ExtResource("1_3takc")
+position = Vector2(192.02417, 599.1865)
+rotation_degrees = 2.8707051
+size = Vector2(316.04834, 34)
+hit_points = 2
+
+[sub_resource type="Resource" id="Resource_at4l7"]
+script = ExtResource("1_3takc")
+position = Vector2(527.9758, 567.1865)
+rotation_degrees = -2.3147316
+size = Vector2(316.04834, 34)
+
+[sub_resource type="Resource" id="Resource_lyqgu"]
+script = ExtResource("2_vn546")
+kind = 6
+position = Vector2(514.53815, 678.44714)
+size = Vector2(90, 90)
+exit_position = Vector2(261.74524, 477.85925)
+
+[sub_resource type="Resource" id="Resource_6c43o"]
+script = ExtResource("3_huqwf")
+position = Vector2(282, 810)
+rotation_degrees = -2.8
+length = 376.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_x6ek5")
+level_uid = "level_182"
+display_order = 182
+difficulty = 4
+hint_angle_degrees = 30.0
+hint_power = 1700.0
+level_id = 182
+display_name = "Bronz Duvar"
+target_position = Vector2(517, 376)
+panels = Array[ExtResource("3_huqwf")]([SubResource("Resource_6c43o")])
+breakable_blocks = Array[ExtResource("1_3takc")]([SubResource("Resource_h4g8d"), SubResource("Resource_at4l7")])
+obstacles = Array[ExtResource("2_vn546")]([SubResource("Resource_lyqgu")])
+two_star_max_seconds = 160.0
+two_star_max_shots = 5
+three_star_max_seconds = 85.0
+three_star_max_shots = 4

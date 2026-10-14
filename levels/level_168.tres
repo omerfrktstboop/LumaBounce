@@ -1,0 +1,44 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_hluin"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_rwpoc"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_t55pa"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_jj3eh"]
+
+[sub_resource type="Resource" id="Resource_1hg0f"]
+script = ExtResource("2_rwpoc")
+kind = 6
+position = Vector2(130.69402, 803.1368)
+size = Vector2(88, 88)
+exit_position = Vector2(367.39066, 277.46863)
+
+[sub_resource type="Resource" id="Resource_cpor5"]
+script = ExtResource("3_t55pa")
+position = Vector2(153, 707)
+rotation_degrees = 42.6
+length = 349.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_1m64d"]
+script = ExtResource("3_t55pa")
+position = Vector2(444, 596)
+rotation_degrees = -36.7
+length = 339.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_jj3eh")
+level_uid = "level_168"
+display_order = 168
+difficulty = 4
+hint_angle_degrees = -38.0
+hint_power = 1250.0
+level_id = 168
+display_name = "Yön Değişimi"
+target_position = Vector2(435, 404)
+panels = Array[ExtResource("3_t55pa")]([SubResource("Resource_cpor5"), SubResource("Resource_1m64d")])
+obstacles = Array[ExtResource("2_rwpoc")]([SubResource("Resource_1hg0f")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 553.2582), Vector2(715.06494, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

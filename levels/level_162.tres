@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_dmmgd"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_nrnct"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_q3bnk"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_x6vtw"]
+
+[sub_resource type="Resource" id="Resource_6xmpe"]
+script = ExtResource("2_nrnct")
+kind = 6
+position = Vector2(540.29584, 582.8037)
+size = Vector2(92, 92)
+exit_position = Vector2(283.8814, 484.55435)
+
+[sub_resource type="Resource" id="Resource_y7gvo"]
+script = ExtResource("2_nrnct")
+kind = 1
+position = Vector2(206.66972, 941.105)
+size = Vector2(77.5, 77.5)
+
+[sub_resource type="Resource" id="Resource_nq7sf"]
+script = ExtResource("3_q3bnk")
+position = Vector2(206, 812)
+rotation_degrees = 23.6
+length = 384.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_x6vtw")
+level_uid = "level_162"
+display_order = 162
+difficulty = 4
+hint_angle_degrees = 16.0
+hint_power = 2100.0
+level_id = 162
+display_name = "Mayınlı Çıkış"
+target_position = Vector2(422, 267)
+panels = Array[ExtResource("3_q3bnk")]([SubResource("Resource_nq7sf")])
+obstacles = Array[ExtResource("2_nrnct")]([SubResource("Resource_6xmpe"), SubResource("Resource_y7gvo")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 442.8706), Vector2(557.1294, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_p05ip"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_0avkb"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_xko7d"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_m21sd"]
+
+[sub_resource type="Resource" id="Resource_roie0"]
+script = ExtResource("2_0avkb")
+kind = 6
+position = Vector2(294.8887, 728.1762)
+size = Vector2(92, 92)
+exit_position = Vector2(438.8056, 312.1645)
+
+[sub_resource type="Resource" id="Resource_ff1uf"]
+script = ExtResource("3_xko7d")
+position = Vector2(372, 812)
+rotation_degrees = -30.7
+length = 245.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_iptlk"]
+script = ExtResource("3_xko7d")
+position = Vector2(229, 523)
+rotation_degrees = -6.9
+length = 369.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_m21sd")
+level_uid = "level_160"
+display_order = 160
+difficulty = 4
+hint_angle_degrees = 26.0
+hint_power = 1750.0
+level_id = 160
+display_name = "Gizli Yol"
+target_position = Vector2(273, 330)
+panels = Array[ExtResource("3_xko7d")]([SubResource("Resource_ff1uf"), SubResource("Resource_iptlk")])
+obstacles = Array[ExtResource("2_0avkb")]([SubResource("Resource_roie0")])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

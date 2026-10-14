@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_h4x6x"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_y7f4o"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_x8y74"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_5e8kv"]
+
+[sub_resource type="Resource" id="Resource_7xeo0"]
+script = ExtResource("2_y7f4o")
+kind = 6
+position = Vector2(473.43658, 826.1935)
+size = Vector2(86, 86)
+exit_position = Vector2(175.5555, 539.55316)
+exit_turn_degrees = -90.0
+
+[sub_resource type="Resource" id="Resource_3cuhc"]
+script = ExtResource("2_y7f4o")
+kind = 6
+position = Vector2(464.31796, 560.7279)
+size = Vector2(86, 86)
+exit_position = Vector2(165.53442, 340.29065)
+exit_turn_degrees = -90.0
+
+[sub_resource type="Resource" id="Resource_omyxp"]
+script = ExtResource("3_x8y74")
+position = Vector2(369, 736)
+rotation_degrees = -12.9
+length = 359.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_5e8kv")
+level_uid = "level_193"
+display_order = 193
+difficulty = 4
+hint_angle_degrees = -44.0
+hint_power = 2050.0
+level_id = 193
+display_name = "Zaman Kapısı"
+target_position = Vector2(567, 393)
+panels = Array[ExtResource("3_x8y74")]([SubResource("Resource_omyxp")])
+obstacles = Array[ExtResource("2_y7f4o")]([SubResource("Resource_7xeo0"), SubResource("Resource_3cuhc")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 575.4729), Vector2(731.3985, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

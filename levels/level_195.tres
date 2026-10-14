@@ -1,0 +1,47 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_1sc1i"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_bmpjt"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_o253k"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_3vf14"]
+
+[sub_resource type="Resource" id="Resource_oqalp"]
+script = ExtResource("2_bmpjt")
+kind = 6
+position = Vector2(121.93655, 875.58704)
+size = Vector2(86, 86)
+exit_position = Vector2(284.95547, 632.54785)
+exit_turn_degrees = -90.0
+
+[sub_resource type="Resource" id="Resource_1qu1n"]
+script = ExtResource("2_bmpjt")
+kind = 6
+position = Vector2(283.59222, 912.5637)
+size = Vector2(86, 86)
+exit_position = Vector2(549.3246, 572.8165)
+exit_turn_degrees = -90.0
+
+[sub_resource type="Resource" id="Resource_0dntn"]
+script = ExtResource("3_o253k")
+position = Vector2(494, 782)
+rotation_degrees = -15.9
+length = 357.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_3vf14")
+level_uid = "level_195"
+display_order = 195
+difficulty = 5
+hint_angle_degrees = -28.0
+hint_power = 2100.0
+level_id = 195
+display_name = "Geçit Fırtınası"
+target_position = Vector2(347, 394)
+panels = Array[ExtResource("3_o253k")]([SubResource("Resource_0dntn")])
+obstacles = Array[ExtResource("2_bmpjt")]([SubResource("Resource_oqalp"), SubResource("Resource_1qu1n")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 681.33276), Vector2(815.08545, 1600)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 572.4993), Vector2(685.7265, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

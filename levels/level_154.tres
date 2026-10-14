@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_odjo4"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_i5x7u"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_ve87g"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_f2swb"]
+
+[sub_resource type="Resource" id="Resource_cygp0"]
+script = ExtResource("2_i5x7u")
+kind = 6
+position = Vector2(214.26508, 930.16473)
+size = Vector2(96, 96)
+exit_position = Vector2(342.56177, 465.8338)
+
+[sub_resource type="Resource" id="Resource_pauyw"]
+script = ExtResource("3_ve87g")
+position = Vector2(369, 736)
+rotation_degrees = -12.9
+length = 359.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_f2swb")
+level_uid = "level_154"
+display_order = 154
+difficulty = 3
+hint_angle_degrees = -72.0
+hint_power = 1950.0
+level_id = 154
+display_name = "Kısa Yol"
+target_position = Vector2(567, 393)
+panels = Array[ExtResource("3_ve87g")]([SubResource("Resource_pauyw")])
+obstacles = Array[ExtResource("2_i5x7u")]([SubResource("Resource_cygp0")])
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

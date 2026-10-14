@@ -16,15 +16,31 @@ extends SceneTree
 ## verifier'inkiyle uyumludur, boylece "uretecte gecti ama verifier'da kaldi"
 ## durumu olusmaz.
 ##
+## 151-200 (PRİZMA) da buradan uretilir: 151-175 portal bandi, 176-200 ustalik
+## bandi. Bu bolumler kullanicinin elle duzenleyecegi TASLAKLARDIR ama yine
+## de gercek fizikten gecer - cozulemez bir taslak oyuna girmemeli.
+##
 ## Kullanim:
 ##   godot --headless --path . --script res://tools/generate_band_51_125.gd
 ##   godot --headless --path . --script res://tools/generate_band_51_125.gd -- --from 51 --to 60
+##   godot --headless --path . --script res://tools/generate_band_51_125.gd -- --from 151 --to 200
 
 const RING := ObstacleData.Kind.METAL_RING
 const BOMB := ObstacleData.Kind.BOMB
 const WHEEL := ObstacleData.Kind.ROTATING_WHEEL
 const BAR := ObstacleData.Kind.MOVING_BAR
 const LASER := ObstacleData.Kind.PULSE_LASER
+const PORTAL := ObstacleData.Kind.PORTAL
+
+## Bant baslangiclari: zorluk ve saglam hucre tavani bant icinde ilerler.
+const BAND_STARTS := [51, 76, 101, 126, 151, 176]
+## Yeni mekanigin okunakli tanitildigi bolumler: tek panel, genis cozum.
+const INTRO_LEVELS := [51, 76, 101, 126, 151, 152, 153, 154, 155]
+## Ekranin alt-orta bandinda ogretici metni olan bolumler (bkz. _position_is_clear).
+const TUTORIAL_LEVELS := [51, 76, 101, 126, 151, 166]
+## Portal bolumlerinde isabetlerin en az bu orani portaldan gecmeli; yoksa
+## portal cozumun parcasi degil, ekrandaki bir sustur.
+const MIN_PORTAL_HIT_SHARE := 0.5
 
 ## Kabul bandi. Alt sinir verifier'in MIN_ROBUST_CELLS'i (6) ile ayni; ustu
 ## "zaten bedava" bolumleri eler.
@@ -124,6 +140,23 @@ const BAND_NAMES := {
 	143: "Kesişen Işın", 144: "Sessiz Aralık", 145: "Işık Kapanı",
 	146: "Keskin Atım", 147: "Sönük Koridor", 148: "Son Işık Kilidi",
 	149: "Işın Düğümü", 150: "Lazer Ustalığı",
+	151: "Işık Geçidi", 152: "Mavi Kapı", 153: "Turuncu Çıkış",
+	154: "Kısa Yol", 155: "Geçit Sırrı", 156: "Sekmeli Geçit",
+	157: "Duvar Ardı", 158: "Eğik Kapı", 159: "Kenar Geçidi",
+	160: "Gizli Yol", 161: "Halka Geçidi", 162: "Mayınlı Çıkış",
+	163: "Korunan Kapı", 164: "Çember ve Geçit", 165: "Tehlikeli Yol",
+	166: "Dönen Kapı", 167: "Kayan Geçit", 168: "Yön Değişimi",
+	169: "Ters Çıkış", 170: "Zamanlı Geçit", 171: "İkiz Kapılar",
+	172: "Çifte Geçit", 173: "Geçit Zinciri", 174: "Kapı Labirenti",
+	175: "Geçit Ustalığı", 176: "Prizma Işığı", 177: "Sıralı Işın",
+	178: "Işık Perdesi", 179: "Yanıp Sönen Yol", 180: "Işın Kavşağı",
+	181: "Zırhlı Koridor", 182: "Bronz Duvar", 183: "Çatlak Kale",
+	184: "Kırık Geçit", 185: "Tuğla Kapanı", 186: "Işık ve Taş",
+	187: "Dönen Kale", 188: "Işın Çarkı", 189: "Kırık Prizma",
+	190: "Taş Işığı", 191: "Çifte Ritim", 192: "İkiz Döngü",
+	193: "Zaman Kapısı", 194: "Kayan İkizler", 195: "Geçit Fırtınası",
+	196: "Son Kırılma", 197: "Prizma Kalbi", 198: "Son Geçit",
+	199: "Işığın Ucu", 200: "Prizma Finali",
 }
 
 ## Iskelet cesitlemesi. Bkz. _jitter_skeleton: yalnizca --distinct modunda
@@ -142,6 +175,10 @@ var _only: Array[int] = []
 ## uretilen bolum kutuphanedeki HICBIR bolumle ayni iskeleti paylasmaz.
 var _distinct := false
 var _identity_only := false
+## --diagnose: adaylarin olcumlerini yazdirir, HICBIR dosya yazmaz. Bir bolumun
+## hangi kabul olcutune takildigini gormek icin.
+var _diagnose := false
+var _diagnosed := 0
 var _solver: LevelSolver
 var _world: LevelWorld
 var _rng := RandomNumberGenerator.new()
@@ -165,6 +202,8 @@ func _initialize() -> void:
 			_distinct = true
 		elif args[i] == "--identity-only":
 			_identity_only = true
+		elif args[i] == "--diagnose":
+			_diagnose = true
 	_run.call_deferred()
 
 
@@ -267,6 +306,14 @@ func _build_level(level_id: int) -> bool:
 				continue
 
 			var verdict := await _evaluate(level)
+			if _diagnose:
+				print("ADAY %d ok=%s saglam=%d sekme=%d isabet=%.3f portal=%.2f" % [
+					level_id, verdict["ok"], int(verdict["robust"]), int(verdict["bounces"]),
+					float(verdict.get("hit_rate", -1.0)), float(verdict.get("portal_share", -1.0))])
+				_diagnosed += 1
+				if _diagnosed >= 24:
+					return false
+				continue
 			if not bool(verdict["ok"]):
 				continue
 			var novelty := _novelty.score(level, verdict, _references)
@@ -393,7 +440,7 @@ func _level_from_skeleton(skeleton: Dictionary, level_id: int,
 		panel.length = float(panel_spec[2])
 		panel.thickness = 26.0
 		panels.append(panel)
-	if level_id in [51, 76, 101, 126] and panels.size() > 1:
+	if level_id in INTRO_LEVELS and panels.size() > 1:
 		panels.resize(1)
 	level.panels = panels
 	level.max_lives = 5
@@ -480,6 +527,20 @@ func _place_obstacles(level: LevelData, spec: Dictionary,
 	var placed: Array[ObstacleData] = []
 	for kind in kinds:
 		var data := _make_obstacle(int(kind), float(spec["difficulty"]))
+		if int(kind) == PORTAL:
+			if bool(spec.get("turns", false)) and _rng.randf() < 0.6:
+				data.exit_turn_degrees = 90.0 if _rng.randf() < 0.5 else -90.0
+			if not _seat_portal(data, level, placed):
+				return false
+			placed.append(data)
+			continue
+		if int(kind) == LASER:
+			# Ayni bolumdeki ikinci lazer birincinin tam tersi fazda yanar:
+			# iki isin tek kalin bir isin gibi okunmasin, sirayla acilsin.
+			for other in placed:
+				if other.kind == LASER:
+					data.phase_degrees = fposmod(other.phase_degrees + 180.0, 360.0)
+					data.motion_period = other.motion_period
 		var seated := false
 		for _try in 40:
 			data.position = Vector2(
@@ -492,6 +553,31 @@ func _place_obstacles(level: LevelData, spec: Dictionary,
 			return false
 	level.obstacles = placed
 	return true
+
+
+## Portal cifti: giris ekranin alt yarisinda (firlaticidan ulasilabilir),
+## cikis ust yarida. Iki halkanin da cevresi bos olmali - top cikista bir
+## panelin icinde dogmamali. Yatay fark sart: cikis girisin tam ustunde olursa
+## top dusup tekrar girer (oyun bunu 4 isinlanmada keser ama okunmaz).
+func _seat_portal(data: ObstacleData, level: LevelData,
+		placed: Array[ObstacleData]) -> bool:
+	var radius := data.outer_radius()
+	for _try in 60:
+		data.position = Vector2(
+			_rng.randf_range(120.0, 600.0), _rng.randf_range(560.0, 940.0))
+		data.exit_position = Vector2(
+			_rng.randf_range(120.0, 600.0), _rng.randf_range(250.0, 640.0))
+		if data.position.distance_to(data.exit_position) < 260.0:
+			continue
+		if absf(data.position.x - data.exit_position.x) < 120.0:
+			continue
+		if not _position_is_clear(data.position, radius, level, placed):
+			continue
+		if not _position_is_clear(data.exit_position, radius + _solver.radius,
+				level, placed):
+			continue
+		return true
+	return false
 
 
 func _place_bricks(level: LevelData, spec: Dictionary,
@@ -581,7 +667,7 @@ func _obstacle_radius(data: ObstacleData) -> float:
 func _position_is_clear(position: Vector2, radius: float, level: LevelData,
 		placed: Array[ObstacleData]) -> bool:
 	var spawn := _solver.spawn_position(level.launcher_position)
-	if level.level_id in [51, 76, 101, 126] and position.y > 820.0:
+	if level.level_id in TUTORIAL_LEVELS and position.y > 820.0:
 		# Tanitim metni ekranin alt-orta bandinda, dunya koordinatinda yaklasik
 		# y=930'da cizilir; yeni engeli bu satirin ustunde tut.
 		return false
@@ -601,6 +687,9 @@ func _position_is_clear(position: Vector2, radius: float, level: LevelData,
 			return false
 	for other in placed:
 		if position.distance_to(other.position) < radius + _obstacle_radius(other) + 24.0:
+			return false
+		if other.kind == PORTAL and position.distance_to(other.exit_position) \
+				< radius + other.outer_radius() + _solver.radius + 24.0:
 			return false
 	return true
 
@@ -646,6 +735,12 @@ func _make_obstacle(kind: int, difficulty: float) -> ObstacleData:
 			data.pulse_on_ratio = lerpf(0.45, 0.60, difficulty)
 			# Ayni bolumdeki iki lazer sirayla yansin.
 			data.phase_degrees = _rng.randf_range(0.0, 360.0)
+		PORTAL:
+			# Tanitimda genis halka (kolay dalis), bant ilerledikce daralir.
+			var diameter := snappedf(lerpf(104.0, 84.0, difficulty), 2.0)
+			data.size = Vector2(diameter, diameter)
+			# Yon ceviren cikis 166'dan sonra gelir (bkz. _spec_for "turns").
+			data.exit_turn_degrees = 0.0
 	return data
 
 
@@ -689,17 +784,17 @@ func _evaluate(level: LevelData) -> Dictionary:
 		return result
 
 	var band_start := 51
-	if level.level_id >= 126:
-		band_start = 126
-	elif level.level_id >= 101:
-		band_start = 101
-	elif level.level_id >= 76:
-		band_start = 76
+	for start in BAND_STARTS:
+		if level.level_id >= int(start):
+			band_start = int(start)
 	var band_progress := float(level.level_id - band_start) / 24.0
-	var intro_levels := [51, 76, 101, 126]
+	var intro_levels := INTRO_LEVELS
 	var max_robust := 64 if level.level_id in intro_levels else roundi(
 		lerpf(34.0, 18.0, clampf(band_progress, 0.0, 1.0)))
 	var min_robust := 14 if level.level_id in intro_levels else MIN_ROBUST
+	var has_portal := false
+	for data in level.obstacles:
+		has_portal = has_portal or data.kind == PORTAL
 	if level.breakable_blocks.is_empty():
 		var scan := _solver.scan(spawn, level.target_position, play_rect,
 			[], ANGLE_STEP, POWER_STEP)
@@ -710,8 +805,20 @@ func _evaluate(level: LevelData) -> Dictionary:
 		result["bounces"] = bounces
 		var hit_rate := float(scan["hit_count"]) / float(maxi(int(scan["total"]), 1))
 		result["hit_rate"] = hit_rate
+		var portal_share := (float(scan.get("teleport_hits", 0))
+			/ float(maxi(int(scan["hit_count"]), 1)))
+		result["portal_share"] = portal_share
+		# Portal bolumunde tek sekme sarti aranmaz: portaldan dogrudan hedefe
+		# giden rota da gecerli bir bulmacadir (cikisi bulmak isin kendisi).
+		var bounce_ok := bounces >= 1 or (has_portal and bounces >= 0)
+		# Portal genis bir huni gibi davranir: olculen isabet orani portal
+		# bolumlerinde %8-26 (51-150 icin konan %7.5 tavaninin cok ustunde).
+		# Tavan portal bolumlerinde gevsetilir; zorlugu saglam hucre tavani ve
+		# portal payi tasir.
+		var hit_cap := 0.16 if has_portal else 0.075
 		result["ok"] = (robust >= min_robust and robust <= max_robust
-			and bounces >= 1 and (level.level_id in intro_levels or hit_rate <= 0.075))
+			and bounce_ok and (level.level_id in intro_levels or hit_rate <= hit_cap)
+			and (not has_portal or portal_share >= MIN_PORTAL_HIT_SHARE))
 	else:
 		# Bloklu bolumde yalnizca "hepsi kirilmis" hayali geometriyi olcmek
 		# yetmez. Oyuncunun gercek atislarla ulasabildigi blok durumlarini ara;
@@ -760,15 +867,18 @@ func _evaluate(level: LevelData) -> Dictionary:
 func _apply_identity(level: LevelData, level_id: int, spec: Dictionary) -> void:
 	level.level_uid = LevelData.uid_for(level_id)
 	level.display_order = level_id
-	level.difficulty = (3 if level_id in [51, 76, 101, 126] else
+	level.difficulty = (3 if level_id in INTRO_LEVELS else
 		(5 if level_id in [75, 95, 96, 97, 98, 99, 100, 120, 121, 122,
-			123, 124, 125, 145, 146, 147, 148, 149, 150] else 4))
+			123, 124, 125, 145, 146, 147, 148, 149, 150, 171, 172, 173, 174, 175,
+			195, 196, 197, 198, 199, 200] else 4))
 	level.display_name = String(spec["name"])
 	level.tutorial_text = ("Metal halkanın açıklığını sekme rotasında kullan."
 		if level_id == 51 else ("Mayına değmeden güvenli sekme açısını bul."
 		if level_id == 76 else ("Dönen çarkın kolları arasındaki boşluğu zamanla."
 		if level_id == 101 else ("Lazer sönükken atışını çizginin ötesine geçir."
-		if level_id == 126 else ""))))
+		if level_id == 126 else ("Topu mavi portala gönder; turuncu portaldan aynı yöne çıkar."
+		if level_id == 151 else ("Ortasında ok olan çıkış, topun yönünü çevirir."
+		if level_id == 166 else ""))))))
 	level.max_lives = 5
 	level.two_star_max_shots = 5 if int(spec["bricks"]) > 0 else 3
 	level.three_star_max_shots = 4 if int(spec["bricks"]) > 0 else 2
@@ -834,6 +944,63 @@ func _spec_for(level_id: int) -> Dictionary:
 			wall_mode = 3 if stage in [14, 19, 24] else (stage % 3)
 		if level_id in [102, 104, 105, 106, 107, 109, 110, 111, 112, 119]:
 			min_kinds = 2
+	elif level_id >= 176:
+		# 176-200: ustalik bandi, yeni mekanik yok. Lazerin asil yeri (iki
+		# isin sirayla), tuglalarin donusu, iki portal cifti ve final.
+		var stage := level_id - 176
+		difficulty = lerpf(0.60, 1.0, float(stage) / 24.0)
+		if stage < 5:
+			kinds = [LASER, LASER, PORTAL]
+			min_kinds = 2
+		elif stage < 10:
+			kinds = [PORTAL]
+			bricks = 2
+			strong = 1
+		elif stage < 15:
+			kinds = [LASER, WHEEL]
+			bricks = 1
+			strong = 1
+			min_kinds = 2
+		elif stage < 20:
+			kinds = [PORTAL, PORTAL, [WHEEL, BAR][stage % 2]]
+			min_kinds = 2
+		else:
+			kinds = [PORTAL, LASER, [RING, BOMB, WHEEL][stage % 3]]
+			min_kinds = 2
+			if level_id == 200:
+				bricks = 1
+				strong = 1
+		wall_mode = 3 if stage in [9, 19, 24] else (stage % 3)
+		return {
+			"name": name, "kinds": kinds, "difficulty": difficulty,
+			"bricks": bricks, "strong_bricks": strong, "wall_mode": wall_mode,
+			"min_kinds": min_kinds, "turns": stage >= 15,
+		}
+	elif level_id >= 151:
+		# 151-175: portal bandi. 151-155 portali TEK BASINA ogretir; 156-160
+		# panel/duvar ile kestirme yol, 161-165 halka/mayin, 166-170 cark/bar
+		# zamanlamasi ve yon ceviren cikis, 171-175 iki portal cifti.
+		var stage := level_id - 151
+		difficulty = lerpf(0.35, 0.95, float(stage) / 24.0)
+		kinds = [PORTAL]
+		if stage >= 10 and stage < 15:
+			kinds.append([RING, BOMB][stage % 2])
+		elif stage >= 15 and stage < 20:
+			kinds.append([WHEEL, BAR][stage % 2])
+		elif stage >= 20:
+			kinds.append(PORTAL)
+			min_kinds = 2
+			if stage >= 22:
+				kinds.append([RING, BOMB, WHEEL][stage % 3])
+		if level_id in [165, 175]:
+			bricks = 1
+		if stage >= 5:
+			wall_mode = 3 if stage in [14, 19, 24] else (stage % 3)
+		return {
+			"name": name, "kinds": kinds, "difficulty": difficulty,
+			"bricks": bricks, "strong_bricks": strong, "wall_mode": wall_mode,
+			"min_kinds": min_kinds, "turns": stage >= 15,
+		}
 	else:
 		# 126-150: lazer bandi. 126 yalnizca lazeri ogretir; sonrasinda cark,
 		# halka ve mayin duzenli doner. Lazer ilk turdur ve her bolumde korunur.

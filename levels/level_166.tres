@@ -1,0 +1,38 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_2owee"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_boefo"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_4vuuk"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_1g7tk"]
+
+[sub_resource type="Resource" id="Resource_hk7ip"]
+script = ExtResource("2_boefo")
+kind = 6
+position = Vector2(364.19104, 737.58234)
+size = Vector2(90, 90)
+exit_position = Vector2(550.4326, 392.84232)
+exit_turn_degrees = 90.0
+
+[sub_resource type="Resource" id="Resource_44gr1"]
+script = ExtResource("3_4vuuk")
+position = Vector2(514, 812)
+rotation_degrees = -23.6
+length = 384.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_1g7tk")
+level_uid = "level_166"
+display_order = 166
+difficulty = 4
+hint_angle_degrees = -34.0
+hint_power = 2050.0
+level_id = 166
+display_name = "Dönen Kapı"
+target_position = Vector2(298, 267)
+panels = Array[ExtResource("3_4vuuk")]([SubResource("Resource_44gr1")])
+obstacles = Array[ExtResource("2_boefo")]([SubResource("Resource_hk7ip")])
+tutorial_text = "Ortasında ok olan çıkış, topun yönünü çevirir."
+two_star_max_seconds = 160.0
+two_star_max_shots = 3
+three_star_max_seconds = 85.0

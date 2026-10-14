@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="LevelData" format=3]
+
+[ext_resource type="Script" path="res://scripts/levels/breakable_block_data.gd" id="1_jhvmd"]
+[ext_resource type="Script" path="res://scripts/levels/obstacle_data.gd" id="2_nyitt"]
+[ext_resource type="Script" path="res://scripts/levels/panel_data.gd" id="3_l1fdr"]
+[ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_xbstl"]
+
+[sub_resource type="Resource" id="Resource_2ctu3"]
+script = ExtResource("1_jhvmd")
+position = Vector2(360, 472.44714)
+rotation_degrees = -3.0098424
+size = Vector2(652, 34)
+
+[sub_resource type="Resource" id="Resource_ybfkb"]
+script = ExtResource("2_nyitt")
+kind = 6
+position = Vector2(208.34518, 570.00635)
+size = Vector2(90, 90)
+exit_position = Vector2(539.0535, 319.01096)
+
+[sub_resource type="Resource" id="Resource_a7go5"]
+script = ExtResource("3_l1fdr")
+position = Vector2(420, 662)
+rotation_degrees = -24.7
+length = 403.0
+thickness = 26.0
+
+[resource]
+script = ExtResource("4_xbstl")
+level_uid = "level_165"
+display_order = 165
+difficulty = 4
+hint_angle_degrees = -26.0
+hint_power = 1600.0
+level_id = 165
+display_name = "Tehlikeli Yol"
+target_position = Vector2(288, 394)
+panels = Array[ExtResource("3_l1fdr")]([SubResource("Resource_a7go5")])
+breakable_blocks = Array[ExtResource("1_jhvmd")]([SubResource("Resource_2ctu3")])
+obstacles = Array[ExtResource("2_nyitt")]([SubResource("Resource_ybfkb")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 560.71423), Vector2(686.78723, 1600)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 600.7194), Vector2(739.53784, 1600)])
+two_star_max_seconds = 160.0
+two_star_max_shots = 5
+three_star_max_seconds = 85.0
+three_star_max_shots = 4
