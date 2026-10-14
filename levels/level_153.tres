@@ -7,16 +7,41 @@
 
 [sub_resource type="Resource" id="Resource_sfy8x"]
 script = ExtResource("2_wbmfk")
-kind = 6
-position = Vector2(201.59833, 763.03046)
-size = Vector2(96, 96)
-exit_position = Vector2(379.07547, 552.97394)
+kind = 5
+position = Vector2(201.9596, 610.84564)
+size = Vector2(285.4479, 14)
+motion_period = 2.61125
+phase_degrees = 279.30475
+pulse_on_ratio = 0.54859375
 
 [sub_resource type="Resource" id="Resource_7xkbx"]
+script = ExtResource("2_wbmfk")
+kind = 5
+position = Vector2(607.2865, 813.0692)
+size = Vector2(285.4479, 14)
+motion_period = 2.61125
+phase_degrees = 99.30475
+pulse_on_ratio = 0.54859375
+
+[sub_resource type="Resource" id="Resource_45iqr"]
+script = ExtResource("2_wbmfk")
+kind = 6
+position = Vector2(419.5021, 584.8277)
+size = Vector2(90, 90)
+exit_position = Vector2(140.83313, 291.59595)
+
+[sub_resource type="Resource" id="Resource_50ymk"]
+script = ExtResource("2_wbmfk")
+position = Vector2(591.1013, 340.02417)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 61.483333333333334
+
+[sub_resource type="Resource" id="Resource_to1f7"]
 script = ExtResource("3_20p7v")
-position = Vector2(527, 853)
-rotation_degrees = 11.9
-length = 311.0
+position = Vector2(254.63564, 833.20996)
+rotation_degrees = 21.86297454833984
+length = 357.0
 thickness = 26.0
 
 [resource]
@@ -24,13 +49,14 @@ script = ExtResource("4_3gh63")
 level_uid = "level_153"
 display_order = 153
 difficulty = 3
-hint_angle_degrees = -46.0
-hint_power = 2150.0
+hint_angle_degrees = -48.0
+hint_power = 2000.0
 level_id = 153
 display_name = "Turuncu Çıkış"
-target_position = Vector2(479, 409)
-panels = Array[ExtResource("3_20p7v")]([SubResource("Resource_7xkbx")])
-obstacles = Array[ExtResource("2_wbmfk")]([SubResource("Resource_sfy8x")])
+target_position = Vector2(339.48148, 385.288)
+panels = Array[ExtResource("3_20p7v")]([SubResource("Resource_to1f7")])
+obstacles = Array[ExtResource("2_wbmfk")]([SubResource("Resource_sfy8x"), SubResource("Resource_7xkbx"), SubResource("Resource_45iqr"), SubResource("Resource_50ymk")])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 3

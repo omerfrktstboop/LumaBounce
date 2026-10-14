@@ -7,31 +7,54 @@
 
 [sub_resource type="Resource" id="Resource_r7wp1"]
 script = ExtResource("2_ettnp")
-kind = 6
-position = Vector2(136.51149, 701.1274)
-size = Vector2(94, 94)
-exit_position = Vector2(307.06067, 277.52692)
+kind = 3
+position = Vector2(177.56494, 898.7468)
+size = Vector2(130, 26)
+travel_distance = 119.07291666666666
+motion_period = 2.2886458333333333
 
 [sub_resource type="Resource" id="Resource_kk3k5"]
+script = ExtResource("2_ettnp")
+position = Vector2(592.762, 660.2368)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 60.78333333333333
+
+[sub_resource type="Resource" id="Resource_hmoqh"]
+script = ExtResource("2_ettnp")
+kind = 3
+position = Vector2(545.7596, 353.72952)
+size = Vector2(130, 26)
+travel_distance = 119.07291666666666
+motion_period = 2.2886458333333333
+
+[sub_resource type="Resource" id="Resource_5x0mc"]
+script = ExtResource("2_ettnp")
+kind = 1
+position = Vector2(424.50208, 743.1782)
+size = Vector2(79.629166, 79.629166)
+
+[sub_resource type="Resource" id="Resource_6gp3p"]
 script = ExtResource("3_ex4uj")
-position = Vector2(316, 679)
-rotation_degrees = 51.6
-length = 367.0
+position = Vector2(197.40427, 549.62775)
+rotation_degrees = -25.607772636413575
+length = 309.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4_o8xng")
 level_uid = "level_159"
 display_order = 159
-difficulty = 4
-hint_angle_degrees = -26.0
-hint_power = 1250.0
+difficulty = 3
+hint_power = 1950.0
 level_id = 159
 display_name = "Kenar Geçidi"
-target_position = Vector2(144, 257)
-panels = Array[ExtResource("3_ex4uj")]([SubResource("Resource_kk3k5")])
-obstacles = Array[ExtResource("2_ettnp")]([SubResource("Resource_r7wp1")])
-right_wall_segments = Array[Vector2]([Vector2(-320, 457.4381), Vector2(632.8528, 1600)])
+target_position = Vector2(183.47499, 220)
+panels = Array[ExtResource("3_ex4uj")]([SubResource("Resource_6gp3p")])
+obstacles = Array[ExtResource("2_ettnp")]([SubResource("Resource_r7wp1"), SubResource("Resource_kk3k5"), SubResource("Resource_hmoqh"), SubResource("Resource_5x0mc")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 581.1024), Vector2(708.0646, 1600)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 443.71097), Vector2(563.54816, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 3

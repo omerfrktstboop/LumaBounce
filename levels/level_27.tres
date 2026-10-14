@@ -8,30 +8,22 @@
 [sub_resource type="Resource" id="Resource_ntj7m"]
 script = ExtResource("1")
 position = Vector2(93.984375, 397.77063)
-rotation_degrees = 0.0
 size = Vector2(112.5, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("1")
 position = Vector2(279.55078, 400.8175)
-rotation_degrees = 0.0
 size = Vector2(112.5, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("1")
 position = Vector2(461.25, 401.57922)
-rotation_degrees = 0.0
 size = Vector2(112.5, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("1")
 position = Vector2(603.75, 401.57922)
-rotation_degrees = 0.0
 size = Vector2(112.5, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("3")
@@ -51,26 +43,17 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_027"
 display_order = 27
-theme_id = ""
 difficulty = 3
-time_limit = 0.0
-is_bonus = false
 hint_angle_degrees = -40.0
 hint_power = 2100.0
+hint_break_angles = PackedFloat32Array(12)
+hint_break_powers = PackedFloat32Array(2100)
+hint_break_targets = PackedInt32Array(15)
 level_id = 27
 display_name = "İki Yol"
-launcher_position = Vector2(360, 1120)
 target_position = Vector2(550.20215, 267.45685)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_krhwj"), SubResource("Resource_lgnf6")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui")])
-obstacles = Array[ExtResource("2")]([])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 95.0
 two_star_max_shots = 3
 three_star_max_seconds = 50.0
-three_star_max_shots = 2

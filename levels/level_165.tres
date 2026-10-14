@@ -6,22 +6,32 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_xbstl"]
 
 [sub_resource type="Resource" id="Resource_2ctu3"]
-script = ExtResource("1_jhvmd")
-position = Vector2(360, 472.44714)
-rotation_degrees = -3.0098424
-size = Vector2(652, 34)
+script = ExtResource("2_nyitt")
+kind = 3
+position = Vector2(167.36829, 897.368)
+size = Vector2(130, 26)
+travel_distance = 122.13541666666666
+motion_period = 2.2317708333333335
 
 [sub_resource type="Resource" id="Resource_ybfkb"]
 script = ExtResource("2_nyitt")
 kind = 6
-position = Vector2(208.34518, 570.00635)
+position = Vector2(257.09845, 574.4422)
 size = Vector2(90, 90)
-exit_position = Vector2(539.0535, 319.01096)
+exit_position = Vector2(404.34882, 314.734)
 
 [sub_resource type="Resource" id="Resource_a7go5"]
+script = ExtResource("2_nyitt")
+kind = 3
+position = Vector2(575.6968, 906.23553)
+size = Vector2(130, 26)
+travel_distance = 122.13541666666666
+motion_period = 2.2317708333333335
+
+[sub_resource type="Resource" id="Resource_sfwu8"]
 script = ExtResource("3_l1fdr")
-position = Vector2(420, 662)
-rotation_degrees = -24.7
+position = Vector2(457.32678, 612.842)
+rotation_degrees = -18.37647075653076
 length = 403.0
 thickness = 26.0
 
@@ -29,18 +39,16 @@ thickness = 26.0
 script = ExtResource("4_xbstl")
 level_uid = "level_165"
 display_order = 165
-difficulty = 4
-hint_angle_degrees = -26.0
-hint_power = 1600.0
+difficulty = 2
+hint_angle_degrees = -18.0
+hint_power = 2200.0
 level_id = 165
 display_name = "Tehlikeli Yol"
-target_position = Vector2(288, 394)
-panels = Array[ExtResource("3_l1fdr")]([SubResource("Resource_a7go5")])
-breakable_blocks = Array[ExtResource("1_jhvmd")]([SubResource("Resource_2ctu3")])
-obstacles = Array[ExtResource("2_nyitt")]([SubResource("Resource_ybfkb")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 560.71423), Vector2(686.78723, 1600)])
-right_wall_segments = Array[Vector2]([Vector2(-320, 600.7194), Vector2(739.53784, 1600)])
+target_position = Vector2(268.18405, 406.51724)
+panels = Array[ExtResource("3_l1fdr")]([SubResource("Resource_sfwu8")])
+obstacles = Array[ExtResource("2_nyitt")]([SubResource("Resource_2ctu3"), SubResource("Resource_ybfkb"), SubResource("Resource_a7go5")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 706.4112), Vector2(855.059, 1600)])
 two_star_max_seconds = 160.0
 two_star_max_shots = 5
 three_star_max_seconds = 85.0
-three_star_max_shots = 4
+three_star_max_shots = 3

@@ -7,16 +7,32 @@
 
 [sub_resource type="Resource" id="Resource_6rbc0"]
 script = ExtResource("2_8ggej")
-kind = 6
-position = Vector2(388.8492, 912.83777)
-size = Vector2(90, 90)
-exit_position = Vector2(519.0885, 335.94635)
+kind = 2
+position = Vector2(317.46207, 947.9439)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -101.953125
 
 [sub_resource type="Resource" id="Resource_ss1n6"]
+script = ExtResource("2_8ggej")
+kind = 6
+position = Vector2(568.98865, 697.6862)
+size = Vector2(88, 88)
+exit_position = Vector2(314.28348, 552.5303)
+exit_turn_degrees = -90.0
+
+[sub_resource type="Resource" id="Resource_sqwi5"]
+script = ExtResource("2_8ggej")
+position = Vector2(128.92719, 759.13696)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 59.85
+
+[sub_resource type="Resource" id="Resource_d5xps"]
 script = ExtResource("3_wty0r")
-position = Vector2(344, 543)
-rotation_degrees = -15.2
-length = 322.0
+position = Vector2(512.2294, 824.5584)
+rotation_degrees = 22.50503463745117
+length = 332.0
 thickness = 26.0
 
 [resource]
@@ -24,14 +40,15 @@ script = ExtResource("4_cen7h")
 level_uid = "level_167"
 display_order = 167
 difficulty = 4
-hint_angle_degrees = -32.0
-hint_power = 2200.0
+hint_angle_degrees = 68.0
+hint_power = 2000.0
 level_id = 167
-display_name = "Kayan Geçit"
-target_position = Vector2(161, 302)
-panels = Array[ExtResource("3_wty0r")]([SubResource("Resource_ss1n6")])
-obstacles = Array[ExtResource("2_8ggej")]([SubResource("Resource_6rbc0")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 613.699), Vector2(761.8269, 1600)])
+display_name = "Çarklı Geçit"
+target_position = Vector2(514.7887, 463.15677)
+panels = Array[ExtResource("3_wty0r")]([SubResource("Resource_d5xps")])
+obstacles = Array[ExtResource("2_8ggej")]([SubResource("Resource_6rbc0"), SubResource("Resource_ss1n6"), SubResource("Resource_sqwi5")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 724.90656), Vector2(840.6079, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 3

@@ -7,23 +7,41 @@
 
 [sub_resource type="Resource" id="Resource_60mli"]
 script = ExtResource("2_pnelm")
-kind = 6
-position = Vector2(187.06564, 936.55835)
-size = Vector2(92, 92)
-exit_position = Vector2(542.3104, 598.801)
+kind = 5
+position = Vector2(200.94739, 354.12512)
+size = Vector2(293.03125, 14)
+motion_period = 2.54125
+phase_degrees = 95.5813
+pulse_on_ratio = 0.55734375
 
 [sub_resource type="Resource" id="Resource_b1yhc"]
 script = ExtResource("2_pnelm")
-position = Vector2(136.68718, 360.5921)
-rotation_degrees = 180.0
-size = Vector2(170, 28)
-inner_radius = 62.4
+kind = 2
+position = Vector2(459.8372, 522.5691)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -98.671875
 
 [sub_resource type="Resource" id="Resource_fkjpf"]
+script = ExtResource("2_pnelm")
+kind = 3
+position = Vector2(135.76004, 791.23566)
+size = Vector2(130, 26)
+travel_distance = 120.09375
+motion_period = 2.2696875
+
+[sub_resource type="Resource" id="Resource_pr5v2"]
 script = ExtResource("3_6nrtg")
-position = Vector2(300, 662)
-rotation_degrees = 24.7
-length = 403.0
+position = Vector2(456.37054, 661.9358)
+rotation_degrees = 23.76783132553101
+length = 400.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_nofxg"]
+script = ExtResource("3_6nrtg")
+position = Vector2(511.59372, 895.7612)
+rotation_degrees = -26.00510196685791
+length = 327.0
 thickness = 26.0
 
 [resource]
@@ -31,14 +49,15 @@ script = ExtResource("4_q3ron")
 level_uid = "level_161"
 display_order = 161
 difficulty = 4
-hint_angle_degrees = -48.0
-hint_power = 2000.0
+hint_angle_degrees = -52.0
+hint_power = 2100.0
 level_id = 161
 display_name = "Halka Geçidi"
-target_position = Vector2(432, 394)
-panels = Array[ExtResource("3_6nrtg")]([SubResource("Resource_fkjpf")])
-obstacles = Array[ExtResource("2_pnelm")]([SubResource("Resource_60mli"), SubResource("Resource_b1yhc")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 620.06885), Vector2(779.9812, 1600)])
+target_position = Vector2(397.76944, 228.51283)
+panels = Array[ExtResource("3_6nrtg")]([SubResource("Resource_pr5v2"), SubResource("Resource_nofxg")])
+obstacles = Array[ExtResource("2_pnelm")]([SubResource("Resource_60mli"), SubResource("Resource_b1yhc"), SubResource("Resource_fkjpf")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 593.14465), Vector2(735.6615, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 3

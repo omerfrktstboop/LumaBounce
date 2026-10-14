@@ -6,27 +6,48 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_awbyn"]
 
 [sub_resource type="Resource" id="Resource_2d1wg"]
-script = ExtResource("2_qmbxj")
-kind = 5
-position = Vector2(131.52258, 582.1521)
-size = Vector2(282.33334, 14)
-motion_period = 2.64
-phase_degrees = 284.27032
-pulse_on_ratio = 0.5449999999999999
+script = ExtResource("1_plqjb")
+position = Vector2(360, 454.88254)
+rotation_degrees = -3.7637122
+size = Vector2(652, 34)
+hit_points = 2
 
 [sub_resource type="Resource" id="Resource_5p2gb"]
 script = ExtResource("2_qmbxj")
-kind = 5
-position = Vector2(584.7573, 793.90796)
-size = Vector2(282.33334, 14)
-motion_period = 2.64
-phase_degrees = 104.270325
-pulse_on_ratio = 0.5449999999999999
+kind = 2
+position = Vector2(596.74884, 553.885)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -107.96875
 
 [sub_resource type="Resource" id="Resource_e0mb1"]
+script = ExtResource("2_qmbxj")
+kind = 3
+position = Vector2(582.04095, 920.72107)
+size = Vector2(130, 26)
+travel_distance = 128.77083333333334
+motion_period = 2.1085416666666665
+
+[sub_resource type="Resource" id="Resource_7g8xr"]
+script = ExtResource("2_qmbxj")
+kind = 5
+position = Vector2(141.03159, 955.91705)
+size = Vector2(309.14584, 14)
+motion_period = 2.3925
+phase_degrees = 195.02666
+pulse_on_ratio = 0.5759375
+
+[sub_resource type="Resource" id="Resource_33ch5"]
+script = ExtResource("2_qmbxj")
+kind = 6
+position = Vector2(187.50848, 675.6227)
+size = Vector2(88, 88)
+exit_position = Vector2(309.63562, 308.3266)
+
+[sub_resource type="Resource" id="Resource_da4j3"]
 script = ExtResource("3_1sakv")
-position = Vector2(404, 679)
-rotation_degrees = -51.6
+position = Vector2(357.40442, 648.3064)
+rotation_degrees = -47.83243999481201
 length = 367.0
 thickness = 26.0
 
@@ -34,15 +55,19 @@ thickness = 26.0
 script = ExtResource("4_awbyn")
 level_uid = "level_178"
 display_order = 178
-difficulty = 4
-hint_angle_degrees = -40.0
-hint_power = 2100.0
+difficulty = 3
+hint_angle_degrees = -28.0
+hint_power = 1250.0
+hint_break_angles = PackedFloat32Array()
+hint_break_powers = PackedFloat32Array()
+hint_break_targets = PackedInt32Array()
 level_id = 178
 display_name = "Işık Perdesi"
-target_position = Vector2(576, 257)
-panels = Array[ExtResource("3_1sakv")]([SubResource("Resource_e0mb1")])
-obstacles = Array[ExtResource("2_qmbxj")]([SubResource("Resource_2d1wg"), SubResource("Resource_5p2gb")])
-right_wall_segments = Array[Vector2]([Vector2(-320, 801.90295), Vector2(918.09705, 1600)])
+target_position = Vector2(577.5649, 229.77043)
+panels = Array[ExtResource("3_1sakv")]([SubResource("Resource_da4j3")])
+breakable_blocks = Array[ExtResource("1_plqjb")]([SubResource("Resource_2d1wg")])
+obstacles = Array[ExtResource("2_qmbxj")]([SubResource("Resource_5p2gb"), SubResource("Resource_e0mb1"), SubResource("Resource_7g8xr"), SubResource("Resource_33ch5")])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 4

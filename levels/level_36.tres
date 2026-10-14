@@ -8,42 +8,34 @@
 [sub_resource type="Resource" id="Resource_ntj7m"]
 script = ExtResource("1")
 position = Vector2(90.84942, 612.91003)
-rotation_degrees = 0.0
 size = Vector2(123.3333, 34)
 hit_points = 2
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("1")
 position = Vector2(241.546, 617.0995)
-rotation_degrees = 0.0
 size = Vector2(123.3333, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("1")
 position = Vector2(393.29727, 617.8612)
-rotation_degrees = 0.0
 size = Vector2(123.3333, 34)
 hit_points = 2
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("1")
 position = Vector2(140.2657, 897.852)
-rotation_degrees = 0.0
 size = Vector2(123.3333, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("1")
 position = Vector2(293.599, 897.852)
-rotation_degrees = 0.0
 size = Vector2(123.3333, 34)
 hit_points = 2
 
 [sub_resource type="Resource" id="Resource_lgnf6"]
 script = ExtResource("1")
 position = Vector2(446.9323, 897.852)
-rotation_degrees = 0.0
 size = Vector2(123.3333, 34)
 hit_points = 2
 
@@ -58,26 +50,18 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_036"
 display_order = 36
-theme_id = ""
 difficulty = 4
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = -32.0
-hint_power = 2050.0
+hint_angle_degrees = 22.0
+hint_power = 1750.0
+hint_break_angles = PackedFloat32Array(63)
+hint_break_powers = PackedFloat32Array(1900)
+hint_break_targets = PackedInt32Array(50)
 level_id = 36
 display_name = "Ayna Anahtar"
 launcher_position = Vector2(374.873, 1120)
 target_position = Vector2(328.934, 200.913)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_lglry")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj"), SubResource("Resource_lgnf6")])
-obstacles = Array[ExtResource("2")]([])
-left_wall_segments = Array[Vector2]([])
-right_wall_segments = Array[Vector2]([])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 94.4
 two_star_max_shots = 3
 three_star_max_seconds = 62.0
-three_star_max_shots = 2

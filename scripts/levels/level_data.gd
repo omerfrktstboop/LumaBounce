@@ -52,6 +52,17 @@ const WALL_OVERSHOOT := 320.0
 ## dayatmak degil, tikandigi yerde bir yon gostermek.
 @export var hint_angle_degrees := 0.0
 @export var hint_power := 0.0
+## TUGLALI BOLUM COZUMU: son atistan (hint_angle_degrees/hint_power) ONCE
+## yapilacak kirma atislari, sirayla. Uc dizi ayni uzunluktadir: adimin acisi,
+## gucu ve vurdugu tuglalarin bit maskesi (breakable_blocks sirasina gore,
+## bit i = breakable_blocks[i]). Bos diziler = tugla kirmadan cozulen bolum.
+##
+## Oyun her ipucu isteginde HEDEF TUGLASI HALA SAGLAM olan ilk adimi gosterir;
+## hepsi kirildiysa son atisi. Boylece oyuncu tuglalari baska sirayla kirsa da
+## ipucu dogru adimi secer. Hesaplama tools/compute_hints.gd'de (durum aramasi).
+@export var hint_break_angles := PackedFloat32Array()
+@export var hint_break_powers := PackedFloat32Array()
+@export var hint_break_targets := PackedInt32Array()
 
 ## Yildiz kapasitesi. Bonus bolumler daha fazla verir, cunku bir bonus bolum
 ## bir dunyanin tamaminin uzerine kurulu tek bir sinavdir.
@@ -193,6 +204,13 @@ func validate(play_rect := DEFAULT_PLAY_RECT) -> PackedStringArray:
 ## Bu bolum icin gosterilecek bir ipucu var mi.
 func has_hint() -> bool:
 	return hint_power > 0.0
+
+
+## Kayitli tugla kirma adimi sayisi. Uc dizi farkli uzunlukta kaydedildiyse
+## (elle duzenlenmis dosya) yalnizca hepsinde bulunan adimlar sayilir.
+func hint_break_step_count() -> int:
+	return mini(hint_break_angles.size(),
+		mini(hint_break_powers.size(), hint_break_targets.size()))
 
 
 func max_stars() -> int:

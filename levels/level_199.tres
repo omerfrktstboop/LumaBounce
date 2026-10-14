@@ -7,55 +7,64 @@
 
 [sub_resource type="Resource" id="Resource_rra6c"]
 script = ExtResource("2_vvr6c")
-kind = 6
-position = Vector2(393.9226, 870.758)
-size = Vector2(84, 84)
-exit_position = Vector2(240.11017, 291.39575)
-exit_turn_degrees = 90.0
+kind = 5
+position = Vector2(110.93822, 877.6974)
+size = Vector2(329.0521, 14)
+motion_period = 2.20875
+phase_degrees = 350.04422
+pulse_on_ratio = 0.59890625
 
 [sub_resource type="Resource" id="Resource_ksmyt"]
 script = ExtResource("2_vvr6c")
 kind = 5
-position = Vector2(593.2743, 387.0913)
-size = Vector2(327.83334, 14)
-motion_period = 2.22
-phase_degrees = 278.55548
-pulse_on_ratio = 0.5974999999999999
+position = Vector2(241.66693, 404.12927)
+size = Vector2(329.0521, 14)
+motion_period = 2.20875
+phase_degrees = 170.04422
+pulse_on_ratio = 0.59890625
 
 [sub_resource type="Resource" id="Resource_085sa"]
-script = ExtResource("3_wt5lg")
-position = Vector2(313, 624)
-rotation_degrees = 1.9
-length = 291.0
-thickness = 26.0
+script = ExtResource("2_vvr6c")
+kind = 1
+position = Vector2(537.2384, 870.58075)
+size = Vector2(87.79583, 87.79583)
 
 [sub_resource type="Resource" id="Resource_l7t1g"]
-script = ExtResource("3_wt5lg")
-position = Vector2(304, 737)
-rotation_degrees = 18.9
-length = 241.0
-thickness = 26.0
+script = ExtResource("2_vvr6c")
+kind = 2
+position = Vector2(544.4528, 730.9878)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 119.453125
 
 [sub_resource type="Resource" id="Resource_faqkl"]
 script = ExtResource("3_wt5lg")
-position = Vector2(191, 897)
-rotation_degrees = 7.9
-length = 264.0
+position = Vector2(432.66824, 560.2418)
+rotation_degrees = -28.39745006561279
+length = 272.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_repmh"]
+script = ExtResource("3_wt5lg")
+position = Vector2(492.52966, 636.3033)
+rotation_degrees = -29.03912467956543
+length = 311.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4_fbcuj")
 level_uid = "level_199"
 display_order = 199
-difficulty = 5
-hint_angle_degrees = 2.0
-hint_power = 2050.0
+difficulty = 4
+hint_angle_degrees = -4.0
+hint_power = 1750.0
 level_id = 199
 display_name = "Işığın Ucu"
-target_position = Vector2(299, 443)
-panels = Array[ExtResource("3_wt5lg")]([SubResource("Resource_085sa"), SubResource("Resource_l7t1g"), SubResource("Resource_faqkl")])
-obstacles = Array[ExtResource("2_vvr6c")]([SubResource("Resource_rra6c"), SubResource("Resource_ksmyt")])
-right_wall_segments = Array[Vector2]([Vector2(-320, 435.02606), Vector2(596.9475, 1600)])
+target_position = Vector2(537.5525, 303.17697)
+panels = Array[ExtResource("3_wt5lg")]([SubResource("Resource_faqkl"), SubResource("Resource_repmh")])
+obstacles = Array[ExtResource("2_vvr6c")]([SubResource("Resource_rra6c"), SubResource("Resource_ksmyt"), SubResource("Resource_085sa"), SubResource("Resource_l7t1g")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 538.5209), Vector2(682.9238, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 3

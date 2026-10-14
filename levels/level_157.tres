@@ -7,44 +7,46 @@
 
 [sub_resource type="Resource" id="Resource_8fhdn"]
 script = ExtResource("2_obsky")
-kind = 6
-position = Vector2(177.63332, 754.7508)
-size = Vector2(94, 94)
-exit_position = Vector2(585.06274, 302.95477)
+kind = 5
+position = Vector2(117.73565, 604.3285)
+size = Vector2(289.2396, 14)
+motion_period = 2.57625
+phase_degrees = 216.47377
+pulse_on_ratio = 0.55296875
 
 [sub_resource type="Resource" id="Resource_3mtud"]
-script = ExtResource("3_jar1h")
-position = Vector2(407, 624)
-rotation_degrees = -1.9
-length = 291.0
-thickness = 26.0
+script = ExtResource("2_obsky")
+kind = 1
+position = Vector2(608.6057, 518.61346)
+size = Vector2(79.22083, 79.22083)
 
 [sub_resource type="Resource" id="Resource_vldbw"]
-script = ExtResource("3_jar1h")
-position = Vector2(416, 737)
-rotation_degrees = -18.9
-length = 241.0
-thickness = 26.0
+script = ExtResource("2_obsky")
+kind = 1
+position = Vector2(448.51843, 684.5547)
+size = Vector2(79.22083, 79.22083)
 
 [sub_resource type="Resource" id="Resource_f3box"]
 script = ExtResource("3_jar1h")
-position = Vector2(529, 897)
-rotation_degrees = -7.9
-length = 264.0
+position = Vector2(227.62126, 810.0382)
+rotation_degrees = -5.848003768920899
+length = 311.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4_ougse")
 level_uid = "level_157"
 display_order = 157
-difficulty = 4
-hint_angle_degrees = -20.0
-hint_power = 1050.0
+difficulty = 3
+hint_angle_degrees = 46.0
+hint_power = 2100.0
 level_id = 157
 display_name = "Duvar Ardı"
-target_position = Vector2(421, 443)
-panels = Array[ExtResource("3_jar1h")]([SubResource("Resource_3mtud"), SubResource("Resource_vldbw"), SubResource("Resource_f3box")])
-obstacles = Array[ExtResource("2_obsky")]([SubResource("Resource_8fhdn")])
+target_position = Vector2(243.0375, 394.59827)
+panels = Array[ExtResource("3_jar1h")]([SubResource("Resource_f3box")])
+obstacles = Array[ExtResource("2_obsky")]([SubResource("Resource_8fhdn"), SubResource("Resource_3mtud"), SubResource("Resource_vldbw")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 614.9124), Vector2(757.87213, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 3

@@ -24,21 +24,18 @@ script = ExtResource("1")
 position = Vector2(430.82037, 488.98682)
 rotation_degrees = -6.559957
 size = Vector2(115.07768, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("1")
 position = Vector2(572.4612, 447.4176)
 rotation_degrees = -6.335993
 size = Vector2(115.07768, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("1")
 position = Vector2(229.05873, 574.0112)
 rotation_degrees = -23.756533
 size = Vector2(172.89494, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_lgnf6"]
 script = ExtResource("3")
@@ -65,26 +62,20 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_045"
 display_order = 45
-theme_id = ""
 difficulty = 3
-time_limit = 0.0
-is_bonus = false
 hint_angle_degrees = -10.0
 hint_power = 1750.0
+hint_break_angles = PackedFloat32Array(-33)
+hint_break_powers = PackedFloat32Array(1900)
+hint_break_targets = PackedInt32Array(19)
 level_id = 45
 display_name = "Dar Geçit"
 launcher_position = Vector2(354.9781, 1120)
 target_position = Vector2(224.02124, 237.30278)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_lgnf6"), SubResource("Resource_lglry"), SubResource("Resource_hp77n")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui"), SubResource("Resource_krhwj")])
-obstacles = Array[ExtResource("2")]([])
 left_wall_segments = Array[Vector2]([Vector2(-320, 627.2691), Vector2(761.6512, 1600)])
 right_wall_segments = Array[Vector2]([Vector2(-320, 575.29034), Vector2(737.32635, 1600)])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 117.0
 two_star_max_shots = 3
 three_star_max_seconds = 66.0
-three_star_max_shots = 2

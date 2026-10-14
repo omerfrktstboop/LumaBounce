@@ -6,39 +6,74 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_l7nph"]
 
 [sub_resource type="Resource" id="Resource_3u467"]
-script = ExtResource("2_v55rx")
-kind = 6
-position = Vector2(588.3639, 599.3656)
-size = Vector2(86, 86)
-exit_position = Vector2(219.7612, 470.9168)
-exit_turn_degrees = -90.0
+script = ExtResource("1_28c7n")
+position = Vector2(193.9434, 680.98944)
+rotation_degrees = -1.6231213
+size = Vector2(319.8868, 34)
+hit_points = 2
 
 [sub_resource type="Resource" id="Resource_103a1"]
-script = ExtResource("2_v55rx")
-kind = 6
-position = Vector2(129.09534, 852.11646)
-size = Vector2(86, 86)
-exit_position = Vector2(406.26456, 581.42755)
+script = ExtResource("1_28c7n")
+position = Vector2(526.0566, 648.98944)
+rotation_degrees = 4.8659935
+size = Vector2(319.8868, 34)
 
 [sub_resource type="Resource" id="Resource_qhxfk"]
+script = ExtResource("2_v55rx")
+kind = 2
+position = Vector2(283.31766, 958.5291)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 104.6875
+
+[sub_resource type="Resource" id="Resource_ominm"]
+script = ExtResource("2_v55rx")
+kind = 6
+position = Vector2(127.12666, 591.7134)
+size = Vector2(88, 88)
+exit_position = Vector2(436.6263, 464.15155)
+
+[sub_resource type="Resource" id="Resource_cjeik"]
+script = ExtResource("2_v55rx")
+kind = 5
+position = Vector2(171.9284, 365.51257)
+size = Vector2(303.45834, 14)
+motion_period = 2.4450000000000003
+phase_degrees = 88.29652
+pulse_on_ratio = 0.569375
+
+[sub_resource type="Resource" id="Resource_tixmf"]
 script = ExtResource("3_ph2qs")
-position = Vector2(393, 820)
-rotation_degrees = -26.7
-length = 286.0
+position = Vector2(386.56, 852.3853)
+rotation_degrees = 35.232411575317386
+length = 245.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_hfub4"]
+script = ExtResource("3_ph2qs")
+position = Vector2(445.05975, 576.7492)
+rotation_degrees = 1.5061687469482423
+length = 369.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4_l7nph")
 level_uid = "level_172"
 display_order = 172
-difficulty = 5
-hint_angle_degrees = -54.0
-hint_power = 1300.0
+difficulty = 4
+hint_angle_degrees = 52.0
+hint_power = 1700.0
+hint_break_angles = PackedFloat32Array(-39)
+hint_break_powers = PackedFloat32Array(2000)
+hint_break_targets = PackedInt32Array(3)
 level_id = 172
 display_name = "Çifte Geçit"
-target_position = Vector2(308, 355)
-panels = Array[ExtResource("3_ph2qs")]([SubResource("Resource_qhxfk")])
-obstacles = Array[ExtResource("2_v55rx")]([SubResource("Resource_3u467"), SubResource("Resource_103a1")])
+target_position = Vector2(428.0079, 304.9146)
+panels = Array[ExtResource("3_ph2qs")]([SubResource("Resource_tixmf"), SubResource("Resource_hfub4")])
+breakable_blocks = Array[ExtResource("1_28c7n")]([SubResource("Resource_3u467"), SubResource("Resource_103a1")])
+obstacles = Array[ExtResource("2_v55rx")]([SubResource("Resource_qhxfk"), SubResource("Resource_ominm"), SubResource("Resource_cjeik")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 505.3618), Vector2(663.701, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 4

@@ -6,22 +6,45 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_x6vtw"]
 
 [sub_resource type="Resource" id="Resource_6xmpe"]
-script = ExtResource("2_nrnct")
-kind = 6
-position = Vector2(540.29584, 582.8037)
-size = Vector2(92, 92)
-exit_position = Vector2(283.8814, 484.55435)
+script = ExtResource("1_dmmgd")
+position = Vector2(193.23703, 469.17267)
+rotation_degrees = -1.8838463
+size = Vector2(318.47406, 34)
 
 [sub_resource type="Resource" id="Resource_y7gvo"]
-script = ExtResource("2_nrnct")
-kind = 1
-position = Vector2(206.66972, 941.105)
-size = Vector2(77.5, 77.5)
+script = ExtResource("1_dmmgd")
+position = Vector2(526.763, 437.17267)
+rotation_degrees = 0.46304226
+size = Vector2(318.47406, 34)
 
 [sub_resource type="Resource" id="Resource_nq7sf"]
+script = ExtResource("2_nrnct")
+kind = 5
+position = Vector2(578.0576, 739.1719)
+size = Vector2(293.97916, 14)
+motion_period = 2.5325
+phase_degrees = 62.085453
+pulse_on_ratio = 0.5584375
+
+[sub_resource type="Resource" id="Resource_5olg7"]
+script = ExtResource("2_nrnct")
+kind = 2
+position = Vector2(246.88454, 919.6366)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -99.21875
+
+[sub_resource type="Resource" id="Resource_x654h"]
+script = ExtResource("2_nrnct")
+kind = 6
+position = Vector2(356.3119, 659.4998)
+size = Vector2(90, 90)
+exit_position = Vector2(214.53871, 304.8454)
+
+[sub_resource type="Resource" id="Resource_pe8eu"]
 script = ExtResource("3_q3bnk")
-position = Vector2(206, 812)
-rotation_degrees = 23.6
+position = Vector2(255.5167, 785.6813)
+rotation_degrees = 28.394539451599123
 length = 384.0
 thickness = 26.0
 
@@ -29,15 +52,20 @@ thickness = 26.0
 script = ExtResource("4_x6vtw")
 level_uid = "level_162"
 display_order = 162
-difficulty = 4
-hint_angle_degrees = 16.0
-hint_power = 2100.0
+difficulty = 3
+hint_angle_degrees = 44.0
+hint_power = 1300.0
+hint_break_angles = PackedFloat32Array()
+hint_break_powers = PackedFloat32Array()
+hint_break_targets = PackedInt32Array()
 level_id = 162
-display_name = "Mayınlı Çıkış"
-target_position = Vector2(422, 267)
-panels = Array[ExtResource("3_q3bnk")]([SubResource("Resource_nq7sf")])
-obstacles = Array[ExtResource("2_nrnct")]([SubResource("Resource_6xmpe"), SubResource("Resource_y7gvo")])
-right_wall_segments = Array[Vector2]([Vector2(-320, 442.8706), Vector2(557.1294, 1600)])
+display_name = "Işıklı Geçit"
+target_position = Vector2(443.63208, 246.39085)
+panels = Array[ExtResource("3_q3bnk")]([SubResource("Resource_pe8eu")])
+breakable_blocks = Array[ExtResource("1_dmmgd")]([SubResource("Resource_6xmpe"), SubResource("Resource_y7gvo")])
+obstacles = Array[ExtResource("2_nrnct")]([SubResource("Resource_nq7sf"), SubResource("Resource_5olg7"), SubResource("Resource_x654h")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 613.83136), Vector2(742.87164, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 4

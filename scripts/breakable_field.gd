@@ -22,6 +22,8 @@ signal block_damaged(at: Vector2, remaining_hits: int, maximum_hits: int)
 
 @export var block_scene: PackedScene
 
+const DATA_INDEX_META := &"data_index"
+
 ## build() ile kurulan blok sayisi; kirilanlar bu sayidan dusulmez.
 var _total := 0
 
@@ -36,13 +38,17 @@ func build(blocks: Array[BreakableBlockData]) -> void:
 		push_error("BreakableField: block_scene atanmamis, bloklar olusturulamiyor.")
 		return
 
-	for data in blocks:
+	for data_index in blocks.size():
+		var data := blocks[data_index]
 		if data == null:
 			continue
 		var block := block_scene.instantiate() as BreakableBlock
 		if block == null:
 			push_error("BreakableField: block_scene bir BreakableBlock degil.")
 			return
+		# Ipucu adimlari tuglalari LevelData.breakable_blocks sirasiyla anar;
+		# bos bir kayit atlansa bile eslesme kaymasin diye sira saklanir.
+		block.set_meta(DATA_INDEX_META, data_index)
 		block.position = data.position
 		block.rotation_degrees = data.rotation_degrees
 		block.block_size = data.size
@@ -97,6 +103,37 @@ func get_body_rids() -> Array[RID]:
 		var block := child as BreakableBlock
 		if block != null:
 			rids.append(block.get_rid())
+	return rids
+
+
+## Ipucu adimi icin: maskedeki (bit i = breakable_blocks[i]) tuglalardan en az
+## biri hala saglam mi? Catlak ama kirilmamis dayanikli tugla saglam sayilir.
+func has_intact_in_mask(mask: int) -> bool:
+	for child in get_children():
+		var block := child as BreakableBlock
+		if block == null or block.is_broken():
+			continue
+		var index := int(block.get_meta(DATA_INDEX_META, -1))
+		if index >= 0 and index < 31 and mask & (1 << index) != 0:
+			return true
+	return false
+
+
+## Ipucu simulasyonu icin saglam tuglalarin govdeleri (RID -> veri sirasi).
+## Kirik tuglalarin carpismasi zaten kapali oldugu icin listede yoktur.
+##
+## LevelSolver haritadaki her govdeyi ILK temasta kirilmis sayar. Oyunda iki
+## hakki kalan dayanikli tugla ilk temasta yalnizca catlar; [param last_hit_only]
+## true iken bu tuglalar haritaya konmaz ve simulasyonda kati kalir.
+func get_intact_rid_index(last_hit_only := false) -> Dictionary:
+	var rids := {}
+	for child in get_children():
+		var block := child as BreakableBlock
+		if block == null or block.is_broken():
+			continue
+		if last_hit_only and block.get_remaining_hits() > 1:
+			continue
+		rids[block.get_rid()] = int(block.get_meta(DATA_INDEX_META, 0))
 	return rids
 
 

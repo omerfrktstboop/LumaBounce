@@ -6,32 +6,67 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_177fp"]
 
 [sub_resource type="Resource" id="Resource_mcwcy"]
-script = ExtResource("2_6qv6s")
-kind = 6
-position = Vector2(171.32664, 806.4487)
-size = Vector2(94, 94)
-exit_position = Vector2(507.731, 534.6545)
+script = ExtResource("1_2in5l")
+position = Vector2(360, 680.8888)
+rotation_degrees = -3.3298993
+size = Vector2(652, 34)
 
 [sub_resource type="Resource" id="Resource_6q76h"]
+script = ExtResource("2_6qv6s")
+kind = 5
+position = Vector2(583.81335, 921.2418)
+size = Vector2(288.29166, 14)
+motion_period = 2.585
+phase_degrees = 225.33734
+pulse_on_ratio = 0.551875
+
+[sub_resource type="Resource" id="Resource_5hwns"]
+script = ExtResource("2_6qv6s")
+kind = 3
+position = Vector2(121.88776, 935.0446)
+size = Vector2(130, 26)
+travel_distance = 117.54166666666669
+motion_period = 2.317083333333333
+
+[sub_resource type="Resource" id="Resource_6xiqq"]
+script = ExtResource("2_6qv6s")
+kind = 6
+position = Vector2(225.59122, 566.23895)
+size = Vector2(90, 90)
+exit_position = Vector2(380.5623, 342.80307)
+
+[sub_resource type="Resource" id="Resource_8t1hw"]
+script = ExtResource("2_6qv6s")
+position = Vector2(143.36317, 365.85846)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 61.13333333333333
+
+[sub_resource type="Resource" id="Resource_xtaqf"]
 script = ExtResource("3_d3061")
-position = Vector2(393, 820)
-rotation_degrees = -26.7
-length = 286.0
+position = Vector2(523.4069, 549.27344)
+rotation_degrees = 25.1960075378418
+length = 309.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4_177fp")
 level_uid = "level_156"
 display_order = 156
-difficulty = 4
-hint_angle_degrees = -42.0
+difficulty = 3
+hint_angle_degrees = -38.0
 hint_power = 2150.0
+hint_break_angles = PackedFloat32Array(0)
+hint_break_powers = PackedFloat32Array(1600)
+hint_break_targets = PackedInt32Array(1)
 level_id = 156
 display_name = "Sekmeli Geçit"
-target_position = Vector2(308, 355)
-panels = Array[ExtResource("3_d3061")]([SubResource("Resource_6q76h")])
-obstacles = Array[ExtResource("2_6qv6s")]([SubResource("Resource_mcwcy")])
-right_wall_segments = Array[Vector2]([Vector2(-320, 676.2159), Vector2(797.7918, 1600)])
+target_position = Vector2(518.3908, 220)
+panels = Array[ExtResource("3_d3061")]([SubResource("Resource_xtaqf")])
+breakable_blocks = Array[ExtResource("1_2in5l")]([SubResource("Resource_mcwcy")])
+obstacles = Array[ExtResource("2_6qv6s")]([SubResource("Resource_6q76h"), SubResource("Resource_5hwns"), SubResource("Resource_6xiqq"), SubResource("Resource_8t1hw")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 634.2709), Vector2(778.35114, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 4

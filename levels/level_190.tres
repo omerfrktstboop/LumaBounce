@@ -7,32 +7,47 @@
 
 [sub_resource type="Resource" id="Resource_2l0y1"]
 script = ExtResource("1_e2vmu")
-position = Vector2(360, 597.6493)
-rotation_degrees = 0.63772917
+position = Vector2(360, 554.76)
+rotation_degrees = 0.16909409
 size = Vector2(652, 34)
 hit_points = 2
 
 [sub_resource type="Resource" id="Resource_wxd4d"]
 script = ExtResource("2_isxmc")
 kind = 5
-position = Vector2(162.63632, 360.93872)
-size = Vector2(308.33334, 14)
-motion_period = 2.4000000000000004
-phase_degrees = 195.90387
-pulse_on_ratio = 0.575
+position = Vector2(156.77905, 935.3448)
+size = Vector2(320.52084, 14)
+motion_period = 2.2875000000000005
+phase_degrees = 44.23471
+pulse_on_ratio = 0.5890624999999999
 
 [sub_resource type="Resource" id="Resource_deoda"]
 script = ExtResource("2_isxmc")
-kind = 2
-position = Vector2(548.27966, 711.3985)
-size = Vector2(120, 20)
-spoke_count = 5
-angular_speed_degrees = -107.5
+kind = 5
+position = Vector2(134.66902, 349.08777)
+size = Vector2(320.52084, 14)
+motion_period = 2.2875000000000005
+phase_degrees = 224.23471
+pulse_on_ratio = 0.5890624999999999
 
 [sub_resource type="Resource" id="Resource_ok5wd"]
+script = ExtResource("2_isxmc")
+position = Vector2(486.8767, 725.9955)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 57.16666666666667
+
+[sub_resource type="Resource" id="Resource_vop88"]
+script = ExtResource("2_isxmc")
+kind = 6
+position = Vector2(311.429, 647.0796)
+size = Vector2(86, 86)
+exit_position = Vector2(567.486, 385.3106)
+
+[sub_resource type="Resource" id="Resource_s23ug"]
 script = ExtResource("3_j65xy")
-position = Vector2(447, 820)
-rotation_degrees = 3.8
+position = Vector2(476.14413, 851.4519)
+rotation_degrees = 3.657484817504882
 length = 271.0
 thickness = 26.0
 
@@ -40,16 +55,19 @@ thickness = 26.0
 script = ExtResource("4_ieksj")
 level_uid = "level_190"
 display_order = 190
-difficulty = 4
-hint_angle_degrees = -38.0
+difficulty = 5
+hint_angle_degrees = 58.0
 hint_power = 2150.0
+hint_break_angles = PackedFloat32Array(54)
+hint_break_powers = PackedFloat32Array(1500)
+hint_break_targets = PackedInt32Array(1)
 level_id = 190
 display_name = "Taş Işığı"
-target_position = Vector2(393, 276)
-panels = Array[ExtResource("3_j65xy")]([SubResource("Resource_ok5wd")])
+target_position = Vector2(422.25064, 249.657)
+panels = Array[ExtResource("3_j65xy")]([SubResource("Resource_s23ug")])
 breakable_blocks = Array[ExtResource("1_e2vmu")]([SubResource("Resource_2l0y1")])
-obstacles = Array[ExtResource("2_isxmc")]([SubResource("Resource_wxd4d"), SubResource("Resource_deoda")])
-right_wall_segments = Array[Vector2]([Vector2(-320, 782.57794), Vector2(937.42206, 1600)])
+obstacles = Array[ExtResource("2_isxmc")]([SubResource("Resource_wxd4d"), SubResource("Resource_deoda"), SubResource("Resource_ok5wd"), SubResource("Resource_vop88")])
+right_wall_segments = Array[Vector2]([Vector2(-320, 565.09265), Vector2(699.831, 1600)])
 two_star_max_seconds = 160.0
 two_star_max_shots = 5
 three_star_max_seconds = 85.0

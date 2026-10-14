@@ -17,6 +17,7 @@ func _run() -> void:
 	_test_wallet_contract()
 	await _test_hint_coverage()
 	await _test_full_hint_reward_flow()
+	await _test_block_solution_chain()
 	await _test_short_hint()
 	await _test_broken_hint_never_charges()
 	await _test_hud_fits_tall_aspect()
@@ -72,12 +73,26 @@ func _test_hint_coverage() -> void:
 		await physics_frame
 		await physics_frame
 		solver.bind_space(world.get_space(), world.get_block_rids(), world.get_obstacles())
-		var excluded := world.rids_for_state(world.get_all_broken_state())
+		# Kayitli cozumu oyuncunun oynayacagi gibi zincir halinde oynat: her
+		# kirma atisi o ana kadar kirilmis katmanlarla atilir ve en az bir
+		# katman kirmalidir; son atis zincirin vardigi durumdan hedefe gitmelidir.
+		var spawn := solver.spawn_position(level.launcher_position)
+		var state := 0
+		var chain_ok := level.hint_break_step_count() <= 4
+		for step in level.hint_break_step_count():
+			var step_direction := Vector2.UP.rotated(deg_to_rad(level.hint_break_angles[step]))
+			var step_result := solver.simulate(spawn,
+				step_direction * level.hint_break_powers[step], level.target_position,
+				world.get_play_rect(), world.rids_for_state(state))
+			var broke := int(step_result.get("broken", 0)) & ~state
+			if broke == 0:
+				chain_ok = false
+				break
+			state |= broke
 		var direction := Vector2.UP.rotated(deg_to_rad(level.hint_angle_degrees))
-		var result := solver.simulate(
-			solver.spawn_position(level.launcher_position), direction * level.hint_power,
-			level.target_position, world.get_play_rect(), excluded, true)
-		if not bool(result.get("hit", false)) \
+		var result := solver.simulate(spawn, direction * level.hint_power,
+			level.target_position, world.get_play_rect(), world.rids_for_state(state), true)
+		if not chain_ok or not bool(result.get("hit", false)) \
 				or (result.get("trace_points", PackedVector2Array()) as PackedVector2Array).size() < 2:
 			invalid.append(level_id)
 		root.remove_child(world)
@@ -85,11 +100,93 @@ func _test_hint_coverage() -> void:
 		await process_frame
 	_check(missing.is_empty(), "all %d campaign levels have hint shots" % LevelLibrary.LEVEL_COUNT)
 	_check(invalid.is_empty(),
-		"all %d campaign hint shots reach the target" % LevelLibrary.LEVEL_COUNT)
+		"all %d campaign hint chains reach the target" % LevelLibrary.LEVEL_COUNT)
 	if not missing.is_empty():
 		push_error("Missing hint levels: %s" % str(missing))
 	if not invalid.is_empty():
 		push_error("Invalid hint levels: %s" % str(invalid))
+
+
+## TUGLALI COZUM ZINCIRI: ipucu siradaki kirma atisini gosterir, rota tuglada
+## biter, o adimin tuglalari kirilinca top yeniden dogarken bir sonraki adima
+## gecer ve hepsi bitince son atisi cizer.
+func _test_block_solution_chain() -> void:
+	var level: LevelData = null
+	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, LevelLibrary.last_level_id() + 1):
+		var candidate := load(LevelLibrary.level_path(level_id)) as LevelData
+		if candidate != null and candidate.hint_break_step_count() >= 2:
+			level = candidate
+			break
+	_check(level != null, "campaign has a multi-step block solution")
+	if level == null:
+		return
+	var steps := level.hint_break_step_count()
+	var wallet := WalletStore.load_from_path(_new_wallet_path("chain"))
+	wallet.grant_hint_unlock(level.uid())
+	var gameplay := (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+	gameplay.set("level_data", level)
+	gameplay.set("wallet", wallet)
+	root.add_child(gameplay)
+	await process_frame
+	await physics_frame
+	await physics_frame
+
+	gameplay.call("_on_hint_pressed")
+	var first: Dictionary = gameplay.call("get_debug_snapshot")
+	_check(bool(first["hint_visible"]) and int(first["hint_step"]) == 0,
+		"unlocked hint starts with the first block-breaking shot (level %d)" % level.level_id)
+	var status := gameplay.get_node("HUD/SafeArea/Root/HintStatus/Text") as Label
+	_check(status.text.contains("1/%d" % (steps + 1)),
+		"hint status shows the step number")
+
+	# Rota ilk hedef tuglasinda biter: son nokta o adimin bir tuglasina yakin.
+	var points: PackedVector2Array = (gameplay.get_node("HintPath") as HintPath).get("_points")
+	var blocks := gameplay.get_node("Blocks") as BreakableField
+	var near_target := false
+	for child in blocks.get_children():
+		var block := child as BreakableBlock
+		if block == null:
+			continue
+		var index := int(block.get_meta(BreakableField.DATA_INDEX_META, -1))
+		if level.hint_break_targets[0] & (1 << index) != 0 and points.size() > 0 \
+				and points[points.size() - 1].distance_to(block.global_position) \
+					< block.block_size.length() * 0.5 + 40.0:
+			near_target = true
+	_check(near_target, "block step route ends at its target block")
+
+	# Ilk adimin tuglalarini kir -> top yeniden dogarken ipucu ilerlemeli.
+	_shatter_targets(blocks, level.hint_break_targets[0])
+	await physics_frame
+	gameplay.call("_respawn_ball")
+	await process_frame
+	var second: Dictionary = gameplay.call("get_debug_snapshot")
+	_check(bool(second["hint_visible"]) and int(second["hint_step"]) > 0,
+		"hint advances once the step's blocks are broken")
+
+	for step in steps:
+		_shatter_targets(blocks, level.hint_break_targets[step])
+	await physics_frame
+	gameplay.call("_respawn_ball")
+	await process_frame
+	var final: Dictionary = gameplay.call("get_debug_snapshot")
+	_check(bool(final["hint_visible"]) and int(final["hint_step"]) == -1,
+		"after every step the hint shows the final shot to the target")
+	_check(status.text.contains("%d/%d" % [steps + 1, steps + 1]),
+		"final shot status shows the last step")
+
+	root.remove_child(gameplay)
+	gameplay.queue_free()
+	await process_frame
+
+
+func _shatter_targets(blocks: BreakableField, mask: int) -> void:
+	for child in blocks.get_children():
+		var block := child as BreakableBlock
+		if block == null:
+			continue
+		var index := int(block.get_meta(BreakableField.DATA_INDEX_META, -1))
+		if index >= 0 and mask & (1 << index) != 0:
+			block.shatter()
 
 
 func _test_full_hint_reward_flow() -> void:
@@ -136,16 +233,22 @@ func _test_full_hint_reward_flow() -> void:
 	var rewarded: Dictionary = gameplay.call("get_debug_snapshot")
 	_check(wallet.balance == initial_balance, "rewarded full route spends no Coin")
 	_check(bool(rewarded["hint_unlocked"]), "reward permanently unlocks level hint")
-	_check(not bool(rewarded["hint_visible"]), "block level waits before drawing final route")
+	# Tuglali bolum artik beklemez: siradaki kirma atisini (ya da kirma
+	# gerekmiyorsa son atisi) hemen cizer.
+	_check(bool(rewarded["hint_visible"]), "block level draws the current solution step at once")
+	var expected_first := 0 if int(rewarded["hint_break_steps"]) > 0 else -1
+	_check(int(rewarded["hint_step"]) == expected_first,
+		"hint starts at the first block-breaking step")
 
 	var blocks := gameplay.get_node("Blocks") as BreakableField
 	blocks.shatter_in_radius(Vector2(360.0, 640.0), 2000.0)
 	await process_frame
 	await physics_frame
+	gameplay.call("_respawn_ball")
 	await process_frame
 	var revealed: Dictionary = gameplay.call("get_debug_snapshot")
-	_check(bool(revealed["hint_visible"]),
-		"route appears after all blocks are broken")
+	_check(bool(revealed["hint_visible"]) and int(revealed["hint_step"]) == -1,
+		"after the blocks break the hint advances to the final shot")
 	gameplay.call("_on_shot_fired", Vector2(0.0, -1800.0))
 	_check(bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
 		"full route remains visible while the ball is flying")

@@ -7,49 +7,65 @@
 
 [sub_resource type="Resource" id="Resource_73jhw"]
 script = ExtResource("1_fqodw")
-position = Vector2(360, 427.4265)
-rotation_degrees = -0.1792717
+position = Vector2(360, 605.9035)
+rotation_degrees = -4.082077
 size = Vector2(652, 34)
 hit_points = 2
 
 [sub_resource type="Resource" id="Resource_4p61g"]
 script = ExtResource("2_qb2cr")
-kind = 6
-position = Vector2(252.15536, 837.6446)
-size = Vector2(84, 84)
-exit_position = Vector2(123.13681, 593.1466)
+kind = 3
+position = Vector2(120.356186, 334.58466)
+size = Vector2(130, 26)
+travel_distance = 140.0
+motion_period = 1.9
 
 [sub_resource type="Resource" id="Resource_n263o"]
 script = ExtResource("2_qb2cr")
-kind = 5
-position = Vector2(591.19507, 925.2819)
-size = Vector2(330, 14)
-motion_period = 2.2
-phase_degrees = 357.2817
-pulse_on_ratio = 0.6
+position = Vector2(609.40125, 886.3478)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 56.0
 
 [sub_resource type="Resource" id="Resource_8frr1"]
+script = ExtResource("2_qb2cr")
+kind = 5
+position = Vector2(132.21013, 899.1573)
+size = Vector2(330, 14)
+motion_period = 2.2
+phase_degrees = 0.7707534
+pulse_on_ratio = 0.6
+
+[sub_resource type="Resource" id="Resource_gstcl"]
 script = ExtResource("3_jyu36")
-position = Vector2(351, 660)
-rotation_degrees = 43.0
-length = 327.0
+position = Vector2(449.13327, 479.3928)
+rotation_degrees = -36.77814636230469
+length = 272.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_gmdd0"]
+script = ExtResource("3_jyu36")
+position = Vector2(482.40265, 714.92316)
+rotation_degrees = -24.10803337097168
+length = 311.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4_pnbvx")
 level_uid = "level_200"
 display_order = 200
-difficulty = 5
-hint_angle_degrees = -32.0
-hint_power = 1850.0
+difficulty = 4
+hint_angle_degrees = 24.0
+hint_power = 1800.0
+hint_break_angles = PackedFloat32Array(24)
+hint_break_powers = PackedFloat32Array(1600)
+hint_break_targets = PackedInt32Array(1)
 level_id = 200
 display_name = "Prizma Finali"
-target_position = Vector2(229, 233)
-panels = Array[ExtResource("3_jyu36")]([SubResource("Resource_8frr1")])
+target_position = Vector2(488.96, 312.35638)
+panels = Array[ExtResource("3_jyu36")]([SubResource("Resource_gstcl"), SubResource("Resource_gmdd0")])
 breakable_blocks = Array[ExtResource("1_fqodw")]([SubResource("Resource_73jhw")])
-obstacles = Array[ExtResource("2_qb2cr")]([SubResource("Resource_4p61g"), SubResource("Resource_n263o")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 724.9918), Vector2(900.01904, 1600)])
-right_wall_segments = Array[Vector2]([Vector2(-320, 776.63446), Vector2(916.0548, 1600)])
+obstacles = Array[ExtResource("2_qb2cr")]([SubResource("Resource_4p61g"), SubResource("Resource_n263o"), SubResource("Resource_8frr1")])
 two_star_max_seconds = 160.0
 two_star_max_shots = 5
 three_star_max_seconds = 85.0

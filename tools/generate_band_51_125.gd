@@ -35,12 +35,41 @@ const PORTAL := ObstacleData.Kind.PORTAL
 ## Bant baslangiclari: zorluk ve saglam hucre tavani bant icinde ilerler.
 const BAND_STARTS := [51, 76, 101, 126, 151, 176]
 ## Yeni mekanigin okunakli tanitildigi bolumler: tek panel, genis cozum.
-const INTRO_LEVELS := [51, 76, 101, 126, 151, 152, 153, 154, 155]
+const INTRO_LEVELS := [51, 76, 101, 126, 151]
 ## Ekranin alt-orta bandinda ogretici metni olan bolumler (bkz. _position_is_clear).
 const TUTORIAL_LEVELS := [51, 76, 101, 126, 151, 166]
 ## Portal bolumlerinde isabetlerin en az bu orani portaldan gecmeli; yoksa
 ## portal cozumun parcasi degil, ekrandaki bir sustur.
 const MIN_PORTAL_HIT_SHARE := 0.5
+
+## 152-200 ZOR TASARIM: kabul, bolum editorundeki SKOR hesabiyla yapilir
+## (LevelEditor._on_analyse ile ayni taramalar + LevelDifficultyScorer).
+## 151 portal tanitimi olarak kalir.
+const HARD_FIRST_LEVEL := 152
+## Hicbir zor bolum bu skorun altinda kabul edilmez (kullanici karari).
+const HARD_SCORE_FLOOR := 30
+## Bant boyunca yukselen hedef taban: 152'de 40, 200'de 60. Kabul edilen
+## skorlar tabanin ustunde kaldigi icin bant ortalamasi 50'yi gecer.
+const HARD_TARGET_FROM := 40.0
+const HARD_TARGET_TO := 60.0
+## Ust sinir: bunun ustu tek hucrelik, pratikte piksel avi bolumlerdir.
+const HARD_SCORE_CAP := 88
+## Adalet kapisi: dogrulayicinin izgarasinda (2 derece / 50 guc) en az bu
+## kadar saglam hucre. Bolum zor olabilir ama nisan kilavuzuyla bulunabilir
+## bir cozum penceresi kalmali.
+const HARD_FINE_ANGLE := 2.0
+const HARD_FINE_POWER := 50.0
+const HARD_MIN_FINE_ROBUST := 1
+## ...ya da en az bu kadar bitisik isabet hucresi. verify_levels.gd 50 sonrasi
+## bolumlerde 2 bitisik hucreyi gecerli "karma rota bandi" sayar; burada bir
+## hucre daha siki. Tek hucrelik igne deligi rotalar yine reddedilir.
+const HARD_MIN_FINE_BAND := 3
+## Bolum basina deneme butcesi: iskelet secimi x yerlesim denemesi. Yerlesim
+## denemesi ucuzdur (fizik yok) ve cogu - olculdu, %85-90'i - cakisma yuzunden
+## elenir; pahali olan degerlendirmedir, o yuzden ayrica sinirlanir.
+const HARD_SKELETON_CHOICES := 12
+const HARD_ATTEMPTS_PER_SKELETON := 40
+const HARD_MAX_EVALUATIONS := 60
 
 ## Kabul bandi. Alt sinir verifier'in MIN_ROBUST_CELLS'i (6) ile ayni; ustu
 ## "zaten bedava" bolumleri eler.
@@ -141,21 +170,21 @@ const BAND_NAMES := {
 	146: "Keskin Atım", 147: "Sönük Koridor", 148: "Son Işık Kilidi",
 	149: "Işın Düğümü", 150: "Lazer Ustalığı",
 	151: "Işık Geçidi", 152: "Mavi Kapı", 153: "Turuncu Çıkış",
-	154: "Kısa Yol", 155: "Geçit Sırrı", 156: "Sekmeli Geçit",
-	157: "Duvar Ardı", 158: "Eğik Kapı", 159: "Kenar Geçidi",
-	160: "Gizli Yol", 161: "Halka Geçidi", 162: "Mayınlı Çıkış",
-	163: "Korunan Kapı", 164: "Çember ve Geçit", 165: "Tehlikeli Yol",
-	166: "Dönen Kapı", 167: "Kayan Geçit", 168: "Yön Değişimi",
-	169: "Ters Çıkış", 170: "Zamanlı Geçit", 171: "İkiz Kapılar",
-	172: "Çifte Geçit", 173: "Geçit Zinciri", 174: "Kapı Labirenti",
-	175: "Geçit Ustalığı", 176: "Prizma Işığı", 177: "Sıralı Işın",
-	178: "Işık Perdesi", 179: "Yanıp Sönen Yol", 180: "Işın Kavşağı",
+	154: "Kısa Yol", 155: "Işın Tuzağı", 156: "Sekmeli Geçit",
+	157: "Duvar Ardı", 158: "Dönen Bariyer", 159: "Kenar Geçidi",
+	160: "Gizli Yol", 161: "Halka Geçidi", 162: "Işıklı Geçit",
+	163: "Korunan Kapı", 164: "Halka Işığı", 165: "Tehlikeli Yol",
+	166: "Mayınlı Kapı", 167: "Çarklı Geçit", 168: "Yön Değişimi",
+	169: "Çark Fırtınası", 170: "Zamanlı Geçit", 171: "İkiz Bariyer",
+	172: "Çifte Geçit", 173: "Halka Zinciri", 174: "Işın Kalesi",
+	175: "Işık Fitili", 176: "Prizma Işığı", 177: "Sıralı Işın",
+	178: "Işık Perdesi", 179: "Yanıp Sönen Yol", 180: "Dönen Kavşak",
 	181: "Zırhlı Koridor", 182: "Bronz Duvar", 183: "Çatlak Kale",
 	184: "Kırık Geçit", 185: "Tuğla Kapanı", 186: "Işık ve Taş",
-	187: "Dönen Kale", 188: "Işın Çarkı", 189: "Kırık Prizma",
+	187: "Dönen Kale", 188: "Çift Çark", 189: "Kırık Prizma",
 	190: "Taş Işığı", 191: "Çifte Ritim", 192: "İkiz Döngü",
-	193: "Zaman Kapısı", 194: "Kayan İkizler", 195: "Geçit Fırtınası",
-	196: "Son Kırılma", 197: "Prizma Kalbi", 198: "Son Geçit",
+	193: "Zaman Kapısı", 194: "İkiz Işın", 195: "Geçit Fırtınası",
+	196: "Son Kırılma", 197: "Prizma Kalbi", 198: "Son Çark",
 	199: "Işığın Ucu", 200: "Prizma Finali",
 }
 
@@ -179,6 +208,12 @@ var _identity_only := false
 ## hangi kabul olcutune takildigini gormek icin.
 var _diagnose := false
 var _diagnosed := 0
+## --hard-budget N: zor modda iskelet basina yerlesim denemesi (varsayilan
+## HARD_ATTEMPTS_PER_SKELETON). Hedefin altinda kalan bolumleri daha genis
+## aramayla yeniden uretmek icin.
+var _hard_attempts := HARD_ATTEMPTS_PER_SKELETON
+## --hard-evals N: zor modda bolum basina azami degerlendirme sayisi.
+var _hard_evals := HARD_MAX_EVALUATIONS
 var _solver: LevelSolver
 var _world: LevelWorld
 var _rng := RandomNumberGenerator.new()
@@ -204,6 +239,10 @@ func _initialize() -> void:
 			_identity_only = true
 		elif args[i] == "--diagnose":
 			_diagnose = true
+		elif args[i] == "--hard-budget" and i + 1 < args.size():
+			_hard_attempts = maxi(int(args[i + 1]), 1)
+		elif args[i] == "--hard-evals" and i + 1 < args.size():
+			_hard_evals = maxi(int(args[i + 1]), 1)
 	_run.call_deferred()
 
 
@@ -279,6 +318,8 @@ func _build_level(level_id: int) -> bool:
 	# sigdirmak cogu zaman imkansiz ve arama bunu ancak yuzlerce denemeden
 	# sonra "anliyor". Bir engel eksiltmek bolumu kurtarir; bos birakmaktan
 	# ya da dakikalarca aramaktan iyidir. En az bir engel her zaman kalir.
+	if level_id >= HARD_FIRST_LEVEL:
+		return await _build_hard_level(level_id, spec)
 	for choice in 12:
 		var skeleton := _skeleton_for(level_id, choice)
 		var relaxed := spec.duplicate(true)
@@ -340,6 +381,98 @@ func _build_level(level_id: int) -> bool:
 
 	print("LEVEL %3d BASARISIZ - arama basamaklari yetmedi" % level_id)
 	return false
+
+
+## ZOR mod (152+): ilk kabul edilebilir adayda DURMAZ. Butce boyunca kesin
+## tabani (30) ve adalet kapisini gecen adaylardan EN YUKSEK skorluyu tutar;
+## hedef tabana ulasan bir aday bulunursa erken biter. Engel ASLA eksiltilmez
+## (eksiltmek bolumu kolaylastirir); cesitlilik iskelet sapmasindan gelir.
+func _build_hard_level(level_id: int, spec: Dictionary, allow_shrink := true) -> bool:
+	var target := _hard_score_floor(level_id)
+	var best: LevelData = null
+	var best_verdict := {}
+	var best_similarity := 0.0
+	var evaluated := 0
+	for choice in HARD_SKELETON_CHOICES:
+		var skeleton := _skeleton_for(level_id, choice)
+		for attempt in _hard_attempts:
+			var shaped := _jitter_skeleton(skeleton)
+			var level := _level_from_skeleton(shaped, level_id, spec)
+			if not _layout_is_clear(level):
+				continue
+			if int(spec["bricks"]) > 0 and not _place_bricks(level, spec, shaped):
+				continue
+			if not _place_obstacles(level, spec, shaped):
+				continue
+			if not level.validate().is_empty():
+				continue
+			if evaluated >= _hard_evals:
+				break
+			evaluated += 1
+			var verdict := await _evaluate_hard(level, HARD_SCORE_FLOOR)
+			if _diagnose:
+				print("ADAY %d ok=%s skor=%d hedef=%d saglam=%d sekme=%d isabet=%.4f" % [
+					level_id, verdict["ok"], int(verdict["score"]), target,
+					int(verdict["robust"]), int(verdict["bounces"]),
+					float(verdict.get("hit_rate", -1.0))])
+				_diagnosed += 1
+				if _diagnosed >= 24:
+					return false
+				continue
+			if not bool(verdict["ok"]):
+				continue
+			if best != null and int(verdict["score"]) <= int(best_verdict["score"]):
+				continue
+			var novelty := _novelty.score(level, verdict, _references)
+			if float(novelty["similarity"]) > MAX_SIMILARITY:
+				continue
+			best = level
+			best_verdict = verdict
+			best_similarity = float(novelty["similarity"])
+			if int(verdict["score"]) >= target:
+				break
+		if (best != null and int(best_verdict["score"]) >= target) \
+				or evaluated >= _hard_evals:
+			break
+
+	if best == null:
+		# Hic aday yerlesemediyse plan ekrana sigmiyordur (or. iki portal cifti
+		# + genis kayan bariyer); yerlesip de hicbiri gecmediyse plan fazla
+		# sikisiktir. Bir engel eksiltip bir kez daha dene; zor bant 3 engelin
+		# altina inmez ve skor tabani (30) degismez.
+		var kinds: Array = spec["kinds"]
+		if allow_shrink and kinds.size() > 3:
+			var smaller := spec.duplicate(true)
+			(smaller["kinds"] as Array).pop_back()
+			smaller["min_kinds"] = (smaller["kinds"] as Array).size()
+			print("LEVEL %3d plan sigmadi, %d engelle yeniden deneniyor" % [
+				level_id, (smaller["kinds"] as Array).size()])
+			return await _build_hard_level(level_id, smaller, false)
+		print("LEVEL %3d BASARISIZ - %d aday, hicbiri skor %d ve adalet kapisini gecmedi" % [
+			level_id, evaluated, HARD_SCORE_FLOOR])
+		return false
+	_apply_identity(best, level_id, spec)
+	_apply_hard_identity(best, best_verdict)
+	var error := ResourceSaver.save(best, "res://levels/level_%d.tres" % level_id)
+	if error != OK:
+		push_error("kayit hatasi level %d: %d" % [level_id, error])
+		return false
+	_references.append({
+		"name": "Yeni %03d" % level_id,
+		"level": best.duplicate(true),
+		"metrics": best_verdict.duplicate(true),
+	})
+	print("LEVEL %3d ok  skor=%d hedef=%d engel=%d tugla=%d saglam=%d bant=%d sekme=%d benzerlik=%d aday=%d" % [
+		level_id, int(best_verdict["score"]), target, best.obstacles.size(),
+		best.breakable_blocks.size(), int(best_verdict["robust"]), int(best_verdict.get("band", 0)),
+		int(best_verdict["bounces"]), int(best_similarity), evaluated])
+	return true
+
+
+## Zor bolumun hedef skor tabani: bant boyunca yukselir, asla 30'un altinda degil.
+func _hard_score_floor(level_id: int) -> int:
+	var t := clampf(float(level_id - HARD_FIRST_LEVEL) / 48.0, 0.0, 1.0)
+	return maxi(HARD_SCORE_FLOOR, roundi(lerpf(HARD_TARGET_FROM, HARD_TARGET_TO, t)))
 
 
 ## Iskeleti bolume atar. Ayna varyanti kutuphaneyi iki katina cikarir; carpim
@@ -864,10 +997,104 @@ func _evaluate(level: LevelData) -> Dictionary:
 	return result
 
 
+## ZOR mod kabulu (152+). Uc kapi, ucuzdan pahaliya:
+##   1) Editordeki SKOR (LevelEditor._on_analyse ile ayni taramalar):
+##      score_floor <= skor <= HARD_SCORE_CAP.
+##   2) Adalet: dogrulayici izgarasinda en az HARD_MIN_FINE_ROBUST saglam hucre.
+##   3) Tugla kapili rotada, bastan en az bir tuglanin kirilabilmesi.
+## Kaba izgarada (3/100) hic isabet yoksa SKOR'un ince aramasina gerek yoktur:
+## o bolum adalet kapisindan gecemeyecek kadar dardir, pahali arama bosa gider.
+## Isabet varsa scan_for_solution_async zaten kaba taramayi aynen dondurur,
+## yani burada hesaplanan skor editordekiyle birebir aynidir.
+func _evaluate_hard(level: LevelData, score_floor: int) -> Dictionary:
+	_world = LevelWorld.new()
+	root.add_child(_world)
+	_world.build(level)
+	_solver.bind_space(_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
+	await physics_frame
+	await physics_frame
+	var result := {"ok": false, "robust": 0, "bounces": -1, "score": 0, "tier": 0}
+	var spawn := _solver.spawn_position(level.launcher_position)
+	var play_rect := _world.get_play_rect()
+	if not _static_geometry_ok(level, spawn):
+		await _drop_world()
+		return result
+
+	var none: Array[RID] = []
+	var free_scan := await _solver.scan_async(spawn, level.target_position, play_rect,
+		none, LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP, SIMS_PER_FRAME)
+	var free_analysis := LevelSolver.analyse_robust(free_scan)
+	var opened_scan := {}
+	var opened_analysis := {}
+	var opened_rids: Array[RID] = []
+	if not level.breakable_blocks.is_empty():
+		opened_rids = _world.rids_for_state(_world.get_all_broken_state())
+		opened_scan = await _solver.scan_async(spawn, level.target_position, play_rect,
+			opened_rids, LevelGenerator.FINE_ANGLE_STEP, LevelGenerator.FINE_POWER_STEP,
+			SIMS_PER_FRAME)
+		opened_analysis = LevelSolver.analyse_robust(opened_scan)
+	if int(free_scan["hit_count"]) + int(opened_scan.get("hit_count", 0)) <= 0:
+		await _drop_world()
+		return result
+
+	var scored := LevelDifficultyScorer.evaluate(
+		level, free_scan, free_analysis, opened_scan, opened_analysis)
+	result["score"] = int(scored["score"])
+	result["tier"] = int(scored["tier"])
+	result["bounces"] = int(scored["bounces"])
+	result["hit_rate"] = float(scored["hit_ratio"])
+	var route := String(scored["route_state"])
+	if not bool(scored["solvable"]) or int(result["score"]) < score_floor \
+			or int(result["score"]) > HARD_SCORE_CAP:
+		await _drop_world()
+		return result
+
+	var fine := await _solver.scan_async(spawn, level.target_position, play_rect,
+		opened_rids if route == "opened" else none,
+		HARD_FINE_ANGLE, HARD_FINE_POWER, SIMS_PER_FRAME)
+	result["robust"] = int(LevelSolver.analyse_robust(fine)["robust"])
+	result["band"] = int(LevelSolver.analyse_bounce_band(fine, 0, 9999)["largest_cluster"])
+	if int(result["robust"]) < HARD_MIN_FINE_ROBUST \
+			and int(result["band"]) < HARD_MIN_FINE_BAND:
+		await _drop_world()
+		return result
+
+	# Tugla kapisi: rota yalnizca kirik durumda aciliyorsa, oyuncu bastan en
+	# az bir tuglayi kirabilmeli (tam durum agaci dogrulayicida olculur).
+	if route == "opened" and (free_scan["reached"] as Dictionary).is_empty():
+		await _drop_world()
+		return result
+
+	result["ok"] = true
+	await _drop_world()
+	return result
+
+
+func _drop_world() -> void:
+	if _world != null:
+		_world.queue_free()
+		_world = null
+	await process_frame
+
+
+## Zor bolumde oyunun gosterdigi zorluk etiketi olculen skordan gelir (eski
+## taslaklarda elle verilen etiket hesapla 2+ seviye ayrisiyordu). Yildiz
+## hedefleri zorluga gore bir atis gevsetilir; 2 yildiz can sayisini asmaz.
+func _apply_hard_identity(level: LevelData, verdict: Dictionary) -> void:
+	level.difficulty = clampi(int(verdict["tier"]), 1, 5)
+	# Zor bolumler ogretici metin tasimaz: mekaniklerin hepsi daha once
+	# tanitildi ve ekranin alt bandi engellere aciktir.
+	level.tutorial_text = ""
+	level.three_star_max_shots = 4 if not level.breakable_blocks.is_empty() else 3
+	level.two_star_max_shots = mini(5, level.max_lives)
+
+
 func _apply_identity(level: LevelData, level_id: int, spec: Dictionary) -> void:
 	level.level_uid = LevelData.uid_for(level_id)
 	level.display_order = level_id
-	level.difficulty = (3 if level_id in INTRO_LEVELS else
+	# 151 portal tanitimi olculen skorla KOLAY'dir (skor 1); diger bant
+	# tanitimlari ORTA-ZOR sinirinda olculdu.
+	level.difficulty = (1 if level_id == 151 else 3 if level_id in INTRO_LEVELS else
 		(5 if level_id in [75, 95, 96, 97, 98, 99, 100, 120, 121, 122,
 			123, 124, 125, 145, 146, 147, 148, 149, 150, 171, 172, 173, 174, 175,
 			195, 196, 197, 198, 199, 200] else 4))
@@ -885,6 +1112,45 @@ func _apply_identity(level: LevelData, level_id: int, spec: Dictionary) -> void:
 	var t := clampf(float(level_id - 51) / 99.0, 0.0, 1.0)
 	level.two_star_max_seconds = snappedf(lerpf(75.0, 160.0, t), 0.1)
 	level.three_star_max_seconds = snappedf(lerpf(40.0, 85.0, t), 0.1)
+
+
+## 152-200 ZOR TASARIM: karisik engeller. Her bolum tum turlerden (halka,
+## mayin, cark, kayan bariyer, lazer, portal) 2-4 tanesini alir; en az biri
+## zamanlama engelidir (cark, bariyer veya lazer) ki zorluk yalniz nisandan
+## degil zamanlamadan da gelsin. Tohum bolume bagli: ayni girdi ayni plani verir.
+func _hard_spec(level_id: int, name: String) -> Dictionary:
+	var pick := RandomNumberGenerator.new()
+	pick.seed = 991000 + level_id * 104729
+	var stage := level_id - HARD_FIRST_LEVEL
+	# Olculdu: iki engelli bolumler skorun karmasiklik payini (13) alamadigi
+	# icin 30-40'ta kaliyordu; zor bant 3 engelle baslar, 176'dan sonra 4.
+	var count := 3 if stage < 24 else 4
+	if pick.randf() < 0.3:
+		count = mini(count + 1, 4)
+	var pool := [RING, BOMB, WHEEL, BAR, LASER, PORTAL]
+	var kinds: Array = [[WHEEL, BAR, LASER][pick.randi() % 3]]
+	while kinds.size() < count:
+		var kind: int = pool[pick.randi() % pool.size()]
+		if kinds.count(kind) >= 2:
+			continue
+		kinds.append(kind)
+	var bricks := 0
+	var strong := 0
+	# Her iki bolumde bir tugla: rota tuglalar kirilinca aciliyorsa skora
+	# tugla kapisi (10) eklenir ve bolum cok atisli bir bulmacaya doner.
+	if level_id % 2 == 0 or level_id == 200:
+		bricks = 1 + pick.randi() % 2
+		strong = 1 if stage >= 18 else 0
+	return {
+		"name": name,
+		"kinds": kinds,
+		"difficulty": lerpf(0.65, 1.0, float(stage) / 48.0),
+		"bricks": bricks,
+		"strong_bricks": strong,
+		"wall_mode": pick.randi() % 4,
+		"min_kinds": kinds.size(),
+		"turns": stage >= 10,
+	}
 
 
 ## Bolum basina icerik plani: engel karisimi, zorluk ve aralikli tugla kapilari.
@@ -944,62 +1210,14 @@ func _spec_for(level_id: int) -> Dictionary:
 			wall_mode = 3 if stage in [14, 19, 24] else (stage % 3)
 		if level_id in [102, 104, 105, 106, 107, 109, 110, 111, 112, 119]:
 			min_kinds = 2
-	elif level_id >= 176:
-		# 176-200: ustalik bandi, yeni mekanik yok. Lazerin asil yeri (iki
-		# isin sirayla), tuglalarin donusu, iki portal cifti ve final.
-		var stage := level_id - 176
-		difficulty = lerpf(0.60, 1.0, float(stage) / 24.0)
-		if stage < 5:
-			kinds = [LASER, LASER, PORTAL]
-			min_kinds = 2
-		elif stage < 10:
-			kinds = [PORTAL]
-			bricks = 2
-			strong = 1
-		elif stage < 15:
-			kinds = [LASER, WHEEL]
-			bricks = 1
-			strong = 1
-			min_kinds = 2
-		elif stage < 20:
-			kinds = [PORTAL, PORTAL, [WHEEL, BAR][stage % 2]]
-			min_kinds = 2
-		else:
-			kinds = [PORTAL, LASER, [RING, BOMB, WHEEL][stage % 3]]
-			min_kinds = 2
-			if level_id == 200:
-				bricks = 1
-				strong = 1
-		wall_mode = 3 if stage in [9, 19, 24] else (stage % 3)
-		return {
-			"name": name, "kinds": kinds, "difficulty": difficulty,
-			"bricks": bricks, "strong_bricks": strong, "wall_mode": wall_mode,
-			"min_kinds": min_kinds, "turns": stage >= 15,
-		}
+	elif level_id >= HARD_FIRST_LEVEL:
+		return _hard_spec(level_id, name)
 	elif level_id >= 151:
-		# 151-175: portal bandi. 151-155 portali TEK BASINA ogretir; 156-160
-		# panel/duvar ile kestirme yol, 161-165 halka/mayin, 166-170 cark/bar
-		# zamanlamasi ve yon ceviren cikis, 171-175 iki portal cifti.
-		var stage := level_id - 151
-		difficulty = lerpf(0.35, 0.95, float(stage) / 24.0)
-		kinds = [PORTAL]
-		if stage >= 10 and stage < 15:
-			kinds.append([RING, BOMB][stage % 2])
-		elif stage >= 15 and stage < 20:
-			kinds.append([WHEEL, BAR][stage % 2])
-		elif stage >= 20:
-			kinds.append(PORTAL)
-			min_kinds = 2
-			if stage >= 22:
-				kinds.append([RING, BOMB, WHEEL][stage % 3])
-		if level_id in [165, 175]:
-			bricks = 1
-		if stage >= 5:
-			wall_mode = 3 if stage in [14, 19, 24] else (stage % 3)
+		# 151: portalin okunakli tanitimi - tek portal cifti, baska engel yok.
 		return {
-			"name": name, "kinds": kinds, "difficulty": difficulty,
-			"bricks": bricks, "strong_bricks": strong, "wall_mode": wall_mode,
-			"min_kinds": min_kinds, "turns": stage >= 15,
+			"name": name, "kinds": [PORTAL], "difficulty": 0.35,
+			"bricks": 0, "strong_bricks": 0, "wall_mode": 0,
+			"min_kinds": 1, "turns": false,
 		}
 	else:
 		# 126-150: lazer bandi. 126 yalnizca lazeri ogretir; sonrasinda cark,

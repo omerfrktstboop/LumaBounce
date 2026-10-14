@@ -6,37 +6,48 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_jnvr3"]
 
 [sub_resource type="Resource" id="Resource_tnip1"]
-script = ExtResource("1_ugbha")
-position = Vector2(193.407, 417.5019)
-rotation_degrees = -2.7848432
-size = Vector2(318.814, 34)
-hit_points = 2
+script = ExtResource("2_clidf")
+kind = 5
+position = Vector2(530.4276, 920.61365)
+size = Vector2(313.8854, 14)
+motion_period = 2.34875
+phase_degrees = 17.695705
+pulse_on_ratio = 0.58140625
 
 [sub_resource type="Resource" id="Resource_6knph"]
-script = ExtResource("1_ugbha")
-position = Vector2(526.593, 449.5019)
-rotation_degrees = -4.8559523
-size = Vector2(318.814, 34)
+script = ExtResource("2_clidf")
+kind = 1
+position = Vector2(152.68211, 934.4964)
+size = Vector2(84.52917, 84.52917)
 
 [sub_resource type="Resource" id="Resource_qdvyx"]
 script = ExtResource("2_clidf")
-kind = 6
-position = Vector2(247.32648, 650.5815)
-size = Vector2(90, 90)
-exit_position = Vector2(451.10846, 336.725)
+kind = 2
+position = Vector2(261.99698, 333.472)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -110.703125
 
 [sub_resource type="Resource" id="Resource_d5gxo"]
-script = ExtResource("3_l2832")
-position = Vector2(372, 812)
-rotation_degrees = -30.7
-length = 245.0
-thickness = 26.0
+script = ExtResource("2_clidf")
+kind = 6
+position = Vector2(431.34094, 662.4143)
+size = Vector2(86, 86)
+exit_position = Vector2(557.77734, 322.06277)
+exit_turn_degrees = 90.0
 
 [sub_resource type="Resource" id="Resource_m0x7h"]
 script = ExtResource("3_l2832")
-position = Vector2(229, 523)
-rotation_degrees = -6.9
-length = 369.0
+position = Vector2(200.08023, 679.2864)
+rotation_degrees = 36.69568691253662
+length = 349.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_vkjv2"]
+script = ExtResource("3_l2832")
+position = Vector2(390.6368, 554.9294)
+rotation_degrees = -36.043749046325686
+length = 339.0
 thickness = 26.0
 
 [resource]
@@ -44,16 +55,14 @@ script = ExtResource("4_jnvr3")
 level_uid = "level_183"
 display_order = 183
 difficulty = 4
-hint_angle_degrees = 26.0
-hint_power = 1700.0
+hint_angle_degrees = -32.0
+hint_power = 1950.0
 level_id = 183
 display_name = "Çatlak Kale"
-target_position = Vector2(273, 330)
-panels = Array[ExtResource("3_l2832")]([SubResource("Resource_d5gxo"), SubResource("Resource_m0x7h")])
-breakable_blocks = Array[ExtResource("1_ugbha")]([SubResource("Resource_tnip1"), SubResource("Resource_6knph")])
-obstacles = Array[ExtResource("2_clidf")]([SubResource("Resource_qdvyx")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 525.8867), Vector2(688.26794, 1600)])
+target_position = Vector2(416.85498, 408.47763)
+panels = Array[ExtResource("3_l2832")]([SubResource("Resource_m0x7h"), SubResource("Resource_vkjv2")])
+obstacles = Array[ExtResource("2_clidf")]([SubResource("Resource_tnip1"), SubResource("Resource_6knph"), SubResource("Resource_qdvyx"), SubResource("Resource_d5gxo")])
 two_star_max_seconds = 160.0
 two_star_max_shots = 5
 three_star_max_seconds = 85.0
-three_star_max_shots = 4
+three_star_max_shots = 3

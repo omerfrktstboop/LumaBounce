@@ -7,47 +7,50 @@
 
 [sub_resource type="Resource" id="Resource_563yi"]
 script = ExtResource("2_6gexk")
-kind = 6
-position = Vector2(494.86905, 855.59814)
-size = Vector2(88, 88)
-exit_position = Vector2(171.1877, 455.91714)
-exit_turn_degrees = 90.0
+kind = 3
+position = Vector2(525.3972, 454.59436)
+size = Vector2(130, 26)
+travel_distance = 125.19791666666669
+motion_period = 2.1748958333333333
 
 [sub_resource type="Resource" id="Resource_3sgqi"]
 script = ExtResource("2_6gexk")
-kind = 6
-position = Vector2(599.838, 771.6799)
-size = Vector2(88, 88)
-exit_position = Vector2(245.77954, 280.79144)
-exit_turn_degrees = 90.0
+kind = 5
+position = Vector2(551.60254, 951.2039)
+size = Vector2(302.5104, 14)
+motion_period = 2.4537500000000003
+phase_degrees = 60.03384
+pulse_on_ratio = 0.56828125
 
 [sub_resource type="Resource" id="Resource_iqtf5"]
-script = ExtResource("3_vklma")
-position = Vector2(332, 684)
-rotation_degrees = -49.1
-length = 269.0
-thickness = 26.0
+script = ExtResource("2_6gexk")
+kind = 3
+position = Vector2(112.45381, 547.7384)
+size = Vector2(130, 26)
+travel_distance = 125.19791666666669
+motion_period = 2.1748958333333333
 
 [sub_resource type="Resource" id="Resource_863sl"]
 script = ExtResource("3_vklma")
-position = Vector2(326, 879)
-rotation_degrees = -42.0
-length = 294.0
+position = Vector2(306.62012, 773.0561)
+rotation_degrees = 0.5376941680908205
+length = 271.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4_d03j7")
 level_uid = "level_171"
 display_order = 171
-difficulty = 5
-hint_angle_degrees = 24.0
-hint_power = 1600.0
+difficulty = 4
+hint_angle_degrees = -38.0
+hint_power = 2100.0
 level_id = 171
-display_name = "İkiz Kapılar"
-target_position = Vector2(368, 355)
-panels = Array[ExtResource("3_vklma")]([SubResource("Resource_iqtf5"), SubResource("Resource_863sl")])
-obstacles = Array[ExtResource("2_6gexk")]([SubResource("Resource_563yi"), SubResource("Resource_3sgqi")])
-right_wall_segments = Array[Vector2]([Vector2(-320, 700.949), Vector2(827.35425, 1600)])
+display_name = "İkiz Bariyer"
+target_position = Vector2(298.42905, 250.64523)
+panels = Array[ExtResource("3_vklma")]([SubResource("Resource_863sl")])
+obstacles = Array[ExtResource("2_6gexk")]([SubResource("Resource_563yi"), SubResource("Resource_3sgqi"), SubResource("Resource_iqtf5")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 532.3307), Vector2(677.8081, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 3

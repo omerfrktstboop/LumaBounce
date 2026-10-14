@@ -1,0 +1,290 @@
+# Bölüm Zorluk Skorları
+
+Tarih: 14 Ekim 2026. Bölüm editöründeki **SKOR** butonunun hesabıyla (`LevelDifficultyScorer`)
+üretildi; bölüm dosyaları değiştirilmedi. Yeniden üretmek için:
+
+```
+godot --headless --path . --script res://tools/rescore_campaign_difficulty.gd
+```
+
+**Skor 0–100** (yüksek = zor) beş bileşenin toplamı:
+
+| Bileşen | Azami | Ne ölçer |
+|---|---|---|
+| H — Hassasiyet | 42 | İsabet eden atış oranı; oran düştükçe puan artar |
+| Ç — Çeşitlilik | 10 | Çözüm hücresi azsa puan artar (10+ çözümde 0) |
+| S — Sekme | 25 | Ana rotanın sekme sayısı (8+ sekmede tam puan) |
+| K — Karmaşıklık | 13 | Panel, tuğla ve engel sayısı/türü |
+| T — Tuğla kapısı | 10 | Rota yalnızca tuğlalar kırılınca açılıyorsa |
+
+Seviye: 0–19 KOLAY · 20–39 ORTA · 40–59 ZOR · 60–79 ÇOK ZOR · 80–100 USTA.
+
+> Not: Karmaşıklık bileşeni **portalı saymıyor** (`LevelDifficultyScorer._complexity`
+> portal öncesi yazıldı). 151–200'deki portal bölümlerinin skoru bu yüzden bir miktar düşük çıkar.
+
+## Özet
+
+| Seviye | Bölüm sayısı |
+|---|---|
+| KOLAY | 20 |
+| ORTA | 70 |
+| ZOR | 68 |
+| ÇOK ZOR | 39 |
+| USTA | 3 |
+
+### Dünya ve bant ortalamaları
+
+| Bölümler | Dünya | Ort. skor | En düşük | En yüksek | Ort. isabet % |
+|---|---|---|---|---|---|
+| 1–25 | BAŞLANGIÇ | 24.6 | 0 | 50 | 2.48 |
+| 26–50 | BAŞLANGIÇ | 47.1 | 26 | 81 | 0.89 |
+| 51–75 | KİNETİK | 41.0 | 9 | 78 | 1.41 |
+| 76–100 | KİNETİK | 50.9 | 11 | 78 | 0.93 |
+| 101–125 | ZAMAN | 37.0 | 13 | 74 | 1.41 |
+| 126–150 | ZAMAN | 32.3 | 8 | 77 | 2.69 |
+| 151–175 | PRİZMA | 51.4 | 1 | 79 | 1.25 |
+| 176–200 | PRİZMA | 58.5 | 40 | 85 | 0.54 |
+
+### En zor 10 bölüm
+
+| # | Bölüm | Skor | Seviye | Çözüm | İsabet % |
+|---|---|---|---|---|---|
+| 190 | Taş Işığı | 85 | USTA | 1 | 0.14 |
+| 32 | Tam Temizlik | 81 | USTA | 1 | 0.14 |
+| 39 | Darboğaz | 81 | USTA | 1 | 0.14 |
+| 161 | Halka Geçidi | 79 | ÇOK ZOR | 1 | 0.14 |
+| 63 | Çapraz Halka | 78 | ÇOK ZOR | 1 | 0.14 |
+| 95 | Üçlü Tehdit | 78 | ÇOK ZOR | 1 | 0.14 |
+| 98 | Halka ve Mayın | 78 | ÇOK ZOR | 1 | 0.14 |
+| 171 | İkiz Bariyer | 78 | ÇOK ZOR | 1 | 0.14 |
+| 198 | Son Çark | 78 | ÇOK ZOR | 2 | 0.27 |
+| 145 | Işık Kapanı | 77 | ÇOK ZOR | 1 | 0.14 |
+
+### En kolay 10 bölüm (1–10 hariç)
+
+| # | Bölüm | Skor | Seviye | Çözüm | İsabet % |
+|---|---|---|---|---|---|
+| 151 | Işık Geçidi | 1 | KOLAY | 114 | 15.36 |
+| 146 | Keskin Atım | 8 | KOLAY | 51 | 6.87 |
+| 141 | Kesik Darbe | 9 | KOLAY | 49 | 6.60 |
+| 56 | Ters Halka | 9 | KOLAY | 40 | 5.39 |
+| 147 | Sönük Koridor | 10 | KOLAY | 53 | 7.14 |
+| 52 | Açık Halka | 10 | KOLAY | 35 | 4.72 |
+| 137 | Duvar Işığı | 11 | KOLAY | 41 | 5.53 |
+| 76 | Mayın Girişi | 11 | KOLAY | 34 | 4.58 |
+| 144 | Sessiz Aralık | 12 | KOLAY | 49 | 6.60 |
+| 143 | Kesişen Işın | 12 | KOLAY | 42 | 5.66 |
+
+### Dikkat çekenler
+
+- **Taramada çözüm bulunamayan (skor 100, ÇÖZÜMSÜZ):** yok
+- **Oyunda gösterilen zorluk etiketi hesapla en az 2 seviye farklı olanlar (0):** yok
+
+## Tam tablo
+
+Bileşenler sütunu H/Ç/S/K/T sırasındadır. "Oyunda" = bölüm dosyasında kayıtlı, oyuncuya gösterilen zorluk etiketi.
+
+| # | Bölüm | Dünya | Skor | Seviye | Oyunda | Çözüm | İsabet % | Sekme | Sağlam | H/Ç/S/K/T | Mekanikler |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | İlk Atış | BAŞLANGIÇ | 0 | KOLAY | KOLAY | 81 | 10.92 | 0 | 16 | 0/0/0/0/0 | — |
+| 2 | İlk Sekme | BAŞLANGIÇ | 4 | KOLAY | KOLAY | 56 | 7.55 | 1 | 15 | 0/0/3/1/0 | 1 panel |
+| 3 | Ters Açı | BAŞLANGIÇ | 6 | KOLAY | KOLAY | 49 | 6.60 | 1 | 14 | 2/0/3/1/0 | 1 panel |
+| 4 | Açı ve Sekme | BAŞLANGIÇ | 11 | KOLAY | KOLAY | 30 | 4.04 | 1 | 3 | 6/0/3/2/0 | 2 panel |
+| 5 | Açı ve Sekme | BAŞLANGIÇ | 26 | ORTA | ORTA | 13 | 1.75 | 3 | 1 | 15/0/9/2/0 | 2 panel |
+| 6 | Duvar Rotası | BAŞLANGIÇ | 20 | ORTA | ORTA | 12 | 1.62 | 1 | 1 | 15/0/3/2/0 | 3 panel |
+| 7 | Duvar Rotası | BAŞLANGIÇ | 25 | ORTA | ORTA | 27 | 3.64 | 5 | 1 | 7/0/16/2/0 | 2 panel |
+| 8 | Duvar Rotası | BAŞLANGIÇ | 21 | ORTA | ORTA | 16 | 2.16 | 2 | 0 | 13/0/6/2/0 | 3 panel |
+| 9 | Duvar Rotası | BAŞLANGIÇ | 23 | ORTA | ORTA | 13 | 1.75 | 2 | 0 | 15/0/6/2/0 | 3 panel |
+| 10 | Duvar Rotası | BAŞLANGIÇ | 39 | ORTA | ORTA | 4 | 0.54 | 2 | 0 | 26/4/6/3/0 | 4 panel |
+| 11 | Dar Geçit | BAŞLANGIÇ | 25 | ORTA | ORTA | 8 | 1.08 | 1 | 0 | 19/1/3/2/0 | 2 panel |
+| 12 | Dar Geçit | BAŞLANGIÇ | 35 | ORTA | ORTA | 5 | 0.67 | 2 | 0 | 24/3/6/2/0 | 3 panel |
+| 13 | Dar Geçit | BAŞLANGIÇ | 35 | ORTA | ORTA | 5 | 0.67 | 2 | 0 | 24/3/6/2/0 | 3 panel |
+| 14 | Dar Geçit | BAŞLANGIÇ | 21 | ORTA | ORTA | 11 | 1.48 | 1 | 0 | 16/0/3/2/0 | 3 panel |
+| 15 | Dar Geçit | BAŞLANGIÇ | 35 | ORTA | ORTA | 6 | 0.81 | 3 | 0 | 22/2/9/2/0 | 3 panel |
+| 16 | Çift Sekme | BAŞLANGIÇ | 25 | ORTA | ORTA | 16 | 2.16 | 3 | 0 | 13/0/9/3/0 | 4 panel |
+| 17 | Çift Sekme | BAŞLANGIÇ | 39 | ORTA | ORTA | 5 | 0.67 | 3 | 0 | 24/3/9/3/0 | 4 panel |
+| 18 | Çift Sekme | BAŞLANGIÇ | 12 | KOLAY | KOLAY | 27 | 3.64 | 1 | 9 | 7/0/3/2/0 | 3 panel |
+| 19 | Çift Sekme | BAŞLANGIÇ | 20 | ORTA | ORTA | 15 | 2.02 | 1 | 0 | 13/0/3/4/0 | 5 panel |
+| 20 | Çift Sekme | BAŞLANGIÇ | 24 | ORTA | ORTA | 9 | 1.21 | 1 | 0 | 18/0/3/3/0 | 4 panel |
+| 21 | Ritim Finali | BAŞLANGIÇ | 21 | ORTA | ORTA | 18 | 2.43 | 2 | 2 | 11/0/6/4/0 | 6 panel |
+| 22 | Ritim Finali | BAŞLANGIÇ | 39 | ORTA | ORTA | 5 | 0.67 | 3 | 0 | 24/3/9/3/0 | 4 panel |
+| 23 | Ritim Finali | BAŞLANGIÇ | 22 | ORTA | ORTA | 20 | 2.70 | 3 | 2 | 10/0/9/3/0 | 4 panel |
+| 24 | Ritim Finali | BAŞLANGIÇ | 50 | ZOR | ZOR | 3 | 0.40 | 4 | 0 | 29/5/13/3/0 | 4 panel |
+| 25 | Yedi Temas | BAŞLANGIÇ | 36 | ORTA | ORTA | 6 | 0.81 | 3 | 0 | 22/2/9/3/0 | 4 panel |
+| 26 | İlk Kırılma | BAŞLANGIÇ | 33 | ORTA | ORTA | 10 | 1.35 | 3 | 0 | 17/0/9/7/0 | 2 panel, 4 tuğla |
+| 27 | İki Yol | BAŞLANGIÇ | 40 | ZOR | ZOR | 6 | 0.81 | 3 | 0 | 22/2/9/7/0 | 2 panel, 4 tuğla |
+| 28 | Kırık Kenar | BAŞLANGIÇ | 40 | ZOR | ZOR | 8 | 1.08 | 4 | 0 | 19/1/13/7/0 | 1 panel, 5 tuğla |
+| 29 | Sahte Geçit | BAŞLANGIÇ | 42 | ZOR | ZOR | 4 | 0.54 | 2 | 0 | 26/4/6/6/0 | 2 panel, 3 tuğla |
+| 30 | Çatlak Kilit | BAŞLANGIÇ | 50 | ZOR | ZOR | 4 | 0.54 | 4 | 0 | 26/4/13/7/0 | 1 panel, 4 tuğla |
+| 31 | Blok Kapısı | BAŞLANGIÇ | 26 | ORTA | ORTA | 21 | 2.83 | 3 | 1 | 10/0/9/7/0 | 1 panel, 4 tuğla |
+| 32 | Tam Temizlik | BAŞLANGIÇ | 81 | USTA | USTA | 1 | 0.14 | 8 | 0 | 39/10/25/7/0 | 1 panel, 7 tuğla |
+| 33 | Üçlü Hat | BAŞLANGIÇ | 54 | ZOR | ZOR | 3 | 0.40 | 4 | 0 | 29/5/13/7/0 | 1 panel, 7 tuğla |
+| 34 | Blok Kapısı | BAŞLANGIÇ | 29 | ORTA | ORTA | 9 | 1.21 | 2 | 0 | 18/0/6/5/0 | 1 panel, 3 tuğla |
+| 35 | Çifte Çatlak | BAŞLANGIÇ | 38 | ORTA | ORTA | 7 | 0.94 | 3 | 0 | 20/2/9/7/0 | 1 panel, 7 tuğla |
+| 36 | Ayna Anahtar | BAŞLANGIÇ | 75 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 6 | 0 | 39/10/19/7/0 | 1 panel, 6 tuğla |
+| 37 | Çifte Kilit | BAŞLANGIÇ | 36 | ORTA | ORTA | 11 | 1.48 | 4 | 0 | 16/0/13/7/0 | 2 panel, 4 tuğla |
+| 38 | Çifte Kilit | BAŞLANGIÇ | 30 | ORTA | ORTA | 22 | 2.96 | 5 | 2 | 9/0/16/5/0 | 1 panel, 3 tuğla |
+| 39 | Darboğaz | BAŞLANGIÇ | 81 | USTA | USTA | 1 | 0.14 | 10 | 0 | 39/10/25/7/0 | 1 panel, 6 tuğla |
+| 40 | Son Kilit | BAŞLANGIÇ | 36 | ORTA | ORTA | 8 | 1.08 | 3 | 0 | 19/1/9/7/0 | 2 panel, 4 tuğla |
+| 41 | Kenar Anahtarı | BAŞLANGIÇ | 28 | ORTA | ORTA | 16 | 2.16 | 3 | 1 | 13/0/9/6/0 | 2 panel, 3 tuğla |
+| 42 | Çifte Koridor | BAŞLANGIÇ | 44 | ZOR | ZOR | 5 | 0.67 | 3 | 0 | 24/3/9/8/0 | 3 panel, 4 tuğla |
+| 43 | Kırık Zikzak | BAŞLANGIÇ | 31 | ORTA | ORTA | 8 | 1.08 | 1 | 0 | 19/1/3/8/0 | 3 panel, 4 tuğla |
+| 44 | Ters Kilit | BAŞLANGIÇ | 53 | ZOR | ZOR | 2 | 0.27 | 2 | 0 | 32/7/6/8/0 | 3 panel, 4 tuğla |
+| 45 | Dar Geçit | BAŞLANGIÇ | 45 | ZOR | ZOR | 3 | 0.40 | 1 | 0 | 29/5/3/8/0 | 3 panel, 5 tuğla |
+| 46 | Yankı Duvarı | BAŞLANGIÇ | 40 | ZOR | ZOR | 6 | 0.81 | 3 | 0 | 22/2/9/7/0 | 2 panel, 4 tuğla |
+| 47 | Çapraz Hasar | BAŞLANGIÇ | 63 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 2 | 0 | 39/10/6/8/0 | 3 panel, 5 tuğla |
+| 48 | İkili Açılım | BAŞLANGIÇ | 42 | ZOR | ZOR | 6 | 0.81 | 3 | 0 | 22/2/9/9/0 | 4 panel, 4 tuğla |
+| 49 | Son Koridor | BAŞLANGIÇ | 76 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 6 | 0 | 39/10/19/8/0 | 3 panel, 5 tuğla |
+| 50 | Blok Labirenti | BAŞLANGIÇ | 65 | ÇOK ZOR | ÇOK ZOR | 2 | 0.27 | 6 | 0 | 32/7/19/7/0 | 2 panel, 5 tuğla |
+| 51 | Halka Girişi | KİNETİK | 16 | KOLAY | KOLAY | 35 | 4.72 | 3 | 1 | 5/0/9/2/0 | 1 panel, halka |
+| 52 | Açık Halka | KİNETİK | 10 | KOLAY | KOLAY | 35 | 4.72 | 1 | 11 | 5/0/3/2/0 | 1 panel, halka |
+| 53 | Eğik Geçiş | KİNETİK | 22 | ORTA | ORTA | 15 | 2.02 | 1 | 2 | 13/0/3/6/0 | 1 panel, 3 tuğla, halka |
+| 54 | Kenar Halkası | KİNETİK | 28 | ORTA | ORTA | 8 | 1.08 | 1 | 0 | 19/1/3/5/0 | 3 panel, 1 tuğla, halka |
+| 55 | Bloklu Halka | KİNETİK | 42 | ZOR | ZOR | 5 | 0.67 | 2 | 0 | 24/3/6/9/0 | 2 panel, 4 tuğla, halka |
+| 56 | Ters Halka | KİNETİK | 9 | KOLAY | KOLAY | 40 | 5.39 | 1 | 21 | 4/0/3/2/0 | 1 panel, halka |
+| 57 | Çifte Sekme | KİNETİK | 42 | ZOR | ZOR | 7 | 0.94 | 5 | 0 | 20/2/16/4/0 | 2 panel, 1 tuğla, halka |
+| 58 | Çatlak Çember | KİNETİK | 61 | ÇOK ZOR | ÇOK ZOR | 3 | 0.40 | 6 | 0 | 29/5/19/8/0 | 1 panel, 4 tuğla, halka |
+| 59 | Dar Yörünge | KİNETİK | 41 | ZOR | ZOR | 5 | 0.67 | 3 | 0 | 24/3/9/5/0 | 3 panel, 1 tuğla, halka |
+| 60 | Halka Koridoru | KİNETİK | 51 | ZOR | ZOR | 2 | 0.27 | 3 | 0 | 32/7/9/3/0 | 2 panel, halka |
+| 61 | Kırık Yörünge | KİNETİK | 52 | ZOR | ZOR | 4 | 0.54 | 4 | 0 | 26/4/13/9/0 | 2 panel, 4 tuğla, halka |
+| 62 | Kenar Düğümü | KİNETİK | 39 | ORTA ¹ | ORTA | 9 | 1.21 | 1 | 1 | 18/0/3/8/10 | 1 panel, 12 tuğla, halka |
+| 63 | Çapraz Halka | KİNETİK | 78 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 9 | 0 | 39/10/25/4/0 | 2 panel, 2× halka |
+| 64 | Zırhlı Çember | KİNETİK | 44 | ZOR | ZOR | 5 | 0.67 | 3 | 0 | 24/3/9/8/0 | 1 panel, 4 tuğla, halka |
+| 65 | İki Geçit | KİNETİK | 12 | KOLAY | KOLAY | 34 | 4.58 | 1 | 12 | 5/0/3/4/0 | 2 panel, 2× halka |
+| 66 | Ters Koridor | KİNETİK | 47 | ZOR | ZOR | 4 | 0.54 | 4 | 0 | 26/4/13/4/0 | 2 panel, 2× halka |
+| 67 | Halka Anahtarı | KİNETİK | 53 | ZOR | ZOR | 5 | 0.67 | 5 | 0 | 24/3/16/10/0 | 2 panel, 4 tuğla, 2× halka |
+| 68 | Kırık Yay | KİNETİK | 55 | ZOR | ZOR | 2 | 0.27 | 4 | 0 | 32/7/13/3/0 | 2 panel, halka |
+| 69 | Duvar Dönüşü | KİNETİK | 72 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 5 | 0 | 39/10/16/7/0 | 2 panel, 2 tuğla, 2× halka |
+| 70 | Dar Çember | KİNETİK | 34 | ORTA | ORTA | 8 | 1.08 | 2 | 0 | 19/1/6/8/0 | 1 panel, 4 tuğla, halka |
+| 71 | Kilitli Halka | KİNETİK | 39 | ORTA | ORTA | 7 | 0.94 | 4 | 0 | 20/2/13/4/0 | 2 panel, 2× halka |
+| 72 | Çifte Yörünge | KİNETİK | 37 | ORTA | ORTA | 6 | 0.81 | 3 | 0 | 22/2/9/4/0 | 1 panel, 3× halka |
+| 73 | Zırhlı Geçit | KİNETİK | 39 | ORTA | ORTA | 9 | 1.21 | 4 | 0 | 18/0/13/8/0 | 1 panel, 5 tuğla, halka |
+| 74 | Son Düğüm | KİNETİK | 56 | ZOR | ZOR | 6 | 0.81 | 8 | 0 | 22/2/25/7/0 | 2 panel, 2 tuğla, 2× halka |
+| 75 | Halka Düğümü | KİNETİK | 46 | ZOR | ZOR | 6 | 0.81 | 4 | 0 | 22/2/13/9/0 | 1 panel, 4 tuğla, 2× halka |
+| 76 | Mayın Girişi | KİNETİK | 11 | KOLAY | KOLAY | 34 | 4.58 | 1 | 5 | 5/0/3/3/0 | 1 panel, mayın |
+| 77 | Güvenli Açı | KİNETİK | 65 | ÇOK ZOR | ÇOK ZOR | 2 | 0.27 | 7 | 0 | 32/7/22/4/0 | 1 panel, mayın, halka |
+| 78 | Mayın Çemberi | KİNETİK | 51 | ZOR | ZOR | 2 | 0.27 | 1 | 0 | 32/7/3/9/0 | 1 panel, 4 tuğla, mayın |
+| 79 | Ters Fitil | KİNETİK | 51 | ZOR | ZOR | 2 | 0.27 | 2 | 0 | 32/7/6/6/0 | 1 panel, 1 tuğla, mayın, halka |
+| 80 | Kenar Mayını | KİNETİK | 72 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 4 | 0 | 39/10/13/10/0 | 2 panel, 4 tuğla, mayın |
+| 81 | Halka ve Fitil | KİNETİK | 58 | ZOR | ZOR | 2 | 0.27 | 4 | 0 | 32/7/13/6/0 | 3 panel, mayın, halka |
+| 82 | Dar Güvenlik | KİNETİK | 64 | ÇOK ZOR | ÇOK ZOR | 2 | 0.27 | 5 | 0 | 32/7/16/9/0 | 3 panel, 1 tuğla, 2× mayın |
+| 83 | Çifte Tehdit | KİNETİK | 55 | ZOR | ZOR | 2 | 0.27 | 2 | 0 | 32/7/6/10/0 | 1 panel, 4 tuğla, mayın, halka |
+| 84 | Kırık Rota | KİNETİK | 24 | ORTA | ORTA | 10 | 1.35 | 1 | 0 | 17/0/3/4/0 | 2 panel, mayın |
+| 85 | Mayın Yörüngesi | KİNETİK | 49 | ZOR | ZOR | 4 | 0.54 | 2 | 0 | 26/4/6/13/0 | 1 panel, 5× mayın, halka |
+| 86 | Zırhlı Mayın | KİNETİK | 25 | ORTA ¹ | ORTA | 46 | 6.20 | 1 | 13 | 2/0/3/10/10 | 1 panel, 4 tuğla, mayın, halka |
+| 87 | Halka Sığınağı | KİNETİK | 32 | ORTA | ORTA | 8 | 1.08 | 1 | 0 | 19/1/3/9/0 | 1 panel, 3× mayın, halka |
+| 88 | Çapraz Fitil | KİNETİK | 45 | ZOR | ZOR | 4 | 0.54 | 3 | 0 | 26/4/9/6/0 | 2 panel, mayın, 2× halka |
+| 89 | Sessiz Koridor | KİNETİK | 52 | ZOR | ZOR | 4 | 0.54 | 4 | 0 | 26/4/13/9/0 | 1 panel, 4 tuğla, mayın |
+| 90 | Dar Mayın | KİNETİK | 52 | ZOR | ZOR | 4 | 0.54 | 5 | 0 | 26/4/16/6/0 | 1 panel, 1 tuğla, mayın, halka |
+| 91 | Çifte Mayın | KİNETİK | 38 | ORTA | ORTA | 7 | 0.94 | 1 | 0 | 20/2/3/13/0 | 1 panel, 5 tuğla, 2× mayın, halka |
+| 92 | Kırık Güvenlik | KİNETİK | 38 | ORTA | ORTA | 8 | 1.08 | 3 | 0 | 19/1/9/9/0 | 1 panel, 4 tuğla, mayın |
+| 93 | Duvar Tuzağı | KİNETİK | 30 | ORTA | ORTA | 14 | 1.89 | 3 | 1 | 14/0/9/7/0 | 1 panel, 2× mayın, halka |
+| 94 | Halka Tuzağı | KİNETİK | 36 | ORTA | ORTA | 8 | 1.08 | 1 | 0 | 19/1/3/13/0 | 1 panel, 3 tuğla, 3× mayın |
+| 95 | Üçlü Tehdit | KİNETİK | 78 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 6 | 0 | 39/10/19/10/0 | 1 panel, 4 tuğla, mayın, halka |
+| 96 | Zırhlı Fitil | KİNETİK | 67 | ÇOK ZOR ¹ | ÇOK ZOR | 2 | 0.27 | 2 | 0 | 32/7/6/12/10 | 3 panel, 3 tuğla, 2× mayın |
+| 97 | Son Güvenli Açı | KİNETİK | 62 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 2 | 0 | 39/10/6/7/0 | 2 panel, 2× mayın, halka |
+| 98 | Halka ve Mayın | KİNETİK | 78 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 5 | 0 | 39/10/16/13/0 | 1 panel, 4 tuğla, 2× mayın, halka |
+| 99 | Mayın Kilidi | KİNETİK | 75 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 5 | 0 | 39/10/16/10/0 | 2 panel, 1 tuğla, 2× mayın, 2× halka |
+| 100 | Mayın Ağı | KİNETİK | 65 | ÇOK ZOR ¹ | ÇOK ZOR | 2 | 0.27 | 1 | 0 | 32/7/3/13/10 | 2 panel, 25 tuğla, 2× mayın, halka |
+| 101 | Çark Girişi | ZAMAN | 20 | ORTA | ORTA | 22 | 2.96 | 2 | 0 | 9/0/6/5/0 | 2 panel, çark |
+| 102 | Dönen Geçit | ZAMAN | 13 | KOLAY | KOLAY | 35 | 4.72 | 1 | 9 | 5/0/3/5/0 | 1 panel, çark, halka |
+| 103 | Ters Devir | ZAMAN | 20 | ORTA | ORTA | 15 | 2.02 | 1 | 0 | 13/0/3/4/0 | 1 panel, çark |
+| 104 | Kenar Çarkı | ZAMAN | 23 | ORTA | ORTA | 17 | 2.29 | 1 | 0 | 12/0/3/8/0 | 1 panel, 2× çark, halka |
+| 105 | Çatlak Rotor | ZAMAN | 32 | ORTA | ORTA | 10 | 1.35 | 3 | 0 | 17/0/9/6/0 | 1 panel, 1 tuğla, çark, halka |
+| 106 | Mayın Dişlisi | ZAMAN | 25 | ORTA | ORTA | 14 | 1.89 | 1 | 0 | 14/0/3/8/0 | 2 panel, çark, mayın, halka |
+| 107 | Dar Pervane | ZAMAN | 32 | ORTA | ORTA | 12 | 1.62 | 3 | 0 | 15/0/9/8/0 | 2 panel, çark, halka, mayın |
+| 108 | Zırhlı Devir | ZAMAN | 35 | ORTA | ORTA | 7 | 0.94 | 1 | 0 | 20/2/3/10/0 | 2 panel, çark, 2× mayın |
+| 109 | Mayınlı Çark | ZAMAN | 36 | ORTA | ORTA | 6 | 0.81 | 2 | 0 | 22/2/6/6/0 | 1 panel, çark, mayın |
+| 110 | Çapraz Rotor | ZAMAN | 39 | ORTA | ORTA | 5 | 0.67 | 2 | 0 | 24/3/6/6/0 | 1 panel, çark, 2× halka |
+| 111 | Duvar Dişlisi | ZAMAN | 52 | ZOR | ZOR | 6 | 0.81 | 5 | 0 | 22/2/16/12/0 | 2 panel, 7 tuğla, çark, halka |
+| 112 | İkili Devir | ZAMAN | 50 | ZOR | ZOR | 4 | 0.54 | 3 | 0 | 26/4/9/11/0 | 1 panel, 3 tuğla, çark, mayın |
+| 113 | Sıkışık Pervane | ZAMAN | 48 | ZOR | ZOR | 3 | 0.40 | 2 | 0 | 29/5/6/8/0 | 1 panel, 1 tuğla, çark, mayın |
+| 114 | Kırık Rotor | ZAMAN | 45 | ZOR | ZOR | 8 | 1.08 | 4 | 0 | 19/1/13/12/0 | 1 panel, 6 tuğla, çark, mayın |
+| 115 | Derin Devir | ZAMAN | 19 | KOLAY | KOLAY | 19 | 2.56 | 1 | 3 | 11/0/3/5/0 | 2 panel, çark |
+| 116 | Sessiz Devir | ZAMAN | 21 | ORTA | ORTA | 26 | 3.50 | 1 | 0 | 8/0/3/10/0 | 1 panel, 2× çark, mayın, halka |
+| 117 | Zırhlı Rotor | ZAMAN | 38 | ORTA | ORTA | 9 | 1.21 | 3 | 0 | 18/0/9/11/0 | 2 panel, 2 tuğla, çark, halka, mayın |
+| 118 | Ters Pervane | ZAMAN | 37 | ORTA | ORTA | 8 | 1.08 | 2 | 0 | 19/1/6/11/0 | 1 panel, 3 tuğla, çark, mayın |
+| 119 | Halka Deviri | ZAMAN | 58 | ZOR | ZOR | 2 | 0.27 | 3 | 0 | 32/7/9/10/0 | 1 panel, 2× çark, halka, mayın |
+| 120 | Kilitli Devir | ZAMAN | 37 | ORTA | ORTA | 7 | 0.94 | 1 | 0 | 20/2/3/12/0 | 1 panel, 3 tuğla, mayın, çark, halka |
+| 121 | Dar Rotor | ZAMAN | 33 | ORTA | ORTA | 10 | 1.35 | 1 | 0 | 17/0/3/13/0 | 1 panel, 4× çark |
+| 122 | Duvar Pervanesi | ZAMAN | 46 | ZOR | ZOR | 4 | 0.54 | 2 | 0 | 26/4/6/10/0 | 1 panel, 2× çark, mayın, halka |
+| 123 | Üçlü Dönüş | ZAMAN | 74 | ÇOK ZOR | ÇOK ZOR | 2 | 0.27 | 9 | 0 | 32/7/25/10/0 | 1 panel, 11 tuğla, çark |
+| 124 | Son Devir | ZAMAN | 26 | ORTA | ORTA | 10 | 1.35 | 1 | 0 | 17/0/3/6/0 | 2 panel, çark, halka |
+| 125 | Çark Kavşağı | ZAMAN | 66 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 2 | 0 | 39/10/6/11/0 | 1 panel, 6 tuğla, çark, halka |
+| 126 | Lazer Girişi | ZAMAN | 25 | ORTA | ORTA | 12 | 1.62 | 2 | 0 | 15/0/6/4/0 | 1 panel, bariyer |
+| 127 | Sönen Hat | ZAMAN | 16 | KOLAY | KOLAY | 31 | 4.18 | 1 | 6 | 6/0/3/7/0 | 1 panel, çark, bariyer |
+| 128 | Işık Aralığı | ZAMAN | 28 | ORTA | ORTA | 8 | 1.08 | 1 | 0 | 19/1/3/5/0 | 1 panel, halka, bariyer |
+| 129 | Kesik Işın | ZAMAN | 24 | ORTA | ORTA | 18 | 2.43 | 2 | 1 | 11/0/6/7/0 | 2 panel, mayın, çark |
+| 130 | Zırhlı Lazer | ZAMAN | 39 | ORTA | ORTA | 10 | 1.35 | 3 | 0 | 17/0/9/13/0 | 1 panel, 6 tuğla, çark, bariyer |
+| 131 | Çember Işığı | ZAMAN | 36 | ORTA | ORTA | 8 | 1.08 | 2 | 0 | 19/1/6/10/0 | 1 panel, halka, bariyer, mayın, çark |
+| 132 | Mayın ve Işık | ZAMAN | 30 | ORTA | ORTA | 10 | 1.35 | 2 | 0 | 17/0/6/7/0 | 2 panel, mayın, çark |
+| 133 | Çatlak Hat | ZAMAN | 43 | ZOR | ZOR | 3 | 0.40 | 1 | 0 | 29/5/3/6/0 | 1 panel, bariyer, mayın |
+| 134 | Halka Lazer | ZAMAN | 29 | ORTA | ORTA | 12 | 1.62 | 2 | 0 | 15/0/6/8/0 | 2 panel, halka, bariyer, mayın |
+| 135 | Ters Darbe | ZAMAN | 21 | ORTA | ORTA | 23 | 3.10 | 1 | 0 | 9/0/3/9/0 | 1 panel, mayın, bariyer, çark |
+| 136 | Kırık Işın | ZAMAN | 26 | ORTA | ORTA | 15 | 2.02 | 1 | 0 | 13/0/3/10/0 | çark, bariyer, halka, mayın |
+| 137 | Duvar Işığı | ZAMAN | 11 | KOLAY | KOLAY | 41 | 5.53 | 1 | 10 | 3/0/3/5/0 | 1 panel, lazer, halka |
+| 138 | Çifte Atım | ZAMAN | 65 | ÇOK ZOR | ÇOK ZOR | 2 | 0.27 | 5 | 0 | 32/7/16/10/0 | 2 panel, çark, bariyer, mayın |
+| 139 | Dar Zamanlama | ZAMAN | 35 | ORTA | ORTA | 7 | 0.94 | 1 | 0 | 20/2/3/10/0 | 1 panel, 2× mayın, halka, bariyer |
+| 140 | Dönen Işık | ZAMAN | 39 | ORTA | ORTA | 6 | 0.81 | 3 | 0 | 22/2/9/6/0 | 2 panel, halka, bariyer |
+| 141 | Kesik Darbe | ZAMAN | 9 | KOLAY | KOLAY | 49 | 6.60 | 1 | 11 | 2/0/3/4/0 | 1 panel, lazer |
+| 142 | Zırhlı Atım | ZAMAN | 25 | ORTA ¹ | ORTA | 43 | 5.79 | 1 | 9 | 3/0/3/9/10 | 1 panel, 1 tuğla, lazer, çark |
+| 143 | Kesişen Işın | ZAMAN | 12 | KOLAY | KOLAY | 42 | 5.66 | 1 | 14 | 3/0/3/6/0 | 2 panel, lazer, halka |
+| 144 | Sessiz Aralık | ZAMAN | 12 | KOLAY | KOLAY | 49 | 6.60 | 1 | 10 | 2/0/3/7/0 | 1 panel, lazer, mayın |
+| 145 | Işık Kapanı | ZAMAN | 77 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 7 | 0 | 39/10/22/6/0 | 1 panel, 1 tuğla, lazer |
+| 146 | Keskin Atım | ZAMAN | 8 | KOLAY | KOLAY | 51 | 6.87 | 1 | 12 | 1/0/3/4/0 | 1 panel, lazer |
+| 147 | Sönük Koridor | ZAMAN | 10 | KOLAY | KOLAY | 53 | 7.14 | 1 | 15 | 1/0/3/6/0 | 3 panel, lazer |
+| 148 | Son Işık Kilidi | ZAMAN | 51 | ZOR | ZOR | 3 | 0.40 | 3 | 0 | 29/5/9/8/0 | 1 panel, çark, halka, bariyer |
+| 149 | Işın Düğümü | ZAMAN | 73 | ÇOK ZOR ¹ | ÇOK ZOR | 6 | 0.14 | 3 | 0 | 39/2/9/13/10 | 1 panel, 5 tuğla, halka, bariyer, mayın, çark |
+| 150 | Lazer Kapanı | ZAMAN | 64 | ÇOK ZOR | ÇOK ZOR | 6 | 0.04 | 3 | 0 | 42/2/9/11/0 | 2× halka, mayın, bariyer, çark |
+| 151 | Işık Geçidi | PRİZMA | 1 | KOLAY | KOLAY | 114 | 15.36 | 0 | 43 | 0/0/0/1/0 | 1 panel, portal |
+| 152 | Mavi Kapı | PRİZMA | 40 | ZOR | ZOR | 6 | 0.81 | 2 | 0 | 22/2/6/10/0 | 1 panel, 2 tuğla, çark, portal, lazer |
+| 153 | Turuncu Çıkış | PRİZMA | 45 | ZOR | ZOR | 4 | 0.54 | 2 | 0 | 26/4/6/9/0 | 1 panel, 2× lazer, portal, halka |
+| 154 | Kısa Yol | PRİZMA | 42 | ZOR | ZOR | 9 | 1.21 | 4 | 0 | 18/0/13/11/0 | 2 panel, 1 tuğla, çark, halka, portal, lazer |
+| 155 | Işın Tuzağı | PRİZMA | 54 | ZOR | ZOR | 3 | 0.40 | 3 | 0 | 29/5/9/11/0 | 1 panel, 2× lazer, mayın, halka |
+| 156 | Sekmeli Geçit | PRİZMA | 43 | ZOR | ZOR | 6 | 0.81 | 3 | 0 | 22/2/9/10/0 | 1 panel, 1 tuğla, lazer, bariyer, portal, halka |
+| 157 | Duvar Ardı | PRİZMA | 42 | ZOR | ZOR | 4 | 0.54 | 1 | 0 | 26/4/3/9/0 | 1 panel, lazer, 2× mayın |
+| 158 | Dönen Bariyer | PRİZMA | 54 | ZOR | ZOR | 2 | 0.27 | 2 | 0 | 32/7/6/9/0 | 1 panel, 1 tuğla, çark, bariyer, halka |
+| 159 | Kenar Geçidi | PRİZMA | 46 | ZOR | ZOR | 4 | 0.54 | 2 | 0 | 26/4/6/10/0 | 1 panel, 2× bariyer, halka, mayın |
+| 160 | Gizli Yol | PRİZMA | 55 | ZOR | ZOR | 5 | 0.67 | 6 | 0 | 24/3/19/9/0 | 1 panel, 2 tuğla, çark, 2× halka, portal |
+| 161 | Halka Geçidi | PRİZMA | 79 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 6 | 0 | 39/10/19/11/0 | 2 panel, lazer, çark, bariyer |
+| 162 | Işıklı Geçit | PRİZMA | 53 | ZOR | ZOR | 4 | 0.54 | 4 | 0 | 26/4/13/10/0 | 1 panel, 2 tuğla, lazer, çark, portal |
+| 163 | Korunan Kapı | PRİZMA | 49 | ZOR | ZOR | 3 | 0.40 | 2 | 0 | 29/5/6/9/0 | 1 panel, çark, 2× mayın, portal |
+| 164 | Halka Işığı | PRİZMA | 76 | ÇOK ZOR ¹ | ÇOK ZOR | 1 | 0.14 | 2 | 0 | 39/10/6/11/10 | 2 panel, 1 tuğla, 2× lazer, halka |
+| 165 | Tehlikeli Yol | PRİZMA | 34 | ORTA | ORTA | 35 | 4.72 | 7 | 1 | 5/0/22/7/0 | 1 panel, 2× bariyer, portal |
+| 166 | Mayınlı Kapı | PRİZMA | 47 | ZOR | ZOR | 4 | 0.54 | 3 | 0 | 26/4/9/8/0 | 1 panel, 1 tuğla, lazer, portal, mayın |
+| 167 | Çarklı Geçit | PRİZMA | 61 | ÇOK ZOR | ÇOK ZOR | 3 | 0.40 | 7 | 0 | 29/5/22/5/0 | 1 panel, çark, portal, halka |
+| 168 | Yön Değişimi | PRİZMA | 60 | ÇOK ZOR | ÇOK ZOR | 2 | 0.27 | 3 | 0 | 32/7/9/12/0 | 2 panel, 1 tuğla, çark, mayın, bariyer |
+| 169 | Çark Fırtınası | PRİZMA | 48 | ZOR | ZOR | 4 | 0.54 | 2 | 0 | 26/4/6/12/0 | 1 panel, 2× çark, mayın, bariyer |
+| 170 | Zamanlı Geçit | PRİZMA | 40 | ZOR | ZOR | 6 | 0.81 | 2 | 0 | 22/2/6/10/0 | 1 panel, 2 tuğla, lazer, bariyer, portal |
+| 171 | İkiz Bariyer | PRİZMA | 78 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 6 | 0 | 39/10/19/10/0 | 1 panel, 2× bariyer, lazer |
+| 172 | Çifte Geçit | PRİZMA | 64 | ÇOK ZOR ¹ | ÇOK ZOR | 3 | 0.40 | 3 | 0 | 29/5/9/11/10 | 2 panel, 2 tuğla, çark, portal, lazer |
+| 173 | Halka Zinciri | PRİZMA | 50 | ZOR | ZOR | 3 | 0.40 | 3 | 0 | 29/5/9/7/0 | 2 panel, lazer, 2× halka |
+| 174 | Işın Kalesi | PRİZMA | 62 | ÇOK ZOR | ÇOK ZOR | 4 | 0.54 | 6 | 0 | 26/4/19/13/0 | 1 panel, 2 tuğla, çark, 2× lazer |
+| 175 | Işık Fitili | PRİZMA | 63 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 2 | 0 | 39/10/6/8/0 | 1 panel, lazer, mayın, halka |
+| 176 | Prizma Işığı | PRİZMA | 52 | ZOR | ZOR | 4 | 0.54 | 3 | 0 | 26/4/9/13/0 | 1 panel, 2 tuğla, çark, halka, 2× bariyer |
+| 177 | Sıralı Işın | PRİZMA | 53 | ZOR | ZOR | 5 | 0.67 | 4 | 0 | 24/3/13/13/0 | 1 panel, 2× bariyer, mayın, lazer |
+| 178 | Işık Perdesi | PRİZMA | 48 | ZOR | ZOR | 5 | 0.67 | 3 | 0 | 24/3/9/12/0 | 1 panel, 1 tuğla, çark, bariyer, lazer, portal |
+| 179 | Yanıp Sönen Yol | PRİZMA | 54 | ZOR | ZOR | 2 | 0.27 | 1 | 0 | 32/7/3/12/0 | 1 panel, bariyer, 2× lazer, halka |
+| 180 | Dönen Kavşak | PRİZMA | 59 | ZOR | ZOR | 4 | 0.54 | 6 | 0 | 26/4/19/10/0 | 2 panel, 1 tuğla, çark, portal, halka, mayın |
+| 181 | Zırhlı Koridor | PRİZMA | 50 | ZOR | ZOR | 3 | 0.40 | 1 | 0 | 29/5/3/13/0 | 1 panel, 2× çark, lazer, bariyer |
+| 182 | Bronz Duvar | PRİZMA | 63 | ÇOK ZOR ¹ | ÇOK ZOR | 5 | 0.67 | 4 | 0 | 24/3/13/13/10 | 1 panel, 2 tuğla, 2× çark, 2× lazer |
+| 183 | Çatlak Kale | PRİZMA | 69 | ÇOK ZOR | ÇOK ZOR | 2 | 0.27 | 6 | 0 | 32/7/19/11/0 | 2 panel, lazer, mayın, çark, portal |
+| 184 | Kırık Geçit | PRİZMA | 59 | ZOR | ZOR | 5 | 0.67 | 6 | 0 | 24/3/19/13/0 | 1 panel, 2 tuğla, 2× çark, bariyer, portal |
+| 185 | Tuğla Kapanı | PRİZMA | 68 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 2 | 0 | 39/10/6/13/0 | 1 panel, 2× lazer, çark, bariyer |
+| 186 | Işık ve Taş | PRİZMA | 70 | ÇOK ZOR | ÇOK ZOR | 2 | 0.27 | 6 | 0 | 32/7/19/12/0 | 1 panel, 1 tuğla, lazer, bariyer, halka, mayın |
+| 187 | Dönen Kale | PRİZMA | 57 | ZOR | ZOR | 4 | 0.54 | 5 | 0 | 26/4/16/11/0 | 1 panel, lazer, halka, bariyer, çark |
+| 188 | Çift Çark | PRİZMA | 55 | ZOR | ZOR | 6 | 0.81 | 7 | 0 | 22/2/22/9/0 | 1 panel, 1 tuğla, 2× çark, halka, portal |
+| 189 | Kırık Prizma | PRİZMA | 55 | ZOR | ZOR | 2 | 0.27 | 1 | 0 | 32/7/3/13/0 | 1 panel, lazer, bariyer, çark, mayın |
+| 190 | Taş Işığı | PRİZMA | 85 | USTA ¹ | USTA | 1 | 0.14 | 5 | 0 | 39/10/16/10/10 | 1 panel, 1 tuğla, 2× lazer, halka, portal |
+| 191 | Çifte Ritim | PRİZMA | 47 | ZOR | ZOR | 7 | 0.94 | 4 | 0 | 20/2/13/12/0 | 2 panel, 2× lazer, bariyer |
+| 192 | İkiz Döngü | PRİZMA | 43 | ZOR ¹ | ZOR | 14 | 1.89 | 2 | 0 | 14/0/6/13/10 | 2 panel, 2 tuğla, lazer, çark, bariyer, halka |
+| 193 | Zaman Kapısı | PRİZMA | 71 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 5 | 0 | 39/10/16/6/0 | 1 panel, çark, 2× portal, mayın |
+| 194 | İkiz Işın | PRİZMA | 46 | ZOR | ZOR | 6 | 0.81 | 3 | 0 | 22/2/9/13/0 | 1 panel, 2 tuğla, 2× lazer, çark, portal |
+| 195 | Geçit Fırtınası | PRİZMA | 40 | ZOR | ZOR | 6 | 0.81 | 3 | 0 | 22/2/9/7/0 | 1 panel, 2× çark, 2× portal |
+| 196 | Son Kırılma | PRİZMA | 61 | ÇOK ZOR | ÇOK ZOR | 2 | 0.27 | 3 | 0 | 32/7/9/13/0 | 1 panel, 2 tuğla, lazer, mayın, portal, çark |
+| 197 | Prizma Kalbi | PRİZMA | 46 | ZOR | ZOR | 8 | 1.08 | 4 | 0 | 19/1/13/13/0 | 1 panel, 2× lazer, çark, bariyer |
+| 198 | Son Çark | PRİZMA | 78 | ÇOK ZOR ¹ | ÇOK ZOR | 2 | 0.27 | 5 | 0 | 32/7/16/13/10 | 1 panel, 2 tuğla, 2× çark, lazer, halka |
+| 199 | Işığın Ucu | PRİZMA | 65 | ÇOK ZOR | ÇOK ZOR | 1 | 0.14 | 1 | 0 | 39/10/3/13/0 | 2 panel, 2× lazer, mayın, çark |
+| 200 | Prizma Finali | PRİZMA | 68 | ÇOK ZOR ¹ | ÇOK ZOR | 3 | 0.40 | 4 | 0 | 29/5/13/11/10 | 2 panel, 1 tuğla, bariyer, halka, lazer |
+
+¹ Rota yalnızca tuğlalar kırılınca açılıyor (tuğla kapısı). ² Taramada çözüm yok.

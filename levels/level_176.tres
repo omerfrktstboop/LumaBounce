@@ -6,42 +6,74 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_0tdr3"]
 
 [sub_resource type="Resource" id="Resource_esxex"]
-script = ExtResource("2_nebom")
-kind = 5
-position = Vector2(201.59709, 852.5996)
-size = Vector2(278, 14)
-motion_period = 2.68
-phase_degrees = 324.82172
-pulse_on_ratio = 0.54
+script = ExtResource("1_g37ut")
+position = Vector2(192.04953, 698.8364)
+rotation_degrees = 1.9312515
+size = Vector2(316.09906, 34)
+hit_points = 2
 
 [sub_resource type="Resource" id="Resource_wkums"]
-script = ExtResource("2_nebom")
-kind = 5
-position = Vector2(214.2734, 451.05338)
-size = Vector2(278, 14)
-motion_period = 2.68
-phase_degrees = 144.82172
-pulse_on_ratio = 0.54
+script = ExtResource("1_g37ut")
+position = Vector2(527.95044, 666.8364)
+rotation_degrees = -0.61816263
+size = Vector2(316.09906, 34)
 
 [sub_resource type="Resource" id="Resource_xt0w8"]
+script = ExtResource("2_nebom")
+kind = 2
+position = Vector2(272.28143, 826.7652)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -106.875
+
+[sub_resource type="Resource" id="Resource_iwqoa"]
+script = ExtResource("2_nebom")
+position = Vector2(237.534, 383.2167)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 58.8
+
+[sub_resource type="Resource" id="Resource_ewpof"]
+script = ExtResource("2_nebom")
+kind = 3
+position = Vector2(566.4907, 914.2977)
+size = Vector2(130, 26)
+travel_distance = 127.75
+motion_period = 2.1275
+
+[sub_resource type="Resource" id="Resource_4jpft"]
+script = ExtResource("2_nebom")
+kind = 3
+position = Vector2(561.3176, 360.578)
+size = Vector2(130, 26)
+travel_distance = 127.75
+motion_period = 2.1275
+
+[sub_resource type="Resource" id="Resource_v04xj"]
 script = ExtResource("3_qmdeg")
-position = Vector2(527, 853)
-rotation_degrees = 11.9
-length = 311.0
+position = Vector2(204.58952, 531.20825)
+rotation_degrees = 45.22466526031494
+length = 360.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4_0tdr3")
 level_uid = "level_176"
 display_order = 176
-difficulty = 4
-hint_angle_degrees = -46.0
-hint_power = 2150.0
+difficulty = 3
+hint_angle_degrees = 28.0
+hint_power = 1800.0
+hint_break_angles = PackedFloat32Array(-3)
+hint_break_powers = PackedFloat32Array(2200)
+hint_break_targets = PackedInt32Array(3)
 level_id = 176
 display_name = "Prizma Işığı"
-target_position = Vector2(479, 409)
-panels = Array[ExtResource("3_qmdeg")]([SubResource("Resource_xt0w8")])
-obstacles = Array[ExtResource("2_nebom")]([SubResource("Resource_esxex"), SubResource("Resource_wkums")])
+target_position = Vector2(304.20718, 237.24968)
+panels = Array[ExtResource("3_qmdeg")]([SubResource("Resource_v04xj")])
+breakable_blocks = Array[ExtResource("1_g37ut")]([SubResource("Resource_esxex"), SubResource("Resource_wkums")])
+obstacles = Array[ExtResource("2_nebom")]([SubResource("Resource_xt0w8"), SubResource("Resource_iwqoa"), SubResource("Resource_ewpof"), SubResource("Resource_4jpft")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 635.48346), Vector2(787.14044, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 4

@@ -1864,10 +1864,12 @@ func _test_library_bounds() -> void:
 		_check("bolum %d: 2-yildiz atis <= max_lives" % id,
 			level.two_star_max_shots <= level.max_lives, true)
 
-	# 151-200 PRİZMA: elle duzenlenecek taslaklar, bu yuzden sozlesme bilerek
-	# gevsek. Her bolum yuklenir/dogrulanir ve engel tasir; 151-175 portal
-	# bandidir. Hizlandirici yoktur: blok kirma etkisini LevelSolver simule
-	# etmez, ona dayanan bir rota cevrimdisi dogrulanamaz.
+	# 151-200 PRİZMA: 151 portalin tek basina tanitimidir; 152-200 karisik
+	# engelli zor banttir (editor skoru >= 30, bkz. generate_band_51_125.gd).
+	# Her zor bolum en az iki engel tasir ve bant tum engel turlerini kullanir.
+	# Hizlandirici yoktur: blok kirma etkisini LevelSolver simule etmez, ona
+	# dayanan bir rota cevrimdisi dogrulanamaz.
+	var prism_kinds := {}
 	for id in range(151, LevelLibrary.last_level_id() + 1):
 		var level := LevelLibrary.load_level(id)
 		_check("bolum %d yukleniyor" % id, level.level_id, id)
@@ -1878,13 +1880,22 @@ func _test_library_bounds() -> void:
 		for obstacle in level.obstacles:
 			has_portal = has_portal or obstacle.kind == ObstacleData.Kind.PORTAL
 			has_boost = has_boost or obstacle.kind == ObstacleData.Kind.SPEED_BOOST
+			prism_kinds[obstacle.kind] = true
 		_check("bolum %d hizlandirici kullanmiyor" % id, has_boost, false)
-		if id <= 175:
-			_check("bolum %d portal iceriyor" % id, has_portal, true)
+		if id == 151:
+			_check("151 portal tanitimi", [has_portal, level.obstacles.size()], [true, 1])
+		else:
+			_check("bolum %d karisik engel" % id, level.obstacles.size() >= 2, true)
 		_check("bolum %d: 3-yildiz atis <= max_lives" % id,
 			level.three_star_max_shots <= level.max_lives, true)
 		_check("bolum %d: 2-yildiz atis <= max_lives" % id,
 			level.two_star_max_shots <= level.max_lives, true)
+	if LevelLibrary.last_level_id() >= 200:
+		for kind in [ObstacleData.Kind.METAL_RING, ObstacleData.Kind.BOMB,
+				ObstacleData.Kind.ROTATING_WHEEL, ObstacleData.Kind.MOVING_BAR,
+				ObstacleData.Kind.PULSE_LASER, ObstacleData.Kind.PORTAL]:
+			_check("PRİZMA bandi %s kullaniyor" % ObstacleData.KIND_IDS[kind],
+				prism_kinds.has(kind), true)
 
 
 # --- Yardimcilar ---------------------------------------------------------------

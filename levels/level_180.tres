@@ -6,50 +6,73 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_vtvog"]
 
 [sub_resource type="Resource" id="Resource_rdre1"]
-script = ExtResource("2_quour")
-kind = 5
-position = Vector2(599.8268, 725.28296)
-size = Vector2(286.66666, 14)
-motion_period = 2.6
-phase_degrees = 284.2074
-pulse_on_ratio = 0.55
+script = ExtResource("1_21tso")
+position = Vector2(360, 443.99817)
+rotation_degrees = -4.9772844
+size = Vector2(652, 34)
+hit_points = 2
 
 [sub_resource type="Resource" id="Resource_vquw4"]
 script = ExtResource("2_quour")
-kind = 5
-position = Vector2(583.27783, 347.5448)
-size = Vector2(286.66666, 14)
-motion_period = 2.6
-phase_degrees = 104.2074
-pulse_on_ratio = 0.55
+kind = 2
+position = Vector2(454.5824, 331.74066)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 109.0625
 
 [sub_resource type="Resource" id="Resource_lmmpr"]
-script = ExtResource("3_sh5s1")
-position = Vector2(236, 522)
-rotation_degrees = 31.1
-length = 272.0
-thickness = 26.0
+script = ExtResource("2_quour")
+kind = 6
+position = Vector2(562.34204, 777.7842)
+size = Vector2(86, 86)
+exit_position = Vector2(301.41113, 620.56256)
+exit_turn_degrees = 90.0
 
 [sub_resource type="Resource" id="Resource_wyygi"]
+script = ExtResource("2_quour")
+position = Vector2(584.4038, 561.7806)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 58.33333333333333
+
+[sub_resource type="Resource" id="Resource_ohlb0"]
+script = ExtResource("2_quour")
+kind = 1
+position = Vector2(152.37253, 550.0554)
+size = Vector2(83.916664, 83.916664)
+
+[sub_resource type="Resource" id="Resource_b335c"]
 script = ExtResource("3_sh5s1")
-position = Vector2(185, 668)
-rotation_degrees = 23.7
-length = 311.0
+position = Vector2(330.49292, 738.1153)
+rotation_degrees = -21.924383
+length = 400.0
+thickness = 26.0
+
+[sub_resource type="Resource" id="Resource_4sqg7"]
+script = ExtResource("3_sh5s1")
+position = Vector2(203.01094, 899.6072)
+rotation_degrees = 17.682127285003663
+length = 327.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4_vtvog")
 level_uid = "level_180"
 display_order = 180
-difficulty = 4
-hint_angle_degrees = 26.0
-hint_power = 1650.0
+difficulty = 3
+hint_angle_degrees = 32.0
+hint_power = 2100.0
+hint_break_angles = PackedFloat32Array(12)
+hint_break_powers = PackedFloat32Array(1700)
+hint_break_targets = PackedInt32Array(1)
 level_id = 180
-display_name = "Işın Kavşağı"
-target_position = Vector2(214, 327)
-panels = Array[ExtResource("3_sh5s1")]([SubResource("Resource_lmmpr"), SubResource("Resource_wyygi")])
-obstacles = Array[ExtResource("2_quour")]([SubResource("Resource_rdre1"), SubResource("Resource_vquw4")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 602.9042), Vector2(744.41565, 1600)])
+display_name = "Dönen Kavşak"
+target_position = Vector2(299.41693, 225.9392)
+panels = Array[ExtResource("3_sh5s1")]([SubResource("Resource_b335c"), SubResource("Resource_4sqg7")])
+breakable_blocks = Array[ExtResource("1_21tso")]([SubResource("Resource_rdre1")])
+obstacles = Array[ExtResource("2_quour")]([SubResource("Resource_vquw4"), SubResource("Resource_lmmpr"), SubResource("Resource_wyygi"), SubResource("Resource_ohlb0")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 541.1689), Vector2(669.8929, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 4

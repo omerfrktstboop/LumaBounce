@@ -190,10 +190,15 @@ var _launcher_enabled_before_hint := true
 var _launcher_enabled_before_pause := true
 enum HintKind { NONE, SHORT, FULL }
 
+## Son cizilen ipucu rotasi. Tugla durumuna bagli oldugu icin ONBELLEK DEGIL:
+## her gosterimde _build_hint_trace() ile yeniden uretilir.
 var _hint_trace := PackedVector2Array()
-## Bloklar kirilinca otomatik acilacak ipucu turu. NONE ayni zamanda ustteki
-## ipucu simgesiyle bekleyen gosterimin iptal edildigi anlamina gelir.
-var _hint_waiting_for_blocks := HintKind.NONE
+## Su an acik olan ipucu turu. Tuglali bolumde top her yeniden dogdugunda acik
+## ipucu siradaki adima ilerletilir (bkz. _refresh_active_hint). NONE, ustteki
+## simgeyle kapatilmis ya da hic acilmamis demektir.
+var _active_hint_kind := HintKind.NONE
+## Gosterilen adim: kirma adiminin sirasi, son atis icin -1.
+var _active_hint_step := -1
 ## Tam ipucu reklami su an gosterilebilir mi. AppRoot AdService hazirligindan
 ## enjekte eder;
 ## Gameplay NEDENINI bilmez - reklam servisi, abonelik ya da baska bir kosul
@@ -540,7 +545,7 @@ func reset_shot() -> void:
 	_shots_this_attempt = 0
 	_reset_attempt_timer()
 	_hint_path.hide_path()
-	_hint_waiting_for_blocks = HintKind.NONE
+	_active_hint_kind = HintKind.NONE
 	_full_hint_used_this_attempt = false
 	_pending_luma_coin_reward = 0
 	_hide_hint_status()
@@ -634,6 +639,7 @@ func _respawn_ball() -> void:
 	_hide_message()
 	_launcher.enabled = true
 	_first_shot.ball_ready()
+	_refresh_active_hint()
 
 
 func _on_shot_fired(impulse: Vector2) -> void:
@@ -933,13 +939,9 @@ func _on_block_broken(_at: Vector2) -> void:
 	# ama sekmenin kivilcimi ve titresimi aynen kalir.
 	AudioManager.play_block_break()
 	_shake.add_trauma(block_break_shake_trauma)
-	if _hint_waiting_for_blocks != HintKind.NONE and _blocks.get_remaining_count() == 0:
-		var waiting_kind := _hint_waiting_for_blocks
-		_hint_waiting_for_blocks = HintKind.NONE
-		if waiting_kind == HintKind.SHORT:
-			_show_short_hint.call_deferred()
-		elif waiting_kind == HintKind.FULL:
-			_show_unlocked_hint.call_deferred()
+	# Acik ipucu burada degil, top yeniden dogdugunda ilerler
+	# (_respawn_ball -> _refresh_active_hint): atis surerken rotayi degistirmek
+	# oyuncunun takip ettigi cizgiyi ucusun ortasinda silerdi.
 
 
 func _on_ball_bounced(at: Vector2, normal: Vector2, impact_speed: float) -> void:
@@ -1119,9 +1121,8 @@ func _on_hint_pressed() -> void:
 	# "Tekrar oyna" reset_shot ile yeni denemeyi kurdugunda bu kilit kalkar.
 	if _attempt_finished or _lives_remaining <= 0:
 		return
-	# Ust simge ayni zamanda ac/kapat dugmesidir. Bloklar icin bekleyen bir
-	# ipucu da ikinci dokunusta iptal edilir.
-	if _hint_path.is_showing() or _hint_waiting_for_blocks != HintKind.NONE:
+	# Ust simge ayni zamanda ac/kapat dugmesidir.
+	if _hint_path.is_showing() or _active_hint_kind != HintKind.NONE:
 		_hide_hint_route()
 		return
 	if wallet.is_hint_unlocked(level_data.uid()):
@@ -1131,9 +1132,9 @@ func _on_hint_pressed() -> void:
 		_show_short_hint()
 		return
 	# Satin alma kartini acmadan once kayitli aci/gucun bu geometride gercekten
-	# hedefe gittigini dogrula. Bozuk/eski ipucu verisi icin Coin kesilmez.
-	if _hint_trace.is_empty():
-		_hint_trace = _build_hint_trace()
+	# hedefe (ya da siradaki tuglaya) gittigini dogrula. Bozuk/eski ipucu
+	# verisi icin Coin kesilmez.
+	_hint_trace = _build_hint_trace()
 	if _hint_trace.is_empty():
 		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
 		return
@@ -1170,10 +1171,6 @@ func _on_hint_pressed() -> void:
 func _on_short_hint_requested() -> void:
 	if wallet == null or level_data == null or _short_hint_unlocked_for_level:
 		return
-	if _blocks.get_remaining_count() > 0:
-		_hint_card.close()
-		_show_hint_status(tr("ÖNCE BLOKLARI KIR"), 2.8)
-		return
 	var trace := _build_short_hint_trace()
 	if trace.is_empty():
 		_hint_card.close()
@@ -1208,8 +1205,7 @@ func _on_full_hint_requested() -> void:
 func grant_full_hint() -> void:
 	if wallet == null or level_data == null or not level_data.has_hint():
 		return
-	if _hint_trace.is_empty():
-		_hint_trace = _build_hint_trace()
+	_hint_trace = _build_hint_trace()
 	if _hint_trace.is_empty():
 		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
 		return
@@ -1249,43 +1245,67 @@ func _on_hint_card_dismissed() -> void:
 		_launcher.enabled = _launcher_enabled_before_hint
 
 
+## TAM IPUCU: tuglali bolumde once siradaki kirma atisi (rota tuglada biter),
+## kirma adimlari bitince hedefe giden son atis. Eskiden tugla kaldikca
+## yalnizca "ONCE BLOKLARI KIR" deyip bekliyordu; hangi tuglanin nasil
+## kirilacagini gostermiyordu.
 func _show_unlocked_hint() -> void:
 	if wallet == null or not wallet.is_hint_unlocked(level_data.uid()):
 		return
-	if _blocks.get_remaining_count() > 0:
-		_hint_waiting_for_blocks = HintKind.FULL
-		_show_hint_status(tr("ÖNCE BLOKLARI KIR"), 2.8)
-		return
-	if _hint_trace.is_empty():
-		_hint_trace = _build_hint_trace()
+	_hint_trace = _build_hint_trace()
 	if _hint_trace.is_empty():
 		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
 		return
-	_hint_waiting_for_blocks = HintKind.NONE
+	_active_hint_kind = HintKind.FULL
+	_active_hint_step = _current_hint_step()
 	_hint_path.show_path(_hint_trace)
 	_full_hint_used_this_attempt = true
-	_show_hint_status(tr("ROTAYI TAKİP ET"), 2.2)
+	_show_hint_status(_hint_step_text(tr("ROTAYI TAKİP ET")), 2.2)
 
 
+## KISA IPUCU: kirma adiminda o atisin tamami (zaten tuglada biten kisa bir
+## rota), son atista yalnizca bas kismi.
 func _show_short_hint() -> void:
 	if not _short_hint_unlocked_for_level:
-		return
-	if _blocks.get_remaining_count() > 0:
-		_hint_waiting_for_blocks = HintKind.SHORT
-		_show_hint_status(tr("ÖNCE BLOKLARI KIR"), 2.8)
 		return
 	var trace := _build_short_hint_trace()
 	if trace.is_empty():
 		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
 		return
-	_hint_waiting_for_blocks = HintKind.NONE
+	_active_hint_kind = HintKind.SHORT
+	_active_hint_step = _current_hint_step()
 	_hint_path.show_path(trace)
-	_show_hint_status(tr("İLK HAMLE"), 2.2)
+	_show_hint_status(_hint_step_text(tr("İLK HAMLE")), 2.2)
+
+
+## Tuglali bolumde adim yazisi ("BLOĞU KIR · 1/3", "SON ATIŞ · 3/3");
+## tuglasiz bolumde verilen genel yazi.
+func _hint_step_text(plain: String) -> String:
+	var breaks := level_data.hint_break_step_count() if level_data != null else 0
+	if breaks <= 0:
+		return plain
+	var step := _current_hint_step()
+	if step >= 0:
+		return tr("BLOĞU KIR · %d/%d") % [step + 1, breaks + 1]
+	return tr("SON ATIŞ · %d/%d") % [breaks + 1, breaks + 1]
+
+
+## Top yeniden dogdugunda acik ipucunu guncel tugla durumuna getirir: bir
+## onceki atis siradaki tuglayi kirdiysa rota bir sonraki adima gecer.
+func _refresh_active_hint() -> void:
+	if _active_hint_kind == HintKind.NONE or _attempt_finished:
+		return
+	if _current_hint_step() == _active_hint_step and _hint_path.is_showing():
+		return
+	if _active_hint_kind == HintKind.FULL:
+		_show_unlocked_hint()
+	else:
+		_show_short_hint()
 
 
 func _hide_hint_route() -> void:
 	_hint_path.hide_path()
-	_hint_waiting_for_blocks = HintKind.NONE
+	_active_hint_kind = HintKind.NONE
 	_hide_hint_status()
 
 
@@ -1301,36 +1321,80 @@ func notify_achievement_unlocked(title_key: String, coin_reward: int) -> void:
 	_show_hint_status(tr("BAŞARI AÇILDI: %s") % tr(title_key), 2.8, coin_reward > 0)
 
 
-## Offline taramada bulunan tek atisi runtime fizik dunyasinda bir kez oynatir.
-## Runtime blok/engel govdeleri sorgudan dislanir: bloklar ipucu sozlesmesine
-## gore kirik, hareketli engeller ise LevelSolver'in zaman cizelgesindedir.
+## Siradaki ipucu adimi: hedef tuglasi hala saglam olan ilk kirma atisi.
+## Tum kirma adimlari tamamlandiysa (ya da bolumde hic yoksa) -1 = son atis.
+func _current_hint_step() -> int:
+	if level_data == null:
+		return -1
+	for i in level_data.hint_break_step_count():
+		if _blocks.has_intact_in_mask(level_data.hint_break_targets[i]):
+			return i
+	return -1
+
+
+## Gecerli tugla durumuna gore ipucu rotasi: kirma adiminda rota ilk saglam
+## tugla temasinda biter ("bu tuglayi kir"), son atista hedefe kadar cizilir.
 func _build_hint_trace() -> PackedVector2Array:
-	var empty := PackedVector2Array()
 	if level_data == null or not level_data.has_hint():
-		return empty
+		return PackedVector2Array()
+	var step := _current_hint_step()
+	if step >= 0:
+		return _simulate_hint_shot(level_data.hint_break_angles[step],
+			level_data.hint_break_powers[step], true)
+	return _simulate_hint_shot(level_data.hint_angle_degrees, level_data.hint_power, false)
+
+
+## Offline hesaplanmis tek atisi runtime fizik dunyasinda bir kez oynatir.
+## Kirik tuglalarin carpismasi kapali, saglamlar kati: rota oyuncunun su an
+## gordugu tugla durumuyla cizilir (eskiden tum tuglalar kirik sayiliyordu).
+## Hareketli engeller LevelSolver'in zaman cizelgesindedir.
+func _simulate_hint_shot(angle: float, power: float, break_step: bool) -> PackedVector2Array:
+	var empty := PackedVector2Array()
 	var solver := LevelSolver.from_scenes()
-	var excluded := _blocks.get_body_rids()
-	excluded.append_array(_obstacles.get_solver_excluded_rids())
+	var excluded := _obstacles.get_solver_excluded_rids()
+	var block_index := _blocks.get_intact_rid_index(not break_step)
+	var direction := Vector2.UP.rotated(deg_to_rad(angle))
+	# Hareketli engeller kesintisiz aktigi icin kayitli cozum her fazda tutmayabilir.
+	# Bu, ipucunun eksik oldugu anlamina gelmez: kayitli rota offline olarak bolum
+	# baslangic fazinda uretilmistir. Mevcut faz basarisizsa o dogrulanmis rotayi
+	# ciz; zamanlama bulmacasi yine oyuncuya kalir.
 	var motion_time := _obstacles.get_motion_time()
-	solver.bind_space(get_world_2d().direct_space_state, {}, level_data.obstacles,
-		motion_time)
-	var direction := Vector2.UP.rotated(deg_to_rad(level_data.hint_angle_degrees))
-	var result := solver.simulate(
-		_launcher.get_spawn_position(), direction * level_data.hint_power,
-		level_data.target_position, _arena.get_play_rect(), excluded, true)
-	# Hareketli engeller kesintisiz aktigi icin kayitli cozum her fazda hedefe
-	# ulasmayabilir. Bu, ipucunun eksik oldugu anlamina gelmez: kayitli rota
-	# offline olarak bolum baslangic fazinda uretilmistir. Mevcut faz basarisizsa
-	# o dogrulanmis rotayi ciz; zamanlama bulmacasi yine oyuncuya kalir.
-	if not bool(result.get("hit", false)) and motion_time > 0.001:
-		solver.bind_space(get_world_2d().direct_space_state, {}, level_data.obstacles, 0.0)
-		result = solver.simulate(
-			_launcher.get_spawn_position(), direction * level_data.hint_power,
+	# Kosullu ifade (a if k else b) dizi tipini kaybettirir; ayri atanir.
+	var phases: Array[float] = [0.0]
+	if motion_time > 0.001:
+		phases = [motion_time, 0.0]
+	for phase in phases:
+		solver.bind_space(get_world_2d().direct_space_state, block_index,
+			level_data.obstacles, phase)
+		var result := solver.simulate(
+			_launcher.get_spawn_position(), direction * power,
 			level_data.target_position, _arena.get_play_rect(), excluded, true)
-	if not bool(result.get("hit", false)):
-		push_warning("Gameplay: %s icin kayitli ipucu hedefe ulasmiyor." % level_data.uid())
-		return empty
-	return result.get("trace_points", empty) as PackedVector2Array
+		if break_step:
+			var to_block := _trace_until_first_block(result)
+			if not to_block.is_empty():
+				return to_block
+		elif bool(result.get("hit", false)):
+			return result.get("trace_points", empty) as PackedVector2Array
+	push_warning("Gameplay: %s icin kayitli ipucu %s." % [
+		level_data.uid(), "tuglaya ulasmiyor" if break_step else "hedefe ulasmiyor"])
+	return empty
+
+
+## Kirma atisinin rotasi ilk tugla temasinda kesilir: anlatilan "bu tuglayi
+## buradan vur"dur; temastan sonrasi bir sonraki adimin isidir.
+func _trace_until_first_block(result: Dictionary) -> PackedVector2Array:
+	var trace: PackedVector2Array = result.get("trace_points", PackedVector2Array())
+	for contact in result.get("collision_points", []):
+		if int((contact as Dictionary).get("block_index", -1)) < 0:
+			continue
+		var at: Vector2 = contact["position"]
+		var cut := PackedVector2Array()
+		for point in trace:
+			cut.append(point)
+			if point.distance_to(at) < 0.5:
+				break
+		return cut
+	return PackedVector2Array()
 
 
 ## KISA IPUCU: tam rotanin yalnizca bas kismi.
@@ -1347,11 +1411,13 @@ func _build_hint_trace() -> PackedVector2Array:
 ##   alt sinir - ilk sekme firlaticinin hemen onundeyse birkac piksellik bir
 ##               cizgi hicbir yon bilgisi tasimaz.
 func _build_short_hint_trace() -> PackedVector2Array:
-	var full := _hint_trace
-	if full.is_empty():
-		full = _build_hint_trace()
+	var full := _build_hint_trace()
 	if full.size() < 2:
 		return PackedVector2Array()
+	# Kirma adiminin rotasi zaten ilk tuglada biter ve tek basina "ilk hamle"dir;
+	# bir de kirpilirsa hangi tuglanin hedeflendigi kaybolurdu.
+	if _current_hint_step() >= 0:
+		return full
 
 	# Yay uzunlugu boyunca kumulatif mesafe: kirpma noktalarini SAYIYLA degil
 	# UZUNLUKLA secmek gerekiyor, cunku nokta yogunlugu hiza gore degisir.
@@ -1608,6 +1674,8 @@ func get_debug_snapshot() -> Dictionary:
 			else false),
 		"short_hint_unlocked": _short_hint_unlocked_for_level,
 		"hint_visible": _hint_path.is_showing(),
+		"hint_step": _current_hint_step(),
+		"hint_break_steps": level_data.hint_break_step_count() if level_data != null else 0,
 		"stats": stats,
 	}
 

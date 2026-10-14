@@ -6,42 +6,74 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_jbxbu"]
 
 [sub_resource type="Resource" id="Resource_0r62o"]
-script = ExtResource("2_beo2k")
-kind = 6
-position = Vector2(590.87256, 884.06323)
-size = Vector2(84, 84)
-exit_position = Vector2(290.3979, 421.65268)
-exit_turn_degrees = 90.0
+script = ExtResource("1_vurw3")
+position = Vector2(192.73074, 541.2879)
+rotation_degrees = -2.0246139
+size = Vector2(317.4615, 34)
+hit_points = 2
 
 [sub_resource type="Resource" id="Resource_si3do"]
-script = ExtResource("2_beo2k")
-kind = 5
-position = Vector2(138.27625, 794.6617)
-size = Vector2(325.66666, 14)
-motion_period = 2.24
-phase_degrees = 139.17188
-pulse_on_ratio = 0.595
+script = ExtResource("1_vurw3")
+position = Vector2(527.2693, 509.2879)
+rotation_degrees = -2.2046778
+size = Vector2(317.4615, 34)
 
 [sub_resource type="Resource" id="Resource_24esl"]
+script = ExtResource("2_beo2k")
+kind = 2
+position = Vector2(530.5548, 681.35126)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -118.90625
+
+[sub_resource type="Resource" id="Resource_501sp"]
+script = ExtResource("2_beo2k")
+kind = 2
+position = Vector2(215.93475, 700.6328)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -118.90625
+
+[sub_resource type="Resource" id="Resource_65su3"]
+script = ExtResource("2_beo2k")
+kind = 5
+position = Vector2(607.633, 955.8085)
+size = Vector2(328.10416, 14)
+motion_period = 2.2175
+phase_degrees = 186.93341
+pulse_on_ratio = 0.5978125
+
+[sub_resource type="Resource" id="Resource_s65cx"]
+script = ExtResource("2_beo2k")
+position = Vector2(138.62769, 333.67654)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 56.233333333333334
+
+[sub_resource type="Resource" id="Resource_8rt57"]
 script = ExtResource("3_1unch")
-position = Vector2(472, 637)
-rotation_degrees = 24.0
-length = 404.0
+position = Vector2(274.78003, 866.8351)
+rotation_degrees = 23.951335144042968
+length = 286.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4_jbxbu")
 level_uid = "level_198"
 display_order = 198
-difficulty = 5
-hint_angle_degrees = 40.0
-hint_power = 900.0
+difficulty = 4
+hint_angle_degrees = -56.0
+hint_power = 2150.0
+hint_break_angles = PackedFloat32Array(-45)
+hint_break_powers = PackedFloat32Array(2100)
+hint_break_targets = PackedInt32Array(1)
 level_id = 198
-display_name = "Son Geçit"
-target_position = Vector2(570, 381)
-panels = Array[ExtResource("3_1unch")]([SubResource("Resource_24esl")])
-obstacles = Array[ExtResource("2_beo2k")]([SubResource("Resource_0r62o"), SubResource("Resource_si3do")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 686.3448), Vector2(833.7192, 1600)])
+display_name = "Son Çark"
+target_position = Vector2(399.68088, 327.49408)
+panels = Array[ExtResource("3_1unch")]([SubResource("Resource_8rt57")])
+breakable_blocks = Array[ExtResource("1_vurw3")]([SubResource("Resource_0r62o"), SubResource("Resource_si3do")])
+obstacles = Array[ExtResource("2_beo2k")]([SubResource("Resource_24esl"), SubResource("Resource_501sp"), SubResource("Resource_65su3"), SubResource("Resource_s65cx")])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 4

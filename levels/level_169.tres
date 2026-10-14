@@ -7,46 +7,56 @@
 
 [sub_resource type="Resource" id="Resource_msx2c"]
 script = ExtResource("2_mrcph")
-kind = 6
-position = Vector2(139.53915, 575.30457)
-size = Vector2(88, 88)
-exit_position = Vector2(442.1432, 501.0152)
-exit_turn_degrees = -90.0
+kind = 2
+position = Vector2(154.97852, 438.55005)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -103.046875
 
 [sub_resource type="Resource" id="Resource_ttadh"]
 script = ExtResource("2_mrcph")
-kind = 2
-position = Vector2(168.37445, 745.86237)
-size = Vector2(120, 20)
-spoke_count = 5
-angular_speed_degrees = 105.0
+kind = 1
+position = Vector2(594.63477, 504.2711)
+size = Vector2(81.67083, 81.67083)
 
 [sub_resource type="Resource" id="Resource_34tbi"]
-script = ExtResource("3_78b6i")
-position = Vector2(288, 601)
-rotation_degrees = 47.4
-length = 275.0
-thickness = 26.0
+script = ExtResource("2_mrcph")
+kind = 2
+position = Vector2(515.29376, 868.7512)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 103.046875
 
 [sub_resource type="Resource" id="Resource_6tvbv"]
+script = ExtResource("2_mrcph")
+kind = 3
+position = Vector2(145.59662, 724.96643)
+size = Vector2(130, 26)
+travel_distance = 124.17708333333331
+motion_period = 2.1938541666666667
+
+[sub_resource type="Resource" id="Resource_feaj6"]
 script = ExtResource("3_78b6i")
-position = Vector2(545, 617)
-rotation_degrees = -11.7
-length = 267.0
+position = Vector2(402.93127, 607.3793)
+rotation_degrees = 40.27349901199341
+length = 327.0
 thickness = 26.0
 
 [resource]
 script = ExtResource("4_n5ir0")
 level_uid = "level_169"
 display_order = 169
-difficulty = 4
-hint_angle_degrees = -16.0
-hint_power = 1900.0
+difficulty = 3
+hint_angle_degrees = -38.0
+hint_power = 2050.0
 level_id = 169
-display_name = "Ters Çıkış"
-target_position = Vector2(266, 370)
-panels = Array[ExtResource("3_78b6i")]([SubResource("Resource_34tbi"), SubResource("Resource_6tvbv")])
-obstacles = Array[ExtResource("2_mrcph")]([SubResource("Resource_msx2c"), SubResource("Resource_ttadh")])
+display_name = "Çark Fırtınası"
+target_position = Vector2(237.94936, 220)
+panels = Array[ExtResource("3_78b6i")]([SubResource("Resource_feaj6")])
+obstacles = Array[ExtResource("2_mrcph")]([SubResource("Resource_msx2c"), SubResource("Resource_ttadh"), SubResource("Resource_34tbi"), SubResource("Resource_6tvbv")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 686.5935), Vector2(850.9304, 1600)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 600.28033), Vector2(733.9068, 1600)])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 3

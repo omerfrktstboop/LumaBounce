@@ -7,32 +7,45 @@
 
 [sub_resource type="Resource" id="Resource_jewan"]
 script = ExtResource("1_q2pav")
-position = Vector2(360, 685.41864)
-rotation_degrees = 1.0712433
+position = Vector2(360, 511.53424)
+rotation_degrees = -1.556288
 size = Vector2(652, 34)
 hit_points = 2
 
 [sub_resource type="Resource" id="Resource_qs3o4"]
 script = ExtResource("2_k3y6q")
 kind = 5
-position = Vector2(112.25309, 920.8677)
-size = Vector2(299.66666, 14)
-motion_period = 2.4800000000000004
-phase_degrees = 202.5984
-pulse_on_ratio = 0.565
+position = Vector2(194.19168, 917.1408)
+size = Vector2(316.72916, 14)
+motion_period = 2.3225
+phase_degrees = 355.60944
+pulse_on_ratio = 0.5846875
 
 [sub_resource type="Resource" id="Resource_bboma"]
 script = ExtResource("2_k3y6q")
-kind = 2
-position = Vector2(530.6716, 860.4677)
-size = Vector2(120, 20)
-spoke_count = 5
-angular_speed_degrees = 102.5
+kind = 3
+position = Vector2(608.8679, 879.91736)
+size = Vector2(130, 26)
+travel_distance = 132.85416666666669
+motion_period = 2.0327083333333333
 
 [sub_resource type="Resource" id="Resource_b7eyc"]
+script = ExtResource("2_k3y6q")
+position = Vector2(122.46631, 330.69025)
+rotation_degrees = 180.0
+size = Vector2(170, 28)
+inner_radius = 57.63333333333333
+
+[sub_resource type="Resource" id="Resource_k5ew4"]
+script = ExtResource("2_k3y6q")
+kind = 1
+position = Vector2(270.6505, 397.10742)
+size = Vector2(85.14167, 85.14167)
+
+[sub_resource type="Resource" id="Resource_yfyta"]
 script = ExtResource("3_moyfm")
-position = Vector2(376, 543)
-rotation_degrees = 15.2
+position = Vector2(409.69388, 594.86566)
+rotation_degrees = 8.543803405761718
 length = 322.0
 thickness = 26.0
 
@@ -41,15 +54,19 @@ script = ExtResource("4_gt3am")
 level_uid = "level_186"
 display_order = 186
 difficulty = 4
-hint_angle_degrees = -32.0
-hint_power = 1850.0
+hint_angle_degrees = 28.0
+hint_power = 1800.0
+hint_break_angles = PackedFloat32Array()
+hint_break_powers = PackedFloat32Array()
+hint_break_targets = PackedInt32Array()
 level_id = 186
 display_name = "Işık ve Taş"
-target_position = Vector2(559, 302)
-panels = Array[ExtResource("3_moyfm")]([SubResource("Resource_b7eyc")])
+target_position = Vector2(590.8405, 318.55414)
+panels = Array[ExtResource("3_moyfm")]([SubResource("Resource_yfyta")])
 breakable_blocks = Array[ExtResource("1_q2pav")]([SubResource("Resource_jewan")])
-obstacles = Array[ExtResource("2_k3y6q")]([SubResource("Resource_qs3o4"), SubResource("Resource_bboma")])
-left_wall_segments = Array[Vector2]([Vector2(-320, 734.4791), Vector2(870.57263, 1600)])
+obstacles = Array[ExtResource("2_k3y6q")]([SubResource("Resource_qs3o4"), SubResource("Resource_bboma"), SubResource("Resource_b7eyc"), SubResource("Resource_k5ew4")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 662.0286), Vector2(784.1176, 1600)])
+right_wall_segments = Array[Vector2]([Vector2(-320, 541.09094), Vector2(657.0938, 1600)])
 two_star_max_seconds = 160.0
 two_star_max_shots = 5
 three_star_max_seconds = 85.0

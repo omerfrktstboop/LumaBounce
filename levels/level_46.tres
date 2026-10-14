@@ -15,23 +15,18 @@ hit_points = 2
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("1")
 position = Vector2(354.88757, 468.86957)
-rotation_degrees = 0.0
 size = Vector2(114.87229, 34)
 hit_points = 2
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("1")
 position = Vector2(503.62805, 466.5844)
-rotation_degrees = 0.0
 size = Vector2(114.87229, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_m3uui"]
 script = ExtResource("1")
 position = Vector2(631.45056, 469.6313)
-rotation_degrees = 0.0
 size = Vector2(114.87229, 34)
-hit_points = 1
 
 [sub_resource type="Resource" id="Resource_krhwj"]
 script = ExtResource("3")
@@ -51,26 +46,20 @@ thickness = 26.0
 script = ExtResource("4")
 level_uid = "level_046"
 display_order = 46
-theme_id = ""
 difficulty = 3
-time_limit = 0.0
-is_bonus = false
-hint_angle_degrees = 4.0
-hint_power = 1750.0
+hint_angle_degrees = 8.0
+hint_power = 1900.0
+hint_break_angles = PackedFloat32Array(12)
+hint_break_powers = PackedFloat32Array(1800)
+hint_break_targets = PackedInt32Array(12)
 level_id = 46
 display_name = "Yankı Duvarı"
 launcher_position = Vector2(350.78488, 1120)
 target_position = Vector2(522.92773, 297.51013)
-target_scale = 1.0
-ball_scale = 1.0
 panels = Array[ExtResource("3")]([SubResource("Resource_krhwj"), SubResource("Resource_lgnf6")])
 breakable_blocks = Array[ExtResource("1")]([SubResource("Resource_ntj7m"), SubResource("Resource_wvjk2"), SubResource("Resource_bi0i1"), SubResource("Resource_m3uui")])
-obstacles = Array[ExtResource("2")]([])
 left_wall_segments = Array[Vector2]([Vector2(-320, 575.29034), Vector2(737.32635, 1600)])
 right_wall_segments = Array[Vector2]([Vector2(-320, 561.6924), Vector2(699.0514, 1600)])
-max_lives = 5
-tutorial_text = ""
 two_star_max_seconds = 120.0
 two_star_max_shots = 3
 three_star_max_seconds = 68.0
-three_star_max_shots = 2

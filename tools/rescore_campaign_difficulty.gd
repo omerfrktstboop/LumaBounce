@@ -42,6 +42,28 @@ func _run() -> void:
 			int(result.get("solution_count", 0)),
 			String(result.get("route_state", "none")),
 		])
+		# Ayrinti satiri: skorun bilesenleri ve bolum bilgisi (tablo icin).
+		# DIFFICULTY_RESULT bicimi degismez; ona bagli okuyucular etkilenmez.
+		var breakdown: Dictionary = result.get("breakdown", {})
+		var kinds := PackedStringArray()
+		for obstacle in level.obstacles:
+			kinds.append(obstacle.kind_id())
+		print("DIFFICULTY_DETAIL|%d|%.5f|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%s|%s" % [
+			level_id,
+			float(result.get("hit_ratio", 0.0)),
+			int(result.get("bounces", -1)),
+			int(result.get("robust", 0)),
+			int(breakdown.get("precision", 0)),
+			int(breakdown.get("solution_variety", 0)),
+			int(breakdown.get("bounces", 0)),
+			int(breakdown.get("complexity", 0)),
+			int(breakdown.get("block_gate", 0)),
+			level.difficulty,
+			level.panels.size(),
+			level.breakable_blocks.size(),
+			",".join(kinds),
+			level.display_name,
+		])
 		_teardown_world()
 		await physics_frame
 

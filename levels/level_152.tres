@@ -6,16 +6,45 @@
 [ext_resource type="Script" path="res://scripts/levels/level_data.gd" id="4_4ph2h"]
 
 [sub_resource type="Resource" id="Resource_re3bi"]
-script = ExtResource("2_vfdxu")
-kind = 6
-position = Vector2(567.2012, 777.65533)
-size = Vector2(96, 96)
-exit_position = Vector2(157.76877, 359.76022)
+script = ExtResource("1_56jem")
+position = Vector2(191.64012, 523.91406)
+rotation_degrees = -4.6748333
+size = Vector2(315.28024, 34)
 
 [sub_resource type="Resource" id="Resource_l16vp"]
+script = ExtResource("1_56jem")
+position = Vector2(528.35986, 491.91403)
+rotation_degrees = 2.7745013
+size = Vector2(315.28024, 34)
+
+[sub_resource type="Resource" id="Resource_tlcch"]
+script = ExtResource("2_vfdxu")
+kind = 2
+position = Vector2(422.10477, 807.0066)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 93.75
+
+[sub_resource type="Resource" id="Resource_0raj1"]
+script = ExtResource("2_vfdxu")
+kind = 6
+position = Vector2(139.39857, 620.53766)
+size = Vector2(92, 92)
+exit_position = Vector2(309.72614, 267.72882)
+
+[sub_resource type="Resource" id="Resource_xokdy"]
+script = ExtResource("2_vfdxu")
+kind = 5
+position = Vector2(205.21606, 875.5739)
+size = Vector2(284.5, 14)
+motion_period = 2.62
+phase_degrees = 101.94713
+pulse_on_ratio = 0.5475
+
+[sub_resource type="Resource" id="Resource_lur5n"]
 script = ExtResource("3_a88wa")
-position = Vector2(472, 637)
-rotation_degrees = 24.0
+position = Vector2(517.8443, 665.59955)
+rotation_degrees = 30.95047
 length = 404.0
 thickness = 26.0
 
@@ -24,13 +53,15 @@ script = ExtResource("4_4ph2h")
 level_uid = "level_152"
 display_order = 152
 difficulty = 3
-hint_angle_degrees = 28.0
-hint_power = 1150.0
+hint_angle_degrees = 52.0
+hint_power = 2000.0
 level_id = 152
 display_name = "Mavi Kapı"
-target_position = Vector2(570, 381)
-panels = Array[ExtResource("3_a88wa")]([SubResource("Resource_l16vp")])
-obstacles = Array[ExtResource("2_vfdxu")]([SubResource("Resource_re3bi")])
+target_position = Vector2(574.1105, 362.5252)
+panels = Array[ExtResource("3_a88wa")]([SubResource("Resource_lur5n")])
+breakable_blocks = Array[ExtResource("1_56jem")]([SubResource("Resource_re3bi"), SubResource("Resource_l16vp")])
+obstacles = Array[ExtResource("2_vfdxu")]([SubResource("Resource_tlcch"), SubResource("Resource_0raj1"), SubResource("Resource_xokdy")])
 two_star_max_seconds = 160.0
-two_star_max_shots = 3
+two_star_max_shots = 5
 three_star_max_seconds = 85.0
+three_star_max_shots = 4

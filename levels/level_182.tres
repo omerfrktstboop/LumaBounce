@@ -7,29 +7,56 @@
 
 [sub_resource type="Resource" id="Resource_h4g8d"]
 script = ExtResource("1_3takc")
-position = Vector2(192.02417, 599.1865)
-rotation_degrees = 2.8707051
-size = Vector2(316.04834, 34)
+position = Vector2(192.45549, 719.671)
+rotation_degrees = -3.6604462
+size = Vector2(316.91098, 34)
 hit_points = 2
 
 [sub_resource type="Resource" id="Resource_at4l7"]
 script = ExtResource("1_3takc")
-position = Vector2(527.9758, 567.1865)
-rotation_degrees = -2.3147316
-size = Vector2(316.04834, 34)
+position = Vector2(527.5445, 687.671)
+rotation_degrees = -3.5451956
+size = Vector2(316.91098, 34)
 
 [sub_resource type="Resource" id="Resource_lyqgu"]
 script = ExtResource("2_vn546")
-kind = 6
-position = Vector2(514.53815, 678.44714)
-size = Vector2(90, 90)
-exit_position = Vector2(261.74524, 477.85925)
+kind = 2
+position = Vector2(566.67236, 565.2905)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = -110.15625
 
 [sub_resource type="Resource" id="Resource_6c43o"]
+script = ExtResource("2_vn546")
+kind = 5
+position = Vector2(573.4882, 885.3446)
+size = Vector2(312.9375, 14)
+motion_period = 2.3575
+phase_degrees = 347.04663
+pulse_on_ratio = 0.5803125
+
+[sub_resource type="Resource" id="Resource_444bh"]
+script = ExtResource("2_vn546")
+kind = 5
+position = Vector2(110.77182, 953.82495)
+size = Vector2(312.9375, 14)
+motion_period = 2.3575
+phase_degrees = 167.04663
+pulse_on_ratio = 0.5803125
+
+[sub_resource type="Resource" id="Resource_yhqmx"]
+script = ExtResource("2_vn546")
+kind = 2
+position = Vector2(430.94852, 334.70074)
+size = Vector2(120, 20)
+spoke_count = 5
+angular_speed_degrees = 110.15625
+
+[sub_resource type="Resource" id="Resource_rkdsi"]
 script = ExtResource("3_huqwf")
-position = Vector2(282, 810)
-rotation_degrees = -2.8
-length = 376.0
+position = Vector2(204.10121, 568.21234)
+rotation_degrees = -32.255293655395505
+length = 309.0
 thickness = 26.0
 
 [resource]
@@ -37,14 +64,18 @@ script = ExtResource("4_x6ek5")
 level_uid = "level_182"
 display_order = 182
 difficulty = 4
-hint_angle_degrees = 30.0
-hint_power = 1700.0
+hint_angle_degrees = 10.0
+hint_power = 2200.0
+hint_break_angles = PackedFloat32Array(6)
+hint_break_powers = PackedFloat32Array(1600)
+hint_break_targets = PackedInt32Array(2)
 level_id = 182
 display_name = "Bronz Duvar"
-target_position = Vector2(517, 376)
-panels = Array[ExtResource("3_huqwf")]([SubResource("Resource_6c43o")])
+target_position = Vector2(204.76404, 233.42076)
+panels = Array[ExtResource("3_huqwf")]([SubResource("Resource_rkdsi")])
 breakable_blocks = Array[ExtResource("1_3takc")]([SubResource("Resource_h4g8d"), SubResource("Resource_at4l7")])
-obstacles = Array[ExtResource("2_vn546")]([SubResource("Resource_lyqgu")])
+obstacles = Array[ExtResource("2_vn546")]([SubResource("Resource_lyqgu"), SubResource("Resource_6c43o"), SubResource("Resource_444bh"), SubResource("Resource_yhqmx")])
+left_wall_segments = Array[Vector2]([Vector2(-320, 527.4446), Vector2(691.02576, 1600)])
 two_star_max_seconds = 160.0
 two_star_max_shots = 5
 three_star_max_seconds = 85.0
