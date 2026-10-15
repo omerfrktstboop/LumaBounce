@@ -1,42 +1,42 @@
 ﻿Bölüm;Ad;Dünya;Skor;Seviye;Oyunda gösterilen;Çözüm hücresi;İsabet %;Sekme;Sağlam hücre;Hassasiyet;Çeşitlilik;Sekme puanı;Karmaşıklık;Tuğla kapısı;Rota;Panel;Tuğla;Engeller
-1;İlk Atış;BAŞLANGIÇ;0;KOLAY;KOLAY;81;10,92;0;16;0;0;0;0;0;serbest;0;0;—
-2;İlk Sekme;BAŞLANGIÇ;4;KOLAY;KOLAY;56;7,55;1;15;0;0;3;1;0;serbest;1;0;1 panel
-3;Ters Açı;BAŞLANGIÇ;6;KOLAY;KOLAY;49;6,60;1;14;2;0;3;1;0;serbest;1;0;1 panel
-4;Açı ve Sekme;BAŞLANGIÇ;11;KOLAY;KOLAY;30;4,04;1;3;6;0;3;2;0;serbest;2;0;2 panel
-5;Açı ve Sekme;BAŞLANGIÇ;26;ORTA;ORTA;13;1,75;3;1;15;0;9;2;0;serbest;2;0;2 panel
-6;Duvar Rotası;BAŞLANGIÇ;20;ORTA;ORTA;12;1,62;1;1;15;0;3;2;0;serbest;3;0;3 panel
-7;Duvar Rotası;BAŞLANGIÇ;25;ORTA;ORTA;27;3,64;5;1;7;0;16;2;0;serbest;2;0;2 panel
-8;Duvar Rotası;BAŞLANGIÇ;21;ORTA;ORTA;16;2,16;2;0;13;0;6;2;0;serbest;3;0;3 panel
-9;Duvar Rotası;BAŞLANGIÇ;23;ORTA;ORTA;13;1,75;2;0;15;0;6;2;0;serbest;3;0;3 panel
-10;Duvar Rotası;BAŞLANGIÇ;39;ORTA;ORTA;4;0,54;2;0;26;4;6;3;0;serbest;4;0;4 panel
-11;Dar Geçit;BAŞLANGIÇ;25;ORTA;ORTA;8;1,08;1;0;19;1;3;2;0;serbest;2;0;2 panel
-12;Dar Geçit;BAŞLANGIÇ;35;ORTA;ORTA;5;0,67;2;0;24;3;6;2;0;serbest;3;0;3 panel
-13;Dar Geçit;BAŞLANGIÇ;35;ORTA;ORTA;5;0,67;2;0;24;3;6;2;0;serbest;3;0;3 panel
-14;Dar Geçit;BAŞLANGIÇ;21;ORTA;ORTA;11;1,48;1;0;16;0;3;2;0;serbest;3;0;3 panel
-15;Dar Geçit;BAŞLANGIÇ;35;ORTA;ORTA;6;0,81;3;0;22;2;9;2;0;serbest;3;0;3 panel
-16;Çift Sekme;BAŞLANGIÇ;25;ORTA;ORTA;16;2,16;3;0;13;0;9;3;0;serbest;4;0;4 panel
-17;Çift Sekme;BAŞLANGIÇ;39;ORTA;ORTA;5;0,67;3;0;24;3;9;3;0;serbest;4;0;4 panel
-18;Çift Sekme;BAŞLANGIÇ;12;KOLAY;KOLAY;27;3,64;1;9;7;0;3;2;0;serbest;3;0;3 panel
-19;Çift Sekme;BAŞLANGIÇ;20;ORTA;ORTA;15;2,02;1;0;13;0;3;4;0;serbest;5;0;5 panel
-20;Çift Sekme;BAŞLANGIÇ;24;ORTA;ORTA;9;1,21;1;0;18;0;3;3;0;serbest;4;0;4 panel
-21;Ritim Finali;BAŞLANGIÇ;21;ORTA;ORTA;18;2,43;2;2;11;0;6;4;0;serbest;6;0;6 panel
-22;Ritim Finali;BAŞLANGIÇ;39;ORTA;ORTA;5;0,67;3;0;24;3;9;3;0;serbest;4;0;4 panel
-23;Ritim Finali;BAŞLANGIÇ;22;ORTA;ORTA;20;2,70;3;2;10;0;9;3;0;serbest;4;0;4 panel
-24;Ritim Finali;BAŞLANGIÇ;50;ZOR;ZOR;3;0,40;4;0;29;5;13;3;0;serbest;4;0;4 panel
+1;İlk Atış;BAŞLANGIÇ;0;KOLAY;KOLAY;77;10,38;0;14;0;0;0;0;0;serbest;0;0;—
+2;İlk Sekme;BAŞLANGIÇ;6;KOLAY;KOLAY;50;6,74;1;10;2;0;3;1;0;serbest;1;0;1 panel
+3;Ters Açı;BAŞLANGIÇ;6;KOLAY;KOLAY;47;6,33;1;12;2;0;3;1;0;serbest;1;0;1 panel
+4;Açı ve Sekme;BAŞLANGIÇ;11;KOLAY;KOLAY;32;4,31;1;1;6;0;3;2;0;serbest;2;0;2 panel
+5;Açı ve Sekme;BAŞLANGIÇ;19;KOLAY;ORTA;19;2,56;2;0;11;0;6;2;0;serbest;2;0;2 panel
+6;Duvar Rotası;BAŞLANGIÇ;17;KOLAY;ORTA;17;2,29;1;2;12;0;3;2;0;serbest;3;0;3 panel
+7;Duvar Rotası;BAŞLANGIÇ;12;KOLAY;ORTA;29;3,91;1;1;7;0;3;2;0;serbest;2;0;2 panel
+8;Duvar Rotası;BAŞLANGIÇ;23;ORTA;ORTA;13;1,75;2;0;15;0;6;2;0;serbest;3;0;3 panel
+9;Duvar Rotası;BAŞLANGIÇ;25;ORTA;ORTA;10;1,35;2;0;17;0;6;2;0;serbest;3;0;3 panel
+10;Duvar Rotası;BAŞLANGIÇ;27;ORTA;ORTA;9;1,21;2;0;18;0;6;3;0;serbest;4;0;4 panel
+11;Dar Geçit;BAŞLANGIÇ;21;ORTA;ORTA;11;1,48;1;0;16;0;3;2;0;serbest;2;0;2 panel
+12;Dar Geçit;BAŞLANGIÇ;32;ORTA;ORTA;6;0,81;2;0;22;2;6;2;0;serbest;3;0;3 panel
+13;Dar Geçit;BAŞLANGIÇ;28;ORTA;ORTA;8;1,08;2;0;19;1;6;2;0;serbest;3;0;3 panel
+14;Dar Geçit;BAŞLANGIÇ;20;ORTA;ORTA;12;1,62;1;0;15;0;3;2;0;serbest;3;0;3 panel
+15;Dar Geçit;BAŞLANGIÇ;24;ORTA;ORTA;15;2,02;3;0;13;0;9;2;0;serbest;3;0;3 panel
+16;Çift Sekme;BAŞLANGIÇ;27;ORTA;ORTA;12;1,62;3;0;15;0;9;3;0;serbest;4;0;4 panel
+17;Çift Sekme;BAŞLANGIÇ;23;ORTA;ORTA;10;1,35;1;0;17;0;3;3;0;serbest;4;0;4 panel
+18;Çift Sekme;BAŞLANGIÇ;14;KOLAY;KOLAY;22;2,96;1;7;9;0;3;2;0;serbest;3;0;3 panel
+19;Çift Sekme;BAŞLANGIÇ;20;ORTA;ORTA;16;2,16;1;0;13;0;3;4;0;serbest;5;0;5 panel
+20;Çift Sekme;BAŞLANGIÇ;19;KOLAY;ORTA;16;2,16;1;0;13;0;3;3;0;serbest;4;0;4 panel
+21;Ritim Finali;BAŞLANGIÇ;22;ORTA;ORTA;17;2,29;2;3;12;0;6;4;0;serbest;6;0;6 panel
+22;Ritim Finali;BAŞLANGIÇ;33;ORTA;ORTA;5;0,67;1;0;24;3;3;3;0;serbest;4;0;4 panel
+23;Ritim Finali;BAŞLANGIÇ;18;KOLAY;ORTA;17;2,29;1;0;12;0;3;3;0;serbest;4;0;4 panel
+24;Ritim Finali;BAŞLANGIÇ;31;ORTA;ZOR;7;0,94;2;0;20;2;6;3;0;serbest;4;0;4 panel
 25;Yedi Temas;BAŞLANGIÇ;36;ORTA;ORTA;6;0,81;3;0;22;2;9;3;0;serbest;4;0;4 panel
 26;İlk Kırılma;BAŞLANGIÇ;33;ORTA;ORTA;10;1,35;3;0;17;0;9;7;0;serbest;2;4;2 panel, 4 tuğla
 27;İki Yol;BAŞLANGIÇ;40;ZOR;ZOR;6;0,81;3;0;22;2;9;7;0;serbest;2;4;2 panel, 4 tuğla
 28;Kırık Kenar;BAŞLANGIÇ;40;ZOR;ZOR;8;1,08;4;0;19;1;13;7;0;serbest;1;5;1 panel, 5 tuğla
 29;Sahte Geçit;BAŞLANGIÇ;42;ZOR;ZOR;4;0,54;2;0;26;4;6;6;0;serbest;2;3;2 panel, 3 tuğla
 30;Çatlak Kilit;BAŞLANGIÇ;50;ZOR;ZOR;4;0,54;4;0;26;4;13;7;0;serbest;1;4;1 panel, 4 tuğla
-31;Blok Kapısı;BAŞLANGIÇ;26;ORTA;ORTA;21;2,83;3;1;10;0;9;7;0;serbest;1;4;1 panel, 4 tuğla
+31;Blok Kapısı;BAŞLANGIÇ;16;KOLAY;ORTA;32;4,31;1;3;6;0;3;7;0;serbest;1;4;1 panel, 4 tuğla
 32;Tam Temizlik;BAŞLANGIÇ;81;USTA;USTA;1;0,14;8;0;39;10;25;7;0;serbest;1;7;1 panel, 7 tuğla
 33;Üçlü Hat;BAŞLANGIÇ;54;ZOR;ZOR;3;0,40;4;0;29;5;13;7;0;serbest;1;7;1 panel, 7 tuğla
-34;Blok Kapısı;BAŞLANGIÇ;29;ORTA;ORTA;9;1,21;2;0;18;0;6;5;0;serbest;1;3;1 panel, 3 tuğla
+34;Blok Kapısı;BAŞLANGIÇ;21;ORTA;ORTA;16;2,16;1;0;13;0;3;5;0;serbest;1;3;1 panel, 3 tuğla
 35;Çifte Çatlak;BAŞLANGIÇ;38;ORTA;ORTA;7;0,94;3;0;20;2;9;7;0;serbest;1;7;1 panel, 7 tuğla
 36;Ayna Anahtar;BAŞLANGIÇ;75;ÇOK ZOR;ÇOK ZOR;1;0,14;6;0;39;10;19;7;0;serbest;1;6;1 panel, 6 tuğla
-37;Çifte Kilit;BAŞLANGIÇ;36;ORTA;ORTA;11;1,48;4;0;16;0;13;7;0;serbest;2;4;2 panel, 4 tuğla
-38;Çifte Kilit;BAŞLANGIÇ;30;ORTA;ORTA;22;2,96;5;2;9;0;16;5;0;serbest;1;3;1 panel, 3 tuğla
+37;Çifte Kilit;BAŞLANGIÇ;34;ORTA;ORTA;14;1,89;4;0;14;0;13;7;0;serbest;2;4;2 panel, 4 tuğla
+38;Çifte Kilit;BAŞLANGIÇ;19;KOLAY;ORTA;19;2,56;1;0;11;0;3;5;0;serbest;1;3;1 panel, 3 tuğla
 39;Darboğaz;BAŞLANGIÇ;81;USTA;USTA;1;0,14;10;0;39;10;25;7;0;serbest;1;6;1 panel, 6 tuğla
 40;Son Kilit;BAŞLANGIÇ;36;ORTA;ORTA;8;1,08;3;0;19;1;9;7;0;serbest;2;4;2 panel, 4 tuğla
 41;Kenar Anahtarı;BAŞLANGIÇ;28;ORTA;ORTA;16;2,16;3;1;13;0;9;6;0;serbest;2;3;2 panel, 3 tuğla
@@ -49,7 +49,7 @@
 48;İkili Açılım;BAŞLANGIÇ;42;ZOR;ZOR;6;0,81;3;0;22;2;9;9;0;serbest;4;4;4 panel, 4 tuğla
 49;Son Koridor;BAŞLANGIÇ;76;ÇOK ZOR;ÇOK ZOR;1;0,14;6;0;39;10;19;8;0;serbest;3;5;3 panel, 5 tuğla
 50;Blok Labirenti;BAŞLANGIÇ;65;ÇOK ZOR;ÇOK ZOR;2;0,27;6;0;32;7;19;7;0;serbest;2;5;2 panel, 5 tuğla
-51;Halka Girişi;KİNETİK;16;KOLAY;KOLAY;35;4,72;3;1;5;0;9;2;0;serbest;1;0;1 panel, halka
+51;Halka Girişi;KİNETİK;10;KOLAY;KOLAY;35;4,72;1;5;5;0;3;2;0;serbest;1;0;1 panel, halka
 52;Açık Halka;KİNETİK;10;KOLAY;KOLAY;35;4,72;1;11;5;0;3;2;0;serbest;1;0;1 panel, halka
 53;Eğik Geçiş;KİNETİK;22;ORTA;ORTA;15;2,02;1;2;13;0;3;6;0;serbest;1;3;1 panel, 3 tuğla, halka
 54;Kenar Halkası;KİNETİK;28;ORTA;ORTA;8;1,08;1;0;19;1;3;5;0;serbest;3;1;3 panel, 1 tuğla, halka
