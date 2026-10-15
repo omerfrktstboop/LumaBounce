@@ -144,6 +144,12 @@ func _run() -> void:
 		elif args[i] == "--out" and i + 1 < args.size():
 			out = args[i + 1]
 	_out_dir = ProjectSettings.globalize_path("res://").path_join(out)
+	# Cikti proje icinde: .gdignore olmazsa editor gorselleri ice aktarir ve
+	# export onlari pakete koyar (v12'nin ilk AAB'si boyle ~12 MB sismisti).
+	DirAccess.make_dir_recursive_absolute(_out_dir)
+	var ignore := FileAccess.open(_out_dir.path_join(".gdignore"), FileAccess.WRITE)
+	if ignore != null:
+		ignore.close()
 	_round_shader = Shader.new()
 	_round_shader.code = ROUND_SHADER
 	AudioServer.set_bus_mute(AudioServer.get_bus_index("Master"), true)

@@ -53,6 +53,9 @@ const REQUIRED_RELEASE_EXCLUDES := [
 	"tools/*",
 	"tmp/*",
 	"assets/store/*",
+	# Export ciktilari ve magaza gorselleri (capture_store_assets.gd) burada;
+	# klasorde .gdignore yoksa Godot gorselleri ice aktarip pakete koyar.
+	"builds/*",
 	"addons/godot_mcp_toolkit/*",
 	"scripts/debug/*",
 	"scripts/editor/*",
