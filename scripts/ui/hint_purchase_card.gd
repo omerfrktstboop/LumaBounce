@@ -86,7 +86,7 @@ func _make_short_option(config: Dictionary) -> Button:
 	var cost := int(config.get("short_cost", 0))
 	var enabled := not used
 
-	var price := tr("%d ◈") % cost
+	var price := tr("ÜCRETSİZ") if cost <= 0 else tr("%d ◈") % cost
 	var note := ""
 	if used:
 		note = tr("Bu denemede kullanıldı")

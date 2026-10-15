@@ -82,6 +82,7 @@ func _score_level(level_id: int) -> bool:
 	_world = LevelWorld.new()
 	root.add_child(_world)
 	_world.build(level)
+	_solver.apply_level_scale(level)
 	_solver.bind_space(_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 	# Yeni govdelerin fizik uzayina girmesi icin iki kare bekle (verify_levels.gd ile ayni).
 	await physics_frame

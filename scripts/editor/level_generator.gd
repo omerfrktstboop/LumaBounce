@@ -327,6 +327,7 @@ func generate(profile: Profile, wanted: int, max_tries := 400, seed_value := 0) 
 		# Yeni govdelerin fizik uzayina girmesi icin iki kare sart.
 		await get_tree().physics_frame
 		await get_tree().physics_frame
+		_solver.apply_level_scale(candidate)
 		_solver.bind_space(
 			_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 
@@ -382,6 +383,7 @@ func generate_from_blueprints(profile: Profile, blueprints: Array, wanted: int,
 		_world.build(candidate)
 		await get_tree().physics_frame
 		await get_tree().physics_frame
+		_solver.apply_level_scale(candidate)
 		_solver.bind_space(
 			_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 		var verdict := await _evaluate(candidate, profile)

@@ -7,7 +7,7 @@
 
 [sub_resource type="Resource" id="Resource_ntj7m"]
 script = ExtResource("3")
-position = Vector2(210, 760)
+position = Vector2(210, 748)
 rotation_degrees = -18.0
 length = 240.0
 thickness = 26.0
@@ -25,7 +25,10 @@ level_uid = "level_011"
 display_order = 11
 difficulty = 2
 hint_angle_degrees = 26.0
-hint_power = 1900.0
+hint_power = 1950.0
+hint_break_angles = PackedFloat32Array()
+hint_break_powers = PackedFloat32Array()
+hint_break_targets = PackedInt32Array()
 level_id = 11
 display_name = "Dar Geçit"
 target_position = Vector2(360, 220)

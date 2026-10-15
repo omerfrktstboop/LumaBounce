@@ -872,6 +872,7 @@ func _on_analyse() -> void:
 	await get_tree().process_frame
 	await get_tree().physics_frame
 
+	_solver.apply_level_scale(level)
 	_solver.bind_space(
 		_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 	var spawn := _solver.spawn_position(level.launcher_position)
@@ -927,6 +928,7 @@ func _on_solution_pressed() -> void:
 	_refresh_info()
 	await get_tree().physics_frame
 	await get_tree().physics_frame
+	_solver.apply_level_scale(level)
 	_solver.bind_space(
 		_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 	var spawn := _solver.spawn_position(level.launcher_position)

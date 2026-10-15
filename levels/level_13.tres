@@ -14,15 +14,15 @@ thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_wvjk2"]
 script = ExtResource("3")
-position = Vector2(594.1211, 518.87695)
-rotation_degrees = 20.0
+position = Vector2(606.1211, 506.87695)
+rotation_degrees = 17.0
 length = 230.0
 thickness = 26.0
 
 [sub_resource type="Resource" id="Resource_bi0i1"]
 script = ExtResource("3")
-position = Vector2(190.42969, 508.20313)
-rotation_degrees = -12.0
+position = Vector2(178.42969, 520.2031)
+rotation_degrees = -15.0
 length = 360.0
 thickness = 26.0
 
@@ -32,7 +32,10 @@ level_uid = "level_013"
 display_order = 13
 difficulty = 2
 hint_angle_degrees = 40.0
-hint_power = 2100.0
+hint_power = 2150.0
+hint_break_angles = PackedFloat32Array()
+hint_break_powers = PackedFloat32Array()
+hint_break_targets = PackedInt32Array()
 level_id = 13
 display_name = "Dar Geçit"
 target_position = Vector2(500, 240)

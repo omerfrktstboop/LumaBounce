@@ -106,6 +106,17 @@ Yapılacaklar:
   - Nişan kılavuzunun ilerledikçe kısalması (`Launcher.guide_visibility_ratio`).
 
   4–15'i genişlet; 3 yıldız ustalık için zor kalabilir ama 1–2 yıldız rahat olmalı.
+
+  **Yapılan (Ekim 2026, zorluk bilerek korunarak):**
+  - Ölçüm hatası düzeltildi: çözücü topun ve hedefin bölüme özgü boyutunu
+    (`ball_scale` %78, `target_scale`) yok sayıyordu. Gerçek boyutla 4–8 makul
+    çıktı; asıl dar olanlar 9, 11, 13, 14, 16, 17.
+  - Hedefi büyütmek denendi, **işe yaramadı** (%30 büyütme isabeti yalnızca
+    %3–10 artırıyor; darboğaz panel aralıkları).
+  - Yalnızca iki aykırı bölüme küçük panel dokunuşu: 11 (bir panel 12 px) isabet
+    %0,70 → %1,22; 13 (iki panel 12 px / 3°) %0,42 → %0,94.
+  - 1–15'te kısa ipucu ücretsiz.
+  - 3 yıldız kuralı ve 21. bölüm kapısı **bilerek değiştirilmedi**.
 - [ ] **Testere dişi eğri:** her 25'lik bant kolay başlayıp zor bitsin. Şu an
   bantlar arası düzensiz (126–150, 101–125'ten kolay; 151–200 hepsinden kolay).
 - [ ] **151–200 taslakları:** düzenlerken zorluğu kademeli artır; şu an 51–150'den

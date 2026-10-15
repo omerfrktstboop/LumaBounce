@@ -56,6 +56,10 @@ signal first_shot_tutorial_finished(skipped: bool)
 ## kalici kilit SAYILMAZ; ayni bolum oturumundaki yeniden denemelerde tekrar
 ## ucret istemez.
 @export var short_hint_cost := 2
+## Bu bolume kadar (dahil) kisa ipucu ucretsiz: en cok terk edilen ilk
+## bolumlerde takilan yeni oyuncu rotanin ilk hamlesini gorur ve oyunu
+## birakmaz. Tam rota (odullu reklam) ve 16+ bolumlerin fiyati degismez.
+@export var free_short_hint_last_level := 15
 ## Kisa ipucu rotanin en fazla bu kadarini gosterir.
 ##
 ## Ust sinir SART: bazi bolumlerde ilk sekme yolun cok ilerisindedir ve
@@ -1167,12 +1171,28 @@ func _refresh_hint_hud() -> void:
 	_coin_value.text = str(wallet.balance)
 	if not available:
 		return
-	# Rozet Coin ile alinan kisa ipucunun fiyatini tasir. Tam rota acildiysa
-	# veya kisa ipucu bu bolum oturumunda odendiyse fiyat gosterilmez.
+	# Rozet Coin ile alinan kisa ipucunun fiyatini tasir. Tam rota acildiysa,
+	# kisa ipucu bu bolum oturumunda odendiyse veya ucretsizse fiyat gosterilmez.
 	var unlocked := wallet.is_hint_unlocked(level_data.uid())
-	_hint_badge.visible = not unlocked and not _short_hint_unlocked_for_level
-	_hint_badge.text = str(short_hint_cost)
+	_hint_badge.visible = not unlocked and not _short_hint_unlocked_for_level \
+		and _short_hint_cost() > 0
+	_hint_badge.text = str(_short_hint_cost())
 	_hint_button.disabled = false
+
+
+## Bu bolumde kisa ipucunun Coin fiyati (ilk bolumlerde 0). Rozet, kart ve
+## harcama ayni degeri okur; fiyat tek yerde karar verilir.
+func _short_hint_cost() -> int:
+	if level_data != null and not daily_mode \
+			and level_data.level_id >= LevelLibrary.FIRST_LEVEL_ID \
+			and level_data.level_id <= free_short_hint_last_level:
+		return 0
+	return short_hint_cost
+
+
+func _can_afford_short_hint() -> bool:
+	var cost := _short_hint_cost()
+	return cost <= 0 or (wallet != null and wallet.can_afford(cost))
 
 
 func _on_hint_pressed() -> void:
@@ -1207,7 +1227,7 @@ func _on_hint_pressed() -> void:
 	if analytics != null:
 		analytics.track_event(AnalyticsService.HINT_OFFER_OPEN, {
 			"level_id": level_data.level_id,
-			"short_affordable": wallet.can_afford(short_hint_cost),
+			"short_affordable": _can_afford_short_hint(),
 			"full_available": full_hint_enabled,
 			"full_unlocked": false,
 		})
@@ -1222,8 +1242,8 @@ func _on_hint_pressed() -> void:
 	# ozellik bayragi, bu denemede kisa ipucu kullanildi mi) oyunun bilgisi.
 	_hint_card.show_options({
 		"balance": wallet.balance,
-		"short_cost": short_hint_cost,
-		"can_afford_short": wallet.can_afford(short_hint_cost),
+		"short_cost": _short_hint_cost(),
+		"can_afford_short": _can_afford_short_hint(),
 		"short_used": _short_hint_unlocked_for_level,
 		"full_enabled": full_hint_enabled,
 	})
@@ -1239,7 +1259,8 @@ func _on_short_hint_requested() -> void:
 		_hint_card.close()
 		_show_hint_status(tr("İPUCU HAZIR DEĞİL"))
 		return
-	if not wallet.spend(short_hint_cost):
+	var cost := _short_hint_cost()
+	if cost > 0 and not wallet.spend(cost):
 		_hint_card.close()
 		_refresh_hint_hud()
 		_show_hint_status(tr("COIN YOK · REKLAM İZLE"), 2.8)
@@ -1249,7 +1270,7 @@ func _on_short_hint_requested() -> void:
 	if analytics != null:
 		analytics.track_event(AnalyticsService.SHORT_HINT_COIN_SPENT, {
 			"level_id": level_data.level_id,
-			"cost": short_hint_cost,
+			"cost": cost,
 		})
 	_show_short_hint()
 	_refresh_hint_hud()
@@ -1414,6 +1435,7 @@ func _build_hint_trace() -> PackedVector2Array:
 func _simulate_hint_shot(angle: float, power: float, break_step: bool) -> PackedVector2Array:
 	var empty := PackedVector2Array()
 	var solver := LevelSolver.from_scenes()
+	solver.apply_level_scale(level_data)
 	var excluded := _obstacles.get_solver_excluded_rids()
 	var block_index := _blocks.get_intact_rid_index(not break_step)
 	var direction := Vector2.UP.rotated(deg_to_rad(angle))

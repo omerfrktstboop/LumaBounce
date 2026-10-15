@@ -59,6 +59,10 @@ var max_power := 2200.0
 var max_angle := 78.0
 var spawn_offset := 70.0
 var target_size := 92.0
+## Sahnelerden okunan TABAN boyutlar; apply_level_scale bunlari bolum
+## olcegiyle carpar (radius/target_size anlik, bolume ozel degerlerdir).
+var base_radius := 24.0
+var base_target_size := 92.0
 
 var _space: PhysicsDirectSpaceState2D
 var _ball_shape: CircleShape2D
@@ -104,9 +108,26 @@ static func from_scenes() -> LevelSolver:
 	solver.target_size = target.size
 	target.free()
 
+	solver.base_radius = solver.radius
+	solver.base_target_size = solver.target_size
 	solver._ball_shape = CircleShape2D.new()
 	solver._ball_shape.radius = solver.radius
 	return solver
+
+
+## Bolumun top ve hedef olcegini uygular (LevelData.ball_scale/target_scale).
+## Oyun bu olcekleri her zaman kullanir (Gameplay._apply_level: hedef
+## node'u olceklenir, top yaricapi 24 * ball_scale olur); cozucu de AYNISINI
+## yapmazsa bolum oyundakinden farkli bir topla/hedefle dogrulanir. Bir
+## cozucu birden fazla bolumde kullaniliyorsa HER bolumden once cagrilmali.
+func apply_level_scale(level: LevelData) -> void:
+	var ball_scale := level.ball_scale if level != null else 1.0
+	var target_scale := level.target_scale if level != null else 1.0
+	radius = base_radius * ball_scale
+	target_size = base_target_size * target_scale
+	if _ball_shape == null:
+		_ball_shape = CircleShape2D.new()
+	_ball_shape.radius = radius
 
 
 ## Hangi fizik uzayinda calisilacagi ve o uzaydaki kirilabilir bloklarin

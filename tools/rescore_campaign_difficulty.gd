@@ -80,6 +80,7 @@ func _score_level(level: LevelData) -> Dictionary:
 	_world.build(level)
 	await physics_frame
 	await physics_frame
+	_solver.apply_level_scale(level)
 	_solver.bind_space(
 		_world.get_space(), _world.get_block_rids(), _world.get_obstacles())
 

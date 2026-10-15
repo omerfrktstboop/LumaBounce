@@ -16,11 +16,13 @@ func _run() -> void:
 	_register_audio_manager()
 	_test_wallet_contract()
 	_test_coin_economy_rules()
+	await _test_solver_scale_parity()
 	_test_rewarded_bonus_wallet()
 	await _test_shop_coin_ad_card()
 	await _test_hint_coverage()
 	await _test_full_hint_reward_flow()
 	await _test_block_solution_chain()
+	await _test_free_short_hint_early_levels()
 	await _test_short_hint()
 	await _test_broken_hint_never_charges()
 	await _test_hud_fits_tall_aspect()
@@ -98,6 +100,35 @@ func _test_coin_economy_rules() -> void:
 		"three-star campaign covers half the shop (%d vs %d)" % [perfect, shop_total])
 	_check(perfect + CoinEconomy.STARTING_COINS <= shop_total,
 		"campaign alone does not buy out the shop (%d vs %d)" % [perfect, shop_total])
+
+
+## Cozucu, oyunla AYNI top ve hedefle calismali. Eskiden ball_scale ve
+## target_scale cozucude yok sayiliyordu: 1-25 bolumleri tam boy topla,
+## 128/150 gibi bolumler buyuk hedefle dogrulaniyordu.
+func _test_solver_scale_parity() -> void:
+	for level_id in [10, 34, 150]:
+		var level := load(LevelLibrary.level_path(level_id)) as LevelData
+		var gameplay := (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+		gameplay.set("level_data", level)
+		root.add_child(gameplay)
+		await process_frame
+		var ball := gameplay.get_node("Ball") as Ball
+		var target := gameplay.get_node("Target") as Target
+		var solver := LevelSolver.from_scenes()
+		solver.apply_level_scale(level)
+		_check(is_equal_approx(solver.radius, ball.radius),
+			"level %d: solver ball radius matches gameplay (%.2f vs %.2f)"
+				% [level_id, solver.radius, ball.radius])
+		_check(is_equal_approx(solver.target_size, target.size * target.scale.x),
+			"level %d: solver target size matches gameplay" % level_id)
+		root.remove_child(gameplay)
+		gameplay.free()
+	var reset := LevelSolver.from_scenes()
+	reset.apply_level_scale(load(LevelLibrary.level_path(10)) as LevelData)
+	reset.apply_level_scale(load(LevelLibrary.level_path(160)) as LevelData)
+	_check(is_equal_approx(reset.radius, reset.base_radius)
+		and is_equal_approx(reset.target_size, reset.base_target_size),
+		"a reused solver does not carry the previous level's scale")
 
 
 func _test_rewarded_bonus_wallet() -> void:
@@ -211,6 +242,7 @@ func _test_hint_coverage() -> void:
 		world.build(level)
 		await physics_frame
 		await physics_frame
+		solver.apply_level_scale(level)
 		solver.bind_space(world.get_space(), world.get_block_rids(), world.get_obstacles())
 		# Kayitli cozumu oyuncunun oynayacagi gibi zincir halinde oynat: her
 		# kirma atisi o ana kadar kirilmis katmanlarla atilir ve en az bir
@@ -409,6 +441,40 @@ func _test_full_hint_reward_flow() -> void:
 ##
 ## Bu testin asil isi uc sozlesmeyi korumak: kisa ipucu tam fiyatini harcar,
 ## reklam istemez ve tam rotanin yerine gecmez.
+## Ilk 15 bolumde kisa ipucu ucretsiz: bakiye sifirken de acilir, Coin
+## dusmez, rozet fiyat gostermez. 16. bolumde fiyat normale doner.
+func _test_free_short_hint_early_levels() -> void:
+	var wallet := WalletStore.load_from_path(_new_wallet_path("freehint"))
+	wallet.spend(wallet.balance)
+	_check(wallet.balance == 0, "free-hint fixture starts with no Coin")
+	var level := load(LevelLibrary.level_path(5)) as LevelData
+	var gameplay := (load("res://scenes/gameplay.tscn") as PackedScene).instantiate()
+	gameplay.set("level_data", level)
+	gameplay.set("wallet", wallet)
+	root.add_child(gameplay)
+	await process_frame
+	await physics_frame
+	await physics_frame
+	_check(int(gameplay.call("_short_hint_cost")) == 0, "level 5 short hint costs nothing")
+	_check(not (gameplay.get_node("HUD/SafeArea/Root/HintButton/HintBadge") as Control).visible,
+		"free short hint shows no price badge")
+	gameplay.set("full_hint_enabled", false)
+	gameplay.call("_on_hint_pressed")
+	var options := gameplay.get_node("HUD/HintPurchaseCard/CardCenter/Card/Margin/Rows/Options")
+	_check(not (options.get_node("ShortOption") as Button).disabled,
+		"free short hint is available with zero Coin")
+	gameplay.call("_on_short_hint_requested")
+	_check(bool(gameplay.call("get_debug_snapshot")["hint_visible"]),
+		"free short hint draws the route")
+	_check(wallet.balance == 0, "free short hint spends no Coin")
+	gameplay.set("level_data", load(LevelLibrary.level_path(
+		int(gameplay.get("free_short_hint_last_level")) + 1)) as LevelData)
+	_check(int(gameplay.call("_short_hint_cost")) == int(gameplay.get("short_hint_cost")),
+		"the first level after the free range charges the normal price")
+	root.remove_child(gameplay)
+	gameplay.free()
+
+
 func _test_short_hint() -> void:
 	var path := _new_wallet_path("shorthint")
 	var wallet := WalletStore.load_from_path(path)
