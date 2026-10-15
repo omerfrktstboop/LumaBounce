@@ -37,13 +37,23 @@ extends Control
 
 @export_group("Animasyon")
 @export var pop_time := 0.26
-@export var pop_stagger := 0.10
+@export var pop_stagger := 0.12
 @export var pop_scale := 1.35
+## Yildiz yuvasina bu kadar YUKARIDAN ucarak gelir (piksel).
+@export var fly_distance := 64.0
+## Iniste yildizin etrafinda acilan parilti halkasinin suresi.
+@export var landing_sparkle_time := 0.32
+
+## Bir yildiz yuvasina oturdugunda (ses/titresim icin; satir kendisi ses calmaz).
+signal star_landed(index: int)
 
 ## Kac yildiz dolu.
 var _filled := 0
 ## Her yildizin anlik olcegi; reveal animasyonu bunlari oynatir.
 var _scales: PackedFloat32Array = PackedFloat32Array()
+## Her yildizin yuvasina gore dikey kaymasi (ucus) ve inis parilti orani (1->0).
+var _offsets: PackedFloat32Array = PackedFloat32Array()
+var _sparkles: PackedFloat32Array = PackedFloat32Array()
 var _reveal_tween: Tween
 
 
@@ -60,35 +70,47 @@ func set_stars(filled: int) -> void:
 	queue_redraw()
 
 
-## Yeni kisisel rekorda kisa, sirali bir pop. Abartili partikul yok - sadece
-## her yildiz sirayla bir kez buyuyup yerine oturur.
-func play_reveal(filled: int) -> void:
+## Yildizlar sirayla YUKARIDAN ucarak yuvalarina iner, kisa bir pop yapar ve
+## inis aninda etraflarinda ince bir parilti halkasi acilir. Sonuc karti
+## her basarida bunu oynatir; [param start_delay] kartin kendi acilis
+## animasyonu bitmeden yildizlarin gelmemesi icindir.
+func play_reveal(filled: int, start_delay := 0.0) -> void:
 	_kill_reveal()
 	_filled = clampi(filled, 0, star_count)
+	_reset_scales(1.0)
 	if _filled <= 0:
-		_reset_scales(1.0)
 		queue_redraw()
 		return
 
-	_reset_scales(1.0)
 	for i in _filled:
 		_scales[i] = 0.0
+		_offsets[i] = -fly_distance
 	queue_redraw()
 
+	var fly_time := pop_time * 0.6
+	var settle_time := pop_time * 0.4
 	_reveal_tween = create_tween()
 	_reveal_tween.set_parallel(true)
 	for i in _filled:
 		var index := i
-		var start := float(index) * pop_stagger
+		var start := start_delay + float(index) * pop_stagger
 		# Callable.bind() bagladigi argumani cagri argumanlarindan SONRA
 		# gonderir, yani `_set_star_scale.bind(index)` aslinda
 		# `_set_star_scale(deger, index)` demektir - iki parametre yer degistirir
 		# ve olcek dizisi bozulur. Lambda ile sira cagri yerinde gorunur kalir.
 		var setter := func(value: float) -> void: _set_star_scale(index, value)
-		_reveal_tween.tween_method(setter, 0.0, pop_scale, pop_time * 0.55) \
+		var mover := func(value: float) -> void: _set_star_offset(index, value)
+		var sparkler := func(value: float) -> void: _set_star_sparkle(index, value)
+		_reveal_tween.tween_method(setter, 0.0, pop_scale, fly_time) \
 			.set_delay(start).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		_reveal_tween.tween_method(setter, pop_scale, 1.0, pop_time * 0.45) \
-			.set_delay(start + pop_time * 0.55).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_reveal_tween.tween_method(mover, -fly_distance, 0.0, fly_time) \
+			.set_delay(start).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		_reveal_tween.tween_callback(star_landed.emit.bind(index)) \
+			.set_delay(start + fly_time)
+		_reveal_tween.tween_method(setter, pop_scale, 1.0, settle_time) \
+			.set_delay(start + fly_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_reveal_tween.tween_method(sparkler, 1.0, 0.0, landing_sparkle_time) \
+			.set_delay(start + fly_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 
 func _set_star_scale(index: int, value: float) -> void:
@@ -98,10 +120,28 @@ func _set_star_scale(index: int, value: float) -> void:
 	queue_redraw()
 
 
+func _set_star_offset(index: int, value: float) -> void:
+	if index < 0 or index >= _offsets.size():
+		return
+	_offsets[index] = value
+	queue_redraw()
+
+
+func _set_star_sparkle(index: int, value: float) -> void:
+	if index < 0 or index >= _sparkles.size():
+		return
+	_sparkles[index] = value
+	queue_redraw()
+
+
 func _reset_scales(value: float) -> void:
 	_scales.resize(star_count)
+	_offsets.resize(star_count)
+	_sparkles.resize(star_count)
 	for i in star_count:
 		_scales[i] = value
+		_offsets[i] = 0.0
+		_sparkles[i] = 0.0
 
 
 func _kill_reveal() -> void:
@@ -131,10 +171,32 @@ func _draw() -> void:
 			_draw_star(center, star_radius, empty_color, true)
 			continue
 		if i < _filled:
-			_draw_star(center, star_radius * scale_factor, filled_color, false)
-			_draw_star(center, star_radius * scale_factor * 0.42, filled_core_color, false)
+			var offset: float = _offsets[i] if i < _offsets.size() else 0.0
+			if offset < -0.5:
+				# Ucus sirasinda yuva bos gorunur; yildiz ona dogru iner.
+				_draw_star(center, star_radius, empty_color, true)
+			var flying := center + Vector2(0.0, offset)
+			_draw_star(flying, star_radius * scale_factor, filled_color, false)
+			_draw_star(flying, star_radius * scale_factor * 0.42, filled_core_color, false)
+			var sparkle: float = _sparkles[i] if i < _sparkles.size() else 0.0
+			if sparkle > 0.01:
+				_draw_sparkle(center, sparkle)
 		else:
 			_draw_star(center, star_radius, empty_color, true)
+
+
+## Inis parilti: disa acilan ince halka + dort kisa isik cizgisi.
+func _draw_sparkle(center: Vector2, amount: float) -> void:
+	var grow := 1.0 - amount
+	var ring_color := Color(filled_core_color, amount * 0.8)
+	draw_arc(center, star_radius * (1.05 + 0.9 * grow), 0.0, TAU, 24, ring_color,
+		maxf(1.2, star_radius * 0.09), true)
+	var inner := star_radius * (1.25 + 0.6 * grow)
+	var outer := inner + star_radius * 0.45 * amount
+	for k in 4:
+		var direction := Vector2.RIGHT.rotated(PI * 0.25 + PI * 0.5 * float(k))
+		draw_line(center + direction * inner, center + direction * outer,
+			Color(filled_color, amount), maxf(1.2, star_radius * 0.1), true)
 
 
 ## Kontur kalinligi YARICAPLA ORANTILI olmali. Sabit 2 px, bolum secim

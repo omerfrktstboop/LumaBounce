@@ -43,6 +43,12 @@ func _test_config_and_analytics_contract() -> void:
 		MonetizationConfig.PLACEMENT_FULL_HINT), "full hint is rewarded")
 	_check(LumaAdmobConfig.rewarded_unit_id(MonetizationConfig.PLACEMENT_FULL_HINT)
 		== LumaAdmobConfig.TEST_REWARDED, "debug full hint uses Google rewarded test unit")
+	_check(MonetizationConfig.is_rewarded_placement(
+		MonetizationConfig.PLACEMENT_COIN_BONUS), "shop coin bonus is rewarded")
+	_check(LumaAdmobConfig.rewarded_unit_id(MonetizationConfig.PLACEMENT_COIN_BONUS)
+		== LumaAdmobConfig.TEST_REWARDED, "debug coin bonus uses Google rewarded test unit")
+	_check(not MonetizationConfig.is_rewarded_placement(&"unknown"),
+		"unknown placement is not rewarded")
 	_check(LumaAdmobConfig.interstitial_unit_id() == LumaAdmobConfig.TEST_INTERSTITIAL,
 		"debug interstitial uses Google test unit")
 	var admob_config_source := FileAccess.get_file_as_string(

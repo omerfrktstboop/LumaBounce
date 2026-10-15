@@ -15,6 +15,9 @@ func _initialize() -> void:
 func _run() -> void:
 	_register_audio_manager()
 	_test_wallet_contract()
+	_test_coin_economy_rules()
+	_test_rewarded_bonus_wallet()
+	await _test_shop_coin_ad_card()
 	await _test_hint_coverage()
 	await _test_full_hint_reward_flow()
 	await _test_block_solution_chain()
@@ -54,6 +57,142 @@ func _test_wallet_contract() -> void:
 	reloaded.add(1)
 	_check(reloaded.balance == CoinEconomy.STARTING_COINS + 1
 		and reloaded.earned_total == 1, "coin rewards are recorded")
+
+
+## Kazanc tablosu: her ilk bitiris +1, her ilk 3 yildiz +1, her 10. bolumun
+## ilk bitirisi ayrica +3; tekrar oynamak hicbir sey vermez.
+func _test_coin_economy_rules() -> void:
+	_check(CoinEconomy.level_complete_reward(7, 7, true, false) == 1,
+		"ordinary first clear pays 1")
+	_check(CoinEconomy.level_complete_reward(7, 7, true, true) == 2,
+		"first clear with three stars pays 2")
+	_check(CoinEconomy.level_complete_reward(7, 7, false, true) == 1,
+		"returning for three stars pays the star reward alone")
+	_check(CoinEconomy.level_complete_reward(7, 7, false, false) == 0,
+		"replaying a cleared level pays nothing")
+	_check(CoinEconomy.level_complete_reward(20, 20, true, true) == 5,
+		"milestone first clear stacks clear, milestone and star rewards")
+	_check(CoinEconomy.level_complete_reward(20, 20, false, false) == 0,
+		"replaying a milestone pays nothing")
+	# Bonus bolumler kutuphanede varsa (su an 201+ bos) kendi odullerini alir.
+	for world in LevelWorlds.count():
+		for bonus_id in LevelWorlds.bonus_ids(world):
+			_check(CoinEconomy.level_complete_reward(bonus_id, 0, true, true)
+				== CoinEconomy.BONUS_FIRST_CLEAR_REWARD,
+				"bonus %d first clear pays the bonus reward" % bonus_id)
+
+	# Kampanya magazanin anlamli bir kismini almali ama tamamini degil:
+	# 3 yildizsiz oynayan ucte birini, tam 3 yildizli yarisindan fazlasini alir.
+	var plain := 0
+	var perfect := 0
+	for level_id in range(LevelLibrary.FIRST_LEVEL_ID, LevelWorlds.FIRST_BONUS_ID):
+		plain += CoinEconomy.level_complete_reward(level_id, 0, true, false)
+		perfect += CoinEconomy.level_complete_reward(level_id, 0, true, true)
+	var shop_total := 0
+	for item in CosmeticCatalog.all():
+		if not item.is_default:
+			shop_total += item.price
+	_check(plain * 3 >= shop_total,
+		"campaign without stars covers a third of the shop (%d vs %d)" % [plain, shop_total])
+	_check(perfect * 2 >= shop_total,
+		"three-star campaign covers half the shop (%d vs %d)" % [perfect, shop_total])
+	_check(perfect + CoinEconomy.STARTING_COINS <= shop_total,
+		"campaign alone does not buy out the shop (%d vs %d)" % [perfect, shop_total])
+
+
+func _test_rewarded_bonus_wallet() -> void:
+	var path := _new_wallet_path("rewarded_bonus")
+	var wallet := WalletStore.load_from_path(path)
+	var day := "2026-10-14"
+	_check(wallet.rewarded_bonus_claimed_today(day) == 0, "fresh wallet has no claims")
+	_check(not wallet.record_rewarded_bonus(""), "empty day is rejected")
+	for i in CoinEconomy.REWARDED_BONUS_DAILY_CAP:
+		_check(wallet.record_rewarded_bonus(day), "claim %d within the daily cap" % (i + 1))
+	_check(wallet.balance == CoinEconomy.STARTING_COINS
+		+ CoinEconomy.REWARDED_BONUS_REWARD * CoinEconomy.REWARDED_BONUS_DAILY_CAP,
+		"each claim pays the rewarded bonus")
+	var capped := wallet.balance
+	_check(not wallet.record_rewarded_bonus(day), "claim beyond the cap is refused")
+	_check(wallet.balance == capped, "refused claim pays nothing")
+
+	var reloaded := WalletStore.load_from_path(path)
+	_check(reloaded.rewarded_bonus_claimed_today(day)
+		== CoinEconomy.REWARDED_BONUS_DAILY_CAP, "daily counter survives reload")
+	_check(not reloaded.record_rewarded_bonus(day), "cap still holds after reload")
+	_check(reloaded.rewarded_bonus_claimed_today("2026-10-15") == 0,
+		"a new day starts with no claims")
+	_check(reloaded.record_rewarded_bonus("2026-10-15"), "a new day can claim again")
+
+	# v2 dosyasi (sayac anahtari yok) hatasiz okunur ve sayac sifirdan baslar.
+	var legacy_path := _new_wallet_path("legacy_v2")
+	var legacy := ConfigFile.new()
+	legacy.set_value(WalletStore.SECTION, WalletStore.KEY_BALANCE, 40)
+	legacy.set_value(WalletStore.SECTION, WalletStore.KEY_SCHEMA, 2)
+	legacy.save(legacy_path)
+	var migrated := WalletStore.load_from_path(legacy_path)
+	_check(migrated.balance == 40, "v2 wallet keeps its balance")
+	_check(migrated.rewarded_bonus_claimed_today(day) == 0, "v2 wallet starts with no claims")
+
+
+## Magazadaki odullu Coin karti: hazir degilken basilamaz, EARNED'de odul
+## verir, kapatilan reklam odul vermez, tavan dolunca kart kapanir.
+func _test_shop_coin_ad_card() -> void:
+	var path := _new_wallet_path("shop_coin_ad")
+	var wallet := WalletStore.load_from_path(path)
+	var provider := MockAdProvider.new()
+	var service := AdService.new()
+	service.configure(provider, null, null)
+	root.add_child(service)
+	service.initialize()
+
+	var shop := (load("res://scenes/shop_screen.tscn") as PackedScene).instantiate()
+	shop.set("wallet", wallet)
+	shop.set("ad_service", service)
+	shop.set("today_override", "2026-10-14")
+	root.add_child(shop)
+	await process_frame
+	var rows := shop.get_node("SafeArea/Content/Scroll/Rows")
+	var card := rows.get_node_or_null("CoinAdCard") as Button
+	_check(card != null, "shop shows the rewarded coin card")
+	if card == null:
+		root.remove_child(shop)
+		shop.free()
+		service.queue_free()
+		return
+	_check(card.disabled, "coin card is disabled until an ad is loaded")
+
+	provider.set_rewarded_ready(MonetizationConfig.PLACEMENT_COIN_BONUS, true)
+	provider.availability_changed.emit()
+	await process_frame
+	card = rows.get_node("CoinAdCard") as Button
+	_check(not card.disabled, "coin card enables when the ad becomes ready")
+
+	var before := wallet.balance
+	provider.queue_rewarded_result(AdResult.Code.CLOSED_WITHOUT_REWARD)
+	card.pressed.emit()
+	for i in 4:
+		await process_frame
+	_check(wallet.balance == before, "closing the ad early pays nothing")
+	_check(provider.rewarded_calls.size() == 1
+		and provider.rewarded_calls[0] == MonetizationConfig.PLACEMENT_COIN_BONUS,
+		"coin card requests the coin bonus placement")
+
+	for i in CoinEconomy.REWARDED_BONUS_DAILY_CAP:
+		provider.queue_rewarded_result(AdResult.Code.EARNED)
+		(rows.get_node("CoinAdCard") as Button).pressed.emit()
+		for frame in 4:
+			await process_frame
+	_check(wallet.balance == before
+		+ CoinEconomy.REWARDED_BONUS_REWARD * CoinEconomy.REWARDED_BONUS_DAILY_CAP,
+		"each earned ad pays the rewarded bonus")
+	card = rows.get_node("CoinAdCard") as Button
+	_check(card.disabled, "coin card closes once the daily cap is reached")
+
+	root.remove_child(shop)
+	shop.free()
+	root.remove_child(service)
+	service.queue_free()
+	await process_frame
 
 
 func _test_hint_coverage() -> void:

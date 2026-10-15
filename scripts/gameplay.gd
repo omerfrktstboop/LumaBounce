@@ -92,6 +92,17 @@ signal first_shot_tutorial_finished(skipped: bool)
 @export var spark_reference_speed := 1600.0
 @export var spark_count := 5
 @export var spark_length := 24.0
+## Sekme anindaki eklemeli isik halesinin yaricapi (strength ile olceklenir).
+@export var bounce_light_radius := 54.0
+## Isabetteki buyuk isik halesinin yaricapi.
+@export var target_light_radius := 230.0
+
+@export_group("Odul Anlari")
+## Isabet eden atis en az bu kadar sekme yaptiysa "N SEKME!" yazisi cikar.
+## Sayilan sekmeler Ball.bounced'in hiz esigini gecenlerdir; siyirmalar sayilmaz.
+@export var bounce_callout_min := 3
+## Bu sayidan itibaren yazi daha buyuk ve ikincil vurgu renginde cikar.
+@export var bounce_callout_big := 5
 
 @export_group("Ekran Titresimi")
 ## Panele carpma titresiminin carpani (gercek deger carpma hizina gore olceklenir).
@@ -140,6 +151,13 @@ var daily_mode := false
 ## Oyuncunun ayarlardan sectigi nisan yardimi. AppRoot tarafindan add_child'dan
 ## ONCE atanir; ProgressStore'dan okunur, ekran kendi basina ayara bakmaz.
 var aim_assist := false
+
+## Su anki atisin geri bildirim esigini gecen sekme sayisi ("N SEKME!" icin).
+## Yalnizca gorsel odul icindir; yildiz ya da ilerleme hesabina girmez.
+var _shot_bounces := 0
+## Ball.surface_touched -> Ball.bounced ayni cagri icinde art arda gelir;
+## bounced carpilan cismi tasimadigi icin son dokunulan panel burada tutulur.
+var _last_touched_panel: BouncePanel
 
 @onready var _arena: Arena = $Arena
 @onready var _panels: Node2D = $Panels
@@ -348,6 +366,7 @@ func _apply_level() -> void:
 	# aykiri) ve zemin bir RENK degil, ikili bir ac/kapa olarak yonetiliyordu.
 	# Zemin artik temanin parcasi ve AppRoot tarafindan kuruluyor
 	# (bkz. AppRoot._configure_gameplay).
+	_apply_world_motif()
 
 	_target.scale = Vector2.ONE * level_data.target_scale
 	_ball.set_radius(24.0 * level_data.ball_scale)
@@ -631,6 +650,7 @@ func set_fullscreen_ad_active(active: bool) -> void:
 func _respawn_ball() -> void:
 	_shot_token += 1
 	_reaim_pending = false
+	_shot_bounces = 0
 	_launcher.cancel_aim()
 	_ball.reset_to(_launcher.get_spawn_position())
 	_target.reset()
@@ -650,6 +670,7 @@ func _on_shot_fired(impulse: Vector2) -> void:
 	_reaim_pending = false
 
 	_shots_this_attempt += 1
+	_shot_bounces = 0
 	_last_shot_power = impulse.length()
 	_last_shot_angle_deg = rad_to_deg(Vector2.UP.angle_to(impulse.normalized()))
 	if playtest_stats != null:
@@ -760,6 +781,9 @@ func _on_target_hit(_body: Node2D) -> void:
 	SparkBurst.burst(
 		_effects, _target.global_position, Vector2.UP, 1.0,
 		Palette.ACCENT_ALT, Palette.ACCENT_ALT_CORE, 12, 74.0, 350.0)
+	LightFlash.flash(_effects, _target.global_position, target_light_radius,
+		Palette.ACCENT_ALT, 1.0, 0.42)
+	_show_bounce_callout()
 	_shake.add_trauma(target_hit_shake_trauma)
 	Haptics.target_hit()
 	AudioManager.play_target_hit()
@@ -789,6 +813,38 @@ func _on_target_hit(_body: Node2D) -> void:
 		level_data.level_id, stars, _final_attempt_seconds,
 		_final_attempt_shots)
 	_open_success_panel(stars, new_record)
+
+
+## Dunyanin arka plan motifi zemin katmanina, gradyanin ustune eklenir. Bolum
+## yeniden kuruldugunda (editor testi) eskisi atilir; motif bolumun ait oldugu
+## dunyaya gore secilir, bonus bolumler kendi dunyalarinin motifini alir.
+func _apply_world_motif() -> void:
+	var layer := get_node_or_null("BackgroundLayer")
+	if layer == null:
+		return
+	var old := layer.get_node_or_null("WorldMotif")
+	if old != null:
+		layer.remove_child(old)
+		old.queue_free()
+	var motif := WorldMotif.new()
+	motif.name = "WorldMotif"
+	motif.motif = WorldMotif.motif_for_world(LevelWorlds.index_for_level(level_data.level_id))
+	motif.parallax_source = _ball
+	layer.add_child(motif)
+
+
+## Cok sekmeli isabeti odullendiren kisa yazi. Hedef ekranin ustundeyse
+## (cogu bolum) altinda, asagidaysa ustunde cikar: HUD'un altina girmemeli.
+## Metin burada cevrilir - bicimli metin otomatik ceviriyle bulunamaz.
+func _show_bounce_callout() -> void:
+	if _shot_bounces < bounce_callout_min:
+		return
+	var big := _shot_bounces >= bounce_callout_big
+	var target_pos := _target.global_position
+	var offset := 178.0 if target_pos.y < 420.0 else -178.0
+	var at := Vector2(clampf(target_pos.x, 150.0, 570.0), target_pos.y + offset)
+	FloatingCallout.spawn(_effects, at, tr("%d SEKME!") % _shot_bounces,
+		Palette.ACCENT_ALT_CORE if big else Palette.ACCENT_CORE, 54 if big else 42)
 
 
 ## Test modunda isabetten sonra. Gecikme hedefin kendi isabet animasyonundan
@@ -877,6 +933,7 @@ func _on_result_retry() -> void:
 ## Sekmenin kendisi zaten fizik tarafindan cozuldu; burada yalnizca "bu temas
 ## ne anlama geliyor" sorusu yanitlanir.
 func _on_surface_touched(collider: Object, _at: Vector2, _normal: Vector2) -> void:
+	_last_touched_panel = collider as BouncePanel
 	var block := collider as BreakableBlock
 	if block == null:
 		return
@@ -949,6 +1006,12 @@ func _on_ball_bounced(at: Vector2, normal: Vector2, impact_speed: float) -> void
 	SparkBurst.burst(
 		_effects, at, normal, strength,
 		Palette.ACCENT, Palette.ACCENT_CORE, spark_count, spark_length)
+	LightFlash.flash(_effects, at, bounce_light_radius * (0.6 + 0.4 * strength),
+		Palette.ACCENT, 0.55 + 0.45 * strength)
+	if _last_touched_panel != null and is_instance_valid(_last_touched_panel):
+		_last_touched_panel.flash(strength)
+	_last_touched_panel = null
+	_shot_bounces += 1
 	_shake.add_trauma(strength * bounce_shake_trauma)
 	# Titresim de AYNI strength olcegini kullanir: siyirma gibi hafif bir temas
 	# ile sert bir carpisma ayni darbeyi verirse geri bildirim anlamsizlasir.

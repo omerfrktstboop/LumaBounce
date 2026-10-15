@@ -63,7 +63,8 @@ enum State {
 ## Kuyrugun EN UZUN halindeki nokta sayisi (tam hizda). Yavas topta bu sayi
 ## trail_min_length'e kadar duser - bkz. _target_trail_length().
 @export var trail_length := 12
-@export var trail_alpha := 0.40
+## Iz eklemeli (additive) karisimla cizilir; alfa burada "parlaklik" demektir.
+@export var trail_alpha := 0.55
 @export var trail_fade_time := 0.28
 ## Iki iz noktasi arasindaki en kucuk mesafe.
 @export var trail_min_step := 6.0
@@ -397,12 +398,21 @@ func _setup_trail() -> void:
 
 	# Ek ara durak: alfa uzun sure cok dusuk kalip yalnizca topa yakin
 	# kisimda yukselir, boylece kuyruk sona dogru hizla saydamlasir.
+	# Topa en yakin ucta renk acilir ("sicak cekirdek"): iz bir serit gibi
+	# degil, topun biraktigi isik gibi okunur.
 	var trail_color := trail_accent if trail_accent.a > 0.0 else accent
 	var gradient := Gradient.new()
 	gradient.set_color(0, Color(trail_color, 0.0))
-	gradient.set_color(1, Color(trail_color, trail_alpha))
+	gradient.set_color(1, Color(trail_color.lightened(0.35), trail_alpha))
 	gradient.add_point(trail_fade_pivot, Color(trail_color, trail_alpha * 0.22))
+	gradient.add_point(0.85, Color(trail_color, trail_alpha * 0.8))
 	_trail.gradient = gradient
+
+	# Eklemeli karisim: koyu zeminde iz parlar, ust uste binen kisimlar (sekme
+	# donusleri) daha da aydinlanir. Yalnizca cizim; fizige etkisi yok.
+	var glow := CanvasItemMaterial.new()
+	glow.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	_trail.material = glow
 
 
 ## Kuyrugu topun ANLIK hizina gore uzatir/kisaltir ve inceltir/kalinlastirir.

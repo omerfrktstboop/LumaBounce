@@ -15,21 +15,28 @@ extends RefCounted
 ## --- Kazanc tablosu ---
 ## Bir kural eklerken karsiligini SORMALI: oyuncu bunu nasil tetikler?
 ## Tetikleyicisi olmayan bir kural, olmayan bir gelirdir.
+##
+## DENGE (Ekim 2026): eski tabloda 200 bolumun tamami ~100 Coin ediyordu, magaza
+## ise 1080 Coin'di - 50 bolum oynayan biri hicbir sey alamiyordu. Simdi her
+## ilk bitiris ve her ilk 3 yildiz +1, her 10. bolum ayrica +3: kampanya
+## 260-460 Coin, magaza 660 Coin. Odullu reklam gunde 25 Coin'e kadar ekler.
 const STARTING_COINS := 3
-## Her N YENI normal bolum tamamlandiginda verilen odul.
-const NORMAL_LEVEL_STEP := 5
-const NORMAL_LEVEL_REWARD := 2
-## Her N. bolumde (10, 20, 30...) ILK KEZ 3 yildiz alindiginda.
+## Normal bir bolumun ILK bitirisi.
+const FIRST_CLEAR_REWARD := 1
+## Normal bir bolumde ILK KEZ 3 yildiz. Ilk bitirise bagli degildir: oyuncu
+## once 1 yildizla gecip sonra donup 3 yildiz yapabilir.
+const THREE_STAR_REWARD := 1
+## Her N. bolumun (10, 20, 30...) ilk bitirisinde ek, hissedilir bir odul.
 const MILESTONE_STEP := 10
-const MILESTONE_THREE_STAR_REWARD := 1
+const MILESTONE_CLEAR_REWARD := 3
 ## Bonus bolumun ilk kez bitirilmesi.
 const BONUS_FIRST_CLEAR_REWARD := 3
 ## Gunluk giris ve gunluk gorevlerin tamami.
 const DAILY_LOGIN_REWARD := 2
 const DAILY_QUESTS_COMPLETE_REWARD := 2
-## Odullu reklam basina ve gunluk tavan.
-const REWARDED_BONUS_REWARD := 1
-const REWARDED_BONUS_DAILY_CAP := 3
+## Magazadaki odullu reklam basina ve gunluk tavan.
+const REWARDED_BONUS_REWARD := 5
+const REWARDED_BONUS_DAILY_CAP := 5
 
 
 ## Bir bolum tamamlandiginda kazanilan Coin.
@@ -40,26 +47,23 @@ const REWARDED_BONUS_DAILY_CAP := 3
 ## [param first_three_star] bu bolumde ilk kez mi 3 yildiz alindi.
 ##
 ## Tum kosullar BIRLIKTE degerlendirilir: 10. bolumu ilk kez 3 yildizla
-## bitiren oyuncu hem esik odulunu hem kilometre tasi odulunu alir.
-static func level_complete_reward(level_id: int, completed_normal_count: int,
+## bitiren oyuncu ilk bitiris, 3 yildiz ve kilometre tasi odulunun hepsini alir.
+## Odullerin hepsi "ILK" kosuluna baglidir; ayni bolumu tekrar oynayarak
+## Coin basilamaz.
+##
+## [param completed_normal_count] imza uyumu icin korunur; kurallar artik
+## bolum numarasina bakar.
+static func level_complete_reward(level_id: int, _completed_normal_count: int,
 		first_clear: bool, first_three_star: bool) -> int:
 	var total := 0
-	var is_bonus := LevelWorlds.is_bonus_id(level_id)
-
+	if LevelWorlds.is_bonus_id(level_id):
+		return BONUS_FIRST_CLEAR_REWARD if first_clear else 0
 	if first_clear:
-		if is_bonus:
-			total += BONUS_FIRST_CLEAR_REWARD
-		elif completed_normal_count > 0 and completed_normal_count % NORMAL_LEVEL_STEP == 0:
-			# Her bolum degil, her BESINCI bolum: kucuk ve surekli bir damla
-			# yerine hissedilir bir odul. Yalnizca ILK bitiriste sayilir,
-			# yoksa ayni bolumu tekrar oynayarak Coin basilirdi.
-			total += NORMAL_LEVEL_REWARD
-
-	# Kilometre tasi bolumleri (10, 20, ...) ilk 3 yildizda ayrica oduldur -
-	# bu odul ilk bitirise BAGLI DEGILDIR: oyuncu bolumu once 1 yildizla
-	# gecip sonra donup 3 yildiz yapabilir.
-	if first_three_star and not is_bonus and level_id % MILESTONE_STEP == 0:
-		total += MILESTONE_THREE_STAR_REWARD
+		total += FIRST_CLEAR_REWARD
+		if level_id % MILESTONE_STEP == 0:
+			total += MILESTONE_CLEAR_REWARD
+	if first_three_star:
+		total += THREE_STAR_REWARD
 	return total
 
 

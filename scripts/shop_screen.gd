@@ -20,6 +20,11 @@ signal menu_requested()
 var wallet: WalletStore
 var purchase_service: PurchaseService
 var analytics: AnalyticsService
+## Odullu Coin karti icin. null ise kart hic gosterilmez.
+var ad_service: AdService
+## Bos degilse "bugun" yerine kullanilir; testler sistem saatine bagli kalmasin
+## diye vardir. Oyunda hep bos kalir (yerel tarih).
+var today_override := ""
 
 ## Sekme etiketleri kisa tutulur (720px genislikte 4 sekme sigmali). Tam
 ## isimler CosmeticCatalog.kind_label()'da kalir, baska yerlerde kullanilir.
@@ -37,6 +42,8 @@ const KIND_TAB_LABELS := {
 var _active_kind_index := 0
 var _flash_tween: Tween
 var _iap_message := ""
+var _coin_ad_busy := false
+var _coin_ad_message := ""
 
 
 func _ready() -> void:
@@ -45,6 +52,9 @@ func _ready() -> void:
 	_back_button.pressed.connect(menu_requested.emit)
 	if purchase_service != null:
 		purchase_service.state_changed.connect(_on_purchase_state_changed)
+	if ad_service != null:
+		# Reklam magaza acikken yuklenebilir; kart "hazirlaniyor"da kalmasin.
+		ad_service.availability_changed.connect(_on_purchase_state_changed)
 	_rebuild()
 
 
@@ -54,6 +64,9 @@ func _rebuild() -> void:
 		child.queue_free()
 
 	_balance_chip.bind(wallet)
+	if ad_service != null:
+		_rows.add_child(LumaCard.section_header(tr("ÜCRETSİZ COIN")))
+		_rows.add_child(_make_coin_ad_card())
 	if purchase_service != null:
 		_rows.add_child(LumaCard.section_header(tr("PREMİUM")))
 		_rows.add_child(_make_remove_ads_card())
@@ -105,17 +118,66 @@ func _make_remove_ads_card() -> Button:
 	var active := purchase_service.is_remove_ads_active()
 	var is_ready := purchase_service.is_product_ready(MonetizationConfig.PRODUCT_REMOVE_ADS)
 	var busy := purchase_service.is_busy()
+	var card := _make_offer_card("RemoveAds",
+		GlyphIcon.Glyph.CHECK if active else GlyphIcon.Glyph.LOCK, Palette.ACCENT,
+		active, active or busy or not is_ready,
+		tr("REKLAMLARI KALDIR"), tr("Geçiş reklamlarını kalıcı olarak kapatır"),
+		_remove_ads_status(active, is_ready, busy),
+		Palette.ACCENT if active else Palette.COIN)
+	if not card.disabled:
+		card.pressed.connect(_on_remove_ads_pressed)
+	return card
 
+
+## Odullu Coin karti. Reklam remove_ads satin alan oyuncuya da acik kalir:
+## o urun yalnizca GECIS reklamlarini kapatir, bu ise oyuncunun kendi istegi.
+func _make_coin_ad_card() -> Button:
+	var remaining := CoinEconomy.rewarded_bonus_remaining(
+		wallet.rewarded_bonus_claimed_today(_today()))
+	var is_ready := ad_service.is_rewarded_ready(MonetizationConfig.PLACEMENT_COIN_BONUS)
+	var card := _make_offer_card("CoinAd", GlyphIcon.Glyph.COIN, Palette.COIN,
+		false, _coin_ad_busy or remaining <= 0 or not is_ready,
+		tr("REKLAM İZLE"),
+		tr("Bugün kalan: %d/%d") % [remaining, CoinEconomy.REWARDED_BONUS_DAILY_CAP],
+		_coin_ad_status(remaining, is_ready),
+		Palette.COIN if remaining > 0 else Palette.TEXT_DIM)
+	if not card.disabled:
+		card.pressed.connect(_on_coin_ad_pressed)
+	return card
+
+
+func _coin_ad_status(remaining: int, is_ready: bool) -> String:
+	if _coin_ad_busy:
+		return tr("İŞLENİYOR...")
+	if remaining <= 0:
+		return tr("YARIN TEKRAR GEL")
+	if not _coin_ad_message.is_empty():
+		return tr(_coin_ad_message)
+	if is_ready:
+		return tr("+%d LUMA COIN") % CoinEconomy.REWARDED_BONUS_REWARD
+	return tr("REKLAM HAZIRLANIYOR")
+
+
+func _today() -> String:
+	return today_override if not today_override.is_empty() \
+		else Time.get_date_string_from_system()
+
+
+## PREMİUM ve ucretsiz Coin kartlarinin ortak iskeleti. Dugum adlari
+## "<prefix>Card" / "<prefix>Icon" (testler bu adlara bakar).
+func _make_offer_card(prefix: String, glyph: GlyphIcon.Glyph, accent: Color,
+		active: bool, disabled: bool, title_text: String, description_text: String,
+		status_text: String, status_color: Color) -> Button:
 	var card := Button.new()
-	card.name = "RemoveAdsCard"
+	card.name = "%sCard" % prefix
 	card.custom_minimum_size = Vector2(0.0, 156.0)
 	card.focus_mode = Control.FOCUS_NONE
-	card.disabled = active or busy or not is_ready
+	card.disabled = disabled
 	card.text = ""
-	card.add_theme_stylebox_override("normal", LumaCard.style(Palette.ACCENT, active, 2))
-	card.add_theme_stylebox_override("hover", LumaCard.style(Palette.ACCENT, true, 2))
-	card.add_theme_stylebox_override("pressed", LumaCard.style(Palette.ACCENT, true, 3))
-	card.add_theme_stylebox_override("disabled", LumaCard.style(Palette.ACCENT, active, 2))
+	card.add_theme_stylebox_override("normal", LumaCard.style(accent, active, 2))
+	card.add_theme_stylebox_override("hover", LumaCard.style(accent, true, 2))
+	card.add_theme_stylebox_override("pressed", LumaCard.style(accent, true, 3))
+	card.add_theme_stylebox_override("disabled", LumaCard.style(accent, active, 2))
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -132,10 +194,10 @@ func _make_remove_ads_card() -> Button:
 	margin.add_child(line)
 
 	var tile := IconTile.new()
-	tile.name = "RemoveAdsIcon"
-	tile.glyph = GlyphIcon.Glyph.CHECK if active else GlyphIcon.Glyph.LOCK
-	tile.icon_color = Palette.ACCENT
-	tile.tile_accent = Palette.ACCENT
+	tile.name = "%sIcon" % prefix
+	tile.glyph = glyph
+	tile.icon_color = accent
+	tile.tile_accent = accent
 	tile.tile_size = 64.0
 	tile.tile_width = 88.0
 	tile.icon_inset = 16.0
@@ -150,14 +212,14 @@ func _make_remove_ads_card() -> Button:
 	line.add_child(texts)
 
 	var title := Label.new()
-	title.text = tr("REKLAMLARI KALDIR")
+	title.text = title_text
 	title.add_theme_font_size_override("font_size", UIMetrics.FONT_CARD_TITLE + 3)
 	title.add_theme_color_override("font_color", Palette.TEXT)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texts.add_child(title)
 
 	var description := Label.new()
-	description.text = tr("Geçiş reklamlarını kalıcı olarak kapatır")
+	description.text = description_text
 	description.add_theme_font_size_override("font_size", UIMetrics.FONT_SUPPORTING + 1)
 	description.add_theme_color_override("font_color", Palette.TEXT_DIM)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -165,16 +227,13 @@ func _make_remove_ads_card() -> Button:
 	texts.add_child(description)
 
 	var status := Label.new()
-	status.text = _remove_ads_status(active, is_ready, busy)
+	status.name = "Status"
+	status.text = status_text
 	status.add_theme_font_size_override("font_size", UIMetrics.FONT_SUPPORTING + 3)
-	status.add_theme_color_override(
-		"font_color", Palette.ACCENT if active else Palette.COIN)
+	status.add_theme_color_override("font_color", status_color)
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texts.add_child(status)
-
-	if not card.disabled:
-		card.pressed.connect(_on_remove_ads_pressed)
 	return card
 
 
@@ -242,6 +301,30 @@ func _on_restore_purchases_pressed() -> void:
 	_rebuild()
 
 
+## Coin yalnizca EARNED sonucunda verilir; kapatilan ya da yuklenemeyen reklam
+## bakiyeye dokunmaz. Gunluk tavan WalletStore.record_rewarded_bonus icinde de
+## denetlenir, yani kart bir sekilde etkin kalsa bile tavan asilamaz.
+func _on_coin_ad_pressed() -> void:
+	if ad_service == null or _coin_ad_busy:
+		return
+	_coin_ad_busy = true
+	_coin_ad_message = ""
+	_rebuild()
+	var result := int(await ad_service.show_rewarded(MonetizationConfig.PLACEMENT_COIN_BONUS))
+	_coin_ad_busy = false
+	var earned := result == AdResult.Code.EARNED and wallet.record_rewarded_bonus(_today())
+	if result == AdResult.Code.CLOSED_WITHOUT_REWARD:
+		_coin_ad_message = "REKLAM TAMAMLANMADI"
+	if not is_inside_tree():
+		return
+	_rebuild()
+	if earned:
+		Haptics.target_hit()
+		AudioManager.play_level_complete()
+		_flash_control(_rows.get_node_or_null("CoinAdCard") as Control)
+		_flash_control(_balance_chip)
+
+
 func _on_purchase_state_changed() -> void:
 	if is_inside_tree():
 		_rebuild()
@@ -291,12 +374,17 @@ func _flash(cosmetic_id: String) -> void:
 	var grid := _rows.get_node_or_null("ProductGrid")
 	if grid == null:
 		return
-	var card := grid.get_node_or_null("Card_%s" % cosmetic_id) as Control
-	if card == null:
+	_flash_control(grid.get_node_or_null("Card_%s" % cosmetic_id) as Control)
+
+
+func _flash_control(control: Control) -> void:
+	if control == null:
 		return
-	if _flash_tween != null and _flash_tween.is_valid():
-		_flash_tween.kill()
-	card.modulate = Color(1.6, 1.6, 1.6)
-	_flash_tween = create_tween()
-	_flash_tween.tween_property(card, "modulate", Color.WHITE, 0.45) \
+	control.modulate = Color(1.6, 1.6, 1.6)
+	var tween := create_tween()
+	tween.tween_property(control, "modulate", Color.WHITE, 0.45) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	if control != _balance_chip:
+		if _flash_tween != null and _flash_tween.is_valid():
+			_flash_tween.kill()
+		_flash_tween = tween

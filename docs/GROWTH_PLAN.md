@@ -30,21 +30,25 @@ enerji), geri dönmek için sebep olmaması ve yayından sonra ölçüm yapılam
 
 ## 1. Mağaza ve ilk izlenim
 
-- [ ] **Öne çıkan görsel yanıltıcı.** `assets/store/play_store_feature_graphic_1024x500.png`
+- [x] **Öne çıkan görsel yanıltıcı.** `assets/store/play_store_feature_graphic_1024x500.png`
   mor neon, yandan bakışlı platformlar, rampalar ve dikenli çark gösteriyor; oyun
   dikey, lacivert-camgöbeği ve minimal. Beklentisi boşa çıkan oyuncu siler ve
   düşük puan verir; Google Play'in yanıltıcı görsel kuralına da takılabilir.
-  Gerçek oyun ekranından yeniden yapılmalı.
+  → Yenisi gerçek oyun render'ından: `tools/capture_store_assets.gd` →
+  `builds/store_assets/<dil>/feature_graphic.png` (6 dil). Eski dosya Play
+  Console'da değiştirilince silinebilir.
 - [ ] **İkon çok koyu.** `assets/icons/luma_bounce_icon_v2_192.png` ve adaptive
   v2 katmanları oyunla tutarlı, ama renkli ikonların arasında küçük boyutta
   kayboluyor. Daha parlak zemin veya daha güçlü ışık.
-- [ ] **Ekran görüntüleri:** gerçek oynanış, üstünde kısa açıklama yazıları
-  ("200 bölüm", "Portallar", "Her bölüm çözülebilir").
+- [x] **Ekran görüntüleri:** gerçek oynanış, üstünde kısa açıklama yazıları —
+  7 kare × 6 dil, oyun içi metin de o dilde (`tools/capture_store_assets.gd`).
 - [ ] **Tanıtım videosu:** 15–30 sn, portal ve çok sekmeli atış anları.
-- [ ] **ASO:** başlıkta anahtar kelime (ör. "LumaBounce: Physics Ball Puzzle"),
-  kısa açıklamada fizik bulmacası / sekme / nişan kelimeleri.
-- [ ] **Mağaza metnini 6 dile çevir** (tr, en, es, pt_BR, de, fr). Oyun zaten
-  çevrili; bu düşük maliyetli bir kazanç.
+  (Play video için YouTube bağlantısı ister; yapılmadı.)
+- [x] **ASO:** başlıkta anahtar kelime ("LumaBounce: Physics Puzzle" ve
+  karşılıkları), kısa açıklamada çek/nişan/sektir kelimeleri.
+- [x] **Mağaza metnini 6 dile çevir** — `docs/store/STORE_LISTING.md`
+  (başlık, kısa/tam açıklama, "Yeni neler var"); sınırlar
+  `tools/check_store_listing.gd` ile denetlenir.
 
 ## 2. Görsel tasarım ve renkler
 
@@ -59,11 +63,13 @@ Sorunlar:
 - 20:9 telefonda üst bilgi şeridiyle oyun alanı arasında ekranın ~%20'si boş.
 
 Yapılacaklar (sadelik korunarak, ışık öne çıkarılarak):
-- [ ] Panellere neon kenar / ince parlak çerçeve.
-- [ ] Hedefe kimlik: vurulunca "yanan" bir ışık küresi veya kristal.
-- [ ] Top izi daha parlak; sekmelerde kısa ışık patlaması.
-- [ ] Her dünyaya kendi arka plan motifi (yıldız, ızgara, aurora, prizma) ve
-  hafif parallax.
+- [x] Panellere neon kenar / ince parlak çerçeve (bostayken soluk hale, temasta
+  kısa flaş — `BouncePanel.flash`).
+- [x] Hedefe kimlik: merkezde nefes alan kristal; isabette yanar, kare dolar,
+  ışınlar + çift halka.
+- [x] Top izi daha parlak (eklemeli karışım); sekmelerde `LightFlash`.
+- [x] Her dünyaya kendi arka plan motifi (yıldız, ızgara, aurora, prizma) ve
+  hafif parallax (`WorldMotif`).
 - [ ] Uzun ekranlarda boşluğu kapat (HUD konumu veya oyun alanı ölçeği).
 
 Kısıt: görsel işler fizik alanlarına dokunmaz (bkz.
@@ -114,16 +120,20 @@ Yapılacaklar:
 
 ## 4. His ve ses
 
-- [ ] **Oyunda müzik yok.** `assets/audio/sfx/ambient_loop.wav` üretiliyor ama
-  hiçbir yerde çalınmıyor; Ayarlar'daki müzik kaydırıcısı boş `Music` bus'ını
-  kontrol ediyor (`scripts/audio/audio_manager.gd`). Her dünya için sakin bir
-  synth parçası ekle. `tools/generate_sfx.py` yaklaşımıyla üretilebilir veya
-  telifsiz parça lisanslanabilir.
-- [ ] **Ödül anlarını büyüt:**
-  - Hedefe isabette kutlama.
-  - Yıldızların uçarak gelmesi.
-  - Çok sekmeli atışta "5 sekme!" yazısı.
-  - Son yaklaşmada kısa yavaşlama (yalnızca görsel; fizik deterministik kalmalı).
+- [x] **Müzik.** Her dünya için ayrı sakin synth parçası + menü parçası
+  (`assets/audio/music/`, `tools/generate_sfx.py` ile dikişsiz döngü üretilir).
+  Ekran geçişiyle çapraz geçer, aynı dünyada bölümden bölüme yeniden başlamaz,
+  tam ekran reklamda ve uygulama arka plandayken durur. Ayarlar'daki müzik
+  kaydırıcısı artık gerçekten bir şey kontrol ediyor. Parçalar kısa (19–29 sn);
+  ileride daha uzun/çeşitli varyasyonlar düşünülebilir.
+- [x] **Ödül anlarını büyüt:**
+  - [x] Hedefe isabette kutlama (mor ışık patlaması, yanan hedef).
+  - [x] Yıldızların uçarak gelmesi (her başarıda; iniş parıltısı + yükselen
+    `star.wav` üçlüsü), coin ödülü yıldızlardan sonra pop.
+  - [x] Çok sekmeli atışta "N SEKME!" yazısı (3+; 5+ büyük ve mor).
+  - [ ] Son yaklaşmada kısa yavaşlama — **yapılmadı:** `Engine.time_scale`
+    topun integrasyon adımını da değiştirir ve `LevelSolver` ile birebir
+    determinizmi bozar. Yalnızca görsel bir yöntem (kamera/zoom) gerekir.
 
 ## 5. Ekonomi ve geri dönme sebebi
 
@@ -135,10 +145,10 @@ Mevcut durum (`scripts/levels/coin_economy.gd`, `scripts/cosmetics/cosmetic_cata
 - Kısa ipucu 2 coin; coin kıt olduğu için o da az kullanılır.
 
 Yapılacaklar:
-- [ ] **Ödüllü reklamla coin'i bağla.** `CoinEconomy.REWARDED_BONUS_REWARD` ve
-  günlük üst sınır kodda var, arayüzden erişilemiyor.
-- [ ] **Fiyat/kazanç dengesi:** fiyatları düşür (ör. 20–120) veya kazancı artır
-  (bölüm başına coin, 3 yıldız bonusu, ödüllü "ödülü ikiye katla").
+- [x] **Ödüllü reklamla coin'i bağla.** Mağazada "ÜCRETSİZ COIN" kartı: reklam
+  başına +5, günde 5 hak (`PLACEMENT_COIN_BONUS`, sayaç `WalletStore` şema 3).
+- [x] **Fiyat/kazanç dengesi:** her ilk bitiriş +1, her ilk 3 yıldız +1, her 10.
+  bölüm ayrıca +3 → kampanya 260–460 coin. Fiyatlar 25–130, mağaza toplamı 660.
 - [ ] **Günlük sistem:** günlük giriş ödülü (`DAILY_LOGIN_REWARD`), görevler ve
   seri kodda var (`scripts/retention/`) ama bilerek gizli
   (`.claude/skills/lumabounce-visual-polish` §7 — lansman ürün kararı). Kararı

@@ -194,3 +194,9 @@ FEEDBACK_EMAIL_GREETING,Merhaba LumaBounce ekibi,Hello LumaBounce team,Hola equi
 FEEDBACK_EMAIL_PROMPT,Geri bildirimim:,My feedback:,Mis comentarios:,Meu feedback:,Mein Feedback :,Mon avis :
 Sürüm: %s,Sürüm: %s,Version: %s,Versión: %s,Versão: %s,Version: %s,Version : %s
 Bölüm: %d,Bölüm: %d,Level: %d,Nivel: %d,Fase: %d,Level: %d,Niveau : %d
+ÜCRETSİZ COIN,ÜCRETSİZ COIN,FREE COINS,MONEDAS GRATIS,MOEDAS GRÁTIS,GRATIS-COINS,COINS GRATUITS
+Bugün kalan: %d/%d,Bugün kalan: %d/%d,Left today: %d/%d,Restantes hoy: %d/%d,Restantes hoje: %d/%d,Heute übrig: %d/%d,Restant aujourd'hui : %d/%d
+YARIN TEKRAR GEL,YARIN TEKRAR GEL,COME BACK TOMORROW,VUELVE MAÑANA,VOLTE AMANHÃ,KOMM MORGEN WIEDER,REVENEZ DEMAIN
+REKLAM HAZIRLANIYOR,REKLAM HAZIRLANIYOR,LOADING AD,CARGANDO ANUNCIO,CARREGANDO ANÚNCIO,WERBUNG WIRD GELADEN,CHARGEMENT DE LA PUB
+REKLAM TAMAMLANMADI,REKLAM TAMAMLANMADI,AD NOT COMPLETED,ANUNCIO NO COMPLETADO,ANÚNCIO NÃO CONCLUÍDO,WERBUNG NICHT ABGESCHLOSSEN,PUB NON TERMINÉE
+%d SEKME!,%d SEKME!,%d BOUNCES!,¡%d REBOTES!,%d QUICADAS!,%d ABPRALLER!,%d REBONDS !

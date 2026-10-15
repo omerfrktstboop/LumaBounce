@@ -55,7 +55,9 @@ func show_rewarded(placement: StringName) -> int:
 	if _fullscreen_request_in_progress or not is_rewarded_ready(placement):
 		return _finish_rewarded(placement, AdResult.Code.UNAVAILABLE)
 	_fullscreen_request_in_progress = true
+	_set_music_paused(true)
 	var result := int(await _provider.show_rewarded(placement))
+	_set_music_paused(false)
 	_fullscreen_request_in_progress = false
 	if result < AdResult.Code.EARNED or result > AdResult.Code.SKIPPED_POLICY:
 		result = AdResult.Code.FAILED
@@ -103,7 +105,9 @@ func request_interstitial(context: StringName, now_seconds := -1.0) -> int:
 		_debug("Interstitial skipped: ad not loaded")
 		return _finish_interstitial(context, AdResult.Code.UNAVAILABLE)
 	_fullscreen_request_in_progress = true
+	_set_music_paused(true)
 	var result := int(await _provider.show_interstitial(context))
+	_set_music_paused(false)
 	_fullscreen_request_in_progress = false
 	if result < AdResult.Code.EARNED or result > AdResult.Code.SKIPPED_POLICY:
 		result = AdResult.Code.FAILED
@@ -135,6 +139,14 @@ func _finish_interstitial(context: StringName, result: int) -> int:
 			"reason": AdResult.label(result),
 		})
 	return result
+
+
+## Tam ekran reklam surerken oyunun muzigi durur. AudioManager autoload'u
+## yalnizca adiyla aranir: headless testler onu kaydetmeden AdService kurar.
+func _set_music_paused(paused: bool) -> void:
+	var audio := get_node_or_null("/root/AudioManager")
+	if audio != null and audio.has_method("set_music_paused"):
+		audio.call("set_music_paused", paused, &"ad")
 
 
 func _track(event_name: StringName, properties: Dictionary) -> void:

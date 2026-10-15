@@ -181,7 +181,7 @@ tamamlananlar silinir; Coin bakiyesi, açılmış ipuçları ve kozmetik sahipli
 **kalır**.
 
 Gerekçe: kozmetik *satın alınmış* bir şeydir, kazanılmış bir ilerleme değil.
-215 Coin'e alınan bir hedef efektini "baştan başla" ile kaybetmek, sıfırlamayı
+130 Coin'e alınan bir hedef efektini "baştan başla" ile kaybetmek, sıfırlamayı
 bir cezaya çevirirdi. Bugün Coin yalnızca oyun içinde kazanıldığı için bu bir
 tercih; **gerçek parayla Coin satılırsa zorunluluk hâline gelir** ve bakiyenin
 cihazda değil sunucuda tutulması gerekir.

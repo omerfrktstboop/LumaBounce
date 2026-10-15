@@ -15,7 +15,9 @@ static func production_ads_enabled() -> bool:
 
 static func rewarded_unit_id(placement: StringName) -> String:
 	match placement:
-		MonetizationConfig.PLACEMENT_FULL_HINT:
+		# Iki odullu yer ayni AdMob odullu birimini kullanir; ayri birim acmak
+		# yalnizca raporlamayi bolerdi, odul yine oyun icinde ayrilir.
+		MonetizationConfig.PLACEMENT_FULL_HINT, MonetizationConfig.PLACEMENT_COIN_BONUS:
 			return LIVE_REWARDED if production_ads_enabled() else TEST_REWARDED
 		_:
 			return ""

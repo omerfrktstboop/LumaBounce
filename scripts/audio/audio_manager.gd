@@ -9,6 +9,7 @@ extends Node
 ## Sahneler kendi AudioStreamPlayer'larini olusturmaz; burada iki havuz vardir:
 ##   - SFX havuzu (8 player, "SFX" bus)  -> sik sekmeler icin
 ##   - UI  havuzu (3 player, "UI"  bus)  -> kisa arayuz tiklamalari icin
+## ve muzik icin iki player ("Music" bus) - capraz gecis (bkz. play_music).
 ## Havuzdaki tum player'lar mesgulse en eskisi geri donusturulur (round-robin),
 ## boylece ses hicbir zaman "yutulmaz" ama sinirsiz da cogalmaz.
 ##
@@ -54,7 +55,30 @@ const SOUND_FILES := {
 	"splash_bounce": "splash_bounce.wav",
 	"logo_reveal": "logo_reveal.wav",
 	"portal": "portal.wav",
+	"star": "star.wav",
 }
+## Sonuc kartinda sirayla inen yildizlarin perde adimlari (yarim ton):
+## D6 - G6 - A6. level_complete'in A-D-G uclusuyle ayni aileden.
+const STAR_SEMITONES := [0, 5, 7]
+
+## --- Muzik ---
+## Parcalar tools/generate_sfx.py ile uretilir (dikissiz dongu, 22 kHz mono).
+## Menuler ortak sakin parcayi, oyun ici bolumun dunyasinin parcasini calar.
+const MUSIC_DIR := "res://assets/audio/music/"
+const MUSIC_MENU := &"menu"
+const MUSIC_FILES := {
+	&"menu": "menu.wav",
+	&"world_1": "world_1.wav",
+	&"world_2": "world_2.wav",
+	&"world_3": "world_3.wav",
+	&"world_4": "world_4.wav",
+}
+## Muzik player'larinin taban seviyesi. Music bus'i kaydiriciyla 0 dB'e kadar
+## cikar (bkz. _apply_volumes) - parca SFX'in altinda kalsin diye player
+## kisik calar.
+const MUSIC_BASE_DB := -9.0
+## Ekran gecisiyle ust uste binen capraz gecis suresi.
+const MUSIC_FADE_TIME := 1.4
 
 var _streams: Dictionary = {}
 var _sfx_pool: Array[AudioStreamPlayer] = []
@@ -62,6 +86,15 @@ var _ui_pool: Array[AudioStreamPlayer] = []
 var _sfx_cursor := 0
 var _ui_cursor := 0
 var _settings: AudioSettingsStore
+## Iki player sirayla kullanilir: biri yeni parcayi acarken digeri eskisini kapatir.
+var _music_players: Array[AudioStreamPlayer] = []
+var _music_active := 0
+var _music_key: StringName = &""
+## Muzik dosyalari SFX'ten buyuk; yalnizca ilk istendiginde yuklenir.
+var _music_streams: Dictionary = {}
+var _music_tween: Tween
+var _music_paused := false
+var _music_pause_reasons: Dictionary = {}
 var _last_bounce_msec := -BOUNCE_COOLDOWN_MSEC
 var _last_played := "-"
 ## Ses icin AYRI bir RNG: global rastgele diziyi hic tuketmez, boylece
@@ -91,6 +124,12 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
 		stop_transient_sounds()
+	# Muzik yalnizca gercek arka plana alinmada durur; bildirim perdesi gibi
+	# kisa odak kayiplarinda calmaya devam eder.
+	if what == NOTIFICATION_APPLICATION_PAUSED:
+		set_music_paused(true, &"app")
+	elif what == NOTIFICATION_APPLICATION_RESUMED:
+		set_music_paused(false, &"app")
 
 
 # --- Oynanis sesleri ----------------------------------------------------------
@@ -141,6 +180,14 @@ func play_portal() -> void:
 ## ust uste binmez; yine de biraz kisik calinir.
 func play_level_complete() -> void:
 	_play_sfx("level_complete", -2.0)
+
+
+## Sonuc kartinda bir yildiz yuvasina indiginde. [param index] 0..2;
+## her yildiz bir oncekinden tiz calar (genel ±%4 jitter adimlardan kucuk
+## oldugu icin yukselis her seferinde duyulur).
+func play_star(index: int) -> void:
+	var step: int = STAR_SEMITONES[clampi(index, 0, STAR_SEMITONES.size() - 1)]
+	_play_sfx("star", -7.0, pow(2.0, float(step) / 12.0))
 
 
 func play_failure() -> void:
@@ -270,7 +317,86 @@ func get_debug_snapshot() -> Dictionary:
 		"active_sfx": get_active_sfx_count(),
 		"sfx_pool_size": _sfx_pool.size(),
 		"last_sound": _last_played,
+		"music": String(_music_key),
 	}
+
+
+# --- Muzik --------------------------------------------------------------------
+
+## Dunya indeksi (0'dan) -> parca anahtari. Parcasi olmayan dunya sonuncuyu calar.
+func music_for_world(index: int) -> StringName:
+	return StringName("world_%d" % (clampi(index, 0, 3) + 1))
+
+
+## Parcayi capraz gecisle degistirir. Ayni parca zaten caliyorsa HICBIR SEY
+## yapmaz: bolumden bolume gecis (ayni dunya) muzigi bastan baslatmamali.
+## Bos anahtar muzigi kapatir.
+func play_music(key: StringName) -> void:
+	if key == _music_key:
+		return
+	_music_key = key
+	if _music_players.size() < 2:
+		return
+	if _music_tween != null and _music_tween.is_valid():
+		_music_tween.kill()
+	# Onceki gecisten hala sonmekte olan player varsa hemen sustur; yoksa yarim
+	# kalan sonme o seviyede takili kalirdi.
+	_music_players[1 - _music_active].stop()
+	var outgoing := _music_players[_music_active]
+	_music_active = 1 - _music_active
+	var incoming := _music_players[_music_active]
+
+	_music_tween = create_tween().set_parallel(true)
+	var stream := _music_stream(key)
+	if stream != null:
+		incoming.stream = stream
+		incoming.volume_db = MIN_VOLUME_DB
+		incoming.play()
+		incoming.stream_paused = _music_paused
+		_music_tween.tween_property(incoming, "volume_db", MUSIC_BASE_DB, MUSIC_FADE_TIME) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	if outgoing.playing:
+		_music_tween.tween_property(outgoing, "volume_db", MIN_VOLUME_DB, MUSIC_FADE_TIME) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+		_music_tween.chain().tween_callback(outgoing.stop)
+
+
+func get_current_music() -> StringName:
+	return _music_key
+
+
+## Muzigi bir SEBEPLE duraklatir/surdurur: &"ad" (tam ekran reklam, AdService
+## cagirir) ve &"app" (uygulama arka planda). Sebepler ayri tutulur: reklam
+## bittiginde uygulama hala arka plandaysa muzik baslamamali.
+func set_music_paused(paused: bool, reason: StringName = &"ad") -> void:
+	if paused:
+		_music_pause_reasons[reason] = true
+	else:
+		_music_pause_reasons.erase(reason)
+	_music_paused = not _music_pause_reasons.is_empty()
+	for player in _music_players:
+		player.stream_paused = _music_paused
+
+
+func _music_stream(key: StringName) -> AudioStream:
+	if key == &"" or not MUSIC_FILES.has(key):
+		return null
+	if _music_streams.has(key):
+		return _music_streams[key]
+	var path: String = MUSIC_DIR + String(MUSIC_FILES[key])
+	if not ResourceLoader.exists(path):
+		push_warning("AudioManager: muzik dosyasi bulunamadi -> %s" % path)
+		return null
+	var stream := load(path) as AudioStream
+	var wav := stream as AudioStreamWAV
+	if wav != null:
+		# Dongu kodda kurulur: .import ayari editorde kolayca sifirlanabilir,
+		# bu satir ise dosya yeniden uretilse de gecerli kalir.
+		wav.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		wav.loop_begin = 0
+		wav.loop_end = int(round(wav.get_length() * float(wav.mix_rate)))
+	_music_streams[key] = stream
+	return stream
 
 
 # --- Ic isleyis ---------------------------------------------------------------
@@ -326,6 +452,7 @@ func _acquire_ui() -> AudioStreamPlayer:
 func _build_pools() -> void:
 	_sfx_pool = _make_pool("SfxPlayer", SFX_POOL_SIZE, SFX_BUS)
 	_ui_pool = _make_pool("UiPlayer", UI_POOL_SIZE, UI_BUS)
+	_music_players = _make_pool("MusicPlayer", 2, MUSIC_BUS)
 
 
 func _make_pool(prefix: String, size: int, bus: String) -> Array[AudioStreamPlayer]:

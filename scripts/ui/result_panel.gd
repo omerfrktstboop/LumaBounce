@@ -21,6 +21,7 @@ signal menu_pressed()
 @export var card_border_color := Color(Palette.SURFACE_EDGE, 1.0)
 @export var card_corner_radius := 34
 @export var pop_time := 0.28
+@export var result_star_radius := 26.0
 
 @onready var _scrim: ColorRect = $Scrim
 @onready var _card: PanelContainer = $CardCenter/Card
@@ -47,6 +48,11 @@ func _ready() -> void:
 	_reward_value.add_theme_color_override("font_color", Palette.COIN_CORE)
 	_reward_glyph.color = Palette.COIN
 	_reward_row.hide()
+	# Kartin odak noktasi yildizlardir: bolum secimindeki kucuk satirla ayni
+	# bilesen, ama burada belirgin sekilde buyuk cizilir.
+	_stars.star_radius = result_star_radius
+	_stars.spacing = result_star_radius * 0.7
+	_stars.star_landed.connect(_on_star_landed)
 	_next_button.pressed.connect(next_pressed.emit)
 	_retry_button.pressed.connect(retry_pressed.emit)
 	_level_select_button.pressed.connect(level_select_pressed.emit)
@@ -67,11 +73,14 @@ func show_success(title_text: String, next_text: String, retry_text: String,
 	_reward_row.visible = reward_coins > 0
 	_reward_value.text = "+%d" % reward_coins
 
+	# Yildizlar HER basarida ucarak gelir (eskiden yalnizca yeni rekorda);
+	# kazanilan sey gorulmeden kart "bitti" demis olmamali. Yeni rekor daha
+	# buyuk bir pop ile ayrisir. Kartin kendi acilisi bitince baslar.
 	_stars.show()
-	if new_record:
-		_stars.play_reveal(stars)
-	else:
-		_stars.set_stars(stars)
+	_stars.pop_scale = 1.5 if new_record else 1.3
+	_stars.play_reveal(stars, pop_time * 0.8)
+	if reward_coins > 0:
+		_pop_reward_row(pop_time * 0.8 + _stars.pop_stagger * maxi(stars, 1) + 0.15)
 
 	_stats.show()
 	# tr() BICIMLENDIRMEDEN ONCE: Control'un otomatik cevirisi hazir metni
@@ -104,9 +113,33 @@ func show_failure(title_text: String, subtitle_text: String, retry_text: String,
 	_open()
 
 
+## Her yildiz inisinde yukselen bir cinlama + hafif tik: ucuncu yildiz
+## kulakta da "tamam" der.
+func _on_star_landed(index: int) -> void:
+	if not visible:
+		return
+	AudioManager.play_star(index)
+	Haptics.pulse(10 + 4 * index)
+
+
+## Coin odulu yildizlardan SONRA kisa bir pop ile gelir; ayni anda belirince
+## goz ikisini birden okuyamiyordu.
+func _pop_reward_row(delay: float) -> void:
+	_reward_row.scale = Vector2.ZERO
+	var tween := _reward_row.create_tween()
+	tween.tween_interval(delay)
+	# Satir az once gizliydi; boyutu ancak yerlesimden sonra belli olur.
+	tween.tween_callback(func() -> void: _reward_row.pivot_offset = _reward_row.size * 0.5)
+	tween.tween_property(_reward_row, "scale", Vector2.ONE * 1.25, 0.16) \
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_property(_reward_row, "scale", Vector2.ONE, 0.12) \
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
 func hide_result() -> void:
 	if _pop_tween != null and _pop_tween.is_valid():
 		_pop_tween.kill()
+	_reward_row.scale = Vector2.ONE
 	hide()
 	modulate.a = 1.0
 	_card.scale = Vector2.ONE

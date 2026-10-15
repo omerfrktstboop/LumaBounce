@@ -28,12 +28,15 @@ const KEY_HINT_UNLOCKS := "hint_unlocks"
 const KEY_OWNED_COSMETICS := "owned_cosmetics"
 const KEY_SELECTED_COSMETICS := "selected_cosmetics"
 const KEY_SCHEMA := "wallet_schema"
+const KEY_REWARDED_BONUS_DAY := "rewarded_bonus_day"
+const KEY_REWARDED_BONUS_CLAIMED := "rewarded_bonus_claimed"
 
 ## Cuzdan dosyasinin yapisi. 2: kozmetik sahipligi ve secimi eklendi.
-## v1 -> v2 icin VERI DONUSUMU GEREKMEZ; eksik anahtarlar savunmaci okunur ve
-## oyuncu yalnizca varsayilan kozmetiklere sahip sayilir. Numara yine de artti
-## cunku surumun anlami "bu dosyayi hangi alan kumesini bilen surum yazdi".
-const SCHEMA_VERSION := 2
+## 3: magazadaki odullu Coin'in gunluk sayaci (gun + o gun alinan adet).
+## Hicbir gecis VERI DONUSUMU gerektirmez; eksik anahtarlar savunmaci okunur
+## (yeni sayac sifirdan baslar). Numara yine de artar cunku surumun anlami
+## "bu dosyayi hangi alan kumesini bilen surum yazdi".
+const SCHEMA_VERSION := 3
 
 ## Yeni oyuncuya verilen baslangic bakiyesi. Ipucu sistemini bir kez BEDAVA
 ## denemesi icin: hic denemeden "para ister" diyen bir ozellik reddedilir.
@@ -51,6 +54,10 @@ var _owned_cosmetics: Dictionary = {}
 ## Tur kimligi ("ball") -> secili kozmetik kimligi.
 var _selected_cosmetics: Dictionary = {}
 var _hint_unlocks: Dictionary = {}
+## Odullu Coin'in en son alindigi gun ("YYYY-MM-DD", yerel saat) ve o gun
+## kac kez alindigi. Gun degisince sayac kendiliginden sifirlanmis sayilir.
+var _rewarded_bonus_day := ""
+var _rewarded_bonus_claimed := 0
 var _save_path := SAVE_PATH
 
 
@@ -73,6 +80,9 @@ static func load_from_path(path: String) -> WalletStore:
 	store.earned_total = _read_int(config, KEY_EARNED, 0)
 	store._load_hint_unlocks(config)
 	store._load_cosmetics(config)
+	var raw_day: Variant = config.get_value(SECTION, KEY_REWARDED_BONUS_DAY, "")
+	store._rewarded_bonus_day = String(raw_day) if raw_day is String else ""
+	store._rewarded_bonus_claimed = _read_int(config, KEY_REWARDED_BONUS_CLAIMED, 0)
 	return store
 
 
@@ -96,6 +106,8 @@ func save() -> Error:
 	owned.sort()
 	config.set_value(SECTION, KEY_OWNED_COSMETICS, owned)
 	config.set_value(SECTION, KEY_SELECTED_COSMETICS, _selected_cosmetics)
+	config.set_value(SECTION, KEY_REWARDED_BONUS_DAY, _rewarded_bonus_day)
+	config.set_value(SECTION, KEY_REWARDED_BONUS_CLAIMED, _rewarded_bonus_claimed)
 	var error := config.save(_save_path)
 	if error != OK:
 		push_warning("WalletStore: bakiye yazilamadi (hata %d)." % error)
@@ -174,12 +186,31 @@ func add(amount: int) -> void:
 	save()
 
 
+## Bugun alinmis odullu Coin adedi. [param today] "YYYY-MM-DD"; testler
+## sistem saatine bagli kalmasin diye cagiran verir.
+func rewarded_bonus_claimed_today(today: String) -> int:
+	return _rewarded_bonus_claimed if _rewarded_bonus_day == today else 0
+
+
+## Odullu reklam KAZANILDIKTAN sonra cagrilir. Gunluk tavan dolduysa hicbir
+## sey vermez ve false doner; aksi halde Coin'i ekler, sayaci ilerletir.
+## Tavan CoinEconomy'de; burasi yalnizca kaydi tutar.
+func record_rewarded_bonus(today: String) -> bool:
+	if today.is_empty() \
+			or not CoinEconomy.can_claim_rewarded_bonus(rewarded_bonus_claimed_today(today)):
+		return false
+	_rewarded_bonus_claimed = rewarded_bonus_claimed_today(today) + 1
+	_rewarded_bonus_day = today
+	add(CoinEconomy.REWARDED_BONUS_REWARD)
+	return true
+
+
 # --- Kozmetikler --------------------------------------------------------------
 #
 # SIFIRLAMA ANLAMI - bilerek: "ilerlemeyi sifirla" kozmetik sahipligini
 # SILMEZ. Cuzdan ProgressStore'dan AYRI bir dosyadir ve ProgressStore.reset()
 # ona hic dokunmaz. Gerekce: kozmetik SATIN ALINMIS bir seydir, kazanilmis bir
-# ilerleme degil. Bolumlerini sifirlayan oyuncunun 215 Coin'e aldigi hedef
+# ilerleme degil. Bolumlerini sifirlayan oyuncunun 130 Coin'e aldigi hedef
 # efektini de kaybetmesi, sifirlamayi cezaya cevirirdi. Bugun Coin yalnizca
 # oyun ici kazanildigi icin bu tercih; ileride GERCEK PARAYLA Coin satilirsa
 # bu davranis zorunluluk haline gelir ve bakiyenin sunucuda tutulmasi gerekir

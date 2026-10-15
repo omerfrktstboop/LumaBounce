@@ -257,12 +257,23 @@ func _transition(scene: PackedScene, configure: Callable, theme_level := 0) -> v
 	if _busy or scene == null:
 		return
 	_busy = true
+	# Muzik gorsel fade ile AYNI anda gecer; ayni parca ise hicbir sey olmaz.
+	AudioManager.play_music(_music_for_theme_level(theme_level))
 	await _fade_to(1.0)
 	Palette.apply_theme(PaletteThemes.for_level(theme_level))
 	_apply_background_theme()
 	_swap_to(scene, configure)
 	await _fade_to(0.0)
 	_busy = false
+
+
+## Menuler (theme_level 0) ortak sakin parcayi, oyun ici ekranlar bolumun
+## dunyasinin parcasini calar. Tema ile ayni anahtar kullanilir, boylece
+## muzik ve renkler hicbir zaman farkli dunyalari gostermez.
+func _music_for_theme_level(theme_level: int) -> StringName:
+	if theme_level <= 0:
+		return AudioManager.MUSIC_MENU
+	return AudioManager.music_for_world(LevelWorlds.index_for_level(theme_level))
 
 
 func _fade_to(alpha: float) -> void:
@@ -392,6 +403,7 @@ func _configure_shop(screen: Node) -> void:
 		shop.wallet = _wallet
 		shop.purchase_service = _purchase_service
 		shop.analytics = _analytics
+		shop.ad_service = _ad_service
 		_analytics.track_event(AnalyticsService.SHOP_OPEN, {
 			"balance": _wallet.balance,
 		})

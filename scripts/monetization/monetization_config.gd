@@ -6,6 +6,9 @@ extends RefCounted
 ## Gameplay veya AppRoot gercek reklam birimi kimligi bilmez.
 
 const PLACEMENT_FULL_HINT := &"full_hint"
+## Magazadaki "reklam izle, Coin kazan" karti. Istege bagli bir oduldur;
+## remove_ads satin alan oyuncuya da acik kalir (yalnizca gecis reklamlari kapanir).
+const PLACEMENT_COIN_BONUS := &"coin_bonus"
 
 const PRODUCT_REMOVE_ADS := &"remove_ads"
 
@@ -19,4 +22,4 @@ const AD_POLICY_STATE_PATH := "user://ad_policy_state.cfg"
 
 
 static func is_rewarded_placement(placement: StringName) -> bool:
-	return placement == PLACEMENT_FULL_HINT
+	return placement in [PLACEMENT_FULL_HINT, PLACEMENT_COIN_BONUS]

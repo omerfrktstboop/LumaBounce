@@ -213,6 +213,7 @@ func _on_initialization_completed(_status: InitializationStatus) -> void:
 		return
 	_sdk_ready = true
 	_queue_rewarded_load(MonetizationConfig.PLACEMENT_FULL_HINT)
+	_queue_rewarded_load(MonetizationConfig.PLACEMENT_COIN_BONUS)
 	_load_interstitial()
 	availability_changed.emit()
 

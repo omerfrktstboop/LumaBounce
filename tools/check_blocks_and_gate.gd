@@ -63,6 +63,7 @@ func _run() -> void:
 	await _test_editor()
 	await _test_edit_official_level()
 	await _test_star_row()
+	await _test_music_routing()
 	await _test_attempt_timer()
 	await _test_level_select()
 	_test_level_worlds()
@@ -1051,6 +1052,67 @@ func _test_editor() -> void:
 # yildizin olcegini ayri oynatir ve olcek 0'da kalirsa o yildiz dolu sayilsa
 # bile bos cizilir. Kod okumakla fark edilmez, bu yuzden cizim kosulunun
 # kendisi test edilir.
+
+# --- Muzik --------------------------------------------------------------------
+#
+# Muzik sessizce bozulabilir: dosya eksikse AudioManager yalnizca uyarir, dongu
+# kurulmazsa parca 20 sn sonra susar, ayni parca yeniden baslarsa her bolum
+# gecisinde muzik bastan calar. Hicbiri kulaksiz bir test ortaminda fark
+# edilmez, bu yuzden durum dogrudan okunur.
+
+func _test_music_routing() -> void:
+	print("")
+	print("--- Muzik ---")
+	var audio := root.get_node_or_null("AudioManager")
+	_check("AudioManager mevcut", audio != null, true)
+	if audio == null:
+		return
+	var files: Dictionary = audio.get("MUSIC_FILES")
+	for key in files:
+		_check("muzik dosyasi var: %s" % key,
+			ResourceLoader.exists(String(audio.get("MUSIC_DIR")) + String(files[key])), true)
+	for index in 4:
+		_check("dunya %d parcasi" % (index + 1), audio.call("music_for_world", index),
+			StringName("world_%d" % (index + 1)))
+	_check("PRIZMA bolumu 4. dunya parcasini calar",
+		audio.call("music_for_world", LevelWorlds.index_for_level(160)), &"world_4")
+
+	audio.call("play_music", &"world_2")
+	await process_frame
+	_check("istenen parca caliyor", audio.call("get_current_music"), &"world_2")
+	var players: Array = []
+	for child in audio.get_children():
+		if child is AudioStreamPlayer and String(child.name).begins_with("MusicPlayer"):
+			players.append(child)
+	_check("iki muzik player'i var", players.size(), 2)
+	var playing: AudioStreamPlayer = null
+	for player in players:
+		if (player as AudioStreamPlayer).playing:
+			playing = player
+	_check("bir player caliyor", playing != null, true)
+	if playing != null:
+		var wav := playing.stream as AudioStreamWAV
+		_check("parca dongude", wav != null and wav.loop_mode == AudioStreamWAV.LOOP_FORWARD, true)
+		_check("muzik Music bus'inda", playing.bus, "Music")
+		audio.call("play_music", &"world_2")
+		await process_frame
+		_check("ayni parca yeniden baslamaz", playing.playing and playing.volume_db > -59.0, true)
+
+	# Duraklatma sebepleri ayri: reklam biterken uygulama arka plandaysa durur.
+	audio.call("set_music_paused", true, &"ad")
+	audio.call("set_music_paused", true, &"app")
+	audio.call("set_music_paused", false, &"ad")
+	_check("bir sebep kalinca muzik duraklatili", playing != null and playing.stream_paused, true)
+	audio.call("set_music_paused", false, &"app")
+	_check("tum sebepler kalkinca muzik surer", playing != null and not playing.stream_paused, true)
+
+	audio.call("play_music", &"")
+	await create_timer(float(audio.get("MUSIC_FADE_TIME")) + 0.3).timeout
+	var any_playing := false
+	for player in players:
+		any_playing = any_playing or (player as AudioStreamPlayer).playing
+	_check("bos anahtar muzigi kapatir", any_playing, false)
+
 
 func _test_star_row() -> void:
 	print("")
