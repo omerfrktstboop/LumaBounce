@@ -5,7 +5,8 @@
 ## Runtime contract
 
 - `show_rewarded(short_hint)` grants the first route move only after `earned`.
-- `request_interstitial(level_complete)` runs at the result transition after every third successful normal-level completion.
+- **New-player grace:** no interstitial of any kind until the player has completed `MonetizationConfig.FIRST_INTERSTITIAL_AFTER_LEVELS` (10) distinct normal levels; failure playtime does not accumulate during grace either. The first interstitial becomes eligible on the transition after the 10th level. The grace flag is persisted (`new_player_grace_done`), so resetting progress does not grant it again; a player who updates with more than 10 levels already completed is not forced an immediate ad.
+- After grace, `request_interstitial(level_complete)` runs at the result transition after every fifth (`COMPLETIONS_PER_INTERSTITIAL`) successful normal-level completion.
 - `request_interstitial(level_fail)` becomes eligible after 600 seconds of active failed-attempt playtime on the same normal level and runs only at a failure result transition.
 - Completion and failure candidates share a 180-second global cooldown. Unloaded/failed ads never block gameplay and keep the candidate for a later natural transition.
 - The completion counter survives sessions in `user://ad_policy_state.cfg`; failure playtime is session-only and resets on success or level change.

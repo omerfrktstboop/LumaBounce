@@ -229,9 +229,9 @@ func _test_settings_ui() -> void:
 			blocked_scroll_buttons.append(str(control.get_path()))
 	_check("settings buttons pass touch drags to scroll container",
 		blocked_scroll_buttons.is_empty())
-	var music_slider := _first_slider(settings_scroll)
+	var volume_slider := _first_slider(settings_scroll)
 	_check("volume slider keeps direct horizontal drag input",
-		music_slider != null and music_slider.mouse_filter == Control.MOUSE_FILTER_STOP)
+		volume_slider != null and volume_slider.mouse_filter == Control.MOUSE_FILTER_STOP)
 	var haptics_before := Haptics.enabled
 	var shake_before := ScreenShake.trauma_scale
 	rate_button.pressed.emit()

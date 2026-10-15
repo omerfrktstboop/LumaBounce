@@ -15,6 +15,7 @@ func _run() -> void:
 	_test_config_and_analytics_contract()
 	_test_entitlement_cache()
 	_test_completion_cadence_and_persistence()
+	_test_new_player_grace()
 	_test_failure_playtime()
 	_test_global_cooldown_and_priority()
 	_test_remove_ads_policy()
@@ -107,6 +108,61 @@ func _test_completion_cadence_and_persistence() -> void:
 		"bonus completion does not increment normal cadence")
 	_check(int(bonus.debug_snapshot()["successful_completion_count"]) == 0,
 		"bonus completion leaves counter unchanged")
+
+
+## Ilk FIRST_INTERSTITIAL_AFTER_LEVELS normal bolum reklamsiz; ilk reklam o
+## bolumun ardindan, sonrasi normal 5'li kadans.
+func _test_new_player_grace() -> void:
+	var grace := MonetizationConfig.FIRST_INTERSTITIAL_AFTER_LEVELS
+	_check(grace == 10, "first interstitial waits for ten levels")
+	var path := _new_path("grace")
+	var policy := _policy(path)
+	for completed in range(1, grace):
+		_check(not policy.register_successful_completion(
+			"level_%03d" % completed, true, completed),
+			"no ad during new-player grace (%d levels)" % completed)
+	_check(not policy.has_interstitial_candidate(MonetizationConfig.CONTEXT_LEVEL_COMPLETE),
+		"grace leaves no pending completion")
+	_check(not policy.register_failed_attempt("level_009", 900.0, true, grace - 1),
+		"failure time does not accumulate during grace")
+	_check(float(policy.debug_snapshot()["failure_playtime_seconds"]) == 0.0,
+		"grace failure time is discarded, not banked")
+
+	policy = _policy(path)
+	_check(not policy.is_new_player_grace_done(), "grace state survives reload")
+	_check(policy.register_successful_completion("level_010", true, grace),
+		"the tenth level makes the first interstitial eligible")
+	_check(policy.can_show_interstitial(MonetizationConfig.CONTEXT_LEVEL_COMPLETE, 100.0),
+		"first interstitial can show right after level ten")
+	policy.record_interstitial_shown(MonetizationConfig.CONTEXT_LEVEL_COMPLETE, 100.0)
+	for completed in range(grace + 1, grace + MonetizationConfig.COMPLETIONS_PER_INTERSTITIAL):
+		_check(not policy.register_successful_completion(
+			"level_%03d" % completed, true, completed),
+			"normal cadence resumes after grace (%d)" % completed)
+	_check(policy.register_successful_completion(
+		"level_%03d" % (grace + MonetizationConfig.COMPLETIONS_PER_INTERSTITIAL), true,
+		grace + MonetizationConfig.COMPLETIONS_PER_INTERSTITIAL),
+		"next interstitial five levels after the first")
+	_check(_policy(path).is_new_player_grace_done(), "finished grace is persisted")
+
+	# Yukseltilen eski oyuncu: esigin ustunde, zorla reklam gormez.
+	var veteran := _policy(_new_path("veteran"))
+	_check(not veteran.register_successful_completion("level_040", true, 40),
+		"existing player past the threshold gets no forced ad")
+	_check(veteran.is_new_player_grace_done()
+		and int(veteran.debug_snapshot()["successful_completion_count"]) == 1,
+		"existing player continues the normal counter")
+
+	# Eski surumden birikmis hak muafiyet icinde silinir.
+	var legacy_path := _new_path("legacy_pending")
+	var legacy_state := ConfigFile.new()
+	legacy_state.set_value(AdPolicy.STATE_SECTION, AdPolicy.STATE_COMPLETION_PENDING, true)
+	legacy_state.save(legacy_path)
+	var legacy := _policy(legacy_path)
+	_check(not legacy.register_successful_completion("level_004", true, 4),
+		"legacy pending ad is not shown during grace")
+	_check(not legacy.has_interstitial_candidate(MonetizationConfig.CONTEXT_LEVEL_COMPLETE),
+		"legacy pending ad is cleared by grace")
 
 
 func _test_failure_playtime() -> void:

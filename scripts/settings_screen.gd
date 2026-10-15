@@ -20,7 +20,7 @@ extends Control
 ##
 ## AYAR NEREDE SAKLANIR - iki ayri yer, bilerek:
 ##   ProgressStore [settings] -> dil, titresim, sarsinti, nisan yardimi
-##   AudioSettingsStore       -> sessize alma, muzik/efekt seviyesi
+##   AudioSettingsStore       -> sessize alma, efekt seviyesi
 ## Ikisi de ProgressStore.reset() tarafindan KORUNUR; ilerleme silmek oyuncu
 ## tercihlerini silmez.
 
@@ -94,7 +94,6 @@ func _rebuild() -> void:
 
 	_begin_card("Sesler")
 	_add_toggle_row("Ses", not AudioManager.is_muted(), _on_sound_toggled)
-	_add_slider_row("Müzik", AudioManager.get_music_volume(), AudioManager.set_music_volume)
 	_add_slider_row("Efektler", AudioManager.get_sfx_volume(), AudioManager.set_sfx_volume)
 
 	_begin_card("Oynanış")

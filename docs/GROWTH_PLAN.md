@@ -18,7 +18,7 @@ enerji), geri dönmek için sebep olmaması ve yayından sonra ölçüm yapılam
 | P0 | Production analitiğini aç, bölüm hunisi olaylarını ekle | 6 |
 | P0 | Ödüllü reklamla coin + mağaza fiyat dengesi | 5 |
 | P0 | 4–15. bölümlerin nişan toleransını genişlet | 3 |
-| P1 — ilk güncelleme | Müzik | 4 |
+| P1 — ilk güncelleme | ~~Müzik~~ (kaldırıldı — ürün kararı) | 4 |
 | P1 | Işık ve görsel enerji turu | 2 |
 | P1 | Günlük bölüm + giriş serisi | 5 |
 | P1 | 151–200 taslaklarını elle düzenle | 3 |
@@ -120,7 +120,10 @@ Yapılacaklar:
 
 ## 4. His ve ses
 
-- [x] **Müzik.** Her dünya için ayrı sakin synth parçası + menü parçası
+- [ ] ~~**Müzik.**~~ **Kaldırıldı (ürün kararı, Ekim 2026):** denendi, oyunda
+  gereksiz bulundu. Oyun yalnızca efekt sesleriyle çıkıyor; Ayarlar'daki müzik
+  kaydırıcısı da kalktı. Aşağıdaki not yalnızca kayıt için.
+  Her dünya için ayrı sakin synth parçası + menü parçası
   (`assets/audio/music/`, `tools/generate_sfx.py` ile dikişsiz döngü üretilir).
   Ekran geçişiyle çapraz geçer, aynı dünyada bölümden bölüme yeniden başlamaz,
   tam ekran reklamda ve uygulama arka plandayken durur. Ayarlar'daki müzik

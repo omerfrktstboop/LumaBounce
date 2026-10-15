@@ -41,7 +41,7 @@ Tool scripts and what they check:
 py -3 tools/generate_sfx.py     # Windows — plain `python3` falls through to the Store stub
 python3 tools/generate_sfx.py   # Linux/macOS
 ```
-New sounds must be appended at the end of the `written` list in `main()` — the RNG is a single stream shared across all sound recipes, so inserting mid-list reshuffles every later sound's samples and rewrites unchanged WAVs. The same script also writes the music (`assets/audio/music/*.wav`, `MUSIC_TRACKS`): 22.05 kHz mono, each track with its own seed (so it never shifts the SFX stream), rendered into a circular buffer and filtered with a warm-up pass so the loop point is seamless — never add a fade to a music track.
+New sounds must be appended at the end of the `written` list in `main()` — the RNG is a single stream shared across all sound recipes, so inserting mid-list reshuffles every later sound's samples and rewrites unchanged WAVs. The old `ambient_loop` recipe is still *called* (its output is no longer written) purely to keep its place in that stream.
 
 **Android export**: `Android Release` is the Gradle/AAB Play preset and `Android Debug` is the Gradle/APK playtest preset. Both target API 36 and package `com.ofsgames.lumabounce`. Release excludes only dev resources (`tools`, MCP toolkit, debug panel, level editor), never blanket `addons/*`; future runtime AdMob/Billing addons must remain exportable. See `docs/RELEASE.md` and run `tools/check_release_readiness.gd` before release.
 
@@ -64,7 +64,7 @@ Godot auto-translates `Control` text, so scene strings and plain `.text = "..."`
 ### Settings (`scripts/settings_screen.gd`)
 Rows are built in code, not in the scene, because changing the language must refresh both the labels *and* which option shows as selected — Godot re-translates text by itself but cannot know that a different button is now active. One `_rebuild()` handles both, and adding a setting is a one-line change.
 
-Settings live in **two** stores on purpose: `ProgressStore` `[settings]` (language, haptics, screen shake, aim assist) and `AudioSettingsStore` (mute, music/SFX volume). **Both survive `ProgressStore.reset()`** — erasing progress must not drop the player into a language they cannot read or re-enable vibration they turned off.
+Settings live in **two** stores on purpose: `ProgressStore` `[settings]` (language, haptics, screen shake, aim assist) and `AudioSettingsStore` (mute, SFX volume). **Both survive `ProgressStore.reset()`** — erasing progress must not drop the player into a language they cannot read or re-enable vibration they turned off.
 
 `ScreenShake.trauma_scale` is a `static var` for the same reason as `Haptics.enabled`: shake is triggered from six call sites, and scaling at each one guarantees someone eventually misses one and the preference leaks silently.
 
@@ -108,8 +108,8 @@ This is purely visual: `_update_trail_response()` touches no physics field, so t
 ### Reward moments and world motifs (visual only)
 Contact and success feedback is layered on top of the physics, never inside it: `LightFlash` (additive glow at a bounce / hit), `BouncePanel.flash(strength)` (panel rim lights on a hard contact — `Gameplay` remembers the collider from `Ball.surface_touched` because `bounced` doesn't carry it), the target's crystal that ignites and stays lit, `FloatingCallout` ("N SEKME!" for 3+ feedback-level bounces in the winning shot), and `StarRow.play_reveal` stars that fly in with a rising `star.wav` triad on every success. `WorldMotif` draws a per-world background pattern (stars / horizon grid / aurora / prism shards) in the background `CanvasLayer` with a few pixels of parallax from the ball. All of it uses tweens or its own seeded `RandomNumberGenerator`, so the determinism rule holds. Slow-motion on the final approach was deliberately **not** done: `Engine.time_scale` changes the ball's integration step and would break the `LevelSolver` match.
 
-### Music (`AudioManager.play_music`)
-`AppRoot._transition` picks the track from the same `theme_level` that picks the palette (menus → `menu`, gameplay → the level's world), so colours and music can never disagree. Two players on the `Music` bus cross-fade with the screen fade; asking for the track already playing is a no-op, so moving between levels of one world doesn't restart it. Pausing is reason-based (`&"ad"` from `AdService` around fullscreen ads, `&"app"` on `NOTIFICATION_APPLICATION_PAUSED`) so an ad ending while the app is backgrounded doesn't resume music. Loop points are set in code (`_music_stream`), not in the `.import`, so regenerating a file can't silently drop the loop.
+### No music (product decision, Oct 2026)
+The game has **sound effects only**. Per-world music was built, then removed at the user's request: no music files, no `Music` bus (`default_bus_layout.tres` has Master/SFX/UI), no music slider in Settings, and `AudioSettingsStore` no longer stores a music volume (an old `music_volume` key is ignored and dropped on the next save). Don't reintroduce music without asking.
 
 ### Mechanic intro card (`scripts/ui/mechanic_intro_card.gd`)
 When the player meets a mechanic for the first time, `Gameplay` opens `MechanicIntroCard` — a **modal** card that plays a small looping demonstration of the rule (ball rises, passes through the ring's open centre, then bounces off its rim; brick cracks then shatters). It deliberately replaced an earlier fading toast: a toast that disappeared as soon as the player started aiming gave no time to read a *rule*, and a spinning icon can't express "the centre passes but the rim blocks".

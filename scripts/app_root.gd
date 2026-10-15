@@ -257,23 +257,12 @@ func _transition(scene: PackedScene, configure: Callable, theme_level := 0) -> v
 	if _busy or scene == null:
 		return
 	_busy = true
-	# Muzik gorsel fade ile AYNI anda gecer; ayni parca ise hicbir sey olmaz.
-	AudioManager.play_music(_music_for_theme_level(theme_level))
 	await _fade_to(1.0)
 	Palette.apply_theme(PaletteThemes.for_level(theme_level))
 	_apply_background_theme()
 	_swap_to(scene, configure)
 	await _fade_to(0.0)
 	_busy = false
-
-
-## Menuler (theme_level 0) ortak sakin parcayi, oyun ici ekranlar bolumun
-## dunyasinin parcasini calar. Tema ile ayni anahtar kullanilir, boylece
-## muzik ve renkler hicbir zaman farkli dunyalari gostermez.
-func _music_for_theme_level(theme_level: int) -> StringName:
-	if theme_level <= 0:
-		return AudioManager.MUSIC_MENU
-	return AudioManager.music_for_world(LevelWorlds.index_for_level(theme_level))
 
 
 func _fade_to(alpha: float) -> void:
@@ -625,7 +614,8 @@ func _on_level_completed(level_id: int, stars: int, seconds: float,
 				rewarded_screen.notify_luma_coin_reward(reward)
 
 	_ad_policy.register_successful_completion(
-		LevelData.uid_for(level_id), not LevelWorlds.is_bonus_id(level_id))
+		LevelData.uid_for(level_id), not LevelWorlds.is_bonus_id(level_id),
+		_completed_normal_level_count())
 	_record_meta_completion(
 		LevelData.uid_for(level_id), stars, shots, full_hint_used, gameplay)
 
@@ -676,7 +666,8 @@ func _on_level_failed(level_id: int, reason: String, shots: int,
 	})
 	var candidate := _ad_policy.register_failed_attempt(
 		LevelData.uid_for(level_id), active_seconds,
-		not _active_daily_challenge and not LevelWorlds.is_bonus_id(level_id))
+		not _active_daily_challenge and not LevelWorlds.is_bonus_id(level_id),
+		_completed_normal_level_count())
 	if candidate and _ad_service != null:
 		await _ad_service.request_interstitial(MonetizationConfig.CONTEXT_LEVEL_FAIL)
 

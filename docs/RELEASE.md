@@ -197,7 +197,7 @@ Oyuncuya bu ayrımın ayarlar ekranındaki onay metninde belirtilmesi önerilir
 | Dosya | İçerik |
 |---|---|
 | `user://save.cfg` → `[settings]` | dil, titreşim, ekran sarsıntısı, nişan yardımı |
-| `user://audio_settings.cfg` | sessize alma, müzik ve efekt seviyesi |
+| `user://audio_settings.cfg` | sessize alma, efekt seviyesi |
 
 İkisi de `ProgressStore.reset()` tarafından **korunur**: ilerleme silmek
 oyuncu tercihlerini silmez. "Baştan başla" diyen oyuncunun anlamadığı bir

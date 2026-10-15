@@ -39,7 +39,7 @@ NASIL OYNANIR
 • Her bölümde sınırlı top hakkın var. Az atış ve kısa süre = 3 yıldız.
 
 200 BÖLÜM, 4 DÜNYA
-Her dünya kendi renkleri, kendi müziği ve yeni bir mekanikle gelir:
+Her dünya kendi renkleri ve yeni bir mekanikle gelir:
 • Sekme zincirleri: hedefe beş, altı, on sekmeyle ulaş.
 • Kırılan tuğlalar: bazıları tek, bazıları iki vuruşta kırılır; önce yolu aç.
 • Metal halkalar ve bombalar: halkanın içine yalnızca üstteki açıklıktan girilir, bombaya dokunan top kaybedilir.
@@ -55,7 +55,6 @@ Oynayarak kazandığın Luma Coin'lerle topuna, izine, fırlatıcına ve hedef e
 
 ÖZELLİKLER
 • Tamamen özgün minimal neon görseller ve sentezlenmiş sesler
-• Her dünyaya özel sakin müzik
 • Titreşim, ekran sarsıntısı ve nişan yardımı ayarları
 • Türkçe, İngilizce, İspanyolca, Portekizce, Almanca ve Fransızca
 • İnternetsiz oynanabilir
@@ -64,11 +63,11 @@ Oyun ücretsizdir ve reklam içerir. Tek seferlik "Reklamları kaldır" satın a
 ```
 <!-- whatsnew -->
 ```
-• Her dünyaya özel müzik
 • Daha parlak oyun: ışıklı paneller, yanan hedef, uçan yıldızlar ve "N SEKME!" kutlaması
 • Dünyalara özel arka planlar
 • Yeni coin dengesi: her bölümde ve her 3 yıldızda Luma Coin
 • Mağazada reklam izleyerek ücretsiz coin (günde 5 kez)
+• İlk 10 bölüm reklamsız
 ```
 
 ## en-US
@@ -91,7 +90,7 @@ HOW TO PLAY
 • Each level gives you a limited number of balls. Fewer shots and a faster clear earn 3 stars.
 
 200 LEVELS, 4 WORLDS
-Every world brings its own colours, its own music and a new mechanic:
+Every world brings its own colours and a new mechanic:
 • Bounce chains: reach the target in five, six, even ten bounces.
 • Breakable bricks: some crack in one hit, some need two — clear the way first.
 • Metal rings and bombs: a ring can only be entered through the gap at its top, and touching a bomb costs you the ball.
@@ -107,7 +106,6 @@ Spend the Luma Coins you earn by playing on new looks for your ball, trail, laun
 
 FEATURES
 • Original minimal neon visuals and synthesized sound
-• Calm music for every world
 • Settings for vibration, screen shake and aim assist
 • English, Turkish, Spanish, Portuguese, German and French
 • Play offline
@@ -116,11 +114,11 @@ The game is free and contains ads. A one-time "Remove ads" purchase turns off in
 ```
 <!-- whatsnew -->
 ```
-• Music for every world
 • A brighter game: glowing panels, a target that lights up, flying stars and "N BOUNCES!" celebrations
 • Background art for each world
 • New coin balance: earn Luma Coin on every level and every 3-star clear
 • Free coins in the shop by watching an ad (5 times a day)
+• The first 10 levels are ad-free
 ```
 
 ## es-ES
@@ -143,7 +141,7 @@ CÓMO SE JUEGA
 • Cada nivel te da un número limitado de bolas. Menos tiros y menos tiempo = 3 estrellas.
 
 200 NIVELES, 4 MUNDOS
-Cada mundo trae sus propios colores, su propia música y una mecánica nueva:
+Cada mundo trae sus propios colores y una mecánica nueva:
 • Cadenas de rebotes: llega al objetivo con cinco, seis o incluso diez rebotes.
 • Ladrillos rompibles: unos se rompen de un golpe y otros necesitan dos; abre el camino primero.
 • Aros metálicos y bombas: al aro solo se entra por la abertura superior, y tocar una bomba te cuesta la bola.
@@ -159,7 +157,6 @@ Usa las Luma Coins que ganas jugando para conseguir nuevos estilos para tu bola,
 
 CARACTERÍSTICAS
 • Gráficos neón minimalistas y originales, y sonidos sintetizados
-• Música tranquila para cada mundo
 • Ajustes de vibración, sacudida de pantalla y ayuda de puntería
 • Español, inglés, turco, portugués, alemán y francés
 • Juega sin conexión
@@ -168,11 +165,11 @@ El juego es gratuito y contiene anuncios. La compra única «Eliminar anuncios»
 ```
 <!-- whatsnew -->
 ```
-• Música para cada mundo
 • Un juego más luminoso: paneles que brillan, objetivo que se enciende, estrellas que vuelan y celebraciones de «¡N REBOTES!»
 • Fondos propios para cada mundo
 • Nuevo equilibrio de monedas: Luma Coins en cada nivel y cada 3 estrellas
 • Monedas gratis en la tienda viendo un anuncio (5 veces al día)
+• Los primeros 10 niveles, sin anuncios
 ```
 
 ## pt-BR
@@ -195,7 +192,7 @@ COMO JOGAR
 • Cada fase dá um número limitado de bolas. Menos tiros e menos tempo = 3 estrelas.
 
 200 FASES, 4 MUNDOS
-Cada mundo traz suas próprias cores, sua própria música e uma mecânica nova:
+Cada mundo traz suas próprias cores e uma mecânica nova:
 • Correntes de quiques: chegue ao alvo com cinco, seis ou até dez quiques.
 • Tijolos quebráveis: alguns quebram com um golpe, outros precisam de dois; abra o caminho primeiro.
 • Anéis de metal e bombas: só se entra no anel pela abertura de cima, e tocar uma bomba custa a bola.
@@ -211,7 +208,6 @@ Use as Luma Coins que você ganha jogando em novos visuais para a bola, o rastro
 
 RECURSOS
 • Visual neon minimalista original e sons sintetizados
-• Música calma para cada mundo
 • Ajustes de vibração, tremor de tela e ajuda de mira
 • Português, inglês, turco, espanhol, alemão e francês
 • Jogue offline
@@ -220,11 +216,11 @@ O jogo é gratuito e contém anúncios. A compra única "Remover anúncios" desa
 ```
 <!-- whatsnew -->
 ```
-• Música para cada mundo
 • Um jogo mais brilhante: painéis que acendem, alvo que se ilumina, estrelas voando e comemorações de "N QUICADAS!"
 • Fundos próprios para cada mundo
 • Novo equilíbrio de moedas: Luma Coins em cada fase e a cada 3 estrelas
 • Moedas grátis na loja assistindo a um anúncio (5 vezes por dia)
+• As primeiras 10 fases sem anúncios
 ```
 
 ## de-DE
@@ -247,7 +243,7 @@ SO WIRD GESPIELT
 • Jedes Level gibt dir eine begrenzte Zahl an Bällen. Weniger Würfe und eine kurze Zeit = 3 Sterne.
 
 200 LEVEL, 4 WELTEN
-Jede Welt bringt eigene Farben, eigene Musik und eine neue Mechanik:
+Jede Welt bringt eigene Farben und eine neue Mechanik:
 • Abprallketten: Erreiche das Ziel mit fünf, sechs oder sogar zehn Abprallern.
 • Zerbrechliche Steine: Manche brechen mit einem Treffer, andere brauchen zwei – mach zuerst den Weg frei.
 • Metallringe und Bomben: In einen Ring kommst du nur durch die Öffnung oben, und eine Bombe kostet dich den Ball.
@@ -263,7 +259,6 @@ Gib die Luma Coins, die du beim Spielen verdienst, für neue Looks für Ball, Le
 
 FUNKTIONEN
 • Eigene, minimalistische Neon-Grafik und synthetisierte Sounds
-• Ruhige Musik für jede Welt
 • Einstellungen für Vibration, Bildschirmwackeln und Zielhilfe
 • Deutsch, Englisch, Türkisch, Spanisch, Portugiesisch und Französisch
 • Offline spielbar
@@ -272,11 +267,11 @@ Das Spiel ist kostenlos und enthält Werbung. Der einmalige Kauf „Werbung entf
 ```
 <!-- whatsnew -->
 ```
-• Musik für jede Welt
 • Ein helleres Spiel: leuchtende Platten, ein Ziel, das aufleuchtet, fliegende Sterne und „N ABPRALLER!"-Jubel
 • Eigene Hintergründe für jede Welt
 • Neue Münzbalance: Luma Coins für jedes Level und jede 3-Sterne-Wertung
 • Gratis-Coins im Shop durch Werbung (5-mal am Tag)
+• Die ersten 10 Level ohne Werbung
 ```
 
 ## fr-FR
@@ -299,7 +294,7 @@ COMMENT JOUER
 • Chaque niveau te donne un nombre limité de balles. Moins de tirs et moins de temps = 3 étoiles.
 
 200 NIVEAUX, 4 MONDES
-Chaque monde apporte ses couleurs, sa musique et une nouvelle mécanique :
+Chaque monde apporte ses couleurs et une nouvelle mécanique :
 • Chaînes de rebonds : atteins la cible en cinq, six, voire dix rebonds.
 • Briques cassables : certaines cèdent en un coup, d'autres en deux ; ouvre d'abord le passage.
 • Anneaux de métal et bombes : on n'entre dans un anneau que par l'ouverture du haut, et toucher une bombe te coûte la balle.
@@ -315,7 +310,6 @@ Dépense les Luma Coins gagnées en jouant pour de nouveaux looks : balle, traî
 
 FONCTIONNALITÉS
 • Visuels néon minimalistes et originaux, sons synthétisés
-• Musique apaisante pour chaque monde
 • Réglages de vibration, de tremblement d'écran et d'aide à la visée
 • Français, anglais, turc, espagnol, portugais et allemand
 • Jouable hors ligne
@@ -324,9 +318,9 @@ Le jeu est gratuit et contient des publicités. L'achat unique « Supprimer les 
 ```
 <!-- whatsnew -->
 ```
-• Une musique pour chaque monde
 • Un jeu plus lumineux : panneaux qui s'illuminent, cible qui s'allume, étoiles qui volent et « N REBONDS ! »
 • Des fonds propres à chaque monde
 • Nouvel équilibre des pièces : des Luma Coins à chaque niveau et à chaque 3 étoiles
 • Des pièces gratuites dans la boutique en regardant une pub (5 fois par jour)
+• Les 10 premiers niveaux sans publicité
 ```
