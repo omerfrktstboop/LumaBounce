@@ -25,6 +25,10 @@ func configure(provider: AdProvider, policy: AdPolicy,
 		_provider.availability_changed.connect(availability_changed.emit)
 		_provider.privacy_options_availability_changed.connect(
 			privacy_options_availability_changed.emit)
+		# UMP sonucu analitige gider: toplama yalnizca izin gerekmeyen
+		# bolgelerde acilir (bkz. AdmobAdProvider.analytics_allowed_for).
+		if _analytics != null:
+			_provider.analytics_consent_changed.connect(_analytics.set_collection_enabled)
 
 
 func initialize() -> bool:

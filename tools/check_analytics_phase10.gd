@@ -37,6 +37,53 @@ class FakeGameAnalytics:
 		calls.append({"method": "addDesignEvent", "event_id": event_id, "options": options})
 
 
+## Godotx Firebase singleton'larinin sahteleri: ayni sinyal ve metod adlari.
+class FakeFirebaseCore:
+	extends RefCounted
+	signal core_initialized(success: bool)
+	var auto_succeed := true
+
+	func initialize() -> void:
+		if auto_succeed:
+			core_initialized.emit(true)
+
+
+class FakeFirebaseAnalytics:
+	extends RefCounted
+	signal analytics_initialized(success: bool)
+	var logged: Array[Dictionary] = []
+	var consent: Dictionary = {}
+	var collection_enabled := false
+	var initialized := false
+
+	func initialize() -> void:
+		initialized = true
+
+	func finish_init() -> void:
+		analytics_initialized.emit(true)
+
+	func log_event(event_name: String, params: Dictionary) -> void:
+		logged.append({"name": event_name, "params": params})
+
+	func set_consent(values: Dictionary) -> void:
+		consent = values
+
+	func set_analytics_collection_enabled(enabled: bool) -> void:
+		collection_enabled = enabled
+
+
+class FakeFirebaseCrashlytics:
+	extends RefCounted
+	signal crashlytics_initialized(success: bool)
+	var collection_enabled := false
+
+	func initialize() -> void:
+		crashlytics_initialized.emit(true)
+
+	func set_crashlytics_collection_enabled(enabled: bool) -> void:
+		collection_enabled = enabled
+
+
 func _initialize() -> void:
 	_run.call_deferred()
 
@@ -46,6 +93,9 @@ func _run() -> void:
 	await _test_deferred_provider_and_fallback()
 	_test_buckets()
 	_test_gameanalytics_adapter()
+	_test_firebase_adapter()
+	_test_firebase_consent_denied()
+	_test_firebase_consent_mapping()
 	_test_config_guards()
 	_cleanup()
 	if _failures == 0:
@@ -150,6 +200,76 @@ func _test_gameanalytics_adapter() -> void:
 		and api.calls[-3].get("status") == "start", "level event maps to progression")
 	_check(api.calls[-1].get("method") == "setEnabledEventSubmission"
 		and not api.calls[-1].get("value"), "analytics consent can stop collection")
+
+
+## Izin gelene kadar hicbir sey gonderilmez; izin gelince kuyruk sirayla
+## gider, ayrilmis adlar yeniden adlandirilir, bool parametreler 0/1 olur.
+func _test_firebase_adapter() -> void:
+	var core := FakeFirebaseCore.new()
+	var analytics := FakeFirebaseAnalytics.new()
+	var crashlytics := FakeFirebaseCrashlytics.new()
+	var provider := FirebaseAnalyticsProvider.new(core, analytics, crashlytics)
+	_check(provider.initialize(GameAnalyticsConfig.new()), "firebase provider initializes with fakes")
+	_check(analytics.initialized, "core success initializes analytics")
+	_check(provider.provider_name() == &"firebase",
+		"started provider reports firebase even before analytics is ready")
+	provider.send_event(AnalyticsService.SESSION_START, {"build": "1.0.0", "provider": "firebase"})
+	provider.send_event(AnalyticsService.LEVEL_COMPLETE, {"level_id": 7, "first_clear": true})
+	analytics.finish_init()
+	_check(analytics.logged.is_empty(), "nothing is logged before consent")
+	_check(provider.queued_event_count() == 2, "pre-consent events wait in the queue")
+	_check(not analytics.collection_enabled and not crashlytics.collection_enabled,
+		"collection stays off before consent")
+
+	provider.set_collection_enabled(true)
+	_check(analytics.logged.size() == 2, "consent flushes the queued events")
+	_check(analytics.logged[0]["name"] == "game_session_start",
+		"reserved session_start is renamed")
+	_check(int(analytics.logged[1]["params"]["first_clear"]) == 1,
+		"bool parameters are sent as 0/1")
+	_check(analytics.collection_enabled and crashlytics.collection_enabled,
+		"consent enables analytics and crash reporting together")
+	_check(String(analytics.consent.get("analytics_storage", "")) == "granted"
+		and String(analytics.consent.get("ad_personalization", "")) == "denied",
+		"analytics storage follows consent; ad personalization stays denied")
+	provider.send_event(AnalyticsService.RESTART, {"level_id": 7})
+	_check(analytics.logged.size() == 3,
+		"events go straight through once ready and consented")
+
+
+func _test_firebase_consent_denied() -> void:
+	var analytics := FakeFirebaseAnalytics.new()
+	var crashlytics := FakeFirebaseCrashlytics.new()
+	var provider := FirebaseAnalyticsProvider.new(FakeFirebaseCore.new(), analytics, crashlytics)
+	provider.initialize(GameAnalyticsConfig.new())
+	analytics.finish_init()
+	provider.send_event(AnalyticsService.LEVEL_START, {"level_id": 1})
+	provider.set_collection_enabled(false)
+	_check(provider.queued_event_count() == 0, "denied consent drops the queue")
+	provider.send_event(AnalyticsService.LEVEL_START, {"level_id": 2})
+	_check(analytics.logged.is_empty(), "denied consent never logs")
+	_check(String(analytics.consent.get("analytics_storage", "")) == "denied",
+		"denied consent is passed to Firebase")
+	_check(not crashlytics.collection_enabled, "denied consent keeps crash reporting off")
+	_check(FirebaseAnalyticsProvider.firebase_event_name(&"Bad-Name!") == "bad_name_",
+		"event names are reduced to Firebase-safe characters")
+	var many := {}
+	for i in 40:
+		many["field_%d" % i] = i
+	_check(FirebaseAnalyticsProvider.firebase_params(many).size()
+		== FirebaseAnalyticsProvider.MAX_PARAMS, "parameter count is capped at 25")
+	_check(not FirebaseAnalyticsProvider.new().initialize(GameAnalyticsConfig.new()),
+		"without the Android plugin the provider declines to start")
+
+
+## UMP -> analitik: yalnizca "izin gerekmiyor" toplamayi acar.
+func _test_firebase_consent_mapping() -> void:
+	_check(AdmobAdProvider.analytics_allowed_for(UserConsent.Status.NOT_REQUIRED),
+		"consent-free regions allow analytics")
+	_check(not AdmobAdProvider.analytics_allowed_for(UserConsent.Status.OBTAINED),
+		"a completed EU consent form does not imply analytics consent")
+	_check(not AdmobAdProvider.analytics_allowed_for(UserConsent.Status.REQUIRED),
+		"pending EU consent keeps analytics off")
 
 
 func _test_config_guards() -> void:

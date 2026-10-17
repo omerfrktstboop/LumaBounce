@@ -7,7 +7,76 @@ with `call_deferred`, so provider latency or failure never blocks a frame.
 
 ## Provider status
 
-The evaluated provider is the official GameAnalytics Godot SDK 3.1.0 (upstream
+**Production provider: Firebase** (Google Analytics for Firebase + Crashlytics)
+through the community plugin **Godotx Firebase 3.1.0** (MIT,
+[godot-x/firebase](https://github.com/godot-x/firebase), targets Godot 4.7).
+`AppRoot` picks `FirebaseAnalyticsProvider` whenever the Android singletons
+exist; desktop/editor keep `NoOpAnalyticsProvider`.
+
+Where things live:
+
+| Piece | Location | In git |
+|---|---|---|
+| Export plugin (editor only) | `addons/godotx_firebase/` | yes (excluded from the game pack) |
+| Thin Android wrappers (AAR) | `android/firebase_core/`, `firebase_analytics/`, `firebase_crashlytics/` | yes (`.gitignore` exceptions) |
+| Firebase SDK itself | pulled by Gradle (`firebase/*_version` export options) | — |
+| `google-services.json` | project root | **no** (local; the export copies it into `android/build/`) |
+| Gradle plugin lines | `android/build/build.gradle` | no — `tools/build_android.ps1` adds them before every build (`Ensure-FirebaseGradle`), so reinstalling the build template cannot drop them |
+
+Push (`firebase/enable_messaging`) stays **off**; `check_release_readiness`
+blocks it, because there is no notification consent flow.
+
+### Consent rule
+
+The export option `firebase/privacy_safe_defaults=true` writes manifest
+meta-data so Analytics and Crashlytics start **disabled** and every Consent
+Mode signal starts **denied** — including Firebase's own automatic events.
+`AdmobAdProvider` emits `analytics_consent_changed` once the UMP status is
+known; `AdService` forwards it to `AnalyticsService.set_collection_enabled()`:
+
+- UMP `NOT_REQUIRED` (e.g. Turkey, US, Brazil) → collection on.
+- UMP `REQUIRED`/`OBTAINED` (EEA/UK) → **off**: a completed consent form means
+  the player answered the ad questions, not that they agreed to analytics, and
+  the game asks no separate analytics question.
+- Unknown (e.g. offline first launch) → stays off.
+
+Until the decision arrives the provider holds up to 64 events and sends them
+in order on consent (or drops them on denial). Analytics never turns on the
+ad-personalization signals (`ad_storage`/`ad_user_data`/`ad_personalization`
+stay denied). If EEA data becomes important, add an explicit opt-in toggle in
+Settings that calls `set_collection_enabled(true)`.
+
+Firebase reserves `session_start`, so the game's own session events are sent
+as `game_session_start`/`game_session_end`.
+
+### Testing on a device (DebugView)
+
+```
+adb shell setprop debug.firebase.analytics.app com.ofsgames.lumabounce
+```
+
+Then play the debug APK and open Firebase console → Analytics → DebugView;
+events appear within seconds. Turn it off again with
+`adb shell setprop debug.firebase.analytics.app .none.`. A test device in an
+EEA consent region will (correctly) send nothing.
+
+### Level funnel in Google Analytics
+
+Explore → Funnel exploration → steps: `level_start` (parameter `level_id` =
+N) → `level_complete` (same `level_id`), breakdown by `level_id`. Use
+`level_fail.reason` for where players lose balls.
+
+### Play Console data safety
+
+Declare, processed by Google as a service provider (not "shared"):
+App activity → App interactions (analytics); App info and performance → Crash
+logs and Diagnostics (Crashlytics); Device or other IDs (Firebase installation
+ID, plus AdMob's advertising ID already declared). Not used for advertising
+by analytics; optional collection follows the consent rule above.
+
+### GameAnalytics (quarantined, fallback only)
+
+The previously evaluated provider is the official GameAnalytics Godot SDK 3.1.0 (upstream
 commit `305e2d791689d99ee5f13a86a1fc1355059a5c60`, Android SDK 7.0.1). It requires
 Godot 4.5+, but the publisher marks it unstable and its Windows binary fails the
 Godot 4.7.1 headless workflow. The native descriptor is therefore quarantined as

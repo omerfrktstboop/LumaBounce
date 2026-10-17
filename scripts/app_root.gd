@@ -480,8 +480,17 @@ func _setup_monetization() -> void:
 	_entitlements = EntitlementStore.load_from_disk()
 	_analytics = AnalyticsService.new(OS.is_debug_build() and not OS.has_feature("production"))
 	var analytics_config := GameAnalyticsConfig.load_from_path()
+	# Firebase (Android eklentisi yukluyse) birincil saglayicidir; toplama UMP
+	# sonucu gelene kadar kapali kalir (AdService -> set_collection_enabled).
+	# GameAnalytics yalnizca karantinadan cikarilirsa ve Firebase yoksa denenir.
 	var analytics_provider: AnalyticsProvider = NoOpAnalyticsProvider.new()
-	if analytics_config.is_ready():
+	if FirebaseAnalyticsProvider.is_available():
+		analytics_provider = FirebaseAnalyticsProvider.new()
+		# Panoda debug cihaz verisini ayirabilmek icin: session_start'taki
+		# "environment" alani release'te production, debug'da staging.
+		analytics_config.environment = GameAnalyticsConfig.ENVIRONMENT_STAGING \
+			if OS.is_debug_build() else GameAnalyticsConfig.ENVIRONMENT_PRODUCTION
+	elif analytics_config.is_ready():
 		analytics_provider = GameAnalyticsProvider.new()
 	_analytics.configure(analytics_provider, analytics_config)
 	_analytics.initialize()

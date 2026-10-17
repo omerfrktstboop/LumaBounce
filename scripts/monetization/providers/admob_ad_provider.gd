@@ -152,6 +152,16 @@ func _refresh_consent_status() -> void:
 	var consent := _admob.get_consent_status()
 	_consent_status = consent.status if consent != null else UserConsent.Status.UNKNOWN
 	privacy_options_availability_changed.emit(is_privacy_options_available())
+	if _consent_status != UserConsent.Status.UNKNOWN:
+		analytics_consent_changed.emit(analytics_allowed_for(_consent_status))
+
+
+## Analitik yalnizca UMP'nin "izin gerekmiyor" dedigi bolgelerde acilir.
+## AB/Ingiltere'de (REQUIRED/OBTAINED) ayri bir analitik onayi sorulmadigi icin
+## kapali kalir: OBTAINED, oyuncunun formu tamamladigini soyler, analitige
+## evet dedigini degil.
+static func analytics_allowed_for(status: int) -> bool:
+	return status == UserConsent.Status.NOT_REQUIRED
 
 
 func _on_consent_info_updated() -> void:

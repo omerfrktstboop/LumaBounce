@@ -36,6 +36,8 @@ const GAMEANALYTICS_PLUGIN := "res://addons/GameAnalytics/plugin.cfg"
 const GAMEANALYTICS_QUARANTINE := "res://addons/GameAnalytics/GameAnalytics.gdextension.disabled"
 const GAMEANALYTICS_ACTIVE := "res://addons/GameAnalytics/GameAnalytics.gdextension"
 const ANALYTICS_PHASE10_CHECK := "res://tools/check_analytics_phase10.gd"
+const FIREBASE_PLUGIN := "res://addons/godotx_firebase/plugin.cfg"
+const FIREBASE_PROVIDER := "res://scripts/analytics/firebase_analytics_provider.gd"
 const SETTINGS_SCREEN := "res://scripts/settings_screen.gd"
 
 const RELEASE_PRESET_NAME := "Android Release"
@@ -56,6 +58,9 @@ const REQUIRED_RELEASE_EXCLUDES := [
 	# Export ciktilari ve magaza gorselleri (capture_store_assets.gd) burada;
 	# klasorde .gdignore yoksa Godot gorselleri ice aktarip pakete koyar.
 	"builds/*",
+	# Firebase: editor-only export eklentisi ve Gradle'a ayrica kopyalanan yapilandirma.
+	"addons/godotx_firebase/*",
+	"google-services.json",
 	"addons/godot_mcp_toolkit/*",
 	"scripts/debug/*",
 	"scripts/editor/*",
@@ -443,12 +448,43 @@ func _check_analytics_integration() -> void:
 			_blockers.append("Karantinadaki GameAnalytics export plugin'i etkin; NoOp fallback bozulabilir.")
 		if FileAccess.file_exists(GAMEANALYTICS_ACTIVE):
 			_blockers.append("GameAnalytics hem aktif hem karantina descriptor'u tasiyor.")
-		_notes.append("GameAnalytics 3.1.0 unstable karantinada; analytics guvenli NoOp fallback kullanir.")
+		_notes.append("GameAnalytics 3.1.0 unstable karantinada; birincil saglayici Firebase.")
 	elif not enabled_plugins.has(GAMEANALYTICS_PLUGIN):
 		_warnings.append("GameAnalytics descriptor aktif gorunuyor ama export plugin'i etkin degil.")
+	_check_firebase_integration(enabled_plugins)
+
+
+## Firebase (Godotx): eklenti etkin, Release preset'te Core/Analytics/
+## Crashlytics acik, push kapali, gizlilik dostu varsayilanlar (izin gelene
+## kadar toplama kapali) acik; google-services.json ve AAR'lar yerinde.
+func _check_firebase_integration(enabled_plugins: PackedStringArray) -> void:
+	if not enabled_plugins.has(FIREBASE_PLUGIN):
+		_blockers.append("Godotx Firebase editor plugin'i etkin degil; export Firebase'i eklemez.")
+	if not FileAccess.file_exists(FIREBASE_PROVIDER):
+		_blockers.append("Firebase analytics provider yok: %s" % FIREBASE_PROVIDER)
+	if not FileAccess.file_exists(ProjectSettings.globalize_path("res://google-services.json")):
+		_blockers.append("google-services.json yok (Firebase konsolu > Proje ayarlari > Android uygulamasi); Gradle derlemesi basarisiz olur.")
+	for module in ["firebase_core", "firebase_analytics", "firebase_crashlytics"]:
+		var aar := ProjectSettings.globalize_path("res://android/%s/%s.release.aar" % [module, module])
+		if not FileAccess.file_exists(aar):
+			_blockers.append("Firebase AAR eksik: android/%s/%s.release.aar" % [module, module])
+	var config := ConfigFile.new()
+	if config.load("res://export_presets.cfg") != OK:
+		return
+	var preset := _find_preset(config, RELEASE_PRESET_NAME)
+	if preset.is_empty():
+		return
+	var options := "%s.options" % preset
+	for key in ["firebase/enable_core", "firebase/enable_analytics",
+			"firebase/enable_crashlytics", "firebase/privacy_safe_defaults"]:
+		if not bool(config.get_value(options, key, false)):
+			_blockers.append("Android Release '%s' acik degil." % key)
+	if bool(config.get_value(options, "firebase/enable_messaging", false)):
+		_blockers.append("Android Release push (firebase/enable_messaging) acik; izin ve gizlilik akisi yok.")
+	_notes.append("Analytics: Firebase (Core+Analytics+Crashlytics); toplama yalnizca UMP 'izin gerekmiyor' dediginde acilir.")
 func _check_gitignore() -> void:
 	var ignore_text := _read_text(GITIGNORE)
-	for required in ["*.keystore", "*.jks", "*.p12", "keystores/", "keystore.properties", "builds/", "gameanalytics.cfg"]:
+	for required in ["*.keystore", "*.jks", "*.p12", "keystores/", "keystore.properties", "builds/", "gameanalytics.cfg", "google-services.json"]:
 		if not ignore_text.contains(required):
 			_blockers.append(".gitignore '%s' kalibini icermiyor." % required)
 	for line in ignore_text.split("\n"):

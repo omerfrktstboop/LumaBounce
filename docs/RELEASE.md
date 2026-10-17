@@ -54,7 +54,8 @@ eşlenmelidir (Godot bunu otomatik okumaz).
 - [ ] UMP formu ilk açılışta test edildi; Ayarlar'da gerekli kullanıcılara gizlilik seçenekleri görünüyor
 - [ ] Ayarlar > Gizlilik'te **gizlilik politikası** bağlantısı görünüyor ve tarayıcıda açılıyor (`LegalLinks.PRIVACY_POLICY_URL`); adres Play Console listelemesindekiyle aynı
 - [ ] `check_analytics_phase10.gd` geçiyor; production dashboard'da debug event yok
-- [ ] GameAnalytics etkinleştirilecekse `docs/ANALYTICS.md` uyumluluk karantinası çözüldü ve staging internal test tamamlandı
+- [ ] Firebase: `google-services.json` proje kökünde (git'e girmez); debug APK ile DebugView'da `game_session_start` ve `level_start` görüldü; Crashlytics panelinde uygulama "bağlandı" görünüyor (`docs/ANALYTICS.md`)
+- [ ] Play Console veri güvenliği formu Firebase Analytics + Crashlytics ile güncellendi
 - [ ] `godot_mcp_toolkit`, debug paneli, DBG rozeti ve level editor release paketinde yok
 - [ ] Launcher ikonları dolu
 - [ ] Keystore hazır ve **repoda değil**

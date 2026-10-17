@@ -29,6 +29,10 @@ local.properties
 # GameAnalytics anahtarlari sadece yerel/CI ortaminda tutulur.
 gameanalytics.cfg
 
+# Firebase istemci yapilandirmasi: gizli anahtar degil ama projeye ozel;
+# yerelde durur, export onu Gradle'a kopyalar (bkz. docs/ANALYTICS.md).
+google-services.json
+
 # Yerel imzalama ortam dosyalari; ornek/README disinda repoya ekleme.
 .env
 .env.*
@@ -46,7 +50,12 @@ scratchpad/
 # Godot Android build sablonu: Project > Install Android Build Template ile
 # yeniden kurulur. Icindeki motor AAR'lari GitHub'in 100 MB sinirini asar ve
 # Gradle ciktilari ~1 GB tutar (Godot'un varsayilan .gitignore'u da dislar).
-/android/
+# Godotx Firebase modulleri (birkac KB'lik AAR'lar) ise sablonun parcasi
+# DEGIL; export onlari ../android/firebase_*/ yolundan okur, repoda kalir.
+/android/*
+!/android/firebase_core/
+!/android/firebase_analytics/
+!/android/firebase_crashlytics/
 
 # Yerel editor/ajan durumu ve kok dizindeki gecici loglar
 .idea/

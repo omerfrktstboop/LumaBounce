@@ -9,6 +9,10 @@ extends Node
 signal availability_changed()
 @warning_ignore("unused_signal")
 signal privacy_options_availability_changed(available: bool)
+## UMP durumu belli oldugunda: analitik/cokme raporu toplanabilir mi.
+## Yalnizca "izin gerekmiyor" bolgelerde true (bkz. AdmobAdProvider).
+@warning_ignore("unused_signal")
+signal analytics_consent_changed(allowed: bool)
 
 
 func provider_name() -> StringName:
